@@ -3282,7 +3282,7 @@ function guideInputs(p,index,r,t){
     </details>`);
  if(index===8)return section('Vitalidade e Chakra','Os valores máximos são calculados pela ficha. Preencha também os recursos atuais, se necessário.',
   `<div class="guide-combat-grid"><div><b>Vitalidade máxima</b><strong>${vitMax(p)}</strong><small>NC e Vigor</small></div><div><b>Chakra máximo</b><strong>${chakraMax(p)}</strong><small>Espírito</small></div></div><div class="guide-fields">
-  <div class="guide-field"><span>Vitalidade atual</span>${vitalStepper(p,'guide')}<small>Use − e + para registrar dano ou cura.</small></div>
+  <div class="guide-field"><span>Vitalidade atual</span>${vitalStepper(p,'guide')}<small>Use − / + ou digite o HP e pressione Enter para registrar dano ou cura.</small></div>
   ${guideField('Chakra atual','recursos.chakra',p.recursos?.chakra,{type:'number'})}</div>`);
  if(index===9)return section('Equipamentos e história','Registre seus Ryos e o passado do personagem. É tudo vinculado à quarta página do Canva.',
   `<div class="guide-fields">
