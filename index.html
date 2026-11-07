@@ -2278,6 +2278,46 @@
 .pub-readonly{font-size:12px;color:#715a49;margin:8px 0}
 @media(max-width:780px){.pub-intro{padding:21px}.pub-viewport{min-height:570px;max-height:72vh}.pub-chip{min-width:155px}.pub-board-toolbar{gap:6px}.pub-zoom{width:85px}}
 
+
+/* APRIMORAMENTO VISUAL — MURAL CENTRALIZADO E FICHAS EM QUASE ESCALA NATIVA
+   A imagem original do Canva tem aproximadamente 1034 px de largura.
+   Evita miniaturizar a arte para 828 px em telas grandes. */
+.pub-viewport{
+  display:flex;
+  align-items:flex-start;
+  justify-content:flex-start;
+  background:
+    linear-gradient(90deg,rgba(91,57,34,.67),rgba(91,57,34,.46)),
+    url("hero-konoha-novo.jpg") center center / cover,
+    #8c674b;
+}
+.pub-zoomframe{
+  flex:0 0 auto;
+  margin-left:auto;
+  margin-right:auto;
+}
+.shell .cv-page{
+  width:min(100%,1034px);
+  max-width:1034px;
+  height:auto;
+}
+.shell .cv-page .cv-bg{
+  image-rendering:auto;
+  object-fit:fill;
+  filter:contrast(1.055) saturate(1.045);
+  -webkit-backface-visibility:hidden;
+  backface-visibility:hidden;
+}
+.shell .cv-wrap{
+  align-items:flex-start;
+}
+@media(max-width:700px){
+  .shell .cv-page{min-width:700px;max-width:none}
+}
+@media print{
+  .shell .cv-page{width:210mm!important;max-width:none!important}
+  .shell .cv-page .cv-bg{filter:none!important}
+}
 </style>
 </head>
 <body>
@@ -4251,6 +4291,7 @@ function canvaUpdateArray(el,preserveFocus=false){
   const PublicBoard=(()=>{
     const W=1580,H=1160;
     const CHANGELOG=[
+      {date:'07/11/2026',title:'Mural centralizado e fichas do Canva mais legíveis',body:'Centralizamos o quadro quando ele estiver menor que a área de visualização, mantendo o zoom e o arraste. O espaço ao redor recebeu um fundo aquarelado. Nas fichas do Canva, a arte agora é exibida próxima da resolução original em telas maiores, com contraste e nitidez percebida ajustados, sem alterar o alinhamento dos campos digitais.'},
       {date:'07/11/2026',title:'Edição de Clã / Hijutsu na ficha',body:'Corrigimos o campo Clã / Hijutsu na página de Identificação da ficha do Canva. Agora ele pode ser editado, aparece também no editor detalhado e é salvo automaticamente junto com os outros dados do personagem.'},
       {date:'07/11/2026',title:'Retrato diretamente no quadro e navegação com mouse',body:'Agora é possível enviar ou trocar a imagem do personagem diretamente no quadro. A roda do mouse controla o zoom sob o cursor; clicar e arrastar com a mãozinha movimenta a visualização sem mover os bilhetes. A nota de atualizações permanece no cabeçalho sem encobrir os botões. Se as novas coleções ainda não estiverem liberadas, o quadro e as observações serão salvos nos documentos privados das fichas já existentes; a publicação para outros jogadores continua dependendo das permissões de leitura.'},
       {date:'07/11/2026',title:'Quadros shinobi compartilháveis',body:'Cada personagem pode ganhar um grande quadro público com retrato, clã, graduação, vila, história e recados organizados livremente. Adicionamos movimentação, redimensionamento, zoom e salvamento na nuvem.'},
