@@ -702,6 +702,75 @@
   .shell .cv-page .cv-stepper button{visibility:hidden!important}
 }
 
+
+/* GUIA DE CRIAÇÃO · livro de campo em aquarela sumi-ê */
+.guide-head{position:relative;display:grid;grid-template-columns:1.25fr .75fr;min-height:215px;overflow:hidden;border:1px solid #aaa99a;background:linear-gradient(118deg,#e9e2d3,#dddcd0);box-shadow:0 14px 28px #292f291b}
+.guide-head-copy{position:relative;z-index:2;padding:30px clamp(20px,3vw,42px)}
+.guide-head h1{font:600 clamp(28px,3vw,42px)/1.16 var(--serif);color:#2b332c;letter-spacing:-.026em;margin:10px 0 12px}
+.guide-head p{font-size:13px;color:#596359;max-width:560px;line-height:1.8;margin:0}
+.guide-head-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:19px}
+.guide-mark,.guide-count{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border:1px solid #bab4a2;font-size:11px;font-weight:700;color:#47564b;background:#e9e5d8}
+.guide-count{background:#dedfcf}
+.guide-head-illustration{position:relative;overflow:hidden;min-height:200px;background:linear-gradient(130deg,rgba(229,222,211,.5),var(--wash,#9caa9a))}
+.guide-head-illustration img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.guide-head-illustration>span{position:absolute;right:16px;bottom:2px;color:#2e3e3542;font-size:95px;font-family:var(--serif)}
+.guide-meter{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:20px 0}
+.guide-meter-item{padding:13px 14px;background:linear-gradient(130deg,#e9e2d3,#dfddd1);border:1px solid #b5b3a5;display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:6px}
+.guide-meter-item>span{font-size:11px;color:#596357;font-weight:700}
+.guide-meter-item>strong{font-size:19px;color:#303c32}
+.guide-meter-item>strong small{font-size:12px;color:#778075}
+.guide-meter-bar{height:4px;background:#c9c9b8;width:100%;border-radius:6px;overflow:hidden}
+.guide-meter-bar i{display:block;background:var(--theme-deep,#4d6a55);height:100%;transition:width .18s ease}
+.guide-meter-item.complete .guide-meter-bar i{background:#618668}
+.guide-layout{display:grid;grid-template-columns:minmax(225px,285px) minmax(0,1fr);align-items:start;gap:18px}
+.guide-nav{display:flex;flex-direction:column;gap:2px;border:1px solid #adaf9f;background:#e3dfd2;padding:10px}
+.guide-nav-title{font-size:10px;color:#7c635b;letter-spacing:.17em;font-weight:800;padding:12px 10px}
+.guide-nav button{display:flex;align-items:center;gap:12px;width:100%;border:1px solid transparent;background:transparent;color:#344238;text-align:left;cursor:pointer;padding:11px 9px;border-radius:3px}
+.guide-nav button:hover{background:#d5d6c8}
+.guide-nav button.active{background:#3c5747;color:#f4eee2;border-color:#486452}
+.guide-nav button.active:hover{background:#314938}
+.guide-nav .guide-index{display:grid;place-items:center;flex:0 0 28px;width:28px;height:28px;border:1px solid #a2a99b;border-radius:50%;font-size:11px;font-weight:800}
+.guide-nav .done .guide-index{border-color:#6c966e;color:#4b7952}
+.guide-nav .active .guide-index{border-color:#d1dccc;color:#e4ecde}
+.guide-nav button>span:last-child{display:flex;flex-direction:column;gap:4px;min-width:0}
+.guide-nav b{font-size:12px;line-height:1.2}
+.guide-nav small{color:#737c70;font-size:10px;line-height:1.4}
+.guide-nav button.active small{color:#d0d9cd}
+.guide-article{min-width:0;padding:clamp(20px,3vw,40px);border:1px solid #b9b6a5;background:radial-gradient(ellipse 48% 35% at 96% 9%,rgba(var(--theme-rgb,93,123,105),.15),transparent),linear-gradient(150deg,#f1ebdf,#e7e2d7 75%,#e2dfd1);box-shadow:0 12px 28px #25382b1b}
+.guide-article-kicker{font-size:11px;font-weight:800;letter-spacing:.18em;color:#8a655c}
+.guide-article h2{font:600 clamp(23px,2.7vw,32px)/1.25 var(--serif);margin:11px 0 5px;color:#2d382e}
+.guide-subtitle{font-size:12px;color:#7b8173;margin-bottom:24px}
+.guide-rule{font-size:13px;line-height:1.9;color:#465047}
+.guide-rule p{margin:0 0 17px}
+.guide-rule b,.guide-rule strong{color:#2b392d}
+.guide-example{padding:14px 18px;margin:17px 0;border-left:3px solid var(--theme-deep,#526754);background:rgba(204,208,193,.34);color:#405044;font-size:12px;line-height:1.85}
+.guide-formula{padding:16px;margin:17px 0;background:#d6d8ca;border:1px solid #b7c0ae;font-size:13px;font-weight:800;color:#344638;line-height:1.9}
+.guide-table{border:1px solid #c4c2b4;margin:16px 0}
+.guide-table>div{display:flex;justify-content:space-between;gap:15px;padding:10px 13px;border-bottom:1px solid #cbc8ba;font-size:12px}
+.guide-table>div:last-child{border-bottom:0}
+.guide-table>div:nth-child(odd){background:#e0dfd1b8}
+.guide-table b{color:#2c4133}
+.guide-attr-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:20px 0}
+.guide-attr-grid span{background:#e0dfd3;padding:10px 12px;border:1px solid #c4c4b6;font-size:11px}
+.guide-attr-grid b{margin-right:8px;color:#4b6a4c}
+.guide-article-footer{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap;background:#d8d9c8a8;border:1px solid #c4c5b7;padding:15px;margin-top:25px}
+.guide-where{display:flex;flex-direction:column;gap:4px}
+.guide-where span{font-size:10px;font-weight:800;letter-spacing:.14em;color:#798074}
+.guide-where b{font-size:12px;color:#3c4d3f}
+.guide-pager{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-top:19px}
+.guide-pager span{color:#7b8277;font-size:11px}
+.guide-checklist{border:1px solid #b9bfb0;margin:16px 0}
+.guide-checklist>div{display:flex;align-items:center;gap:13px;padding:11px 15px;background:#e8e4d8;border-bottom:1px solid #c8c9ba}
+.guide-checklist>div:last-child{border:0}
+.guide-checklist>div>span{border-radius:50%;width:26px;height:26px;flex-shrink:0;display:grid;place-items:center;border:1px solid #aeb0a1;color:#8b7663;font-weight:800}
+.guide-checklist>div.is-done>span{background:#668a6a;border-color:#668a6a;color:#fff}
+.guide-checklist b{display:block;font-size:12px;color:#314035}
+.guide-checklist small{display:block;font-size:11px;color:#6d776b;margin-top:2px}
+.guide-source{font-size:11px;color:#657267;max-width:950px;line-height:1.8;margin:20px auto}
+@media(max-width:950px){.guide-layout{grid-template-columns:1fr}.guide-nav{display:flex;overflow-x:auto;flex-direction:row;scroll-snap-type:x mandatory;padding:8px;gap:6px}.guide-nav-title{display:none}.guide-nav button{min-width:165px;max-width:210px;scroll-snap-align:start}}
+@media(max-width:650px){.guide-head{grid-template-columns:1fr}.guide-head-illustration{min-height:125px}.guide-head-copy{padding:24px}.guide-meter{grid-template-columns:repeat(2,minmax(0,1fr))}.guide-attr-grid{grid-template-columns:1fr}.guide-article-footer{align-items:stretch;flex-direction:column}.guide-table>div{flex-wrap:wrap}}
+@media print{.guide-nav,.guide-meter,.guide-article-footer,.guide-pager{display:none}}
+
 </style>
 </head>
 <body>
@@ -912,7 +981,7 @@
   const COMMON_POWERS=['Ninpou','Doton','Fuuton','Katon','Raiton','Suiton','Fuuinjutsu','Iryou Ninjutsu','Rasengan'];
   const TABS=[['identidade','Identidade'],['atributos','Atributos'],['pericias','Perícias'],['combate','Combate'],['tecnicas','Poderes e jutsus'],['inventario','Inventário'],['historia','História']];
 
-  const S={view:'home',tab:'identidade',authPane:'login',user:null,isAdmin:false,sheet:null,sheetId:null,adminSheets:[],activeClan:null,demo:!CONFIGURED,sheets:[],adminViewing:false,pendingDeleteId:null,pendingWrite:null,canvaPage:1,canvaMode:'original',loading:CONFIGURED,modal:null,saveTimer:null,saveState:'Pronto',authWorking:false,adminUnlocked:false,adminAuthBusy:false,adminLoginBusy:false,adminUnsubscribe:null,adminLive:false,adminLiveReady:false,adminLiveError:false,adminEvents:[],pendingRemote:null,locallyDirty:false,isSaving:false,lastSavedWrite:null,creating:false,portraitBusy:false};
+  const S={view:'home',tab:'identidade',authPane:'login',user:null,isAdmin:false,sheet:null,sheetId:null,adminSheets:[],activeClan:null,demo:!CONFIGURED,sheets:[],adminViewing:false,pendingDeleteId:null,pendingWrite:null,canvaPage:1,canvaMode:'original',loading:CONFIGURED,modal:null,saveTimer:null,saveState:'Pronto',authWorking:false,adminUnlocked:false,adminAuthBusy:false,adminLoginBusy:false,adminUnsubscribe:null,adminLive:false,adminLiveReady:false,adminLiveError:false,adminEvents:[],pendingRemote:null,locallyDirty:false,isSaving:false,lastSavedWrite:null,creating:false,portraitBusy:false,guideStep:0};
   let fb=null;
   const $=sel=>document.querySelector(sel);
   const E=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -1066,11 +1135,11 @@ async function openSheet(id){
  if(ownsCurrent()&&S.saveTimer){clearTimeout(S.saveTimer);S.saveTimer=null;await persist()}
  const item=S.sheets.find(x=>x.id===id);
  if(!item)return showToast('Esta ficha não pertence à sua conta.',true);
- S.sheet=item.data;S.sheetId=id;S.adminViewing=false;S.canvaMode='original';S.canvaPage=1;S.tab='identidade';S.view='sheet';S.modal=null;render();window.scrollTo({top:0});
+ S.sheet=item.data;S.sheetId=id;S.adminViewing=false;S.canvaMode='original';S.canvaPage=1;S.tab='identidade';S.guideStep=0;S.view='sheet';S.modal=null;render();window.scrollTo({top:0});
 }
 function sheetSwitcher(){
  if(S.adminViewing)return `<div class="my-sheet-strip"><span class="pill">Modo mestre · edição autorizada</span><button id="admin-sheet-sync" class="admin-sync-note ${S.pendingRemote?'has-update':''}" data-action="apply-remote">${S.pendingRemote?'Alteração externa recebida · clique para atualizar':'Sincronização ao vivo'}</button><button class="button small" data-action="save">Salvar alterações</button><button class="button secondary small" data-action="nav" data-view="admin">← Voltar ao painel do mestre</button></div>`;
- return `<div class="my-sheet-strip"><button class="button secondary small" data-action="nav" data-view="fichas">← Minhas fichas</button><span class="pill">${S.sheets.length} ficha(s) na conta</span><button class="button secondary small danger-quiet" data-action="ask-delete" data-id="${E(S.sheetId)}">Excluir esta ficha</button></div>`;
+ return `<div class="my-sheet-strip"><button class="button secondary small" data-action="nav" data-view="fichas">← Minhas fichas</button><button class="button secondary small" data-action="nav" data-view="guia">☷ Guia de criação</button><span class="pill">${S.sheets.length} ficha(s) na conta</span><button class="button secondary small danger-quiet" data-action="ask-delete" data-id="${E(S.sheetId)}">Excluir esta ficha</button></div>`;
 }
 function askDelete(id){if(S.adminViewing||!S.sheets.some(x=>x.id===id))return showToast('Exclusão não permitida.',true);S.pendingDeleteId=id;S.modal='delete';render()}
 function deleteModal(){
@@ -1110,8 +1179,8 @@ function themeStyle(){
  const deepHex='#'+deep.map(x=>x.toString(16).padStart(2,'0')).join('');
  return `style="--theme-accent:${clan.color};--theme-rgb:${rgb.join(',')};--theme-deep:${deepHex};--theme-wash:${clan.wash}" data-theme="${clan.id}"`;
 }
-  function side(){return `<aside class="sidebar"><div class="brand"><div class="brandmark">忍</div><div><div class="brand-name">Shinobi<br>Chronicles</div><div class="brand-sub">Arquivos Shinobi</div></div></div><nav aria-label="Menu principal"><div class="nav-category">NAVEGAÇÃO</div>${[['home','⌂','Início'],['clans','◈','Os Clãs'],['fichas','▤','Minhas Fichas'],['sheet','✎','Editar Ficha'],...(canAdmin()?[['admin','♜','Administração']]:[])].map(([view,ic,label])=>`<button class="nav-item ${S.view===view?'active':''}" data-action="nav" data-view="${view}"><span class="nav-icon">${ic}</span>${label}</button>`).join('')}</nav><div class="sidebar-bottom"><div class="tiny">SHINOBI NO SHO · SISTEMA D8</div><div class="side-account">${E(S.user?.displayName|| (CONFIGURED?'Conta não conectada':'Modo demonstração'))}</div><div class="tiny">${CONFIGURED?'Dados privados no Firebase.':'Prévia local, sem salvamento na nuvem.'}</div>${S.user?'<button class="nav-item" data-action="logout"><span class="nav-icon">↪</span>Sair da conta</button>':''}</div></aside>`}
-  function top(){const currentTheme=themeClan();let titles={home:'Início',clans:'Guia dos clãs',sheet:'Registro do personagem',fichas:'Minhas fichas',admin:'Administração','admin-gate':'Entrada do mestre',login:'Acesso shinobi'};return `<header class="topbar"><div><div class="eyebrow">SHINOBI CHRONICLES / ARQUIVO</div><div class="top-title">${titles[S.view]||'Arquivo'}</div></div><div class="top-actions">${currentTheme?`<span class="theme-chip"><span class="theme-chip-dot"></span>${E(currentTheme.name)}</span>`:''}${S.user?`<span class="pill">${E(S.user.displayName)}</span>`:!CONFIGURED?'<span class="pill">Prévia demonstrativa</span>':'<button class="button small" data-action="nav" data-view="login">Entrar</button>'}${S.view==='sheet'?`<span id="save-status" class="pill">${E(S.saveState)}</span>`:''}</div></header>`}
+  function side(){return `<aside class="sidebar"><div class="brand"><div class="brandmark">忍</div><div><div class="brand-name">Shinobi<br>Chronicles</div><div class="brand-sub">Arquivos Shinobi</div></div></div><nav aria-label="Menu principal"><div class="nav-category">NAVEGAÇÃO</div>${[['home','⌂','Início'],['clans','◈','Os Clãs'],['fichas','▤','Minhas Fichas'],['sheet','✎','Editar Ficha'],...(S.sheets.length?[['guia','☷','Guia de criação']]:[]),...(canAdmin()?[['admin','♜','Administração']]:[])].map(([view,ic,label])=>`<button class="nav-item ${S.view===view?'active':''}" data-action="nav" data-view="${view}"><span class="nav-icon">${ic}</span>${label}</button>`).join('')}</nav><div class="sidebar-bottom"><div class="tiny">SHINOBI NO SHO · SISTEMA D8</div><div class="side-account">${E(S.user?.displayName|| (CONFIGURED?'Conta não conectada':'Modo demonstração'))}</div><div class="tiny">${CONFIGURED?'Dados privados no Firebase.':'Prévia local, sem salvamento na nuvem.'}</div>${S.user?'<button class="nav-item" data-action="logout"><span class="nav-icon">↪</span>Sair da conta</button>':''}</div></aside>`}
+  function top(){const currentTheme=themeClan();let titles={home:'Início',clans:'Guia dos clãs',sheet:'Registro do personagem',guia:'Guia de criação',fichas:'Minhas fichas',admin:'Administração','admin-gate':'Entrada do mestre',login:'Acesso shinobi'};return `<header class="topbar"><div><div class="eyebrow">SHINOBI CHRONICLES / ARQUIVO</div><div class="top-title">${titles[S.view]||'Arquivo'}</div></div><div class="top-actions">${currentTheme?`<span class="theme-chip"><span class="theme-chip-dot"></span>${E(currentTheme.name)}</span>`:''}${S.user?`<span class="pill">${E(S.user.displayName)}</span>`:!CONFIGURED?'<span class="pill">Prévia demonstrativa</span>':'<button class="button small" data-action="nav" data-view="login">Entrar</button>'}${S.view==='sheet'?`<span id="save-status" class="pill">${E(S.saveState)}</span>`:''}</div></header>`}
   function layout(inner){return `<div class="shell ${S.view==='home'?'home-ambient':''} ${themeClan()?'themed-shell':''}" ${themeStyle()}>${side()}<main class="main">${top()}<div class="content">${inner}<footer class="footer-note">SHINOBI CHRONICLES · Sistema D8 / SNS 4.1b · Plataforma independente de fichas · Ilustrações dos clãs serão adicionadas pelo projeto.</footer></div></main></div>`}
   const heroArt=`<img class="hero-illustration" src="hero-konoha-novo.jpg" onerror="this.onerror=null;this.src='hero-konoha.svg'" alt="Ilustração em tinta mangá e aquarela da Vila Oculta da Folha, com arquitetura tradicional e cerejeiras" loading="eager" decoding="async">`;
   function home(){const c=active()?clanOf(active().clanId):null;return layout(`<section class="hero hero-inkwash"><div class="hero-copy"><div class="eyebrow">UM NOVO CICLO · SHINOBI CHRONICLES</div><h1>Seu caminho<br>começa aqui.</h1><p>Explore as famílias shinobi, registre seu personagem e acompanhe sua evolução com uma ficha automatizada pelo sistema D8.</p><div class="flex wrap mt24"><button class="button" data-action="nav" data-view="clans">Explorar os clãs <span>↗</span></button><button class="button secondary" data-action="nav" data-view="fichas">Minhas fichas</button></div></div><div class="hero-scene">${heroArt}</div></section>${!CONFIGURED?`<div class="notice warn mt16"><b>Modo de demonstração.</b> A interface e os cálculos já funcionam, mas os dados não serão salvos online até configurar o Firebase no arquivo <code>index.html</code>. É possível testar a ficha agora.</div>`:''}<div class="section-head"><div><div class="eyebrow">ARQUIVOS DE KONOHA</div><h2>Explore os clãs</h2></div><p>11 linhagens e um caminho independente</p></div><div class="clans-grid">${CLANS.slice(0,6).map(clanCard).join('')}</div><div class="section-head"><div><div class="eyebrow">O SEU REGISTRO</div><h2>Ficha de personagem</h2></div></div>${c?`<div class="paper-panel"><div class="flex between wrap"><div><div class="eyebrow">PERSONAGEM ATIVO</div><h3 style="margin:8px 0">${E(active().nome||'Personagem sem nome')} · ${E(c.name)}</h3><div class="panel-caption">Nível de Campanha ${active().nc} · ${E(active().graduacao)}</div></div><button class="button" data-action="nav" data-view="sheet">Continuar edição ↗</button></div></div>`:`<div class="empty"><h3>Sua história ainda não foi registrada</h3><p>Escolha um clã e crie sua ficha; os atributos e as perícias serão calculados automaticamente.</p><button class="button" data-action="nav" data-view="clans">Escolher clã</button></div>`}`)}
@@ -1261,6 +1330,148 @@ function startAdminLive(){
   <div class="notice mt16">O modo ADM continua ativo ao visitar outras abas. Só será encerrado por <strong>Encerrar modo ADM</strong> ou ao sair da conta. O monitor reflete os dados assim que forem gravados no Firebase.</div>`);
 }
   function adminRows(items){return items.length?items.map(x=>`<div class="admin-row"><div><b>${E(x.nome||'Sem nome')}</b><small>${E(x.usuario||'Jogador')} · ${E(clanOf(x.clanId).name)}</small></div><div>NC ${n(x.nc)}</div><div class="admin-date">${x.atualizadoEm?new Date(x.atualizadoEm).toLocaleDateString('pt-BR'):'—'}</div><button class="button secondary small" data-action="open-admin" data-id="${E(x.__id)}">Editar ficha</button></div>`).join(''):`<div class="empty"><h3>Nenhuma ficha encontrada</h3><p>Os personagens aparecerão aqui após serem criados pelos jogadores.</p></div>`}
+  const GUIDE_STEPS=[
+  {
+    "title": "Quem é seu shinobi?",
+    "subtitle": "Conceito, identidade e retrato",
+    "page": 1,
+    "tab": "identidade",
+    "advanced": false
+  },
+  {
+    "title": "Nível de Campanha",
+    "subtitle": "NC 4 e os pontos iniciais",
+    "page": 1,
+    "tab": "identidade",
+    "advanced": false
+  },
+  {
+    "title": "Distribuição de atributos",
+    "subtitle": "Os sete atributos e seus limites",
+    "page": 1,
+    "tab": "atributos",
+    "advanced": false
+  },
+  {
+    "title": "Habilidades de combate",
+    "subtitle": "CC, CD, Esquiva e Ler Movimento",
+    "page": 1,
+    "tab": "combate",
+    "advanced": true
+  },
+  {
+    "title": "Compra de perícias",
+    "subtitle": "Treinamento e precisão",
+    "page": 2,
+    "tab": "pericias",
+    "advanced": false
+  },
+  {
+    "title": "Atributos sociais",
+    "subtitle": "Carisma e Manipulação",
+    "page": 1,
+    "tab": "atributos",
+    "advanced": true
+  },
+  {
+    "title": "Escolha de aptidões",
+    "subtitle": "Três gratuitas e pré-requisitos",
+    "page": 3,
+    "tab": "tecnicas",
+    "advanced": true
+  },
+  {
+    "title": "Poderes e jutsus",
+    "subtitle": "Habilidades de clã e técnicas",
+    "page": 3,
+    "tab": "tecnicas",
+    "advanced": false
+  },
+  {
+    "title": "Vitalidade e Chakra",
+    "subtitle": "Recursos calculados automaticamente",
+    "page": 1,
+    "tab": "atributos",
+    "advanced": false
+  },
+  {
+    "title": "Equipamento e história",
+    "subtitle": "Ryos, inventário e background",
+    "page": 4,
+    "tab": "inventario",
+    "advanced": false
+  },
+  {
+    "title": "Revisão final",
+    "subtitle": "Confira os gastos e finalize",
+    "page": 1,
+    "tab": "identidade",
+    "advanced": false
+  }
+];
+function guideStepDone(i,p,t,r){
+ const c=p.aptidoes.filter(a=>a?.nome?.trim()).length;
+ if(i===0)return !!String(p.nome||'').trim();
+ if(i===1)return !!NC_TABLE[p.nc];
+ if(i===2)return t.attrs===r.attrs&&ATTRS.every(([k])=>n(p.atributos[k])>=r.min);
+ if(i===3)return true;
+ if(i===4)return t.skills===r.skills;
+ if(i===5)return t.social===r.social;
+ if(i===6)return c>=3;
+ if(i===7)return t.powers===r.powers;
+ if(i===8)return true;
+ if(i===9)return !!String(p.historia||'').trim();
+ if(i===10)return [0,2,4,5,6,7].every(k=>guideStepDone(k,p,t,r));
+ return false;
+}
+
+function guideBody(p,index,r,t,clan){
+ const lv=limit(),abilities=p.aptidoes.filter(x=>x?.nome?.trim()).length;
+ const num=(v)=>`<strong>${v}</strong>`;
+ if(index===0)return `<p>Antes de distribuir pontos, pense em quem é seu personagem. Você já escolheu <b>${E(clan.name)}</b>; agora defina sua história, personalidade e a forma como ele pretende atuar em missões.</p><div class="guide-example"><b>Preencha primeiro:</b> nome, idade, vila, graduação Genin, descrição e retrato do personagem. Depois registre família, objetivos e personalidade na quarta página.</div><p>A escolha do clã é gratuita, mas não entrega poderes automaticamente. Técnicas exclusivas precisam ser adquiridas e cumprir os requisitos do sistema.</p>`;
+ if(index===1)return `<p>O padrão para um Genin recém-formado é <b>NC 4</b>. É esse nível que define quantos pontos você tem para distribuir. A ficha permite NCs de 4 a 20, mas comece no nível autorizado para a campanha.</p><div class="guide-table"><div><span>Atributos</span><b>${r.attrs} pontos</b></div><div><span>Perícias</span><b>${r.skills} pontos</b></div><div><span>Poderes</span><b>${r.powers} pontos</b></div><div><span>Sociais</span><b>${r.social} pontos</b></div><div><span>Aptidões gratuitas</span><b>3</b></div></div><p><b>Limite de cada atributo:</b> ${p.nc}. <b>Limite de poder/perícia:</b> ${lv}. Em NCs mais altos, todos os atributos precisam atingir o mínimo de ${r.min} antes de distribuir o restante.</p><div class="guide-example"><b>Importante:</b> NCs intermediários entre os marcos da tabela do manual são uma adaptação do site. Consulte o mestre antes de iniciar acima de NC 4.</div>`;
+ if(index===2)return `<p>Os sete atributos começam em zero e cada ponto aumenta um atributo em um nível. Para <b>NC ${p.nc}</b>, você tem ${num(r.attrs)} pontos no total e não pode ultrapassar ${num(p.nc)} em nenhum deles.</p><div class="guide-attr-grid"><span><b>FOR</b> Força — corpo a corpo e dano</span><span><b>DES</b> Destreza — arremessos e selos</span><span><b>AGI</b> Agilidade — esquiva e iniciativa</span><span><b>PER</b> Percepção — sentidos e leitura</span><span><b>INT</b> Inteligência — conhecimento e perícias</span><span><b>VIG</b> Vigor — resistência e Vitalidade</span><span><b>ESP</b> Espírito — Chakra e ninjutsu</span></div><div class="guide-example">Exemplo de 12 pontos para um Genin: FOR 2, DES 2, AGI 2, PER 1, INT 2, VIG 1 e ESP 2. É apenas um exemplo; escolha a distribuição que combina com seu conceito.</div><p><b>Sua ficha:</b> ${t.attrs} de ${r.attrs} pontos de atributo distribuídos.</p>`;
+ if(index===3)return `<p>Cada habilidade de combate usa <b>Valor Base 3 + atributo</b>. A ficha calcula automaticamente os valores enquanto você altera FOR, DES, AGI e PER.</p><div class="guide-table"><div><span>Combate Corporal (CC)</span><b>3 + FOR = ${combat(p,'CC')}</b></div><div><span>Combate à Distância (CD)</span><b>3 + DES = ${combat(p,'CD')}</b></div><div><span>Esquiva (ESQ)</span><b>3 + AGI = ${combat(p,'ESQ')}</b></div><div><span>Ler Movimento (LM)</span><b>3 + PER = ${combat(p,'LM')}</b></div></div><p>Durante a criação, você pode transferir até <b>dois pontos de Valor Base</b> entre essas quatro habilidades. Essa escolha não pode ser refeita livremente após a criação.</p><div class="guide-example">Use o <b>Editor detalhado → Combate</b> para configurar as transferências. Não é obrigatório transferir pontos.</div>`;
+ if(index===4)return `<p>Para cada perícia, o valor inicial é a metade do atributo relacionado, <b>arredondada para cima</b>. Depois você soma os pontos investidos nela.</p><div class="guide-formula">Precisão da perícia = ⌈atributo ÷ 2⌉ + pontos gastos + modificadores</div><p>Distribua ${num(r.skills)} pontos. Em NC ${p.nc}, você pode gastar no máximo ${num(lv)} em uma única perícia. As marcadas como <b>treinadas [x]</b> exigem pelo menos um ponto investido para serem usadas.</p><p>Exemplos: Medicina, Mecanismos, Ocultismo e Lidar com Animais exigem treinamento. <b>Venefício não pode ser comprada no NC 4</b>.</p><div class="guide-example"><b>Exemplo:</b> com INT 2, uma perícia de Inteligência começa em 1. Investindo 2 pontos, a precisão dela fica 3 (antes de outros bônus).</div><p><b>Na sua ficha:</b> ${t.skills} de ${r.skills} pontos de perícias distribuídos.</p>`;
+ if(index===5)return `<p>Os atributos sociais são separados dos sete atributos principais: <b>Carisma</b> mede influência e simpatia, enquanto <b>Manipulação</b> abrange blefes, lábia e enganação.</p><p>No NC ${p.nc}, distribua ${num(r.social)} pontos entre os dois, respeitando o limite de ${num(lv)} por atributo social.</p><div class="guide-example">Exemplo no NC 4: Carisma 1 e Manipulação 1. Você também pode investir 2 em apenas um deles. O manual admite que grupos que prefiram interpretar sem testes sociais ignorem essa etapa, conforme decisão do mestre.</div><p><b>Na sua ficha:</b> ${t.social} de ${r.social} pontos sociais distribuídos.</p>`;
+ if(index===6)return `<p>Escolha <b>três aptidões gratuitas</b> dentre as opções permitidas. Se o clã ${E(clan.name)} permitir aptidões específicas e o personagem cumprir seus pré-requisitos, elas também podem ser opções gratuitas.</p><p>Aptidões adicionais, além das três gratuitas, custam <b>2 pontos de poder cada</b>. Não confunda aptidão com poder: cada uma tem sua própria função e requisitos.</p><div class="guide-example">Algumas aptidões mencionadas no manual são Acuidade, Reflexos, Especialista, Velocista e Clone. Confira os requisitos de cada uma no livro antes de selecionar.</div><p><b>Na sua ficha:</b> ${abilities} aptidão(ões) registradas. As adicionais já entram no orçamento de poder.</p>`;
+ if(index===7)return `<p>Agora use seus <b>${r.powers} pontos de poder</b>. Cada nível de um poder custa um ponto, e no NC ${p.nc} nenhum poder pode ultrapassar nível ${lv}. Aptidões extras também descontam desse orçamento.</p><p>O clã ${E(clan.name)} permite acesso a opções restritas correspondentes, mas <b>nenhuma técnica é obtida automaticamente</b>. Os poderes precisam ser comprados e os pré-requisitos verificados.</p><div class="guide-example"><b>Exemplo no NC 4:</b> comprar Katon nível 2 custa 2 pontos de poder, deixando 2 para outros poderes ou uma aptidão extra. Técnicas básicas são gratuitas; jutsus conhecidos devem ser registrados de acordo com o nível e as regras do poder correspondente.</div><p>Em geral, o custo de Chakra da técnica é igual ao nível usado. Confira exceções no livro.</p><p><b>Na sua ficha:</b> ${t.powers} de ${r.powers} pontos de poder comprometidos.</p>`;
+ if(index===8)return `<p>O site calcula as energias com os atributos e NC selecionados. Você não precisa fazer a conta manualmente, mas vale saber de onde vêm os números.</p><div class="guide-formula">Vitalidade máxima = 10 + (3 × VIG) + (5 × NC)<br>Chakra máximo = 10 + (3 × ESP)</div><div class="guide-table"><div><span>Sua Vitalidade máxima</span><b>${vitMax(p)}</b></div><div><span>Seu Chakra máximo</span><b>${chakraMax(p)}</b></div></div><p>Para um Genin NC 4 com Vigor 1 e Espírito 2, os valores seriam <b>33 de Vitalidade e 16 de Chakra</b>. Os campos de recursos atuais indicam quanto ainda resta durante o jogo.</p>`;
+ if(index===9)return `<p>Registre seus Ryos e equipamentos na quarta página. O dinheiro inicial de um Genin NC 4 é <b>100 Ryos</b>. O equipamento básico, como kunais e shurikens, costuma ser fornecido pela Vila, respeitando a capacidade de carga.</p><p>Os itens ocupam compartimentos. Consulte o manual para preços, limites e equipamentos especiais; o guia não preenche esses valores por conta própria.</p><div class="guide-example"><b>História:</b> escreva a família, as relações, um objetivo e o que motiva o personagem a atuar como shinobi. Isso ajuda o mestre a inserir seu personagem na campanha.</div><p>No editor, você pode enviar a imagem do personagem diretamente do aparelho, trocar o retrato e salvar tudo na sua conta.</p>`;
+ const checks=guideChecks(p,t,r);
+ return `<p>Antes de considerar sua ficha concluída, confira os valores abaixo. Eles mostram os pontos investidos, mas <b>não substituem a verificação dos pré-requisitos de aptidões, poderes e técnicas pelo mestre</b>.</p><div class="guide-checklist">${checks.map(x=>`<div class="${x.ok?'is-done':'is-pending'}"><span>${x.ok?'✓':'○'}</span><div><b>${E(x.label)}</b><small>${E(x.detail)}</small></div></div>`).join('')}</div><div class="guide-example">Pronto para a campanha? Revise também sua história, as regras exclusivas de ${E(clan.name)} e eventuais orientações do mestre. A ficha salva automaticamente suas alterações no Firebase.</div>`;
+}
+
+function guideChecks(p,t,r){
+ const abilities=p.aptidoes.filter(x=>x?.nome?.trim()).length;
+ return [
+  {label:'Identidade',detail:p.nome?`Nome: ${p.nome}`:'Preencha o nome do personagem',ok:!!String(p.nome||'').trim()},
+  {label:'Atributos',detail:`${t.attrs} / ${r.attrs} pontos; mínimo ${r.min} em cada atributo`,ok:t.attrs===r.attrs&&ATTRS.every(([k])=>n(p.atributos[k])>=r.min&&n(p.atributos[k])<=p.nc)},
+  {label:'Perícias',detail:`${t.skills} / ${r.skills} pontos; máximo ${limit()} por perícia`,ok:t.skills===r.skills&&SKILLS.every(([name])=>n(p.pericias[name])<=limit())&&!(p.nc===4&&n(p.pericias.Venefício)>0)},
+  {label:'Sociais',detail:`${t.social} / ${r.social} pontos em Carisma e Manipulação`,ok:t.social===r.social},
+  {label:'Aptidões',detail:`${abilities} registradas; três gratuitas e extras pagas com poderes`,ok:abilities>=3},
+  {label:'Poderes',detail:`${t.powers} / ${r.powers} pontos investidos, incluindo aptidões extras`,ok:t.powers===r.powers},
+  {label:'Energia calculada',detail:`Vitalidade ${vitMax(p)} · Chakra ${chakraMax(p)}`,ok:true},
+ ];
+}
+
+function guideView(){
+ if(!active())return layout(`<div class="empty"><h3>Escolha um clã primeiro</h3><p>Crie um personagem para seguir o guia de montagem de ficha.</p><button class="button" data-action="nav" data-view="clans">Escolher clã</button></div>`);
+ const p=active(),clan=clanOf(p.clanId),r=currentNC(),t=totals(p);
+ const index=bound(S.guideStep||0,0,GUIDE_STEPS.length-1),step=GUIDE_STEPS[index];
+ const done=GUIDE_STEPS.filter((_,i)=>guideStepDone(i,p,t,r)).length;
+ const meter=[['Atributos',t.attrs,r.attrs],['Perícias',t.skills,r.skills],['Poderes',t.powers,r.powers],['Sociais',t.social,r.social]];
+ const showStat=([label,used,max])=>`<div class="guide-meter-item ${used===max?'complete':''}"><span>${label}</span><strong>${used} <small>/ ${max}</small></strong><div class="guide-meter-bar"><i style="width:${Math.max(0,Math.min(100,Math.round(100*used/Math.max(1,max))))}%"></i></div></div>`;
+ return layout(`<div class="guide-head"><div class="guide-head-copy"><div class="eyebrow">SHINOBI CHRONICLES / MANUAL DE RECRUTAS</div><h1>Do primeiro passo à sua ficha.</h1><p>Um guia interativo para criar seu personagem após escolher o clã. Acompanhe os pontos utilizados e volte à ficha sempre que precisar.</p><div class="guide-head-actions"><span class="guide-mark">Clã ${E(clan.name)} · NC ${p.nc}</span><span class="guide-count">${done} de ${GUIDE_STEPS.length} etapas conferidas</span></div></div><div class="guide-head-illustration" style="--wash:${clan.wash}">${imageTag(clan)}<span>${E(clan.kanji)}</span></div></div>
+ <div class="guide-meter">${meter.map(showStat).join('')}</div>
+ <div class="guide-layout">
+  <nav class="guide-nav" aria-label="Etapas do guia"><div class="guide-nav-title">PASSO A PASSO</div>${GUIDE_STEPS.map((g,i)=>`<button type="button" data-action="guide-step" data-step="${i}" class="${index===i?'active':''} ${guideStepDone(i,p,t,r)?'done':''}" ${index===i?'aria-current="step"':''}><span class="guide-index">${guideStepDone(i,p,t,r)?'✓':String(i+1).padStart(2,'0')}</span><span><b>${E(g.title)}</b><small>${E(g.subtitle)}</small></span></button>`).join('')}</nav>
+  <article class="guide-article"><div class="guide-article-kicker">ETAPA ${String(index+1).padStart(2,'0')} / ${GUIDE_STEPS.length}</div><h2>${E(step.title)}</h2><div class="guide-subtitle">${E(step.subtitle)}</div><div class="guide-rule">${guideBody(p,index,r,t,clan)}</div>
+   <div class="guide-article-footer"><div class="guide-where"><span>PREENCHA NA FICHA</span><b>${step.advanced?'Editor detalhado':`Página ${step.page} do Canva`}</b></div><button type="button" class="button" data-action="guide-open" data-page="${step.page}" data-tab="${E(step.tab)}" data-advanced="${step.advanced?'true':'false'}">Abrir esta parte da ficha ↗</button></div>
+   <div class="guide-pager"><button class="button secondary small" ${index===0?'disabled':''} data-action="guide-step" data-step="${index-1}">← Anterior</button><span>${index+1} / ${GUIDE_STEPS.length}</span><button class="button secondary small" data-action="${index===GUIDE_STEPS.length-1?'guide-open':'guide-step'}" ${index===GUIDE_STEPS.length-1?`data-page="1" data-tab="identidade" data-advanced="false"`:`data-step="${index+1}"`}>${index===GUIDE_STEPS.length-1?'Voltar à ficha':'Próximo passo →'}</button></div>
+  </article>
+ </div><p class="guide-source">Base: Naruto Shinobi no Sho, 4ª edição (4.1b) — resumo e manual de criação. O guia explica as regras gerais, mas não substitui os pré-requisitos específicos do livro nem as decisões do mestre. NCs intermediários foram adaptados para o site.</p>`);
+}
   function clanModal(){const c=clanOf(S.activeClan);return `<div class="modalshade" data-action="close-modal"><div class="modalbox" role="dialog" aria-modal="true" aria-label="Clã ${E(c.name)}" ><div class="clan-art" style="--wash:${c.wash};height:164px;margin:-32px -32px 24px">${imageTag(c)}<span class="kanji">${c.kanji}</span></div><div class="eyebrow">CAMINHOS SHINOBI</div><h2>Clã ${E(c.name)}</h2><p class="panel-caption">${E(c.desc)} Esta escolha define a família do personagem e os poderes restritos disponíveis mediante cumprimento de pré-requisitos no SNS 4.1b.</p><div class="notice mt16">Você pode criar vários personagens por login, inclusive do mesmo clã.</div><div class="flex wrap mt24"><button class="button" data-action="create-sheet">Criar personagem deste clã</button><button class="button secondary" data-action="close-modal">Cancelar</button></div></div></div>`}
   function cvWrap(inner,x,y,w,h){
   const f=(a,b)=>(100*a/b).toFixed(4)+"%";
@@ -1422,7 +1633,7 @@ function canvaUpdateArray(el,preserveFocus=false){
  scheduleSave();
  if(!preserveFocus)render();
 }
-function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="margin:15vh auto;max-width:500px"><h3>Carregando os arquivos shinobi...</h3><p>Conectando ao sistema de autenticação.</p></div>';return}if(CONFIGURED&&!S.user&&!['login'].includes(S.view))S.view='login';let screen={home,clans,sheet:canvaSheetView,fichas:mySheets,admin:adminView,'admin-gate':adminGate,login}[S.view]||home;$('#app').innerHTML=screen();if(S.modal)$('#app').insertAdjacentHTML('beforeend',S.modal==='delete'?deleteModal():clanModal())}
+function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="margin:15vh auto;max-width:500px"><h3>Carregando os arquivos shinobi...</h3><p>Conectando ao sistema de autenticação.</p></div>';return}if(CONFIGURED&&!S.user&&!['login'].includes(S.view))S.view='login';let screen={home,clans,sheet:canvaSheetView,guia:guideView,fichas:mySheets,admin:adminView,'admin-gate':adminGate,login}[S.view]||home;$('#app').innerHTML=screen();if(S.modal)$('#app').insertAdjacentHTML('beforeend',S.modal==='delete'?deleteModal():clanModal())}
   function nav(view){
  S.modal=null;
  if(view==='admin'){
@@ -1434,7 +1645,7 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
    if(S.saveTimer){clearTimeout(S.saveTimer);S.saveTimer=null;void persist()}
    const first=ownSheets()[0];S.sheet=first?.data||null;S.sheetId=first?.id||null;S.adminViewing=false;S.pendingRemote=null;
  }
- if(view==='sheet'&&!active()){const first=ownSheets()[0];if(first){S.sheet=first.data;S.sheetId=first.id}else view='fichas'}
+ if((view==='sheet'||view==='guia')&&!active()){const first=ownSheets()[0];if(first){S.sheet=first.data;S.sheetId=first.id}else view='fichas'}
  S.view=view;render();window.scrollTo({top:0,behavior:'smooth'});
 }
   function setStatus(st){S.saveState=st;const x=$('#save-status');if(x)x.textContent=st;const y=$('#save-footer');if(y)y.textContent=st}
@@ -1516,7 +1727,7 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
   if(S.sheets.length>=40)return showToast('Máximo de 40 fichas por conta.',true);
   S.modal=null;
   const p=fresh(S.activeClan),id=uid()+'_'+randomId();
-  S.sheets.push({id,data:p});S.sheet=p;S.sheetId=id;S.adminViewing=false;S.view='sheet';S.canvaMode='original';S.canvaPage=1;S.tab='identidade';render();
+  S.sheets.push({id,data:p});S.sheet=p;S.sheetId=id;S.adminViewing=false;S.view='guia';S.guideStep=0;S.canvaMode='original';S.canvaPage=1;S.tab='identidade';S.guideStep=0;S.view='guia';render();
   const saved=await persist();
   if(CONFIGURED&&saved)showToast('Nova ficha criada. Você pode criar outras em Minhas fichas.');
 }
@@ -1580,7 +1791,7 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
   if(button?.isConnected)button.disabled=false;
  }
 }
-  function clickAction(el){const action=el.dataset.action;if(!action)return;const p=active();if(action==='cv-page'){S.canvaPage=Number(el.dataset.page)||1;render();return}if(action==='cv-mode'){S.canvaMode=S.canvaMode==='advanced'?'original':'advanced';render();return}if(action==='open-sheet')return openSheet(el.dataset.id);if(action==='ask-delete')return askDelete(el.dataset.id);if(action==='confirm-delete')return deleteSheet();if(action==='lock-admin')return lockAdmin();if(action==='apply-remote')return applyRemoteSheet();if(action==='nav')return nav(el.dataset.view);if(action==='tab'){S.tab=el.dataset.tab;render();return}if(action==='clan'){S.activeClan=el.dataset.clan;S.modal='clan';render();return}if(action==='close-modal'){S.modal=null;render();return}if(action==='create-sheet')return createSheetAnimated();if(action==='auth-pane'){S.authPane=el.dataset.pane==='admin'?'admin':'login';render();return}if(action==='auth-switch'){S.authPane=S.authPane==='register'?'login':'register';render();return}if(action==='logout'){S.adminUnlocked=false;stopAdminLive();S.adminSheets=[];if(fb)fb.signOut(fb.auth);else{S.user=null;S.sheet=null;S.sheetId=null;S.sheets=[];S.view='home';render()}return}if(action==='portrait-upload'){if(!canEditCurrent())return showToast('Sem permissão para editar esta ficha.',true);$('#portrait-file')?.click();return}if(action==='portrait-remove')return removePortrait();if(action==='save')return persist();if(action==='print')return window.print();if(action==='export')return exportSheet();if(action==='attr')return adjustAttr(el.dataset.key,n(el.dataset.delta));if(action==='skill')return adjustSkill(el.dataset.key,n(el.dataset.delta));if(action==='shift')return shiftCombat();if(action==='reset-shift'){if(!canEditCurrent())return;p.combateAjustes={CC:0,CD:0,ESQ:0,LM:0};render();scheduleSave();return}if(action==='add-item')return modifyItem(el.dataset.array);if(action==='remove-item')return modifyItem(el.dataset.array,n(el.dataset.index),true);if(action==='roll-skill'){const k=el.dataset.key;if(!trained(p,k))return showToast('Esta perícia exige treinamento.',true);return roll(2,skillTotal(p,k),k)}if(action==='roll-combat')return roll(2,combat(p,el.dataset.key),'Combate corporal');if(action==='roll-initiative')return roll(1,n(p.atributos.AGI)+skillTotal(p,'Prontidão'),'Iniciativa');if(action==='refresh-admin')return refreshAdmin();if(action==='open-admin'){if(!canAdmin()||!S.adminUnlocked)return showToast('Confirme a senha para acessar as fichas.',true);const x=S.adminSheets.find(a=>a.__id===el.dataset.id);if(x){const {__id,...safeData}=x;S.sheet=normalize(safeData);S.sheetId=__id;S.adminViewing=true;S.canvaMode='original';S.view='sheet';S.tab='identidade';render();}return}}
+  function clickAction(el){const action=el.dataset.action;if(!action)return;const p=active();if(action==='guide-step'){S.guideStep=bound(el.dataset.step,0,GUIDE_STEPS.length-1);S.view='guia';render();window.scrollTo({top:0,behavior:'smooth'});return}if(action==='guide-open'){if(!active())return nav('clans');S.canvaPage=bound(el.dataset.page||1,1,4);S.canvaMode=el.dataset.advanced==='true'?'advanced':'original';S.tab=el.dataset.tab||'identidade';S.view='sheet';render();window.scrollTo({top:0,behavior:'smooth'});return}if(action==='cv-page'){S.canvaPage=Number(el.dataset.page)||1;render();return}if(action==='cv-mode'){S.canvaMode=S.canvaMode==='advanced'?'original':'advanced';render();return}if(action==='open-sheet')return openSheet(el.dataset.id);if(action==='ask-delete')return askDelete(el.dataset.id);if(action==='confirm-delete')return deleteSheet();if(action==='lock-admin')return lockAdmin();if(action==='apply-remote')return applyRemoteSheet();if(action==='nav')return nav(el.dataset.view);if(action==='tab'){S.tab=el.dataset.tab;render();return}if(action==='clan'){S.activeClan=el.dataset.clan;S.modal='clan';render();return}if(action==='close-modal'){S.modal=null;render();return}if(action==='create-sheet')return createSheetAnimated();if(action==='auth-pane'){S.authPane=el.dataset.pane==='admin'?'admin':'login';render();return}if(action==='auth-switch'){S.authPane=S.authPane==='register'?'login':'register';render();return}if(action==='logout'){S.adminUnlocked=false;stopAdminLive();S.adminSheets=[];if(fb)fb.signOut(fb.auth);else{S.user=null;S.sheet=null;S.sheetId=null;S.sheets=[];S.view='home';render()}return}if(action==='portrait-upload'){if(!canEditCurrent())return showToast('Sem permissão para editar esta ficha.',true);$('#portrait-file')?.click();return}if(action==='portrait-remove')return removePortrait();if(action==='save')return persist();if(action==='print')return window.print();if(action==='export')return exportSheet();if(action==='attr')return adjustAttr(el.dataset.key,n(el.dataset.delta));if(action==='skill')return adjustSkill(el.dataset.key,n(el.dataset.delta));if(action==='shift')return shiftCombat();if(action==='reset-shift'){if(!canEditCurrent())return;p.combateAjustes={CC:0,CD:0,ESQ:0,LM:0};render();scheduleSave();return}if(action==='add-item')return modifyItem(el.dataset.array);if(action==='remove-item')return modifyItem(el.dataset.array,n(el.dataset.index),true);if(action==='roll-skill'){const k=el.dataset.key;if(!trained(p,k))return showToast('Esta perícia exige treinamento.',true);return roll(2,skillTotal(p,k),k)}if(action==='roll-combat')return roll(2,combat(p,el.dataset.key),'Combate corporal');if(action==='roll-initiative')return roll(1,n(p.atributos.AGI)+skillTotal(p,'Prontidão'),'Iniciativa');if(action==='refresh-admin')return refreshAdmin();if(action==='open-admin'){if(!canAdmin()||!S.adminUnlocked)return showToast('Confirme a senha para acessar as fichas.',true);const x=S.adminSheets.find(a=>a.__id===el.dataset.id);if(x){const {__id,...safeData}=x;S.sheet=normalize(safeData);S.sheetId=__id;S.adminViewing=true;S.canvaMode='original';S.view='sheet';S.tab='identidade';render();}return}}
   document.addEventListener('click',ev=>{const el=ev.target.closest('[data-action]');if(!el)return;if(el.classList.contains('modalshade')&&ev.target!==el)return;clickAction(el)});
   document.addEventListener('submit',ev=>{if(ev.target.id==='auth-form'){ev.preventDefault();submitAuth(ev.target)}else if(ev.target.id==='admin-auth-form'){ev.preventDefault();unlockAdmin(ev.target)}});
   document.addEventListener('input',ev=>{const el=ev.target;if(el.id==='admin-filter'){const q=el.value.toLocaleLowerCase('pt-BR');$('#admin-rows').innerHTML=adminRows(S.adminSheets.filter(x=>[x.nome,x.usuario,clanOf(x.clanId).name].some(z=>String(z||'').toLocaleLowerCase('pt-BR').includes(q))));return}if(el.dataset.cvArray){canvaUpdateArray(el,true);return}if(el.dataset.cvSkill){updateCanvaSkill(el,true);return}if(!el.dataset.bind||el.tagName==='SELECT')return;const old=getAt(active(),el.dataset.bind);if(!updateValue(el.dataset.bind,el.value)){el.value=old??''}});
