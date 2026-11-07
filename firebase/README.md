@@ -55,3 +55,21 @@ O código espera 12 banners em `assets/clas/` e 48 páginas das fichas em `asset
 - No modo sem configuração Firebase, o site oferece uma **prévia local**, sem persistência entre sessões ou isolamento real entre jogadores.
 - Algumas aptidões, poderes e requisitos específicos dos clãs ainda precisam de revisão no livro original; os campos podem ser registrados manualmente.
 - Não é necessário servidor Node.js: o site é estático no GitHub Pages e usa os serviços do Firebase.
+
+## 9. Instalação automática das imagens (GitHub Actions)
+
+O repositório tem o workflow `.github/workflows/importar-imagens.yml`: quando você enviar um ZIP compatível para a **raiz da branch main**, o GitHub extrairá e publicará automaticamente as imagens nas pastas certas.
+
+Você pode usar **uma destas opções**:
+- Um ZIP completo chamado exatamente `Shinobi_Chronicles_Assets.zip` (12 banners + 48 páginas).
+- Dois ZIPs menores: `Shinobi_Banners_12.zip` (banners) e `Shinobi_Fichas_48.zip` (páginas).
+
+Passos: baixe o(s) ZIP(s) da conversa, abra o repositório → **Add file → Upload files**, selecione os ZIPs **sem extrair**, confirme o commit em `main` e acompanhe **Actions → Instalar imagens do Shinobi Chronicles**. O workflow publica `assets/clas/*.jpg` e `assets/fichas/*.jpg`; o GitHub Pages passa a carregá-los depois da publicação.
+
+Se uma Action não puder enviar o commit, revise em **Settings → Actions → General** as permissões de gravação dos workflows e execute a importação novamente.
+
+## 10. Upgrade para várias fichas
+
+A partir da versão com múltiplos personagens por conta, **republique obrigatoriamente** o conteúdo de `firebase/firestore.rules` no Console do Firebase → Firestore Database → Rules → Publish. Sem esse passo, a consulta privada por `ownerUid` será bloqueada pelas regras antigas.
+
+As fichas antigas continuam na coleção `fichas` com seu ID original, e as novas usam um ID exclusivo por personagem.
