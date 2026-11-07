@@ -1662,7 +1662,8 @@ function refreshPortraitUI(previousAutomatic=null){
   const before=portraitSeverity(previousAutomatic),after=portraitSeverity(latest);
   const healing=after<before;
   const effect=healing?'portrait-healing':after===2?'portrait-hit-grave':after===1?'portrait-hit-wounded':null;
-  if(after>before)playSfx(after===2?'critical':'wounded');
+  if(healing)playSfx('healing');
+  else if(after>before)playSfx(after===2?'critical':'wounded');
   document.querySelectorAll('.cv-portrait,.portrait-editor-preview').forEach(surface=>{
    surface.classList.remove('portrait-hit-wounded','portrait-hit-grave','portrait-healing');
    if(!effect)return;
@@ -2475,7 +2476,8 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
   const SHINOBI_SFX={
     menu:{url:'assets/audio/menu-transition.ogg',volume:.66},
     wounded:{url:'assets/audio/injury-wounded.ogg',volume:.74},
-    critical:{url:'assets/audio/injury-critical.ogg',volume:.8}
+    critical:{url:'assets/audio/injury-critical.ogg',volume:.8},
+    healing:{url:'assets/audio/healing.ogg',volume:.72}
   };
   const soundTracks=new Map();
   function playSfx(kind){
