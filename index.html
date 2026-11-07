@@ -1119,6 +1119,124 @@
  .shell .cv-page .cv-portrait .cv-portrait-image{object-fit:contain!important}
 }
 
+
+/* REFINAMENTO DA FICHA 1/4 — substitui somente o desenho digital */
+.shell .cv-page .cv-portrait{
+  overflow:visible!important;isolation:isolate!important;
+  background:transparent!important;box-shadow:none!important;
+}
+/* O texto "Adicione sua imagem no Canva" pertence ao JPG original.
+   A pequena mancha em cor de papel encobre o placeholder abaixo
+   do PNG do jogador, sem criar outro retângulo sobre a moldura. */
+.shell .cv-page .cv-portrait::before{
+  content:"";position:absolute;z-index:0;pointer-events:none;
+  left:4%;right:4%;top:59%;height:25%;
+  background:radial-gradient(ellipse 78% 82% at 50% 50%,
+    #faf8f1 0%,#faf8f1 62%,rgba(250,248,241,.96) 75%,rgba(250,248,241,0) 100%);
+}
+.shell .cv-page .cv-portrait .cv-portrait-image{
+  z-index:1!important;object-fit:contain!important;object-position:center bottom!important;
+}
+.shell .cv-page .cv-portrait .cv-portrait-tabs{
+  bottom:3px!important;left:3px!important;right:3px!important;z-index:5!important;
+}
+.shell .cv-page .cv-portrait .cv-portrait-pick{
+  inset:auto auto -28px 50%!important;
+  transform:translateX(-50%)!important;
+  min-width:0!important;max-width:90%!important;width:auto!important;
+  min-height:0!important;height:22px!important;
+  padding:2px 10px!important;
+  background:rgba(250,246,237,.95)!important;
+  border:1px solid rgba(var(--theme-rgb,93,123,105),.4)!important;
+  border-radius:20px!important;
+  box-shadow:0 1px 4px rgba(42,46,39,.09)!important;
+  color:var(--theme-deep,#425b49)!important;
+  opacity:1!important;
+  font:700 10px/1 "DM Sans",Arial,sans-serif!important;
+  white-space:nowrap!important;z-index:7!important;
+}
+.shell .cv-page .cv-portrait .cv-portrait-pick:hover,
+.shell .cv-page .cv-portrait .cv-portrait-pick:focus-visible{
+  background:#fffaf0!important;border-color:var(--theme-deep,#425b49)!important;
+}
+/* Sociais: esconder os zeros impressos pelo Canva mantendo
+   as caixas originais e centralizando exatamente o valor editado. */
+.shell .cv-page .cv-spot.cv-social-spot{
+  background:#fff!important;
+  box-shadow:0 0 0 2px #fff!important;
+  border:0!important;border-radius:0!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  overflow:hidden!important;z-index:5!important;
+}
+.shell .cv-page .cv-spot.cv-social-spot input.cv-in{
+  position:relative!important;z-index:1!important;
+  display:block!important;width:100%!important;height:100%!important;
+  margin:0!important;padding:0!important;
+  box-sizing:border-box!important;
+  background:#fff!important;border:0!important;border-radius:0!important;
+  box-shadow:none!important;color:#343234!important;
+  font:700 clamp(10px,1.05vw,12px)/normal "DM Sans",Arial,sans-serif!important;
+  text-align:center!important;
+  -moz-appearance:textfield!important;appearance:textfield!important;
+}
+.shell .cv-page .cv-spot.cv-social-spot input.cv-in:focus{
+  background:#faf7ed!important;outline:1px solid var(--theme-deep,#425b49)!important;
+}
+/* O retrato, e não a moldura nem os ícones, reage aos ferimentos. */
+.shell .cv-page .cv-portrait.portrait-hit-wounded .cv-portrait-image,
+.shell .portrait-editor-preview.portrait-hit-wounded img{
+  animation:shinobi-portrait-wounded .52s cubic-bezier(.24,.72,.31,1) both!important;
+  transform-origin:50% 75%;
+}
+.shell .cv-page .cv-portrait.portrait-hit-grave .cv-portrait-image,
+.shell .portrait-editor-preview.portrait-hit-grave img{
+  animation:shinobi-portrait-critical .75s cubic-bezier(.27,.12,.3,1) both!important;
+  transform-origin:50% 70%;
+}
+.shell .cv-page .cv-portrait.portrait-hit-grave::after{
+  content:"";pointer-events:none;position:absolute;
+  z-index:4;inset:4% 0 7% 0;
+  background:linear-gradient(121deg,transparent 43%,rgba(255,255,255,.95) 47%,rgba(164,65,68,.7) 48%,transparent 52%);
+  animation:shinobi-portrait-slash .69s ease-out both;
+}
+@keyframes shinobi-portrait-wounded{
+  0%{opacity:.55;transform:translateX(0) scale(.99);filter:brightness(1.18)}
+  16%{transform:translateX(-3px) rotate(-.7deg)}
+  38%{transform:translateX(3px) rotate(.6deg)}
+  60%{transform:translateX(-1px);opacity:1}
+  100%{opacity:1;transform:none;filter:none}
+}
+@keyframes shinobi-portrait-critical{
+  0%{opacity:.48;transform:translateX(0);filter:contrast(1.3) brightness(1.5)}
+  10%{transform:translateX(-9px) rotate(-2deg)}
+  20%{transform:translateX(8px) rotate(1.7deg)}
+  32%{transform:translateX(-7px) rotate(-1.3deg)}
+  44%{transform:translateX(6px) rotate(1.1deg);opacity:1}
+  56%{transform:translateX(-4px) rotate(-.7deg)}
+  73%{transform:translateX(2px)}
+  100%{transform:none;filter:none;opacity:1}
+}
+@keyframes shinobi-portrait-slash{
+  0%{opacity:0;clip-path:inset(0 100% 0 0)}
+  15%{opacity:1;clip-path:inset(0 63% 0 0)}
+  46%{opacity:.9;clip-path:inset(0 0 0 0)}
+  100%{opacity:0;clip-path:inset(0 0 0 0)}
+}
+@media(prefers-reduced-motion:reduce){
+ .shell .cv-page .cv-portrait.portrait-hit-wounded .cv-portrait-image,
+ .shell .cv-page .cv-portrait.portrait-hit-grave .cv-portrait-image,
+ .shell .portrait-editor-preview.portrait-hit-wounded img,
+ .shell .portrait-editor-preview.portrait-hit-grave img,
+ .shell .cv-page .cv-portrait.portrait-hit-grave::after{
+  animation:none!important;
+ }
+}
+@media print{
+ .shell .cv-page .cv-portrait .cv-portrait-pick{display:none!important}
+ .shell .cv-page .cv-spot.cv-social-spot{background:#fff!important;box-shadow:none!important}
+ .shell .cv-page .cv-portrait.portrait-hit-grave::after{display:none!important}
+}
+
 </style>
 </head>
 <body>
@@ -1425,7 +1543,7 @@ function portraitEditor(p){
  </div></div>`;
 }
 
-function refreshPortraitUI(){
+function refreshPortraitUI(previousAutomatic=null){
  const p=active();if(!p)return;
  const key=portraitShowing(p),photo=portraitPhoto(p,key);
  document.querySelectorAll('[data-portrait-display]').forEach(img=>{
@@ -1443,6 +1561,16 @@ function refreshPortraitUI(){
  document.querySelectorAll('[data-portrait-status]').forEach(el=>{
   let state=portraitAutomatic(p);el.textContent=state==='grave'?'Gravemente ferido · ≤25%':state==='ferido'?'Ferido · ≤50%':'';
  });
+ const latest=portraitAutomatic(p);
+ if(previousAutomatic!==null&&previousAutomatic!==latest&&(latest==='ferido'||latest==='grave')){
+  const effect=latest==='grave'?'portrait-hit-grave':'portrait-hit-wounded';
+  document.querySelectorAll('.cv-portrait,.portrait-editor-preview').forEach(surface=>{
+   surface.classList.remove('portrait-hit-wounded','portrait-hit-grave');
+   void surface.offsetWidth;
+   surface.classList.add(effect);
+   setTimeout(()=>{if(surface.isConnected)surface.classList.remove(effect)},900);
+  });
+ }
 }
 
 function uploadPortrait(key){
@@ -2012,7 +2140,7 @@ function cvInput(path,value,x,y,w,h,opts={}){
   let element=opts.multiline?
     `<textarea class="cv-in" data-bind="${E(path)}" aria-label="${label}">${val}</textarea>`:
     `<input class="cv-in" data-bind="${E(path)}" ${num} value="${val}" aria-label="${label}" autocomplete="off">`;
-  return cvWrap(element,x,y,w,h);
+  return cvWrap(element,x,y,w,h,opts.social?'cv-social-spot':'');
 }
 function cvArray(p,array,i,key,x,y,w,h,opts={}){
   const v=p[array]?.[i]?.[key]??'';
@@ -2055,8 +2183,8 @@ function canvaPageBody(p,page){
    a+=d('1d8 + '+(n(p.atributos.AGI)+skillTotal(p,'Prontidão')),1.6,10.24,1.03,.25);
    a+=d(''+(9+combat(p,'ESQ')),4.55,10.24,.45,.25);
    a+=d((10+Math.ceil(n(p.atributos.AGI)/2))+' m',6.87,10.24,.57,.25);
-   a+=f('sociais.Carisma',3.08,10.70,.57,.25,{num:true});
-   a+=f('sociais.Manipulacao',6.14,10.70,.56,.25,{num:true});
+   a+=f('sociais.Carisma',3.08,10.70,.57,.25,{num:true,social:true});
+   a+=f('sociais.Manipulacao',6.14,10.70,.56,.25,{num:true,social:true});
    a+=portraitCanva(p);
  }
  if(page===2){
@@ -2234,7 +2362,7 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
  }
 }
   function scheduleSave(){if(!active()||!canEditCurrent())return;S.locallyDirty=true;setStatus(CONFIGURED?'Alterações pendentes':'Prévia local');clearTimeout(S.saveTimer);S.saveTimer=setTimeout(()=>void persist(),280)}
-  function updateValue(path,val){const p=active();if(!p||!canEditCurrent())return;const isArray=path.startsWith('@');if(isArray){const bits=path.slice(1).split('.');const [a,index,...rest]=bits;const obj=p[a]?.[Number(index)];if(!obj)return;const key=rest.join('.');let next=val;const numFields=['nivel','quantidade'];if(a==='aptidoes'&&key==='nome'&&String(next).trim()&&!String(obj[key]||'').trim()&&p.aptidoes.filter(x=>x?.nome?.trim()).length>=3&&totals(p).powers+2>currentNC().powers){showToast('Faltam pontos de poder para outra aptidão.',true);return false}if(numFields.includes(key)){next=bound(val,0,key==='nivel'?limit():9999);if(key==='nivel'&&a==='poderes'){const diff=next-n(obj[key]);if(diff>0&&totals(p).powers+diff>currentNC().powers){showToast('Pontos de poder insuficientes.',true);return false}}}obj[key]=next}else{let next=val;if(path==='nc'){const newNC=n(val);if(!NC_TABLE[newNC])return false;p.nc=newNC;render();scheduleSave();return true}if(['ryos','sociais.Carisma','sociais.Manipulacao','recursos.vit','recursos.chakra'].includes(path)){next=bound(val,path.startsWith('recursos')?-99:0,99999);if(path.startsWith('recursos')&&String(val).trim()==='')next=null;if(path.startsWith('sociais')){next=bound(val,0,limit());const before=n(getAt(p,path));if(totals(p).social-before+next>currentNC().social){showToast('Pontos sociais insuficientes.',true);return false}}}setAt(p,path,next);if(path==='recursos.vit'){S.portraitPreview=null;refreshPortraitUI()}}scheduleSave();return true}
+  function updateValue(path,val){const p=active();if(!p||!canEditCurrent())return;const isArray=path.startsWith('@');if(isArray){const bits=path.slice(1).split('.');const [a,index,...rest]=bits;const obj=p[a]?.[Number(index)];if(!obj)return;const key=rest.join('.');let next=val;const numFields=['nivel','quantidade'];if(a==='aptidoes'&&key==='nome'&&String(next).trim()&&!String(obj[key]||'').trim()&&p.aptidoes.filter(x=>x?.nome?.trim()).length>=3&&totals(p).powers+2>currentNC().powers){showToast('Faltam pontos de poder para outra aptidão.',true);return false}if(numFields.includes(key)){next=bound(val,0,key==='nivel'?limit():9999);if(key==='nivel'&&a==='poderes'){const diff=next-n(obj[key]);if(diff>0&&totals(p).powers+diff>currentNC().powers){showToast('Pontos de poder insuficientes.',true);return false}}}obj[key]=next}else{let next=val;if(path==='nc'){const newNC=n(val);if(!NC_TABLE[newNC])return false;p.nc=newNC;render();scheduleSave();return true}if(['ryos','sociais.Carisma','sociais.Manipulacao','recursos.vit','recursos.chakra'].includes(path)){next=bound(val,path.startsWith('recursos')?-99:0,99999);if(path.startsWith('recursos')&&String(val).trim()==='')next=null;if(path.startsWith('sociais')){next=bound(val,0,limit());const before=n(getAt(p,path));if(totals(p).social-before+next>currentNC().social){showToast('Pontos sociais insuficientes.',true);return false}}}const oldPortraitState=path==='recursos.vit'?portraitAutomatic(p):null;setAt(p,path,next);if(path==='recursos.vit'){S.portraitPreview=null;refreshPortraitUI(oldPortraitState)}}scheduleSave();return true}
   function adjustAttr(key,delta){if(!canEditCurrent())return;const p=active(),t=totals(p),cur=n(p.atributos[key]),next=cur+delta;if(next<0||next>p.nc)return showToast(`Atributos vão de 0 até NC ${p.nc}.`,true);if(delta>0&&t.attrs>=currentNC().attrs)return showToast('Todos os pontos de atributo disponíveis foram usados.',true);p.atributos[key]=next;render();scheduleSave()}
   function adjustSkill(key,delta){if(!canEditCurrent())return;const p=active(),t=totals(p),cur=n(p.pericias[key]),next=cur+delta;if(next<0||next>limit())return showToast(`Máximo de ${limit()} pontos nesta perícia.`,true);if(delta>0&&t.skills>=currentNC().skills)return showToast('Pontos de perícia insuficientes.',true);if(key==='Venefício'&&p.nc<8&&delta>0)return showToast('Venefício não pode ser comprada no NC 4.',true);p.pericias[key]=next;render();scheduleSave()}
   function shiftCombat(){if(!canEditCurrent())return;const p=active(),from=$('#shift-from')?.value,to=$('#shift-to')?.value;if(!from||!to||from===to)return showToast('Escolha habilidades diferentes.',true);const m=p.combateAjustes;let positive=Object.values(m).reduce((s,x)=>s+Math.max(0,n(x)),0);if(positive>=2&&n(m[from])<=0&&n(m[to])>=0)return showToast('Limite de duas transferências.',true);const copy={...m,[from]:n(m[from])-1,[to]:n(m[to])+1};if(Object.values(copy).reduce((s,x)=>s+Math.max(0,n(x)),0)>2||Object.values(copy).some(x=>3+n(x)<0))return showToast('As bases não podem transferir mais de 2 pontos.',true);p.combateAjustes=copy;render();scheduleSave()}
