@@ -1512,6 +1512,59 @@ function refreshGuideFeedback(){
   const marker=el.querySelector('.guide-index');if(marker)marker.textContent=okay?'✓':String(i+1).padStart(2,'0');
  });
 }
+function guideInputs(p,index,r,t){
+ const section=(title,intro,body)=>`<section class="guide-workshop" aria-label="${E(title)}"><header class="guide-workshop-head"><div><div class="eyebrow">PREENCHIMENTO INTEGRADO</div><h3>${E(title)}</h3><p>${E(intro)}</p></div><span class="guide-workshop-seal" aria-hidden="true">記</span></header>${body}<div class="guide-save-foot"><span class="guide-save-dot"></span>O que você preencher aqui vai para a mesma ficha e é salvo automaticamente.</div></section>`;
+ if(index===0)return section('Identidade do personagem','Escolha os detalhes do seu shinobi. Os campos são os mesmos das páginas do Canva.',
+  `<div class="guide-fields">
+  ${guideField('Nome do personagem','nome',p.nome,{placeholder:'Como ele se chama?'})}
+  ${guideField('Idade','idade',p.idade,{type:'number',placeholder:'Ex.: 13'})}
+  ${guideField('Gênero','genero',p.genero)}
+  ${guideField('Vila de origem','vilaOrigem',p.vilaOrigem)}
+  ${guideField('Vila atual','vila',p.vila)}
+  ${guideField('Graduação','graduacao',p.graduacao)}
+  ${guideField('Tendência','tendencia',p.tendencia)}
+  ${guideField('Conceito e aparência','descricao',p.descricao,{area:true,rows:3})}
+  </div><div class="guide-photo">${portraitEditor(p)}</div>`);
+ if(index===1)return section('Nível da campanha','Selecione o NC liberado pelo mestre. Os limites e o orçamento mudam automaticamente.',
+  `<div class="guide-fields"><label class="guide-field"><span>Nível de Campanha (NC)</span><select data-bind="nc" aria-label="Selecionar Nível de Campanha">${Object.entries(NC_TABLE).map(([key,info])=>`<option value="${key}" ${Number(key)===p.nc?'selected':''}>NC ${key} — ${E(info.label)}</option>`).join('')}</select></label>
+  <div class="guide-nc-card"><span>CLASSIFICAÇÃO ATUAL</span><strong>NC ${p.nc}</strong><small>${E(r.label)} · mínimo ${r.min} · limite de poder/perícia ${limit()}</small></div></div>`);
+ if(index===2)return section('Distribua os sete atributos',`Distribuídos: ${t.attrs} de ${r.attrs} pontos. Use os botões de menos e mais.`,
+  `<div class="guide-stat-grid">${ATTRS.map(([key,label])=>{
+   const val=n(p.atributos[key]);
+   return `<div class="guide-stat-row"><div><b>${E(label)}</b><small>${key} · máximo ${p.nc}</small></div><div class="guide-inline-step"><button type="button" data-action="attr" data-key="${key}" data-delta="-1" ${val<=0?'disabled':''} aria-label="Diminuir ${E(label)}">−</button><strong>${val}</strong><button type="button" data-action="attr" data-key="${key}" data-delta="1" ${val>=p.nc||t.attrs>=r.attrs?'disabled':''} aria-label="Aumentar ${E(label)}">+</button></div></div>`}).join('')}</div>`);
+ if(index===3)return section('Organize as habilidades de combate','Os valores são calculados automaticamente. A redistribuição dos pontos de base é opcional.',
+  `<div class="guide-combat-grid">${[['CC','Combate Corporal'],['CD','Combate à Distância'],['ESQ','Esquiva'],['LM','Ler Movimento']].map(([key,label])=>`<div><b>${label}</b><strong>${combat(p,key)}</strong><small>Base ${3+n(p.combateAjustes[key])}</small></div>`).join('')}</div>
+  <div class="guide-redirect"><label><span>Tirar 1 ponto de</span><select id="shift-from">${[['CC','Combate Corporal'],['CD','Combate à Distância'],['ESQ','Esquiva'],['LM','Ler Movimento']].map(([k,label])=>`<option value="${k}">${label}</option>`).join('')}</select></label>
+  <label><span>Adicionar esse ponto em</span><select id="shift-to">${[['CD','Combate à Distância'],['CC','Combate Corporal'],['ESQ','Esquiva'],['LM','Ler Movimento']].map(([k,label])=>`<option value="${k}">${label}</option>`).join('')}</select></label>
+  <button type="button" class="button small" data-action="shift">Transferir ponto</button>
+  <button type="button" class="button secondary small" data-action="reset-shift">Restaurar bases</button></div>`);
+ if(index===4)return section('Distribua as perícias',`Distribuídos: ${t.skills} de ${r.skills} pontos. Máximo por perícia: ${limit()}.`,
+  `<div class="guide-skill-grid">${SKILLS.map(([key,attr,trained])=>{
+   const val=n(p.pericias[key]),base=Math.ceil(n(p.atributos[attr])/2);
+   return `<div class="guide-skill-row"><div class="guide-skill-label"><b>${E(key)}</b><small>${attr} · base ${base}${trained?' · exige treino':''}</small></div><div class="guide-inline-step"><button type="button" data-action="skill" data-key="${E(key)}" data-delta="-1" ${val<=0?'disabled':''} aria-label="Diminuir ${E(key)}">−</button><strong>${val}</strong><button type="button" data-action="skill" data-key="${E(key)}" data-delta="1" ${val>=limit()||t.skills>=r.skills||(key==='Venefício'&&p.nc<8)?'disabled':''} aria-label="Aumentar ${E(key)}">+</button></div><div class="guide-skill-total">Total <b>${skillTotal(p,key)}</b></div></div>`}).join('')}</div>`);
+ if(index===5)return section('Carisma e Manipulação',`Você distribuiu ${t.social} de ${r.social} pontos sociais.`,
+  `<div class="guide-social-items">${socialControls(p)}</div><p class="guide-social-hint">Esses valores aparecem automaticamente na seção social da ficha original do Canva.</p>`);
+ if(index===6)return section('Escolha suas aptidões','As três primeiras são gratuitas. Outras utilizam dois pontos de poder cada.',
+  guideListEditor(p,'aptidoes','Aptidão',[['Nome','nome'],['Categoria e requisitos','tipo']],'Verifique as condições exigidas pelo livro.'));
+ if(index===7)return section('Poderes e jutsus',`Pontos gastos: ${t.powers}/${r.powers}. O limite por poder neste NC é ${limit()}.`,
+  guideListEditor(p,'poderes','Poder',[['Nome','nome'],['Nível adquirido','nivel','number'],['Descrição','descricao','area']],'Cada nível adquirido consome 1 ponto.')
+  +guideListEditor(p,'jutsus','Jutsu',[['Nome','nome'],['Nível utilizado','nivel','number'],['Ação','acao'],['Duração','duracao'],['Alvo / área','alvo'],['Alcance','alcance'],['Efeito','efeito','area']],'Registre técnicas autorizadas pelo poder e seus pré-requisitos.'));
+ if(index===8)return section('Vitalidade e Chakra','Os valores máximos são calculados pela ficha. Preencha também os recursos atuais, se necessário.',
+  `<div class="guide-combat-grid"><div><b>Vitalidade máxima</b><strong>${vitMax(p)}</strong><small>NC e Vigor</small></div><div><b>Chakra máximo</b><strong>${chakraMax(p)}</strong><small>Espírito</small></div></div><div class="guide-fields">
+  ${guideField('Vitalidade atual','recursos.vit',p.recursos?.vit,{type:'number'})}
+  ${guideField('Chakra atual','recursos.chakra',p.recursos?.chakra,{type:'number'})}</div>`);
+ if(index===9)return section('Equipamentos e história','Registre seus Ryos e o passado do personagem. É tudo vinculado à quarta página do Canva.',
+  `<div class="guide-fields">
+  ${guideField('Ryos atuais','ryos',p.ryos,{type:'number'})}
+  ${guideField('História e biografia','historia',p.historia,{area:true,rows:4})}
+  ${guideField('Personalidade','personalidade',p.personalidade,{area:true,rows:3})}
+  ${guideField('Família','familia',p.familia,{area:true,rows:3})}
+  ${guideField('Objetivos','objetivos',p.objetivos,{area:true,rows:3})}
+  ${guideField('Missões e diário','historico',p.historico,{area:true,rows:3})}
+  </div>${guideListEditor(p,'inventario','Equipamento',[['Nome','nome'],['Quantidade','quantidade','number'],['Compartimentos','compartimentos','number'],['Observações','obs']],'Custos e limites de carga específicos seguem o manual.')}`);
+ return section('Sua ficha está conectada ao guia','Tudo que você preencheu já foi integrado à mesma ficha do personagem.',
+ `<div class="guide-finish-actions"><button type="button" class="button" data-action="guide-open" data-page="1" data-tab="identidade" data-advanced="false">Visualizar ficha Canva</button><button type="button" class="button secondary" data-action="save">Salvar agora</button></div>`);
+}
 function guideView(){
  if(!active())return layout(`<div class="empty"><h3>Escolha um clã primeiro</h3><p>Crie um personagem para seguir o guia de montagem de ficha.</p><button class="button" data-action="nav" data-view="clans">Escolher clã</button></div>`);
  const p=active(),clan=clanOf(p.clanId),r=currentNC(),t=totals(p);
@@ -1519,11 +1572,11 @@ function guideView(){
  const done=GUIDE_STEPS.filter((_,i)=>guideStepDone(i,p,t,r)).length;
  const meter=[['Atributos',t.attrs,r.attrs],['Perícias',t.skills,r.skills],['Poderes',t.powers,r.powers],['Sociais',t.social,r.social]];
  const showStat=([label,used,max])=>`<div class="guide-meter-item ${used===max?'complete':''}"><span>${label}</span><strong>${used} <small>/ ${max}</small></strong><div class="guide-meter-bar"><i style="width:${Math.max(0,Math.min(100,Math.round(100*used/Math.max(1,max))))}%"></i></div></div>`;
- return layout(`<div class="guide-head"><div class="guide-head-copy"><div class="eyebrow">SHINOBI CHRONICLES / MANUAL DE RECRUTAS</div><h1>Do primeiro passo à sua ficha.</h1><p>Um guia interativo para criar seu personagem após escolher o clã. Acompanhe os pontos utilizados e volte à ficha sempre que precisar.</p><div class="guide-head-actions"><span class="guide-mark">Clã ${E(clan.name)} · NC ${p.nc}</span><span class="guide-count">${done} de ${GUIDE_STEPS.length} verificações atendidas</span></div></div><div class="guide-head-illustration" style="--wash:${clan.wash}">${imageTag(clan)}<span>${E(clan.kanji)}</span></div></div>
+ return layout(`${portraitFileInput()}<div class="guide-head"><div class="guide-head-copy"><div class="eyebrow">SHINOBI CHRONICLES / MANUAL DE RECRUTAS</div><h1>Do primeiro passo à sua ficha.</h1><p>Um guia interativo para criar seu personagem após escolher o clã. Acompanhe os pontos utilizados e volte à ficha sempre que precisar.</p><div class="guide-head-actions"><span class="guide-mark">Clã ${E(clan.name)} · NC ${p.nc}</span><span class="guide-count">${done} de ${GUIDE_STEPS.length} verificações atendidas</span></div></div><div class="guide-head-illustration" style="--wash:${clan.wash}">${imageTag(clan)}<span>${E(clan.kanji)}</span></div></div>
  <div class="guide-meter">${meter.map(showStat).join('')}</div>
  <div class="guide-layout">
   <nav class="guide-nav" aria-label="Etapas do guia"><div class="guide-nav-title">PASSO A PASSO</div>${GUIDE_STEPS.map((g,i)=>`<button type="button" data-action="guide-step" data-step="${i}" class="${index===i?'active':''} ${guideStepDone(i,p,t,r)?'done':''}" ${index===i?'aria-current="step"':''}><span class="guide-index">${guideStepDone(i,p,t,r)?'✓':String(i+1).padStart(2,'0')}</span><span><b>${E(g.title)}</b><small>${E(g.subtitle)}</small></span></button>`).join('')}</nav>
-  <article class="guide-article"><div class="guide-article-kicker">ETAPA ${String(index+1).padStart(2,'0')} / ${GUIDE_STEPS.length}</div><h2>${E(step.title)}</h2><div class="guide-subtitle">${E(step.subtitle)}</div><div class="guide-rule">${guideBody(p,index,r,t,clan)}</div>
+  <article class="guide-article"><div class="guide-article-kicker">ETAPA ${String(index+1).padStart(2,'0')} / ${GUIDE_STEPS.length}</div><h2>${E(step.title)}</h2><div class="guide-subtitle">${E(step.subtitle)}</div><div class="guide-rule">${guideBody(p,index,r,t,clan)}</div>${guideInputs(p,index,r,t)}
    <div class="guide-article-footer"><div class="guide-where"><span>PREENCHA NA FICHA</span><b>${step.advanced?'Editor detalhado':`Página ${step.page} do Canva`}</b></div><button type="button" class="button" data-action="guide-open" data-page="${step.page}" data-tab="${E(step.tab)}" data-advanced="${step.advanced?'true':'false'}">Abrir esta parte da ficha ↗</button></div>
    <div class="guide-pager"><button class="button secondary small" ${index===0?'disabled':''} data-action="guide-step" data-step="${index-1}">← Anterior</button><span>${index+1} / ${GUIDE_STEPS.length}</span><button class="button secondary small" data-action="${index===GUIDE_STEPS.length-1?'guide-open':'guide-step'}" ${index===GUIDE_STEPS.length-1?`data-page="1" data-tab="identidade" data-advanced="false"`:`data-step="${index+1}"`}>${index===GUIDE_STEPS.length-1?'Voltar à ficha':'Próximo passo →'}</button></div>
   </article>
