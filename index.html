@@ -915,6 +915,71 @@
 
 .cv-social-panel{margin:16px auto 15px!important}
 .guide-nav>button>.guide-step-chevron{display:block!important;flex:0 0 auto;align-self:center}
+
+/* RETRATOS HALF-BODY: cabeças, braços e troncos permanecem no enquadramento */
+.shell .cv-page .cv-portrait{
+ background:linear-gradient(155deg,#f5f0e6,#e3e3d8 70%,#dbe0d8)!important;
+ display:flex!important;align-items:flex-end!important;justify-content:center!important;
+}
+.shell .cv-page .cv-portrait .cv-portrait-image,
+.shell .portrait-editor-preview img,
+.shell .guide-photo .portrait-editor-preview img{
+ display:block!important;width:100%!important;height:100%!important;
+ max-width:100%!important;max-height:100%!important;
+ object-fit:contain!important;object-position:center bottom!important;
+ border:0!important;box-shadow:none!important;background:transparent!important;
+}
+.shell .portrait-editor-preview,.shell .guide-photo .portrait-editor-preview{
+ background:linear-gradient(150deg,#f5f0e5,#e1e3d7)!important;aspect-ratio:3 / 4;
+}
+.shell .cv-page .cv-portrait .cv-portrait-pick{z-index:3}
+.shell .cv-page .cv-portrait .cv-portrait-remove{z-index:4}
+
+/* ATRIBUTOS: o Canva tem um "0" já gravado na arte.
+   O fundo branco do campo digital cobre apenas aquele número impresso,
+   exibindo valor atualizado e controles perfeitamente centralizados. */
+.shell .cv-page .cv-spot.cv-attr-spot{
+ box-sizing:border-box!important;background:#fff!important;
+ border:0!important;box-shadow:0 0 1px 2px #fff!important;
+ overflow:hidden!important;z-index:4!important;
+}
+.shell .cv-page .cv-attr-spot .cv-stepper{
+ display:grid!important;grid-template-columns:1fr 1.4fr 1fr!important;
+ align-items:stretch!important;justify-items:stretch!important;
+ box-sizing:border-box!important;width:100%!important;height:100%!important;
+ margin:0!important;padding:0!important;gap:0!important;
+ background:#fff!important;border:0!important;box-shadow:none!important;
+}
+.shell .cv-page .cv-attr-spot .cv-stepper b{
+ grid-column:2!important;grid-row:1!important;
+ display:flex!important;align-items:center!important;justify-content:center!important;
+ box-sizing:border-box!important;width:100%!important;height:100%!important;
+ min-width:0!important;margin:0!important;padding:0!important;
+ background:#fff!important;position:relative!important;z-index:2!important;
+ font:800 clamp(11px,1.12vw,14px)/1 "DM Sans",Arial,sans-serif!important;
+ color:#51343c!important;text-align:center!important;
+}
+.shell .cv-page .cv-attr-spot .cv-stepper button{
+ display:flex!important;align-items:center!important;justify-content:center!important;
+ min-width:0!important;width:100%!important;height:100%!important;
+ margin:0!important;padding:0!important;
+ background:#fff!important;color:var(--theme-deep,#754b53)!important;
+ font:700 clamp(10px,1.02vw,13px)/1 "DM Sans",Arial,sans-serif!important;
+ border:0!important;box-shadow:none!important;cursor:pointer;position:relative;z-index:2;
+}
+.shell .cv-page .cv-attr-spot .cv-stepper button:first-child{grid-column:1!important;grid-row:1!important}
+.shell .cv-page .cv-attr-spot .cv-stepper button:last-child{grid-column:3!important;grid-row:1!important}
+.shell .cv-page .cv-attr-spot .cv-stepper button:disabled{opacity:.28!important;cursor:default}
+.shell .cv-page .cv-attr-spot .cv-stepper button:hover:not(:disabled),
+.shell .cv-page .cv-attr-spot .cv-stepper button:focus-visible{
+ background:#ecf0e9!important;color:#2e5840!important;
+}
+@media print{
+ .shell .cv-page .cv-attr-spot{background:#fff!important;box-shadow:0 0 1px 2px #fff!important;
+ -webkit-print-color-adjust:exact;print-color-adjust:exact}
+ .shell .cv-page .cv-attr-spot .cv-stepper button{visibility:hidden!important}
+}
+
 </style>
 </head>
 <body>
@@ -1715,9 +1780,9 @@ function guideView(){
  </div><p class="guide-source">Base: Naruto Shinobi no Sho, 4ª edição (4.1b) — resumo e manual de criação. O guia explica as regras gerais, mas não substitui os pré-requisitos específicos do livro nem as decisões do mestre. NCs intermediários foram adaptados para o site.</p>`);
 }
   function clanModal(){const c=clanOf(S.activeClan);return `<div class="modalshade" data-action="close-modal"><div class="modalbox" role="dialog" aria-modal="true" aria-label="Clã ${E(c.name)}" ><div class="clan-art" style="--wash:${c.wash};height:164px;margin:-32px -32px 24px">${imageTag(c)}<span class="kanji">${c.kanji}</span></div><div class="eyebrow">CAMINHOS SHINOBI</div><h2>Clã ${E(c.name)}</h2><p class="panel-caption">${E(c.desc)} Esta escolha define a família do personagem e os poderes restritos disponíveis mediante cumprimento de pré-requisitos no SNS 4.1b.</p><div class="notice mt16">Você pode criar vários personagens por login, inclusive do mesmo clã.</div><div class="flex wrap mt24"><button class="button" data-action="create-sheet">Criar personagem deste clã</button><button class="button secondary" data-action="close-modal">Cancelar</button></div></div></div>`}
-  function cvWrap(inner,x,y,w,h){
+  function cvWrap(inner,x,y,w,h,extraClass=''){
   const f=(a,b)=>(100*a/b).toFixed(4)+"%";
-  return `<div class="cv-spot" style="left:${f(x,8.27)};top:${f(y,11.69)};width:${f(w,8.27)};height:${f(h,11.69)}">${inner}</div>`;
+  return `<div class="cv-spot${extraClass?" "+extraClass:""}" style="left:${f(x,8.27)};top:${f(y,11.69)};width:${f(w,8.27)};height:${f(h,11.69)}">${inner}</div>`;
 }
 function cvInput(path,value,x,y,w,h,opts={}){
   const num=opts.num?'type="number" step="1"':'type="text"';
@@ -1738,7 +1803,7 @@ function cvArray(p,array,i,key,x,y,w,h,opts={}){
 function cvDisplay(value,x,y,w,h){return cvWrap(`<span class="cv-readonly">${E(value)}</span>`,x,y,w,h);}
 function cvAttr(p,key,x,y,w,h){
  const label=ATTRS.find(a=>a[0]===key)?.[1]||key;
- return cvWrap(`<span class="cv-stepper"><button data-action="attr" data-key="${key}" data-delta="-1" aria-label="Reduzir ${label}">−</button><b>${n(p.atributos[key])}</b><button data-action="attr" data-key="${key}" data-delta="1" aria-label="Aumentar ${label}">+</button></span>`,x,y,w,h);
+ return cvWrap(`<span class="cv-stepper"><button type="button" data-action="attr" data-key="${key}" data-delta="-1" aria-label="Reduzir ${label}" ${n(p.atributos[key])<=0?"disabled":""}>−</button><b aria-label="${label}: ${n(p.atributos[key])}">${n(p.atributos[key])}</b><button type="button" data-action="attr" data-key="${key}" data-delta="1" aria-label="Aumentar ${label}" ${n(p.atributos[key])>=p.nc||totals(p).attrs>=currentNC().attrs?"disabled":""}>+</button></span>`,x,y,w,h,"cv-attr-spot");
 }
 function cvSkill(p,key,x,y,w,h){
  const val=n(p.pericias[key]);
