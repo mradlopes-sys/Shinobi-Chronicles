@@ -1562,10 +1562,11 @@ function refreshPortraitUI(previousAutomatic=null){
   let state=portraitAutomatic(p);el.textContent=state==='grave'?'Gravemente ferido · ≤25%':state==='ferido'?'Ferido · ≤50%':'';
  });
  const latest=portraitAutomatic(p);
- if(previousAutomatic!==null&&previousAutomatic!==latest&&(latest==='ferido'||latest==='grave')){
-  const effect=latest==='grave'?'portrait-hit-grave':'portrait-hit-wounded';
+ if(previousAutomatic!==null&&previousAutomatic!==latest){
+  const effect=latest==='grave'?'portrait-hit-grave':latest==='ferido'?'portrait-hit-wounded':null;
   document.querySelectorAll('.cv-portrait,.portrait-editor-preview').forEach(surface=>{
    surface.classList.remove('portrait-hit-wounded','portrait-hit-grave');
+   if(!effect)return;
    void surface.offsetWidth;
    surface.classList.add(effect);
    setTimeout(()=>{if(surface.isConnected)surface.classList.remove(effect)},900);
