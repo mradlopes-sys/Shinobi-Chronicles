@@ -3801,6 +3801,7 @@ function canvaTechniqueAppendix(p,clan){
   let combatCueContext=null;
   function combatCue(kind){
     if(!S.combatMode||S.view!=='sheet')return;
+    if(kind==='healing')return playSfx('healing');
     try{
       const Engine=window.AudioContext||window.webkitAudioContext;
       if(!Engine)return;
@@ -4528,33 +4529,12 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
     menu:{url:'assets/audio/menu-transition.ogg',volume:.66},
     wounded:{url:'assets/audio/injury-wounded.ogg',volume:.74},
     critical:{url:'assets/audio/injury-critical.ogg',volume:.8},
-    healing:{url:'custom',volume:.72} // o som original foi substituído pelo segundo áudio enviado
+    healing:{volume:.72} // o som original foi substituído pelo segundo áudio enviado
   };
   const soundTracks=new Map();
   function playSfx(kind){
     const spec=SHINOBI_SFX[kind];if(!spec)return;
     if(kind==='healing')return playJournalSfx('healing',spec.volume);
-    if(false){
-      // Retratos de cura são eventos raros: abrir uma instância nova mantém a
-      // reprodução ligada ao clique de Vitalidade, mesmo após cache de erro.
-      const attempt=(url,allowFallback)=>{
-        try{
-          const sound=new Audio(url);
-          sound.preload='auto';
-          sound.muted=false;
-          sound.volume=normalizedSoundVolume(spec.volume);
-          const started=sound.play();
-          if(started?.catch)started.catch(error=>{
-            console.warn('Áudio de cura não iniciou:',url,error);
-            if(allowFallback&&spec.fallback)attempt(spec.fallback,false);
-          });
-        }catch(error){
-          console.warn('Erro no áudio de cura:',url,error);
-          if(allowFallback&&spec.fallback)attempt(spec.fallback,false);
-        }
-      };
-      return attempt(spec.url,true);
-    }
     try{
       let sound=soundTracks.get(kind);
       if(!sound){sound=new Audio(spec.url);sound.preload='auto';soundTracks.set(kind,sound)}
