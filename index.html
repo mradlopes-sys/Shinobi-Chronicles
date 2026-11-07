@@ -1966,6 +1966,67 @@ function themeStyle(){
     showToast((item.kind==='power'?'Poder atualizado: ':item.kind==='effect'?'Efeito selecionado: ':'Registrado: ')+item.name);
   }
 
+function libraryView(){
+ const p=active();
+ if(!p)return layout(`<div class="empty"><h3>Selecione um shinobi</h3><p>Abra uma ficha para consultar e registrar poderes.</p><button class="button" data-action="nav" data-view="fichas">Minhas fichas</button></div>`);
+ const clan=clanOf(p.clanId),kind=S.libraryKind||'all',scope=S.libraryScope||'mine',query=catalogKey(S.librarySearch||'');
+ const effectPowers=LIBRARY_ENTRIES.filter(x=>x.kind==='power'&&x.effectPower);
+ const owned=effectPowers.find(x=>catalogPower(p,x.id));
+ const selected=S.libraryPowerId||owned?.id||'ninpou';
+ if(!S.libraryPowerId)S.libraryPowerId=selected;
+ const spent=totals(p).powers,budget=currentNC().powers;
+ const kinds=[['all','Tudo'],['power','Poderes'],['jutsu','Jutsus'],['effect','Efeitos'],['aptitude','Aptidões']];
+ const scopes=[['mine','Meu clã e comuns'],['all','Todos os clãs'],['available','Aprendíveis agora']];
+ const matchesScope=(x)=>scope==='all'||(scope==='mine'?(x.clan==='comum'||x.clan===p.clanId):catalogGate(p,x).ok);
+ const visible=LIBRARY_ENTRIES.filter(x=>(kind==='all'||x.kind===kind)&&matchesScope(x));
+ const renderEntry=(x)=>{
+  const check=catalogGate(p,x),clanName=x.clan==='comum'?'Comum':clanOf(x.clan).name;
+  const label={power:'PODER',jutsu:'JUTSU',effect:'EFEITO',aptitude:'APTIDÃO'}[x.kind];
+  let ownedLabel='';
+  if(x.kind==='power'){const r=catalogPower(p,x.id);if(r)ownedLabel=`Adquirido · nível ${n(r.nivel)}${r.efeitos?.length?' · '+r.efeitos.length+' efeito(s)':''}`}
+  if(x.kind==='jutsu'&&catalogTech(p,x))ownedLabel='✓ Registrado';
+  if(x.kind==='aptitude'&&catalogApt(p,x.name))ownedLabel='✓ Adquirida';
+  if(x.kind==='effect'){const power=catalogPower(p,selected);ownedLabel=`Para ${catalogItem(selected)?.name||'Ninpou'} · ${power?'Nv '+n(power.nivel)+' · '+(power.efeitos||[]).length+' efeito(s)':'não comprado'}`}
+  const searchText=catalogKey([x.name,x.desc,x.clan,x.power,clanName].join(' '));
+  return `<article class="lib-card ${check.ok?'can-learn':'is-locked'}" data-library-card data-library-searchable="${E(searchText)}">
+   <div class="lib-card-kicker"><span>${label}</span><small>${E(clanName)}</small></div>
+   <h3>${E(x.name)}</h3><p>${E(x.desc)}</p>
+   ${ownedLabel?`<div class="lib-own">${E(ownedLabel)}</div>`:''}
+   <div class="lib-tags">${x.min?`<span>Requer nível ${x.min}</span>`:''}${x.rank?`<span>Rank ${E(x.rank)}</span>`:''}${x.free?'<span>Gratuito</span>':''}${x.model?'<span>Modelo</span>':''}<span>Livro · p. ${x.page}</span></div>
+   <div class="lib-card-footer"><span>${x.kind==='power'?'1 ponto por nível':x.kind==='aptitude'?'3 gratuitas; extras custam 2':x.kind==='effect'?'1 escolha por nível':'Registro gratuito'}</span>
+   <button class="button small ${check.ok?'':'secondary'}" data-action="library-learn" data-id="${E(x.id)}" ${check.ok?'':'disabled'}>${E(check.text)}</button></div>
+   ${!check.ok?`<div class="lib-block-reason">${E(check.reason)}</div>`:''}
+  </article>`;
+ };
+ const shown=visible.filter(x=>!query||catalogKey([x.name,x.desc,x.clan,x.power,x.clan==='comum'?'comum':clanOf(x.clan).name].join(' ')).includes(query));
+ return layout(`<div class="lib-hero">
+  <div class="lib-hero-copy"><div class="eyebrow">SHINOBI CHRONICLES · ARQUIVO DE TÉCNICAS</div>
+   <h1>Biblioteca de<br>Poderes & Jutsus</h1>
+   <p>Encontre as artes do mundo shinobi, consulte os requisitos e acrescente habilidades à sua ficha sem copiar os dados manualmente.</p>
+   <div class="lib-info"><span>${E(p.nome||'Novo personagem')} · ${E(clan.name)} · NC ${p.nc}</span><span><strong>${spent} / ${budget}</strong> pontos investidos</span></div>
+   <div class="lib-hero-actions"><button class="button secondary small" data-action="nav" data-view="sheet">← Voltar à ficha</button><button class="button secondary small" data-action="nav" data-view="guia">Guia de criação</button></div>
+  </div><div class="lib-hero-art"><div class="lib-symbol">${E(clan.kanji)}</div><div class="lib-ink-ring"></div><span>忍術<br>秘伝</span></div>
+ </div>
+ <div class="lib-how"><strong>Regras do SNS 4.1b:</strong> compre níveis de <b>poder</b> com pontos; escolha os <b>efeitos</b> que cada nível permite; jutsus disponíveis são <b>registrados gratuitamente</b>. Restrições de clã e de atributo são verificadas antes de adicionar.</div>
+ <div class="lib-toolbar"><label class="lib-search"><span>Pesquisar técnicas</span><input data-library-search type="search" placeholder="Ex.: Katon, Kage Mane, Sharingan..." value="${E(S.librarySearch||'')}" autocomplete="off"></label>
+ <label class="lib-scope"><span>Exibir</span><select data-library-scope>${scopes.map(([id,label])=>`<option value="${id}" ${scope===id?'selected':''}>${label}</option>`).join('')}</select></label></div>
+ <nav class="lib-nav" aria-label="Categorias da biblioteca">${kinds.map(([id,label])=>`<button class="${kind===id?'active':''}" data-action="library-kind" data-kind="${id}">${label} <small>${id==='all'?LIBRARY_ENTRIES.length:LIBRARY_ENTRIES.filter(x=>x.kind===id).length}</small></button>`).join('')}</nav>
+ ${kind==='effect'||kind==='all'?`<div class="lib-effect-select"><div><b>Poder que receberá o efeito</b><p>Selecione um poder adquirido. Cada nível permite escolher um efeito seguindo a ordem de aprendizado.</p></div><select aria-label="Poder para receber efeitos" data-library-power>${effectPowers.map(x=>`<option value="${x.id}" ${selected===x.id?'selected':''}>${E(x.name)}${catalogPower(p,x.id)?' ✓':''}</option>`).join('')}</select></div>`:''}
+ <div class="lib-count"><span id="library-count">${shown.length} resultados</span><span>Referências às páginas do manual</span></div>
+ <div class="lib-grid">${visible.map(renderEntry).join('')}</div>
+ <div class="lib-empty" id="library-empty" ${shown.length?'hidden':''}>Nenhuma técnica encontrada. Tente outro filtro ou palavra.</div>
+ <p class="lib-disclaimer">Catálogo inicial baseado no livro Naruto: Shinobi no Sho 4.1b. Os textos são resumos, não substituem as regras completas. Certos poderes permitem apenas efeitos específicos, e requisitos adicionais de técnicas avançadas precisam ser conferidos no livro e com o mestre.</p>`);
+}
+function librarySearchFilter(){
+ if(S.view!=='biblioteca')return;
+ const query=catalogKey(S.librarySearch||'');let count=0;
+ document.querySelectorAll('[data-library-card]').forEach(el=>{
+  const match=!query||String(el.dataset.librarySearchable||'').includes(query);
+  el.hidden=!match;if(match)count++;
+ });
+ const textEl=$('#library-count');if(textEl)textEl.textContent=count+' resultados';
+ const empty=$('#library-empty');if(empty)empty.hidden=count>0;
+}
   function techniques(p){const t=totals(p);return `<div class="stack"><div class="notice"><b>Como funciona:</b> pontos de poder compram níveis de poderes, não jutsus isolados. Cada personagem tem 3 aptidões gratuitas; cada aptidão extra consome 2 pontos de poder. O custo-padrão em chakra é igual ao nível usado na técnica. Jutsus básicos são gratuitos.</div><div class="flex between wrap"><h3 style="margin:0;font:600 19px var(--serif)">Orçamento de poder</h3>${budget(t.powers,currentNC().powers)}</div>${collectionEditor('poderes','Poderes', [['Nome do poder','nome'],['Nível investido','nivel','number'],['Observações','descricao','area']],`Limite por poder: ${limit()} níveis. Exemplos comuns: ${COMMON_POWERS.join(', ')}.`)}${collectionEditor('aptidoes','Aptidões',[['Nome da aptidão','nome'],['Categoria / requisito','tipo']],`3 gratuitas, as demais custam 2 pontos de poder. Confira os pré-requisitos no livro.`)}${collectionEditor('jutsus','Técnicas registradas',[['Nome da técnica','nome'],['Nível utilizado','nivel','number'],['Ação','acao'],['Duração','duracao'],['Alvo / Área','alvo'],['Alcance','alcance'],['Efeito / descrição','efeito','area']],`Jutsus são registros de técnicas desbloqueadas, e não compras independentes. Custo de chakra padrão = nível usado.`)}<div class="notice">Técnicas e aptidões restritas aos clãs devem ser validadas conforme suas descrições e pré-requisitos no manual completo do SNS. O editor não desbloqueia poderes somente por selecionar um clã.</div></div>`}
   function inventory(p){return `<div class="stack"><div class="two-col"><section class="paper-panel"><h3>Recursos e dinheiro</h3>${field('Ryos atuais','ryos',p.ryos,'number')}<p class="panel-caption mt16">Referência de Ryos iniciais em ${currentNC().label}: ${fmt(currentNC().ryos)}. O equipamento básico costuma ser fornecido pela vila, conforme as regras da campanha.</p></section><section class="paper-panel"><h3>Compartimentos</h3><p class="panel-caption">Registre os equipamentos transportados. Os limites de carga e os preços específicos devem ser consultados no manual do sistema.</p></section></div>${collectionEditor('inventario','Inventário e equipamentos',[['Item','nome'],['Quantidade','quantidade','number'],['Notas / compartimentos','obs']])}</div>`}
   function history(p){return `<div class="two-col"><section class="paper-panel"><h3>História do personagem</h3>${area('Biografia, família, motivações e trajetória','historia',p.historia,15)}</section><section class="paper-panel"><h3>Diário de campanha</h3>${area('Missões, eventos, contatos e progressão','historico',p.historico,15)}<p class="panel-caption mt16">As alterações são salvas automaticamente no Firebase depois da configuração do projeto.</p></section></div>`}
