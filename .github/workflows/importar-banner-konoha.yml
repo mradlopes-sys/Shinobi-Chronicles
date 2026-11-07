@@ -1,0 +1,33 @@
+name: Importar imagem Konoha (uma vez)
+on:
+  push:
+    paths:
+      - '.github/workflows/importar-banner-konoha.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  importar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Baixar nova imagem
+        env:
+          SOURCE_URL: 'https://media.canva.com/v2/image-resize/format:JPG/height:768/quality:75/uri:ifs%3A%2F%2FM%2Fa75ec794-2938-414c-a247-acd953f110a3/watermark:F/width:1376?csig=AAAAAAAAAAAAAAAAAAAAAFbnToiuL_2VIl8JJYaEZeo3tbvDcLkAsBq78of9UpzH&exp=1794050593&osig=AAAAAAAAAAAAAAAAAAAAAHd2vB9-dKUtJ2f3fHdWV02g21UJnNl2l3KaubHR8vus&signer=media-rpc&token=AAIAAU0AJGE3NWVjNzk0LTI5MzgtNDE0Yy1hMjQ3LWFjZDk1oxfDZWkUm33S9hCwDCprXwQNQ&x-canva-quality=thumbnail'
+        run: |
+          curl --location --fail --silent --show-error --retry 2 "$SOURCE_URL" --output hero-konoha-user.jpg
+          file hero-konoha-user.jpg
+          test "$(stat --printf=%s hero-konoha-user.jpg)" -gt 20000
+          python3 - <<'PY'
+          from pathlib import Path
+          data=Path('hero-konoha-user.jpg').read_bytes()
+          assert data[:3]==b'\xff\xd8\xff', "Servidor nao retornou JPEG"
+          print('Imagem recebida:',len(data),'bytes')
+          PY
+      - name: Publicar imagem no repositório
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add hero-konoha-user.jpg
+          git commit -m "assets: adicionar banner Konoha enviado pelo usuario"
+          git push
