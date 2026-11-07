@@ -2216,9 +2216,19 @@
 
 
 /* Nota fixa na lateral superior do mural, inclusive ao rolar o grande quadro */
-.pub-fixed-update{position:sticky;top:12px;z-index:30;float:right;display:block;margin:-9px 14px 8px 12px;padding:13px 17px;background:#f1d68e;color:#67412a;border:1px solid #cfa863;border-radius:3px;box-shadow:2px 5px 9px #30201555;transform:rotate(2deg);font:600 15px 'Yuji Boku',var(--serif);cursor:pointer}
+.pub-fixed-update{position:absolute;top:15px;right:16px;z-index:3;float:none;display:block;margin:0;padding:13px 17px;background:#f1d68e;color:#67412a;border:1px solid #cfa863;border-radius:3px;box-shadow:2px 5px 9px #30201555;transform:rotate(2deg);font:600 15px 'Yuji Boku',var(--serif);cursor:pointer}
 .pub-fixed-update:hover{filter:brightness(1.07);transform:rotate(0deg)}
 .pub-hub:after{content:"";display:table;clear:both}
+.pub-intro{padding-right:252px!important}
+.pub-viewport{cursor:grab;overscroll-behavior:contain;touch-action:none;user-select:none}
+.pub-viewport.is-panning,.pub-viewport.is-panning *{cursor:grabbing!important}
+.pub-note textarea,.pub-note input{user-select:text;cursor:text}
+.pub-photo-controls{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 0;align-items:center}
+.pub-photo-controls button{font-size:11px;padding:6px 9px;background:#faf3e5;border:1px solid #a88f73;border-radius:7px;color:#6b4634}
+.pub-photo-controls button:hover{background:#e8d2ae}
+.pub-portrait-picture{height:calc(100% - 95px);min-height:95px}
+.pub-zoom-level{white-space:nowrap;font-size:12px;color:#725744}
+@media(max-width:780px){.pub-intro{padding-right:21px!important;padding-top:65px!important}.pub-fixed-update{right:13px;top:11px;padding:9px 12px;font-size:13px}}
 
 /* QUADROS SHINOBI — PERFIS PUBLICOS */
 .shell:has(.pub-hub) .content{max-width:none;padding:24px clamp(15px,2.2vw,36px) 70px}
@@ -4240,6 +4250,7 @@ function canvaUpdateArray(el,preserveFocus=false){
   const PublicBoard=(()=>{
     const W=1580,H=1160;
     const CHANGELOG=[
+      {date:'07/11/2026',title:'Retrato diretamente no quadro e navegação com mouse',body:'Agora é possível enviar ou trocar a imagem do personagem diretamente no quadro. A roda do mouse controla o zoom sob o cursor; clicar e arrastar com a mãozinha movimenta a visualização sem mover os bilhetes. A nota de atualizações permanece no cabeçalho sem encobrir os botões.'},
       {date:'07/11/2026',title:'Quadros shinobi compartilháveis',body:'Cada personagem pode ganhar um grande quadro público com retrato, clã, graduação, vila, história e recados organizados livremente. Adicionamos movimentação, redimensionamento, zoom e salvamento na nuvem.'},
       {date:'07/11/2026',title:'Observações individuais e atualização permanente',body:'Cada jogador pode escrever observações particulares sobre o personagem que está consultando. A nota amarela no canto superior direito sempre abre o histórico de mudanças.'}
     ];
@@ -4274,6 +4285,66 @@ function canvaUpdateArray(el,preserveFocus=false){
     }
     function current(){return all.find(x=>x.id===id)}
     function status(label){const el=document.querySelector('[data-board-status]');if(el)el.textContent=label}
+    function repaint(){
+      const old=document.querySelector('#pub-viewport');
+      const left=old?.scrollLeft||0,top=old?.scrollTop||0;
+      render();
+      const next=document.querySelector('#pub-viewport');
+      if(next){next.scrollLeft=left;next.scrollTop=top}
+    }
+    function setZoom(next,clientX=null,clientY=null){
+      const vp=document.querySelector('#pub-viewport'),frame=document.querySelector('.pub-zoomframe'),scene=document.querySelector('.pub-scene');
+      const old=zoom;
+      const desired=limitNumber(next,0.5,1.85,old);
+      if(Math.abs(desired-old)<.00005)return;
+      let atX=0,atY=0;
+      if(vp){
+        const rect=vp.getBoundingClientRect();
+        const ox=clientX===null?vp.clientWidth/2:clientX-rect.left;
+        const oy=clientY===null?vp.clientHeight/2:clientY-rect.top;
+        atX=(vp.scrollLeft+ox)/old;
+        atY=(vp.scrollTop+oy)/old;
+        zoom=desired;
+        if(scene)scene.style.transform='scale('+zoom+')';
+        if(frame){frame.style.width=W*zoom+'px';frame.style.height=H*zoom+'px'}
+        vp.scrollLeft=Math.max(0,atX*zoom-ox);
+        vp.scrollTop=Math.max(0,atY*zoom-oy);
+      }else zoom=desired;
+      const level=document.querySelector('[data-board-zoom-level]');
+      if(level)level.textContent=Math.round(zoom*100)+'%';
+    }
+    async function uploadPortrait(file){
+      if(!file||!permitted())return;
+      if(!/^image\/(jpeg|jpg|png|webp)$/.test(file.type)||file.size>12*1024*1024){
+        showToast('Escolha uma imagem JPG, PNG ou WEBP de até 12 MB.',true);return;
+      }
+      const url=URL.createObjectURL(file);
+      try{
+        const image=new Image();
+        await new Promise((resolve,reject)=>{
+          image.onload=resolve;image.onerror=()=>reject(Error('Imagem inválida'));image.src=url;
+        });
+        if(!permitted())return;
+        let scale=Math.min(1,900/Math.max(image.naturalWidth,image.naturalHeight));
+        let output='';
+        for(let attempt=0;attempt<9;attempt++){
+          const canvas=document.createElement('canvas');
+          canvas.width=Math.max(1,Math.round(image.naturalWidth*scale));
+          canvas.height=Math.max(1,Math.round(image.naturalHeight*scale));
+          const ctx=canvas.getContext('2d');
+          if(!ctx)throw Error('Canvas indisponível');
+          ctx.fillStyle='#f4e8d6';ctx.fillRect(0,0,canvas.width,canvas.height);
+          ctx.drawImage(image,0,0,canvas.width,canvas.height);
+          output=canvas.toDataURL('image/jpeg',Math.max(.5,.83-attempt*.055));
+          if(output.length<=112000)break;
+          scale*=.8;
+        }
+        if(output.length>112000)throw Error('Retrato ficou grande demais');
+        draft.portrait=output;
+        queueSave();repaint();showToast('Retrato adicionado ao quadro.');
+      }catch(error){console.error('Upload do retrato:',error);showToast('Não foi possível processar este retrato.',true)}
+      finally{URL.revokeObjectURL(url)}
+    }
     async function load(){
       if(!S.user||!fb)return;
       if(obsTimer)await saveObservation();
@@ -4375,7 +4446,8 @@ function canvaUpdateArray(el,preserveFocus=false){
       const heading='<h3>'+(canEdit?'<button type="button" class="pub-tool pub-drag" data-board-drag="'+esc(note.id)+'" title="Arrastar nota" aria-label="Arrastar nota">⠿</button><input maxlength="80" aria-label="Título da nota" data-board-note="'+esc(note.id)+'" data-board-note-field="title" value="'+esc(note.title)+'">':esc(note.title))+
         (canEdit?'<span class="pub-note-tools"><button class="pub-tool" data-action="board-color" data-id="'+esc(note.id)+'" title="Alterar cor">◐</button><button class="pub-tool" data-action="board-remove" data-id="'+esc(note.id)+'" title="Descolar nota">×</button></span>':'')+'</h3>';
       const body=note.kind==='portrait'?
-        '<div class="pub-portrait-picture">'+(draft?.portrait?'<img src="'+esc(draft.portrait)+'" alt="Retrato de '+esc(draft.nome)+'">':'<span class="pub-silhouette">忍</span>')+'</div>':
+        '<div class="pub-portrait-picture">'+(draft?.portrait?'<img src="'+esc(draft.portrait)+'" alt="Retrato de '+esc(draft.nome)+'">':'<span class="pub-silhouette">忍</span>')+'</div>'+
+        (canEdit?'<div class="pub-photo-controls"><button type="button" data-action="board-image-upload">📷 '+(draft?.portrait?'Trocar imagem':'Enviar retrato')+'</button>'+(draft?.portrait?'<button type="button" data-action="board-image-remove">Remover</button>':'')+'<input type="file" id="pub-portrait-file" data-board-image-file accept="image/png,image/jpeg,image/webp" hidden></div>':''):
         canEdit?'<textarea maxlength="6000" data-board-note="'+esc(note.id)+'" data-board-note-field="text" placeholder="Escreva aqui...">'+esc(note.text)+'</textarea>':
         '<div class="pub-note-body">'+(esc(note.text)||'<span style="opacity:.6">Nenhuma anotação publicada.</span>')+'</div>';
       return '<section class="pub-note '+(note.kind==='portrait'?'portrait':'')+'" data-public-note="'+esc(note.id)+'" data-color="'+esc(note.color)+'" style="'+style+'" '+(!canEdit?'data-readonly="true"':'')+'><i class="pub-pin" aria-hidden="true"></i>'+heading+body+'</section>';
@@ -4388,8 +4460,8 @@ function canvaUpdateArray(el,preserveFocus=false){
       if(!S.user)return layout('<div class="pub-hub"><div class="pub-blank">Entre na sua conta para consultar os quadros shinobi.</div></div>');
       const own=S.sheets.filter(s=>!all.some(a=>a.id===s.id));
       const isOwner=permitted();
-      let output='<div class="pub-hub"><div class="pub-intro"><div class="eyebrow">ARQUIVOS PÚBLICOS DA VILA</div><h1>Mural de Konoha</h1><p>Conheça os shinobi do servidor pelos retratos, histórias e bilhetes publicados por seus jogadores. As estatísticas, atributos, recursos, perícias e demais dados privados das fichas não são exibidos aqui.</p></div>';
-      output+='<button class="pub-fixed-update" data-action="board-updates-open" title="Abrir notas de atualização">📌 Atualizações</button><div class="pub-actions"><button class="button secondary small" data-action="board-refresh" '+(loading?'disabled':'')+'>↻ Atualizar mural</button>';
+      let output='<div class="pub-hub"><div class="pub-intro"><button type="button" class="pub-fixed-update" data-action="board-updates-open" title="Abrir notas de atualização">📌 Notas de Atualização</button><div class="eyebrow">ARQUIVOS PÚBLICOS DA VILA</div><h1>Mural de Konoha</h1><p>Conheça os shinobi do servidor pelos retratos, histórias e bilhetes publicados por seus jogadores. As estatísticas, atributos, recursos, perícias e demais dados privados das fichas não são exibidos aqui.</p></div>';
+      output+='<div class="pub-actions"><button class="button secondary small" data-action="board-refresh" '+(loading?'disabled':'')+'>↻ Atualizar mural</button>';
       if(own.length)output+='<select class="pub-select" id="pub-new-sheet" aria-label="Escolher personagem para publicar"><option value="">Selecione sua ficha para criar um quadro</option>'+own.map(s=>'<option value="'+esc(s.id)+'">'+esc(s.data.nome||'Personagem sem nome')+'</option>').join('')+'</select><button class="button small" data-action="board-create">+ Publicar meu personagem</button>';
       output+='<span class="pub-readonly" data-board-status>'+ (loading?'Buscando registros…':busy?'Salvando…':'Cada personagem tem seu próprio quadro.') +'</span></div>';
       if(all.length)output+='<div class="pub-choose" aria-label="Quadros dos jogadores">'+all.map(p=>'<button class="pub-chip '+(p.id===id?'active':'')+'" data-action="board-open" data-id="'+esc(p.id)+'"><b>'+esc(p.nome)+'</b><small>'+esc(p.clan)+' · '+esc(p.graduacao)+(p.ownerUid===uid()?' · Seu quadro':'')+'</small></button>').join('')+'</div>';
@@ -4397,65 +4469,93 @@ function canvaUpdateArray(el,preserveFocus=false){
       else {
         output+='<div class="pub-board-toolbar"><b>'+esc(draft.nome)+' · '+esc(draft.clan)+'</b><span class="pub-spacer"></span>';
         if(isOwner)output+='<button class="button small" data-action="board-add">+ Colar bilhete</button><button class="button secondary small" data-action="board-save">Salvar quadro</button><button class="button secondary small" data-action="board-hide">Retirar da vitrine</button>';
-        output+='<label style="font-size:12px">Zoom <input class="pub-zoom" type="range" min="0.65" max="1.3" step="0.05" data-board-zoom value="'+zoom+'"></label><button class="button secondary small" data-action="board-center">Recentrar</button></div>';
+        output+='<span class="pub-zoom-level">🖱️ Roda: zoom · Arraste: mover · <b data-board-zoom-level>'+Math.round(zoom*100)+'%</b></span><button class="button secondary small" data-action="board-center">Centralizar</button></div>';
         output+='<div class="pub-viewport" id="pub-viewport"><div class="pub-zoomframe" style="width:'+(W*zoom)+'px;height:'+(H*zoom)+'px"><div class="pub-scene" style="transform:scale('+zoom+')">';
         output+='<div class="pub-topcloth"><span>木ノ葉 · '+esc(draft.nome)+'</span><div class="pub-cork-head">ARQUIVO DE PERSONAGEM · NOTÍCIAS E ANOTAÇÕES</div></div>';
         for(const note of draft.notes)output+=noteHTML(note,isOwner);
         output+='<section class="pub-note obs" style="left:1230px;top:680px;width:278px;height:325px;--tilt:-2deg"><i class="pub-pin" aria-hidden="true"></i><h3>✎ Minhas observações</h3><textarea maxlength="5000" data-board-observation placeholder="Anote aqui o que você sabe, descobriu ou pensa sobre este personagem. Só você poderá ler suas observações.">'+esc(observation)+'</textarea></section>';
         output+='</div></div></div>';
-        output+='<p class="pub-note-help">'+(isOwner?'Arraste pelo símbolo ⠿, redimensione pelo canto inferior direito das notas e use o controle de zoom. As alterações são salvas automaticamente.':'Você pode explorar este quadro, aumentar o zoom e escrever suas próprias observações privadas sobre o personagem.')+'</p>';
+        output+='<p class="pub-note-help">Use a roda do mouse para aproximar ou afastar. Clique e arraste o quadro para passear com a mãozinha. '+(isOwner?'O símbolo ⠿ move um bilhete; o canto inferior direito o redimensiona. Para trocar o retrato, use o botão dentro da fotografia.':'Suas observações sobre este personagem são particulares.')+'</p>';
       }
       output+='</div>'+updatesHTML();
       return layout(output);
     }
     function action(key,el){
       if(key==='board-refresh')return void load();
+      if(key==='board-image-upload'){if(permitted())document.querySelector('#pub-portrait-file')?.click();return}
+      if(key==='board-image-remove'){if(permitted()){draft.portrait='';queueSave();repaint()}return}
       if(key==='board-open')return void open(el.dataset.id);
       if(key==='board-create'){const val=document.querySelector('#pub-new-sheet')?.value;if(!val)return showToast('Escolha uma ficha para publicar.');return void create(val)}
       if(key==='board-add')return addNote();
       if(key==='board-remove')return removeNote(el.dataset.id);
       if(key==='board-save')return void persist();
       if(key==='board-hide')return void hide();
-      if(key==='board-center'){const target=document.querySelector('#pub-viewport');if(target){target.scrollLeft=0;target.scrollTop=0}return}
+      if(key==='board-center'){const target=document.querySelector('#pub-viewport');if(target){target.scrollLeft=Math.max(0,(W*zoom-target.clientWidth)/2);target.scrollTop=Math.max(0,(H*zoom-target.clientHeight)/2)}return}
       if(key==='board-color'){if(!permitted())return;const n=draft.notes.find(x=>x.id===el.dataset.id);if(!n)return;const colors=['cream','sage','pink','blue','lavender'];n.color=colors[(colors.indexOf(n.color)+1)%colors.length];const card=el.closest('.pub-note');if(card)card.dataset.color=n.color;queueSave();return}
       if(key==='board-updates-open'){updates=true;render();return}
       if(key==='board-updates-close'){updates=false;render();return}
     }
     function change(target){
-      if(target.matches('[data-board-zoom]')){
-        zoom=limitNumber(target.value,.65,1.3,.85);
-        const scene=document.querySelector('.pub-scene'),frame=document.querySelector('.pub-zoomframe');
-        if(scene)scene.style.transform='scale('+zoom+')';
-        if(frame){frame.style.width=(W*zoom)+'px';frame.style.height=(H*zoom)+'px'}
-        return true;
-      }
+      if(target.matches('[data-board-image-file]')){const file=target.files?.[0];target.value='';void uploadPortrait(file);return true}
       return input(target);
     }
-    let dragging=null;
+    let dragging=null,panning=null;
+    document.addEventListener('wheel',ev=>{
+      if(S.view!=='quadros'||!ev.target.closest?.('#pub-viewport'))return;
+      ev.preventDefault();
+      setZoom(zoom*Math.exp(-ev.deltaY*.00125),ev.clientX,ev.clientY);
+    },{passive:false});
     document.addEventListener('pointerdown',ev=>{
-      const handle=ev.target.closest('[data-board-drag]');
-      if(!handle||S.view!=='quadros'||!permitted())return;
-      const node=handle.closest('[data-public-note]');
-      const note=draft.notes.find(x=>x.id===handle.dataset.boardDrag);
-      if(!node||!note)return;
-      dragging={node,note,x:ev.clientX,y:ev.clientY,left:note.x,top:note.y};
-      node.style.zIndex='11';handle.setPointerCapture?.(ev.pointerId);ev.preventDefault();
+      if(S.view!=='quadros'||ev.button!==0)return;
+      const handle=ev.target.closest?.('[data-board-drag]');
+      if(handle&&permitted()){
+        const node=handle.closest('[data-public-note]');
+        const note=draft.notes.find(x=>x.id===handle.dataset.boardDrag);
+        if(!node||!note)return;
+        dragging={node,note,pointerId:ev.pointerId,x:ev.clientX,y:ev.clientY,left:note.x,top:note.y};
+        node.style.zIndex='11';handle.setPointerCapture?.(ev.pointerId);ev.preventDefault();return;
+      }
+      const vp=ev.target.closest?.('#pub-viewport');
+      if(!vp||ev.target.closest?.('button,input,textarea,select,a,[contenteditable="true"]'))return;
+      const node=ev.target.closest?.('[data-public-note]');
+      if(node&&permitted()){
+        const rect=node.getBoundingClientRect();
+        if(ev.clientX>=rect.right-32&&ev.clientY>=rect.bottom-32)return;
+      }
+      panning={viewport:vp,pointerId:ev.pointerId,x:ev.clientX,y:ev.clientY,left:vp.scrollLeft,top:vp.scrollTop};
+      vp.classList.add('is-panning');vp.setPointerCapture?.(ev.pointerId);ev.preventDefault();
     });
     document.addEventListener('pointermove',ev=>{
-      if(!dragging)return;const d=dragging;
+      if(panning&&ev.pointerId===panning.pointerId){
+        const d=panning;
+        d.viewport.scrollLeft=d.left-(ev.clientX-d.x);
+        d.viewport.scrollTop=d.top-(ev.clientY-d.y);
+        return;
+      }
+      if(!dragging||ev.pointerId!==dragging.pointerId)return;
+      const d=dragging;
       d.node.style.left=limitNumber(d.left+(ev.clientX-d.x)/zoom,35,W-d.note.w-26,35)+'px';
       d.node.style.top=limitNumber(d.top+(ev.clientY-d.y)/zoom,100,H-d.note.h-30,100)+'px';
     });
-    document.addEventListener('pointerup',ev=>{
-      if(dragging){const d=dragging;d.note.x=parseFloat(d.node.style.left)||d.note.x;d.note.y=parseFloat(d.node.style.top)||d.note.y;d.node.style.zIndex='5';dragging=null;queueSave();return}
+    function endBoardPointer(ev){
+      if(panning&&ev.pointerId===panning.pointerId){
+        const vp=panning.viewport;vp.classList.remove('is-panning');
+        if(vp.hasPointerCapture?.(ev.pointerId))vp.releasePointerCapture(ev.pointerId);
+        panning=null;return;
+      }
+      if(dragging&&ev.pointerId===dragging.pointerId){
+        const d=dragging;d.note.x=parseFloat(d.node.style.left)||d.note.x;d.note.y=parseFloat(d.node.style.top)||d.note.y;d.node.style.zIndex='5';dragging=null;queueSave();return;
+      }
       const node=ev.target.closest?.('[data-public-note]');
       if(!node||S.view!=='quadros'||!permitted())return;
       const note=draft.notes.find(x=>x.id===node.dataset.publicNote);
       if(!note)return;
       const w=Math.round(node.offsetWidth),h=Math.round(node.offsetHeight);
       if(Math.abs(note.w-w)>2||Math.abs(note.h-h)>2){note.w=w;note.h=h;queueSave()}
-    });
-    return {view,enter,action,change,load,saveObservation,persist};
+    }
+    document.addEventListener('pointerup',endBoardPointer);
+    document.addEventListener('pointercancel',endBoardPointer);
+    return {view,enter,action,change,load,saveObservation,persist,uploadPortrait};
   })();
 
 function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="margin:15vh auto;max-width:500px"><h3>Carregando os arquivos shinobi...</h3><p>Conectando ao sistema de autenticação.</p></div>';return}if(CONFIGURED&&!S.user&&!['login'].includes(S.view))S.view='login';let screen={quadros:PublicBoard.view,home,clans,sheet:canvaSheetView,guia:guideView,biblioteca:libraryView,diario:diaryView,fichas:mySheets,admin:adminView,'admin-gate':adminGate,login}[S.view]||home;$('#app').innerHTML=screen();if(S.modal)$('#app').insertAdjacentHTML('beforeend',S.modal==='delete'?deleteModal():clanModal());if(S.view==='biblioteca')librarySearchFilter();integratedFilter();if(S.view==='diario'&&S.diaryEnterAnimate)S.diaryEnterAnimate=false}
