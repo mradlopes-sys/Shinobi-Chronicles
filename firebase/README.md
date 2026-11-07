@@ -1,3 +1,16 @@
+## Vitalidade atual, animações de cura e sons de navegação
+
+- **Vida cheia na criação:** novos personagens NC 4 começam com **30 pontos de Vitalidade atual** quando VIG=0, exatamente sua Vitalidade máxima, calculada por `10 + 3 × VIG + 5 × NC`. Fichas antigas com Vitalidade nula/ausente passam a exibir o máximo; uma ficha com Vitalidade 0 ou dano registrado **mantém esse valor**.
+- **Controles +/−:** página 1 da ficha Canva e etapa Vitalidade e Chakra do Manual de Recrutas usam botões para aumentar/diminuir a Vida atual **um ponto por clique**; os limites são 0 e a Vitalidade máxima. A mudança é salva automaticamente no Firestore e atualiza as imagens do personagem.
+- **Subida de Vigor/NC:** se a vida estava cheia, ela acompanha o novo máximo; se havia dano, o valor atual é preservado (ou limitado ao novo máximo em caso de redução).
+- **Ferimentos:** quando a vida cruza para 50% ou menos, toca `assets/audio/injury-wounded.ogg` e o retrato muda para Ferido. Em 25% ou menos, toca `assets/audio/injury-critical.ogg` e muda para Gravemente ferido. Os efeitos só são disparados na **mudança de estado**, não a cada ponto perdido.
+- **Cura:** quando a vida cruza para um estado mais saudável, o retrato recebe uma animação curta de brilho verde e leve tremida. A animação respeita a configuração `prefers-reduced-motion`.
+- **Menu:** ao navegar até **Os Clãs/Criar Fichas** ou **Minhas Fichas**, toca `assets/audio/menu-transition.ogg`, inclusive quando o jogador sai da ficha por um desses atalhos. O áudio antigo de criar personagem em `assets/audio/create-sheet.mp3` foi preservado.
+
+Os três novos arquivos são versões leves em Ogg/Opus dos WAV enviados pelo usuário, hospedadas como arquivos estáticos no GitHub Pages. O navegador pode exigir interação do jogador antes da primeira reprodução de áudio; caso o formato não seja suportado, a ação continua funcionando silenciosamente.
+
+---
+
 ## Guia de criação de personagem no site
 
 Ao selecionar um clã e criar personagem, o jogador entra no **Manual de Recrutas**, um guia editável dividido em 11 etapas. O novo menu é inspirado na estética tradicional japonesa de papel washi, pinceladas sumi-e, selos dos clãs e pigmentos em aquarela.
