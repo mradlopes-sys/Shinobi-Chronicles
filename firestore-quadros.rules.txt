@@ -1,0 +1,65 @@
+// Adicione os dois blocos abaixo DENTRO de match /databases/{database}/documents
+// das regras Firestore JA PUBLICADAS. Nao substitua suas regras de fichas,
+// diarios, usuarios ou administracao.
+// Estes blocos nao sao publicados automaticamente pelo GitHub Pages.
+
+match /perfisPublicos/{profileId} {
+  // Apenas pessoas autenticadas podem descobrir os perfis publicados.
+  allow read: if request.auth != null;
+
+  // A ficha de origem precisa pertencer ao mesmo usuario.
+  allow create: if request.auth != null
+    && exists(/databases/$(database)/documents/fichas/$(profileId))
+    && get(/databases/$(database)/documents/fichas/$(profileId)).data.ownerUid == request.auth.uid
+    && request.resource.data.ownerUid == request.auth.uid
+    && request.resource.data.keys().hasOnly([
+      'ownerUid','nome','clan','vila','graduacao','portrait',
+      'notes','createdAt','updatedAt'
+    ])
+    && request.resource.data.notes is list
+    && request.resource.data.notes.size() <= 22;
+
+  // O dono pode mudar exclusivamente seu quadro, sem transferir a autoria.
+  allow update: if request.auth != null
+    && resource.data.ownerUid == request.auth.uid
+    && request.resource.data.ownerUid == resource.data.ownerUid
+    && request.resource.data.keys().hasOnly([
+      'ownerUid','nome','clan','vila','graduacao','portrait',
+      'notes','createdAt','updatedAt'
+    ])
+    && request.resource.data.notes is list
+    && request.resource.data.notes.size() <= 22;
+
+  allow delete: if request.auth != null
+    && resource.data.ownerUid == request.auth.uid;
+}
+
+match /observacoesShinobi/{observationId} {
+  // Observacoes pertencem ao VISITANTE, nao ao dono da ficha consultada.
+  // Nunca listar observacoes de outros jogadores.
+  allow list: if false;
+  allow get: if request.auth != null
+    && resource.data.ownerUid == request.auth.uid;
+
+  allow create: if request.auth != null
+    && request.resource.data.ownerUid == request.auth.uid
+    && observationId == request.auth.uid + '__' + request.resource.data.profileId
+    && request.resource.data.keys().hasOnly([
+      'ownerUid','profileId','texto','updatedAt'
+    ])
+    && request.resource.data.texto is string
+    && request.resource.data.texto.size() <= 5000;
+
+  allow update: if request.auth != null
+    && resource.data.ownerUid == request.auth.uid
+    && request.resource.data.ownerUid == request.auth.uid
+    && request.resource.data.profileId == resource.data.profileId
+    && request.resource.data.keys().hasOnly([
+      'ownerUid','profileId','texto','updatedAt'
+    ])
+    && request.resource.data.texto is string
+    && request.resource.data.texto.size() <= 5000;
+
+  allow delete: if request.auth != null
+    && resource.data.ownerUid == request.auth.uid;
+}
