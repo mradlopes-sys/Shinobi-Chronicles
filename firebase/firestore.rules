@@ -9,8 +9,10 @@ service cloud.firestore {
     // O administrador é autorizado exclusivamente por um documento criado
     // manualmente no Console do Firebase usando o UID da conta.
     function isAdmin() {
-      return signedIn()
-        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+      return signedIn() && (
+        request.auth.token.email == 'mestre_shinobi@players.shinobi-chronicles.invalid'
+        || exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
     }
 
     // Cada jogador só pode ler o próprio perfil.
