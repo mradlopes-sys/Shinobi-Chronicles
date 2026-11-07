@@ -1864,6 +1864,105 @@ function themeStyle(){
   function pool(p,key,label,max){const raw=p.recursos?.[key];const val=raw===null||raw===undefined?max:n(raw);return `<div class="pool ${key==='chakra'?'chakra':''}"><div><div class="pool-title">${label}</div><div class="pool-max">Máximo ${max}</div><div class="progress"><span style="width:${Math.max(0,Math.min(100,val/Math.max(1,max)*100))}%"></span></div></div><input type="number" data-bind="recursos.${key}" min="-99" max="9999" value="${val}" aria-label="${label} atual"></div>`}
   function itemFields(arr,i,fields){return fields.map(([label,key,type])=>type==='area'?area(label,`@${arr}.${i}.${key}`,active()[arr][i][key],2):field(label,`@${arr}.${i}.${key}`,active()[arr][i][key],type||'text')).join('')}
   function collectionEditor(arr,title,fields,note){const p=active();return `<section class="paper-panel"><div class="flex between wrap"><div><h3 style="margin-bottom:2px">${title}</h3>${note?`<div class="panel-caption">${note}</div>`:''}</div><button class="button secondary small" data-action="add-item" data-array="${arr}">+ Adicionar</button></div><div class="collection">${p[arr].length?p[arr].map((item,i)=>`<div class="collection-item"><div class="flex between"><span class="pill">REGISTRO ${String(i+1).padStart(2,'0')}</span><button class="icon-btn" data-action="remove-item" data-array="${arr}" data-index="${i}">Remover</button></div><div class="form-grid">${itemFields(arr,i,fields)}</div></div>`).join(''):`<p class="panel-caption">Nenhum registro cadastrado ainda.</p>`}</div></section>`}
+
+  function catalogKey(value){return String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase().replace(/\s+/g,' ')}
+  function catalogItem(id){return LIBRARY_ENTRIES.find(x=>x.id===id)}
+  function catalogPower(p,id){
+    const item=catalogItem(id);if(!item)return null;
+    return (p.poderes||[]).find(x=>x.catalogId===id||catalogKey(x.nome)===catalogKey(item.name))||null;
+  }
+  function catalogApt(p,name){return (p.aptidoes||[]).some(x=>catalogKey(x.nome)===catalogKey(name))}
+  function catalogTech(p,item){return (p.jutsus||[]).find(x=>x.catalogId===item.id||catalogKey(x.nome)===catalogKey(item.name))}
+  function catalogHasEffect(p,powerId,name){
+    const power=catalogPower(p,powerId);
+    return !!power&&(power.efeitos||[]).some(x=>catalogKey(x.nome||x)===catalogKey(name));
+  }
+  function catalogRequirements(p,item){
+    if(item.clan&&item.clan!=='comum'&&item.clan!==p.clanId)
+      return 'Restrito ao clã '+clanOf(item.clan).name+'.';
+    for(const [attr,min] of Object.entries(item.attr||{}))
+      if(n(p.atributos?.[attr])<min)return 'Requer '+attr+' '+min+'.';
+    for(const [skill,min] of Object.entries(item.skill||{}))
+      if(n(p.pericias?.[skill])<1||skillTotal(p,skill)<min)return 'Requer '+skill+' '+min+' (treinada).';
+    for(const apt of item.apt||[])
+      if(!catalogApt(p,apt))return 'Requer a aptidão '+apt+'.';
+    return '';
+  }
+  function catalogGate(p,item){
+    if(!p||!item)return {ok:false,reason:'Abra uma ficha primeiro.',text:'Indisponível'};
+    const reason=catalogRequirements(p,item);
+    if(reason)return {ok:false,reason,text:'Bloqueado'};
+    const spent=totals(p).powers,budget=currentNC().powers;
+    if(item.kind==='power'){
+      const owned=catalogPower(p,item.id),level=n(owned?.nivel);
+      if(level>=limit())return {ok:false,reason:'Limite no NC atual: '+limit()+'.',text:'Nível máximo'};
+      if(spent+1>budget)return {ok:false,reason:'Falta 1 ponto de poder.',text:'Pontos insuficientes'};
+      if(!owned&&p.poderes.length>=MAX_ITEMS)return {ok:false,reason:'Limite de poderes atingido.',text:'Lista cheia'};
+      return {ok:true,text:level?'Evoluir para nível '+(level+1):'Comprar nível 1'};
+    }
+    if(item.kind==='aptitude'){
+      if(catalogApt(p,item.name))return {ok:false,reason:'Aptidão já registrada.',text:'Já aprendida'};
+      if(p.aptidoes.length>=MAX_ITEMS)return {ok:false,reason:'Limite de aptidões atingido.',text:'Lista cheia'};
+      const qty=p.aptidoes.filter(x=>x?.nome?.trim()).length;
+      if(qty>=3&&spent+2>budget)return {ok:false,reason:'Aptidão extra custa 2 pontos de poder.',text:'Pontos insuficientes'};
+      return {ok:true,text:qty<3?'Adicionar gratuitamente':'Comprar por 2 pontos'};
+    }
+    if(item.kind==='effect'){
+      const selected=S.libraryPowerId||'ninpou',power=catalogPower(p,selected),def=catalogItem(selected);
+      if(!def?.effectPower)return {ok:false,reason:'Selecione um poder de efeitos.',text:'Escolha o poder'};
+      if(!power||n(power.nivel)<1)return {ok:false,reason:'Compre o poder '+def.name+' antes.',text:'Sem poder'};
+      const chosen=(power.efeitos||[]).length;
+      if(chosen>=n(power.nivel))return {ok:false,reason:'Todos os níveis já têm um efeito escolhido.',text:'Sem espaço'};
+      if(item.min>chosen+1)return {ok:false,reason:'Escolha primeiro o efeito do nível '+(chosen+1)+'.',text:'Nível insuficiente'};
+      if(catalogHasEffect(p,selected,item.name))return {ok:false,reason:'Efeito já selecionado. Evoluções seguem regras específicas.',text:'Já escolhido'};
+      return {ok:true,text:'Escolher para nível '+(chosen+1)};
+    }
+    if(item.kind==='jutsu'){
+      if(catalogTech(p,item))return {ok:false,reason:'Já está na ficha.',text:'Já registrado'};
+      if(p.jutsus.length>=MAX_ITEMS)return {ok:false,reason:'Limite de técnicas atingido.',text:'Lista cheia'};
+      if(!item.free){
+        const special=item.id==='goukakyuu'&&p.clanId==='uchiha'&&catalogApt(p,'Elemento Natural: Katon');
+        const power=catalogPower(p,item.power);
+        if(!special&&(!power||n(power.nivel)<n(item.min)))
+          return {ok:false,reason:'Requer '+(catalogItem(item.power)?.name||item.power)+' nível '+item.min+'.',text:'Poder insuficiente'};
+        if(item.effectNeed&&!special&&!catalogHasEffect(p,item.power,item.effectNeed))
+          return {ok:false,reason:'Selecione o efeito '+item.effectNeed+' neste poder.',text:'Falta efeito'};
+        if(item.id==='shikakyu-jutsu'&&!catalogApt(p,'Hakken no Jutsu'))
+          return {ok:false,reason:'Requer Hakken no Jutsu.',text:'Falta aptidão'};
+        if(item.id==='juujin'&&!catalogApt(p,'Companheiro Animal'))
+          return {ok:false,reason:'Requer Companheiro Animal.',text:'Falta aptidão'};
+        const parent=catalogItem(item.power);
+        if(parent){const pr=catalogRequirements(p,parent);if(pr)return {ok:false,reason:pr,text:'Pré-requisito'};}
+      }
+      return {ok:true,text:item.free?'Registrar (gratuito)':'Adicionar à ficha · gratuito'};
+    }
+    return {ok:false,reason:'Tipo desconhecido.',text:'Indisponível'};
+  }
+  function catalogLearn(id){
+    const p=active(),item=catalogItem(id);
+    if(!p||!canEditCurrent())return showToast('Abra uma ficha com permissão de edição.',true);
+    const gate=catalogGate(p,item);if(!gate.ok)return showToast(gate.reason,true);
+    if(item.kind==='power'){
+      const owned=catalogPower(p,item.id);
+      if(owned)owned.nivel=n(owned.nivel)+1;
+      else p.poderes.push({id:randomId(),nome:item.name,nivel:1,descricao:item.desc,catalogId:item.id,efeitos:[]});
+    }else if(item.kind==='aptitude'){
+      p.aptidoes.push({id:randomId(),nome:item.name,tipo:item.clan==='comum'?'Geral':'Clã: '+clanOf(item.clan).name,catalogId:item.id});
+    }else if(item.kind==='effect'){
+      const power=catalogPower(p,S.libraryPowerId);
+      if(!power)return showToast('Escolha um poder.',true);
+      if(!Array.isArray(power.efeitos))power.efeitos=[];
+      power.efeitos.push({nome:item.name,nivelEscolha:power.efeitos.length+1,catalogId:item.id});
+    }else if(item.kind==='jutsu'){
+      const special=item.id==='goukakyuu'&&p.clanId==='uchiha'&&catalogApt(p,'Elemento Natural: Katon');
+      p.jutsus.push({id:randomId(),nome:item.name,nivel:item.free?0:(special?4:n(item.min)||1),
+        acao:item.action||'',duracao:'',alvo:'',alcance:item.range||'',efeito:item.desc,
+        origemPoder:item.power||'',catalogId:item.id,rank:item.rank||'',custoChakra:item.cost||'Ver descrição do poder'});
+    }
+    scheduleSave();render();
+    showToast((item.kind==='power'?'Poder atualizado: ':item.kind==='effect'?'Efeito selecionado: ':'Registrado: ')+item.name);
+  }
+
   function techniques(p){const t=totals(p);return `<div class="stack"><div class="notice"><b>Como funciona:</b> pontos de poder compram níveis de poderes, não jutsus isolados. Cada personagem tem 3 aptidões gratuitas; cada aptidão extra consome 2 pontos de poder. O custo-padrão em chakra é igual ao nível usado na técnica. Jutsus básicos são gratuitos.</div><div class="flex between wrap"><h3 style="margin:0;font:600 19px var(--serif)">Orçamento de poder</h3>${budget(t.powers,currentNC().powers)}</div>${collectionEditor('poderes','Poderes', [['Nome do poder','nome'],['Nível investido','nivel','number'],['Observações','descricao','area']],`Limite por poder: ${limit()} níveis. Exemplos comuns: ${COMMON_POWERS.join(', ')}.`)}${collectionEditor('aptidoes','Aptidões',[['Nome da aptidão','nome'],['Categoria / requisito','tipo']],`3 gratuitas, as demais custam 2 pontos de poder. Confira os pré-requisitos no livro.`)}${collectionEditor('jutsus','Técnicas registradas',[['Nome da técnica','nome'],['Nível utilizado','nivel','number'],['Ação','acao'],['Duração','duracao'],['Alvo / Área','alvo'],['Alcance','alcance'],['Efeito / descrição','efeito','area']],`Jutsus são registros de técnicas desbloqueadas, e não compras independentes. Custo de chakra padrão = nível usado.`)}<div class="notice">Técnicas e aptidões restritas aos clãs devem ser validadas conforme suas descrições e pré-requisitos no manual completo do SNS. O editor não desbloqueia poderes somente por selecionar um clã.</div></div>`}
   function inventory(p){return `<div class="stack"><div class="two-col"><section class="paper-panel"><h3>Recursos e dinheiro</h3>${field('Ryos atuais','ryos',p.ryos,'number')}<p class="panel-caption mt16">Referência de Ryos iniciais em ${currentNC().label}: ${fmt(currentNC().ryos)}. O equipamento básico costuma ser fornecido pela vila, conforme as regras da campanha.</p></section><section class="paper-panel"><h3>Compartimentos</h3><p class="panel-caption">Registre os equipamentos transportados. Os limites de carga e os preços específicos devem ser consultados no manual do sistema.</p></section></div>${collectionEditor('inventario','Inventário e equipamentos',[['Item','nome'],['Quantidade','quantidade','number'],['Notas / compartimentos','obs']])}</div>`}
   function history(p){return `<div class="two-col"><section class="paper-panel"><h3>História do personagem</h3>${area('Biografia, família, motivações e trajetória','historia',p.historia,15)}</section><section class="paper-panel"><h3>Diário de campanha</h3>${area('Missões, eventos, contatos e progressão','historico',p.historico,15)}<p class="panel-caption mt16">As alterações são salvas automaticamente no Firebase depois da configuração do projeto.</p></section></div>`}
