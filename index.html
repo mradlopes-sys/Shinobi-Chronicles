@@ -108,14 +108,163 @@
     ['Procurar','PER',false],['Prontidão','PER',false],['Rastrear','PER',false],['Venefício','INT',true]
   ];
   // Valores oficiais do resumo SNS 4.1b. Somente NCs da tabela são oferecidos nesta versão.
+  // Marcos do resumo SNS 4.1b preservados; NCs intermediários interpolados.
+  // NC 17–19: 3 pontos de poder por nível para preservar NC 20 = 40.
   const NC_TABLE={
-    4:{label:'Genin',attrs:12,skills:8,powers:4,social:2,min:0,ryos:100},
-    8:{label:'Chuunin',attrs:36,skills:24,powers:12,social:4,min:2,ryos:1000},
-    10:{label:'Jounin Especial',attrs:48,skills:32,powers:16,social:6,min:3,ryos:5000},
-    12:{label:'Jounin',attrs:60,skills:40,powers:20,social:8,min:4,ryos:13000},
-    16:{label:'Jounin Elite',attrs:84,skills:56,powers:28,social:12,min:6,ryos:36000},
-    20:{label:'Sannin / Kage',attrs:108,skills:72,powers:40,social:16,min:8,ryos:88000}
-  };
+  "4": {
+    "label": "Genin",
+    "attrs": 12,
+    "skills": 8,
+    "powers": 4,
+    "social": 2,
+    "min": 0,
+    "ryos": 100
+  },
+  "5": {
+    "label": "Genin",
+    "attrs": 18,
+    "skills": 12,
+    "powers": 6,
+    "social": 2,
+    "min": 0,
+    "ryos": 100
+  },
+  "6": {
+    "label": "Genin",
+    "attrs": 24,
+    "skills": 16,
+    "powers": 8,
+    "social": 2,
+    "min": 1,
+    "ryos": 100
+  },
+  "7": {
+    "label": "Genin",
+    "attrs": 30,
+    "skills": 20,
+    "powers": 10,
+    "social": 2,
+    "min": 1,
+    "ryos": 100
+  },
+  "8": {
+    "label": "Chuunin",
+    "attrs": 36,
+    "skills": 24,
+    "powers": 12,
+    "social": 4,
+    "min": 2,
+    "ryos": 1000
+  },
+  "9": {
+    "label": "Chuunin",
+    "attrs": 42,
+    "skills": 28,
+    "powers": 14,
+    "social": 4,
+    "min": 2,
+    "ryos": 1000
+  },
+  "10": {
+    "label": "Jounin Especial",
+    "attrs": 48,
+    "skills": 32,
+    "powers": 16,
+    "social": 6,
+    "min": 3,
+    "ryos": 5000
+  },
+  "11": {
+    "label": "Jounin Especial",
+    "attrs": 54,
+    "skills": 36,
+    "powers": 18,
+    "social": 6,
+    "min": 3,
+    "ryos": 5000
+  },
+  "12": {
+    "label": "Jounin",
+    "attrs": 60,
+    "skills": 40,
+    "powers": 20,
+    "social": 8,
+    "min": 4,
+    "ryos": 13000
+  },
+  "13": {
+    "label": "Jounin",
+    "attrs": 66,
+    "skills": 44,
+    "powers": 22,
+    "social": 8,
+    "min": 4,
+    "ryos": 13000
+  },
+  "14": {
+    "label": "Jounin",
+    "attrs": 72,
+    "skills": 48,
+    "powers": 24,
+    "social": 10,
+    "min": 5,
+    "ryos": 13000
+  },
+  "15": {
+    "label": "Jounin",
+    "attrs": 78,
+    "skills": 52,
+    "powers": 26,
+    "social": 10,
+    "min": 5,
+    "ryos": 13000
+  },
+  "16": {
+    "label": "Jounin Elite",
+    "attrs": 84,
+    "skills": 56,
+    "powers": 28,
+    "social": 12,
+    "min": 6,
+    "ryos": 36000
+  },
+  "17": {
+    "label": "Jounin Elite",
+    "attrs": 90,
+    "skills": 60,
+    "powers": 31,
+    "social": 12,
+    "min": 6,
+    "ryos": 36000
+  },
+  "18": {
+    "label": "Jounin Elite",
+    "attrs": 96,
+    "skills": 64,
+    "powers": 34,
+    "social": 14,
+    "min": 7,
+    "ryos": 36000
+  },
+  "19": {
+    "label": "Jounin Elite",
+    "attrs": 102,
+    "skills": 68,
+    "powers": 37,
+    "social": 14,
+    "min": 7,
+    "ryos": 36000
+  },
+  "20": {
+    "label": "Sannin / Kage",
+    "attrs": 108,
+    "skills": 72,
+    "powers": 40,
+    "social": 16,
+    "min": 8,
+    "ryos": 88000
+  }
+};
   const COMMON_POWERS=['Ninpou','Doton','Fuuton','Katon','Raiton','Suiton','Fuuinjutsu','Iryou Ninjutsu','Rasengan'];
   const TABS=[['identidade','Identidade'],['atributos','Atributos'],['pericias','Perícias'],['combate','Combate'],['tecnicas','Poderes e jutsus'],['inventario','Inventário'],['historia','História']];
 
