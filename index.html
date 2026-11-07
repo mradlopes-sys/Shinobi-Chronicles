@@ -4250,7 +4250,7 @@ function canvaUpdateArray(el,preserveFocus=false){
   const PublicBoard=(()=>{
     const W=1580,H=1160;
     const CHANGELOG=[
-      {date:'07/11/2026',title:'Retrato diretamente no quadro e navegação com mouse',body:'Agora é possível enviar ou trocar a imagem do personagem diretamente no quadro. A roda do mouse controla o zoom sob o cursor; clicar e arrastar com a mãozinha movimenta a visualização sem mover os bilhetes. A nota de atualizações permanece no cabeçalho sem encobrir os botões.'},
+      {date:'07/11/2026',title:'Retrato diretamente no quadro e navegação com mouse',body:'Agora é possível enviar ou trocar a imagem do personagem diretamente no quadro. A roda do mouse controla o zoom sob o cursor; clicar e arrastar com a mãozinha movimenta a visualização sem mover os bilhetes. A nota de atualizações permanece no cabeçalho sem encobrir os botões. Se as novas coleções ainda não estiverem liberadas, o quadro e as observações serão salvos nos documentos privados das fichas já existentes; a publicação para outros jogadores continua dependendo das permissões de leitura.'},
       {date:'07/11/2026',title:'Quadros shinobi compartilháveis',body:'Cada personagem pode ganhar um grande quadro público com retrato, clã, graduação, vila, história e recados organizados livremente. Adicionamos movimentação, redimensionamento, zoom e salvamento na nuvem.'},
       {date:'07/11/2026',title:'Observações individuais e atualização permanente',body:'Cada jogador pode escrever observações particulares sobre o personagem que está consultando. A nota amarela no canto superior direito sempre abre o histórico de mudanças.'}
     ];
@@ -4355,6 +4355,7 @@ function canvaUpdateArray(el,preserveFocus=false){
     async function load(){
       if(!S.user||!fb)return;
       if(obsTimer)await saveObservation();
+      if(saveTimer&&permitted())await persist();
       loading=true;render();
       try{
         let remote=[];
@@ -4388,7 +4389,7 @@ function canvaUpdateArray(el,preserveFocus=false){
       if(!key||!S.user||!fb)return;
       try{
         const doc=await fb.getDoc(fb.doc(fb.db,'observacoesShinobi',uid()+'__'+key));
-        if(request===obsRequest&&key===id){observation=clip(doc.exists()?doc.data().texto:'',5000);refreshObservation();}
+        if(request===obsRequest&&key===id){const host=S.sheets.find(s=>s.data?.ownerUid===uid());observation=clip(doc.exists()?doc.data().texto:(host?.data?.observacoesDoMural?.[key]||''),5000);refreshObservation();}
       }catch(error){
         // As fichas privadas já têm permissões próprias; reutilizar apenas as do visitante.
         const host=S.sheets.find(s=>s.data?.ownerUid===uid());
@@ -4427,7 +4428,7 @@ function canvaUpdateArray(el,preserveFocus=false){
         await saveChain;
         const pos=all.findIndex(x=>x.id===key);
         if(pos>=0)all[pos]=normalizeProfile(snapshot,key);else all.push(normalizeProfile(snapshot,key));
-        if(version===v){busy=false;status(savedAs==='public'?'Publicado e salvo na nuvem ✓':'Salvo na sua ficha ✓ · Visível só para você até liberar os perfis públicos')}else {busy=false;queueSave()}
+        if(version===v){busy=false;status(savedAs==='public'?(publicReadDenied?'Perfil salvo ✓ · confirme a permissão de leitura para compartilhar':'Publicado e salvo na nuvem ✓'):'Salvo na sua ficha ✓ · Visível só para você até liberar os perfis públicos')}else {busy=false;queueSave()}
       }catch(error){busy=false;console.error('Salvamento do quadro:',error);status('Erro ao salvar');showToast('Não foi possível salvar o quadro. Confira as regras do Firestore.',true)}
     }
     async function create(key){
@@ -4437,7 +4438,7 @@ function canvaUpdateArray(el,preserveFocus=false){
       if(current()&&permitted()&&version)await persist();
       id=key;draft=fromSheet(sheet);observation='';render();
       await persist();
-      if(all.some(x=>x.id===id))showToast('Quadro público criado para '+draft.nome+'.');
+      if(all.some(x=>x.id===id))showToast(sharedIds.has(id)?'Quadro publicado para '+draft.nome+'.':'Quadro pessoal salvo. Para compartilhar com outros jogadores, será preciso permitir perfis públicos.');
     }
     async function hide(){
       if(!permitted()||!fb)return;
