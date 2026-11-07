@@ -35,10 +35,10 @@ A interface transforma o nome de usuário numa conta de e-mail interna, por exem
 
 ## 6. Estrutura dos documentos
 - `users/{uid}`: `username`, `criadoEm`.
-- `fichas/{uid}`: `ownerUid`, `nome`, `clanId`, `nc`, `atributos`, `pericias`, `poderes`, `aptidoes`, `jutsus`, `inventario`, `historia` e outros dados da ficha.
+- `fichas/{idUnico}`: cada personagem tem seu documento próprio, com `ownerUid`, `nome`, `clanId`, `nc`, `atributos`, `pericias`, `poderes`, `aptidoes`, `jutsus`, `inventario`, `historia` e outros campos. Uma mesma conta pode ter várias fichas.
 - `admins/{uid}`: documento criado manualmente no Firebase Console.
 
-As regras permitem que usuários leiam e editem **somente suas próprias fichas**, enquanto um administrador pode **visualizar todas**.
+As regras permitem que usuários leiam, criem, editem e excluam **somente as próprias fichas**, enquanto um administrador pode **visualizar todas**. A consulta de cada jogador filtra `ownerUid` pelo UID autenticado. **Depois da atualização do código, é obrigatório republicar `firestore.rules` no Console do Firebase**; as regras anteriores bloqueiam o carregamento de várias fichas.
 
 ## 7. GitHub Pages
 Em **Settings → Pages**, selecione **Deploy from a branch**, branch **main**, pasta **/(root)**, e salve.
@@ -49,7 +49,7 @@ https://mradlopes-sys.github.io/Shinobi-Chronicles/
 > Importante: o repositório se chama `Shinobi-Chronicles`, com letras maiúsculas. O GitHub Pages diferencia maiúsculas/minúsculas no caminho.
 
 ## 8. Imagens dos clãs
-Envie as 12 imagens e elas serão incorporadas em `assets/clas/`. O site já prevê caminhos como `assets/clas/uchiha.jpg` e `assets/clas/senju.jpg`. É necessário converter formatos diferentes para os nomes indicados no código.
+O código espera 12 banners em `assets/clas/` e 48 páginas das fichas em `assets/fichas/`, no próprio repositório GitHub Pages. Ex.: `assets/clas/uchiha.jpg` e `assets/fichas/uchiha-1.jpg`. O pacote das imagens deve ser extraído e a pasta `assets` enviada ao GitHub, preservando subpastas e nomes. Se os arquivos não estiverem publicados, o site utiliza o editor detalhado como alternativa, em vez de exibir uma página vazia.
 
 ## Observações
 - No modo sem configuração Firebase, o site oferece uma **prévia local**, sem persistência entre sessões ou isolamento real entre jogadores.
