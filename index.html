@@ -2342,7 +2342,7 @@
   const LIBRARY_SOURCES={title:'Naruto: Shinobi no Sho — 4ª edição (4.1b)',notes:'Poderes compram níveis; jutsus e efeitos dependem dos poderes e demais pré-requisitos.'};
   const TABS=[['identidade','Identidade'],['atributos','Atributos'],['pericias','Perícias'],['combate','Combate'],['tecnicas','Poderes e jutsus'],['inventario','Inventário'],['historia','História']];
 
-  const S={view:'home',tab:'identidade',authPane:'login',user:null,isAdmin:false,sheet:null,sheetId:null,adminSheets:[],activeClan:null,demo:!CONFIGURED,sheets:[],adminViewing:false,pendingDeleteId:null,pendingWrite:null,canvaPage:1,canvaMode:'original',loading:CONFIGURED,modal:null,saveTimer:null,saveState:'Pronto',authWorking:false,adminUnlocked:false,adminAuthBusy:false,adminLoginBusy:false,adminUnsubscribe:null,adminLive:false,adminLiveReady:false,adminLiveError:false,adminEvents:[],pendingRemote:null,locallyDirty:false,isSaving:false,lastSavedWrite:null,creating:false,portraitBusy:false,portraitPreview:null,portraitUploadSlot:'casual',guideStep:0,libraryKind:'all',libraryScope:'mine',librarySearch:'',libraryPowerId:'',inlineKind:'power',inlineSearch:'',combatMode:false,combatTransitioning:false,diary:null,diaryOwnerUid:null,diaryStorage:null,diaryHostId:null,diaryFromAdmin:false,diaryLoading:false,diaryDirty:false,diaryVersion:0,diarySaveTimer:null,diaryPendingWrite:null,diaryStatus:'',diaryPanel:'',diaryExpandedId:'',diaryEnterAnimate:false,diaryRequest:0,adminDiaries:[]};
+  const S={view:'home',tab:'identidade',authPane:'login',user:null,isAdmin:false,sheet:null,sheetId:null,adminSheets:[],activeClan:null,demo:!CONFIGURED,sheets:[],adminViewing:false,pendingDeleteId:null,pendingWrite:null,canvaPage:1,canvaMode:'original',loading:CONFIGURED,modal:null,saveTimer:null,saveState:'Pronto',authWorking:false,adminUnlocked:false,adminAuthBusy:false,adminLoginBusy:false,adminUnsubscribe:null,adminLive:false,adminLiveReady:false,adminLiveError:false,adminEvents:[],pendingRemote:null,locallyDirty:false,isSaving:false,lastSavedWrite:null,creating:false,portraitBusy:false,portraitPreview:null,portraitUploadSlot:'casual',guideStep:0,libraryKind:'all',libraryScope:'mine',librarySearch:'',libraryPowerId:'',inlineKind:'power',inlineSearch:'',combatMode:false,combatTransitioning:false,diary:null,diaryOwnerUid:null,diaryStorage:null,diaryHostId:null,diaryNoHost:false,diaryFromAdmin:false,diaryLoading:false,diaryDirty:false,diaryVersion:0,diarySaveTimer:null,diaryPendingWrite:null,diaryStatus:'',diaryPanel:'',diaryExpandedId:'',diaryEnterAnimate:false,diaryRequest:0,adminDiaries:[]};
   let fb=null;
   const $=sel=>document.querySelector(sel);
   const E=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -2671,7 +2671,7 @@ function askDelete(id){if(S.adminViewing||!S.sheets.some(x=>x.id===id))return sh
 function deleteModal(){
  const item=S.sheets.find(x=>x.id===S.pendingDeleteId);
  if(!item)return '';
- return `<div class="modalshade" data-action="close-modal"><div class="modalbox" role="alertdialog" aria-modal="true" aria-label="Confirmar exclusão"><div class="eyebrow">EXCLUSÃO PERMANENTE</div><h2>Excluir esta ficha?</h2><p>O personagem <strong>${E(item.data.nome||'Sem nome')}</strong> será removido do Firebase. Esta ação não pode ser desfeita pelo site.</p><div class="flex wrap mt24"><button class="button button-danger" data-action="confirm-delete">Excluir definitivamente</button><button class="button secondary" data-action="close-modal">Cancelar</button></div></div></div>`;
+ return `<div class="modalshade" data-action="close-modal"><div class="modalbox" role="alertdialog" aria-modal="true" aria-label="Confirmar exclusão"><div class="eyebrow">EXCLUSÃO PERMANENTE</div><h2>Excluir esta ficha?</h2><p>O personagem <strong>${E(item.data.nome||'Sem nome')}</strong> será removido do Firebase. Esta ação não pode ser desfeita pelo site.${item.data.diarioPessoal&&S.sheets.length===1?' Para preservar seu diário, crie outro personagem antes de excluir esta última ficha.':''}</p><div class="flex wrap mt24"><button class="button button-danger" data-action="confirm-delete">Excluir definitivamente</button><button class="button secondary" data-action="close-modal">Cancelar</button></div></div></div>`;
 }
 async function deleteSheet(){
  const id=S.pendingDeleteId;
@@ -2679,6 +2679,25 @@ async function deleteSheet(){
  S.modal=null;if(S.sheetId===id){clearTimeout(S.saveTimer);S.saveTimer=null}
  try{
    if(S.pendingWrite)await S.pendingWrite.catch(()=>{});
+   // Transferir o diário antes da exclusão da ficha que o hospeda.
+   const victim=S.sheets.find(x=>x.id===id);
+   if(S.diaryDirty&&S.diaryStorage==='sheet'&&S.diaryHostId===id){
+     if(!await persistDiary())throw Error('Falha ao salvar o diário antes da exclusão');
+   }
+   const payload=victim?.data?.diarioPessoal;
+   if(payload){
+     const replacement=S.sheets.filter(x=>x.id!==id&&x.data?.ownerUid===uid()).sort((a,b)=>
+       (n(a.data.criadoEm)||0)-(n(b.data.criadoEm)||0))[0];
+     if(!replacement){
+       S.pendingDeleteId=null;render();
+       return showToast('Para não perder seu diário, crie outra ficha antes de excluir a última.',true);
+     }
+     if(CONFIGURED&&fb){
+       await fb.setDoc(fb.doc(fb.db,'fichas',replacement.id),{diarioPessoal:payload},{merge:true});
+     }
+     replacement.data.diarioPessoal=payload;
+     if(S.diaryHostId===id)S.diaryHostId=replacement.id;
+   }
    if(CONFIGURED&&fb){if(!S.user)throw Error('Sem autenticação');await fb.deleteDoc(fb.doc(fb.db,'fichas',id))}
    S.sheets=S.sheets.filter(x=>x.id!==id);
    if(S.sheetId===id){const next=ownSheets()[0];S.sheet=next?.data||null;S.sheetId=next?.id||null}
@@ -4189,11 +4208,12 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
     if(S.diaryDirty){const saved=await persistDiary();if(!saved)return showToast('Salve as alterações do diário antes de mudar de jogador.',true)}
     const legacy=diaryLegacyFor(ownerUid),host=diarySheetHost(ownerUid);
     if(!legacy&&!host){
-      S.diaryLoading=false;S.diary=null;S.diaryOwnerUid=null;S.diaryHostId=null;S.diaryStorage=null;
+      S.diaryLoading=false;S.diary=null;S.diaryOwnerUid=null;S.diaryHostId=null;S.diaryStorage=null;S.diaryNoHost=true;
       S.view='diario';render();
       return showToast('Para ativar o diário, crie primeiro uma ficha de personagem.',true);
     }
     S.diaryRequest++;
+    S.diaryNoHost=false;
     S.diaryFromAdmin=fromAdmin&&ownerUid!==uid();
     S.diaryOwnerUid=ownerUid;
     S.diaryStorage=legacy?'legacy':'sheet';
@@ -4284,6 +4304,7 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
   function diaryView(){
     if(!S.user||!CONFIGURED)return layout('<div class="empty"><h3>Diário pessoal</h3><p>Entre na sua conta para acessar este registro.</p></div>');
     if(S.diaryLoading)return layout('<div class="empty"><h3>Buscando seu pergaminho...</h3><p>Carregando o diário protegido do jogador.</p></div>');
+    if(S.diaryNoHost)return layout('<div class="empty"><h3>Seu diário ainda não foi iniciado</h3><p>Crie uma ficha de personagem para ativar seu diário privado. Depois, todas as suas fichas compartilharão o mesmo pergaminho.</p><button class="button" data-action="nav" data-view="clans">Criar uma ficha</button></div>');
     if(!diaryAuthorized())return layout('<div class="empty"><h3>Diário indisponível</h3><p>Não foi possível validar a permissão de acesso. Retorne às suas fichas.</p><button class="button secondary" data-action="nav" data-view="fichas">Voltar</button></div>');
     const d=S.diary,isAdmin=S.diaryFromAdmin,currentOpen=S.diaryPanel==='current',completedOpen=S.diaryPanel==='completed',notesOpen=S.diaryPanel==='notes';
     const count=d.concluidas.length;
@@ -4547,9 +4568,9 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
   document.addEventListener('submit',ev=>{if(ev.target.id==='auth-form'){ev.preventDefault();submitAuth(ev.target)}else if(ev.target.id==='admin-auth-form'){ev.preventDefault();unlockAdmin(ev.target)}});
   document.addEventListener('input',ev=>{const el=ev.target;if(el.matches('[data-diary-field],[data-diary-completed]')){diaryUpdateField(el);return}if(el.matches('[data-vitality-input]'))return;if(el.matches('[data-int-search]')){S.inlineSearch=el.value;integratedFilter();return}if(el.matches('[data-library-search]')){S.librarySearch=el.value;librarySearchFilter();return}if(el.id==='admin-filter'){const q=el.value.toLocaleLowerCase('pt-BR');$('#admin-rows').innerHTML=adminRows(S.adminSheets.filter(x=>[x.nome,x.usuario,clanOf(x.clanId).name].some(z=>String(z||'').toLocaleLowerCase('pt-BR').includes(q))));return}if(el.dataset.cvArray){canvaUpdateArray(el,true);return}if(el.dataset.cvSkill){updateCanvaSkill(el,true);return}if(!el.dataset.bind||el.tagName==='SELECT')return;const current=active(),path=el.dataset.bind,old=getAt(current,path.startsWith('@')?path.slice(1):path);if(!updateValue(path,el.value)){el.value=old??''}else refreshGuideFeedback()});
   document.addEventListener('change',ev=>{const el=ev.target;if(el.matches('[data-diary-field],[data-diary-completed]')){if(S.diaryDirty)void persistDiary();return}if(el.matches('[data-vitality-input]')){commitVitalityInput(el);return}if(el.matches('[data-library-power]')){S.libraryPowerId=el.value;render();return}if(el.matches('[data-library-scope]')){S.libraryScope=el.value;render();return}if(el.matches('[data-portrait-file]')){const file=el.files?.[0];el.value='';void handlePortraitSelected(file,S.portraitUploadSlot);return}if(el.dataset.cvArray){canvaUpdateArray(el);return}if(el.dataset.cvSkill){updateCanvaSkill(el);return}if(!el.dataset.bind||el.tagName!=='SELECT')return;updateValue(el.dataset.bind,el.value)});
-  async function startFirebase(){try{const base=`https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}`;const [{initializeApp},{getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,reauthenticateWithCredential,EmailAuthProvider},{getFirestore,doc,getDoc,setDoc,deleteDoc,collection,getDocs,query,where,onSnapshot}]=await Promise.all([import(base+'/firebase-app.js'),import(base+'/firebase-auth.js'),import(base+'/firebase-firestore.js')]);const app=initializeApp(FIREBASE_CONFIG),auth=getAuth(app),db=getFirestore(app);fb={auth,db,doc,getDoc,setDoc,deleteDoc,collection,getDocs,query,where,onSnapshot,reauthenticateWithCredential,EmailAuthProvider,signOut,createUserWithEmailAndPassword,signInWithEmailAndPassword};onAuthStateChanged(auth,async(user)=>{clearTimeout(S.saveTimer);if(!user){clearTimeout(S.diarySaveTimer);S.diarySaveTimer=null;S.diary=null;S.diaryOwnerUid=null;S.diaryStorage=null;S.diaryHostId=null;S.diaryFromAdmin=false;S.diaryDirty=false;S.diaryRequest++;stopAdminLive();S.adminUnlocked=false;S.adminAuthBusy=false;S.adminLoginBusy=false;S.adminSheets=[];S.user=null;S.isAdmin=false;S.sheet=null;S.sheetId=null;S.sheets=[];S.adminViewing=false;S.loading=false;S.view='login';render();return}const fallback=user.email?.split('@')[0]||'Shinobi';S.user={uid:user.uid,displayName:fallback};try{const [profile,admin,found]=await Promise.all([getDoc(doc(db,'users',user.uid)),getDoc(doc(db,'admins',user.uid)),getDocs(query(collection(db,'fichas'),where('ownerUid','==',user.uid)))]);if(profile.exists())S.user.displayName=profile.data().username||fallback;S.isAdmin=admin.exists()||user.email===MASTER_EMAIL;if(user.email===MASTER_EMAIL)S.adminUnlocked=true;const personalDiary=found.docs.find(d=>d.data().tipo==='diario'&&d.data().ownerUid===user.uid);
+  async function startFirebase(){try{const base=`https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}`;const [{initializeApp},{getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,reauthenticateWithCredential,EmailAuthProvider},{getFirestore,doc,getDoc,setDoc,deleteDoc,collection,getDocs,query,where,onSnapshot}]=await Promise.all([import(base+'/firebase-app.js'),import(base+'/firebase-auth.js'),import(base+'/firebase-firestore.js')]);const app=initializeApp(FIREBASE_CONFIG),auth=getAuth(app),db=getFirestore(app);fb={auth,db,doc,getDoc,setDoc,deleteDoc,collection,getDocs,query,where,onSnapshot,reauthenticateWithCredential,EmailAuthProvider,signOut,createUserWithEmailAndPassword,signInWithEmailAndPassword};onAuthStateChanged(auth,async(user)=>{clearTimeout(S.saveTimer);if(!user){clearTimeout(S.diarySaveTimer);S.diarySaveTimer=null;S.diary=null;S.diaryOwnerUid=null;S.diaryStorage=null;S.diaryHostId=null;S.diaryNoHost=false;S.diaryFromAdmin=false;S.diaryDirty=false;S.diaryRequest++;stopAdminLive();S.adminUnlocked=false;S.adminAuthBusy=false;S.adminLoginBusy=false;S.adminSheets=[];S.user=null;S.isAdmin=false;S.sheet=null;S.sheetId=null;S.sheets=[];S.adminViewing=false;S.loading=false;S.view='login';render();return}const fallback=user.email?.split('@')[0]||'Shinobi';S.user={uid:user.uid,displayName:fallback};try{const [profile,admin,found]=await Promise.all([getDoc(doc(db,'users',user.uid)),getDoc(doc(db,'admins',user.uid)),getDocs(query(collection(db,'fichas'),where('ownerUid','==',user.uid)))]);if(profile.exists())S.user.displayName=profile.data().username||fallback;S.isAdmin=admin.exists()||user.email===MASTER_EMAIL;if(user.email===MASTER_EMAIL)S.adminUnlocked=true;const personalDiary=found.docs.find(d=>d.data().tipo==='diario'&&d.data().ownerUid===user.uid);
 S.diary=personalDiary?normalizeDiary(personalDiary.data(),user.uid,S.user.displayName):null;
-S.diaryStorage=personalDiary?'legacy':null;S.diaryHostId=null;
+S.diaryStorage=personalDiary?'legacy':null;S.diaryHostId=null;S.diaryNoHost=false;
 S.diaryOwnerUid=user.uid;S.diaryFromAdmin=false;S.diaryDirty=false;S.diaryLoading=false;S.diaryStatus='';
 S.sheets=found.docs.filter(d=>d.data().tipo!=='diario').map(d=>({id:d.id,data:normalize(d.data())}));const first=ownSheets()[0];S.sheet=first?.data||null;S.sheetId=first?.id||null;S.adminViewing=false;S.loading=false;if(S.adminUnlocked&&S.isAdmin)startAdminLive();S.view=S.adminUnlocked&&S.isAdmin?'admin':S.authPane==='admin'?'login':'home';render()}catch(e){console.error(e);S.loading=false;S.view='home';render();showToast('Conta conectada, mas houve um erro ao carregar os dados. Confira as regras do Firestore.',true)}})}catch(e){console.error(e);S.loading=false;S.view='login';render();showToast('Falha ao inicializar Firebase. Confira as chaves e o domínio autorizado.',true)}}
   if(CONFIGURED)startFirebase();else{S.loading=false;render()}
