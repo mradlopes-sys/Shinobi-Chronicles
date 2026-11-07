@@ -2018,6 +2018,34 @@
 }
 @media print{.cb-feedback-effect{display:none!important}}
 
+
+/* HP editável por teclado, preservando setas e o tamanho da ficha Canva */
+.vital-stepper input[data-vitality-input]{
+ appearance:textfield;-moz-appearance:textfield;box-sizing:border-box;
+ display:block;width:100%;height:100%;min-width:0;min-height:0;
+ border:0!important;border-left:1px solid #526d5526!important;border-right:1px solid #526d5526!important;
+ border-radius:0!important;background:rgba(255,255,255,.48)!important;
+ color:#344735!important;text-align:center!important;
+ padding:0 2px!important;margin:0!important;
+ font-family:var(--sans);font-size:15px;font-weight:800;
+ font-variant-numeric:tabular-nums;
+ box-shadow:none!important;
+}
+.vital-stepper input[data-vitality-input]::-webkit-outer-spin-button,
+.vital-stepper input[data-vitality-input]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.vital-stepper input[data-vitality-input]:focus{
+ outline:2px solid var(--theme-deep,#54745b)!important;
+ outline-offset:-2px;
+ background:#fffefa!important;z-index:1
+}
+.vital-stepper input[data-vitality-input]:disabled{opacity:.6;cursor:not-allowed}
+.shell .cv-page .cv-vitality-spot .vital-stepper input[data-vitality-input]{
+ font-size:clamp(9px,.95vw,12px)!important;
+ height:100%!important;background:#fff!important;padding:0 1px!important
+}
+.cb-resource-actions .vital-stepper input[data-vitality-input]{font-size:15px}
+@media print{.vital-stepper input[data-vitality-input]{background:transparent!important;border-color:transparent!important}}
+
 </style>
 </head>
 <body>
@@ -2261,21 +2289,40 @@
     const hp=vitalityValue(p),max=vitMax(p);
     return `<div class="vital-stepper ${mode==='canva'?'vital-canva':'vital-guide'}" data-vitality-control aria-label="Vitalidade atual, ${hp} de ${max}">
       <button type="button" data-action="vitality-step" data-delta="-1" aria-label="Diminuir Vitalidade" ${hp<=0?'disabled':''}>−</button>
-      <strong data-vitality-display aria-live="polite">${hp}</strong>
+      <input type="number" data-vitality-input min="0" max="${max}" step="1" inputmode="numeric" value="${hp}" aria-label="Digitar Vitalidade atual (HP), máximo ${max}" title="Clique para digitar seu HP" ${!canEditCurrent()?'disabled':''}>
       <button type="button" data-action="vitality-step" data-delta="1" aria-label="Aumentar Vitalidade" ${hp>=max?'disabled':''}>+</button>
     </div>`;
   }
   function syncVitalityControls(p){
     const hp=vitalityValue(p),max=vitMax(p);
     document.querySelectorAll('[data-vitality-control]').forEach(box=>{
-      const value=box.querySelector('[data-vitality-display]');
-      if(value)value.textContent=hp;
+      const input=box.querySelector('[data-vitality-input]');
+      if(input){
+        input.min='0';input.max=String(max);
+        input.disabled=!canEditCurrent();
+        if(document.activeElement!==input)input.value=String(hp);
+        input.setAttribute('aria-label',`Digitar Vitalidade atual (HP), máximo ${max}`);
+      }
       box.setAttribute('aria-label',`Vitalidade atual, ${hp} de ${max}`);
       box.querySelectorAll('[data-action="vitality-step"]').forEach(btn=>{
         btn.disabled=Number(btn.dataset.delta)<0?hp<=0:hp>=max;
       });
     });
   }
+
+  // Digitação direta de HP usa a mesma rotina dos botões de cura e ferimento.
+  function commitVitalityInput(input){
+    const p=active();if(!p||!canEditCurrent()){if(p)input.value=String(vitalityValue(p));return}
+    const raw=String(input.value??'').trim(),old=vitalityValue(p);
+    if(!raw||!Number.isFinite(Number(raw))){
+      input.value=String(old);
+      return;
+    }
+    const next=Math.max(0,Math.min(vitMax(p),Math.round(Number(raw))));
+    if(next!==old)adjustVitality(next-old);
+    input.value=String(vitalityValue(p));
+  }
+
   function adjustVitality(delta){
     if(!canEditCurrent()||!active())return;
     const p=active(),oldValue=vitalityValue(p),next=Math.min(vitMax(p),Math.max(0,oldValue+Math.trunc(n(delta))));
@@ -3235,7 +3282,7 @@ function guideInputs(p,index,r,t){
     </details>`);
  if(index===8)return section('Vitalidade e Chakra','Os valores máximos são calculados pela ficha. Preencha também os recursos atuais, se necessário.',
   `<div class="guide-combat-grid"><div><b>Vitalidade máxima</b><strong>${vitMax(p)}</strong><small>NC e Vigor</small></div><div><b>Chakra máximo</b><strong>${chakraMax(p)}</strong><small>Espírito</small></div></div><div class="guide-fields">
-  <div class="guide-field"><span>Vitalidade atual</span>${vitalStepper(p,'guide')}<small>Use − e + para registrar dano ou cura.</small></div>
+  <div class="guide-field"><span>Vitalidade atual</span>${vitalStepper(p,'guide')}<small>Use − / + ou digite o HP e pressione Enter para registrar dano ou cura.</small></div>
   ${guideField('Chakra atual','recursos.chakra',p.recursos?.chakra,{type:'number'})}</div>`);
  if(index===9)return section('Equipamentos e história','Registre seus Ryos e o passado do personagem. É tudo vinculado à quarta página do Canva.',
   `<div class="guide-fields">
@@ -4116,10 +4163,10 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
 }
   function clickAction(el){const action=el.dataset.action;if(!action)return;const p=active();if(action==='evolution-close')return evolutionDismiss();if(action==='combat-enter')return combatEnter();if(action==='combat-exit')return combatExit();if(action==='combat-chakra-step')return combatStepChakra(n(el.dataset.delta));if(action==='combat-portrait-next')return combatNextPortrait();if(action==='combat-to-techniques')return combatToTechniques();if(action==='integrated-use')return integratedUse(n(el.dataset.index));if(action==='integrated-kind'){S.inlineKind=el.dataset.kind||'power';S.inlineSearch='';render();return}if(action==='library-learn')return catalogLearn(el.dataset.id);if(action==='library-forget-effect')return forgetCatalogEffect(n(el.dataset.powerIndex),n(el.dataset.index));if(action==='library-kind'){S.libraryKind=el.dataset.kind||'all';render();return}if(action==='guide-step'){S.inlineSearch='';S.inlineKind='power';S.guideStep=bound(el.dataset.step,0,GUIDE_STEPS.length-1);S.view='guia';render();window.scrollTo({top:0,behavior:'smooth'});return}if(action==='guide-open'){if(!active())return nav('clans');S.canvaPage=bound(el.dataset.page||1,1,4);S.canvaMode=el.dataset.advanced==='true'?'advanced':'original';S.tab=el.dataset.tab||'identidade';S.view='sheet';render();window.scrollTo({top:0,behavior:'smooth'});return}if(action==='cv-page'){S.inlineSearch='';S.canvaPage=Number(el.dataset.page)||1;render();return}if(action==='cv-mode'){S.canvaMode=S.canvaMode==='advanced'?'original':'advanced';render();return}if(action==='open-sheet')return openSheet(el.dataset.id);if(action==='ask-delete')return askDelete(el.dataset.id);if(action==='confirm-delete')return deleteSheet();if(action==='lock-admin')return lockAdmin();if(action==='apply-remote')return applyRemoteSheet();if(action==='exit-sheet-to-list'){if(S.view==='sheet'&&!S.adminViewing&&active()){playSfx('menu');return nav('fichas')}return}if(action==='nav')return nav(el.dataset.view);if(action==='tab'){S.tab=el.dataset.tab;render();return}if(action==='clan'){S.activeClan=el.dataset.clan;S.modal='clan';render();return}if(action==='close-modal'){S.modal=null;render();return}if(action==='create-sheet')return createSheetAnimated();if(action==='auth-pane'){S.authPane=el.dataset.pane==='admin'?'admin':'login';render();return}if(action==='auth-switch'){S.authPane=S.authPane==='register'?'login':'register';render();return}if(action==='logout'){S.adminUnlocked=false;stopAdminLive();S.adminSheets=[];if(fb)fb.signOut(fb.auth);else{S.user=null;S.sheet=null;S.sheetId=null;S.sheets=[];S.view='home';render()}return}if(action==='portrait-upload')return uploadPortrait(el.dataset.slot);if(action==='portrait-switch')return switchPortrait(el.dataset.slot);if(action==='portrait-remove')return removePortrait(el.dataset.slot);if(action==='save')return persist();if(action==='print')return window.print();if(action==='export')return exportSheet();if(action==='vitality-step')return adjustVitality(n(el.dataset.delta));if(action==='social')return adjustSocial(el.dataset.key,n(el.dataset.delta));if(action==='attr')return adjustAttr(el.dataset.key,n(el.dataset.delta));if(action==='skill')return adjustSkill(el.dataset.key,n(el.dataset.delta));if(action==='shift')return shiftCombat();if(action==='reset-shift'){if(!canEditCurrent())return;p.combateAjustes={CC:0,CD:0,ESQ:0,LM:0};render();scheduleSave();return}if(action==='add-item')return modifyItem(el.dataset.array);if(action==='remove-item')return modifyItem(el.dataset.array,n(el.dataset.index),true);if(action==='roll-skill'){const k=el.dataset.key;if(!trained(p,k))return showToast('Esta perícia exige treinamento.',true);return roll(2,skillTotal(p,k),k)}if(action==='roll-combat'){const key=el.dataset.key;return roll(2,combat(p,key),key==='CD'?'Combate à distância':'Combate corporal')}if(action==='roll-initiative')return roll(1,n(p.atributos.AGI)+skillTotal(p,'Prontidão'),'Iniciativa');if(action==='refresh-admin')return refreshAdmin();if(action==='open-admin'){if(!canAdmin()||!S.adminUnlocked)return showToast('Confirme a senha para acessar as fichas.',true);const x=S.adminSheets.find(a=>a.__id===el.dataset.id);if(x){const {__id,...safeData}=x;S.sheet=normalize(safeData);S.sheetId=__id;S.adminViewing=true;S.canvaMode='original';S.view='sheet';S.tab='identidade';render();}return}}
   document.addEventListener('click',ev=>{const el=ev.target.closest('[data-action]');if(!el)return;if(el.classList.contains('modalshade')&&ev.target!==el)return;clickAction(el)});
-  document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&document.querySelector('.evo-rise-layer')){ev.preventDefault();evolutionDismiss();return}if(ev.key==='Escape'&&S.view==='sheet'&&S.combatMode){ev.preventDefault();combatExit()}});
+  document.addEventListener('keydown',ev=>{if(ev.target.matches?.('[data-vitality-input]')){if(ev.key==='Enter'){ev.preventDefault();ev.target.blur();return}if(ev.key==='Escape'){ev.preventDefault();ev.stopPropagation();ev.target.value=String(vitalityValue(active()));ev.target.blur();return}}if(ev.key==='Escape'&&document.querySelector('.evo-rise-layer')){ev.preventDefault();evolutionDismiss();return}if(ev.key==='Escape'&&S.view==='sheet'&&S.combatMode){ev.preventDefault();combatExit()}});
   document.addEventListener('submit',ev=>{if(ev.target.id==='auth-form'){ev.preventDefault();submitAuth(ev.target)}else if(ev.target.id==='admin-auth-form'){ev.preventDefault();unlockAdmin(ev.target)}});
-  document.addEventListener('input',ev=>{const el=ev.target;if(el.matches('[data-int-search]')){S.inlineSearch=el.value;integratedFilter();return}if(el.matches('[data-library-search]')){S.librarySearch=el.value;librarySearchFilter();return}if(el.id==='admin-filter'){const q=el.value.toLocaleLowerCase('pt-BR');$('#admin-rows').innerHTML=adminRows(S.adminSheets.filter(x=>[x.nome,x.usuario,clanOf(x.clanId).name].some(z=>String(z||'').toLocaleLowerCase('pt-BR').includes(q))));return}if(el.dataset.cvArray){canvaUpdateArray(el,true);return}if(el.dataset.cvSkill){updateCanvaSkill(el,true);return}if(!el.dataset.bind||el.tagName==='SELECT')return;const current=active(),path=el.dataset.bind,old=getAt(current,path.startsWith('@')?path.slice(1):path);if(!updateValue(path,el.value)){el.value=old??''}else refreshGuideFeedback()});
-  document.addEventListener('change',ev=>{const el=ev.target;if(el.matches('[data-library-power]')){S.libraryPowerId=el.value;render();return}if(el.matches('[data-library-scope]')){S.libraryScope=el.value;render();return}if(el.matches('[data-portrait-file]')){const file=el.files?.[0];el.value='';void handlePortraitSelected(file,S.portraitUploadSlot);return}if(el.dataset.cvArray){canvaUpdateArray(el);return}if(el.dataset.cvSkill){updateCanvaSkill(el);return}if(!el.dataset.bind||el.tagName!=='SELECT')return;updateValue(el.dataset.bind,el.value)});
+  document.addEventListener('input',ev=>{const el=ev.target;if(el.matches('[data-vitality-input]'))return;if(el.matches('[data-int-search]')){S.inlineSearch=el.value;integratedFilter();return}if(el.matches('[data-library-search]')){S.librarySearch=el.value;librarySearchFilter();return}if(el.id==='admin-filter'){const q=el.value.toLocaleLowerCase('pt-BR');$('#admin-rows').innerHTML=adminRows(S.adminSheets.filter(x=>[x.nome,x.usuario,clanOf(x.clanId).name].some(z=>String(z||'').toLocaleLowerCase('pt-BR').includes(q))));return}if(el.dataset.cvArray){canvaUpdateArray(el,true);return}if(el.dataset.cvSkill){updateCanvaSkill(el,true);return}if(!el.dataset.bind||el.tagName==='SELECT')return;const current=active(),path=el.dataset.bind,old=getAt(current,path.startsWith('@')?path.slice(1):path);if(!updateValue(path,el.value)){el.value=old??''}else refreshGuideFeedback()});
+  document.addEventListener('change',ev=>{const el=ev.target;if(el.matches('[data-vitality-input]')){commitVitalityInput(el);return}if(el.matches('[data-library-power]')){S.libraryPowerId=el.value;render();return}if(el.matches('[data-library-scope]')){S.libraryScope=el.value;render();return}if(el.matches('[data-portrait-file]')){const file=el.files?.[0];el.value='';void handlePortraitSelected(file,S.portraitUploadSlot);return}if(el.dataset.cvArray){canvaUpdateArray(el);return}if(el.dataset.cvSkill){updateCanvaSkill(el);return}if(!el.dataset.bind||el.tagName!=='SELECT')return;updateValue(el.dataset.bind,el.value)});
   async function startFirebase(){try{const base=`https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}`;const [{initializeApp},{getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,reauthenticateWithCredential,EmailAuthProvider},{getFirestore,doc,getDoc,setDoc,deleteDoc,collection,getDocs,query,where,onSnapshot}]=await Promise.all([import(base+'/firebase-app.js'),import(base+'/firebase-auth.js'),import(base+'/firebase-firestore.js')]);const app=initializeApp(FIREBASE_CONFIG),auth=getAuth(app),db=getFirestore(app);fb={auth,db,doc,getDoc,setDoc,deleteDoc,collection,getDocs,query,where,onSnapshot,reauthenticateWithCredential,EmailAuthProvider,signOut,createUserWithEmailAndPassword,signInWithEmailAndPassword};onAuthStateChanged(auth,async(user)=>{clearTimeout(S.saveTimer);if(!user){stopAdminLive();S.adminUnlocked=false;S.adminAuthBusy=false;S.adminLoginBusy=false;S.adminSheets=[];S.user=null;S.isAdmin=false;S.sheet=null;S.sheetId=null;S.sheets=[];S.adminViewing=false;S.loading=false;S.view='login';render();return}const fallback=user.email?.split('@')[0]||'Shinobi';S.user={uid:user.uid,displayName:fallback};try{const [profile,admin,found]=await Promise.all([getDoc(doc(db,'users',user.uid)),getDoc(doc(db,'admins',user.uid)),getDocs(query(collection(db,'fichas'),where('ownerUid','==',user.uid)))]);if(profile.exists())S.user.displayName=profile.data().username||fallback;S.isAdmin=admin.exists()||user.email===MASTER_EMAIL;if(user.email===MASTER_EMAIL)S.adminUnlocked=true;S.sheets=found.docs.map(d=>({id:d.id,data:normalize(d.data())}));const first=ownSheets()[0];S.sheet=first?.data||null;S.sheetId=first?.id||null;S.adminViewing=false;S.loading=false;if(S.adminUnlocked&&S.isAdmin)startAdminLive();S.view=S.adminUnlocked&&S.isAdmin?'admin':S.authPane==='admin'?'login':'home';render()}catch(e){console.error(e);S.loading=false;S.view='home';render();showToast('Conta conectada, mas houve um erro ao carregar os dados. Confira as regras do Firestore.',true)}})}catch(e){console.error(e);S.loading=false;S.view='login';render();showToast('Falha ao inicializar Firebase. Confira as chaves e o domínio autorizado.',true)}}
   if(CONFIGURED)startFirebase();else{S.loading=false;render()}
 </script>
