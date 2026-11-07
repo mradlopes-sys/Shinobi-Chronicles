@@ -1259,6 +1259,39 @@
 .shell .cv-page .cv-vitality-spot .vital-stepper button{font-size:clamp(10px,.95vw,12px)!important}
 .vital-guide{min-height:42px}
 
+
+/* Curas: tremida leve, brilho verde e difusão de aquarela, sem afetar ícones */
+.shell .cv-page .cv-portrait.portrait-healing .cv-portrait-image,
+.shell .portrait-editor-preview.portrait-healing img{
+ animation:shinobi-portrait-healing .82s cubic-bezier(.24,.61,.25,1) both!important;
+ transform-origin:50% 76%;
+}
+.shell .cv-page .cv-portrait.portrait-healing::after{
+ content:"";position:absolute;inset:4% 3% 8% 3%;z-index:4;pointer-events:none;
+ background:radial-gradient(ellipse at 50% 58%,rgba(125,228,145,.42),rgba(93,196,111,.12) 51%,transparent 74%);
+ animation:shinobi-healing-wash .82s ease-out both;
+ mix-blend-mode:screen;
+}
+@keyframes shinobi-portrait-healing{
+ 0%{transform:translateX(-2px) scale(.991);filter:brightness(1) drop-shadow(0 0 0 rgba(90,205,125,0))}
+ 14%{transform:translateX(3px) rotate(.5deg);filter:brightness(1.24) drop-shadow(0 0 5px rgba(93,215,116,.75))}
+ 34%{transform:translateX(-2px) rotate(-.5deg);filter:brightness(1.12) drop-shadow(0 0 10px rgba(104,221,125,.75))}
+ 57%{transform:translateX(1px);filter:brightness(1.08) drop-shadow(0 0 6px rgba(104,221,125,.43))}
+ 100%{transform:none;filter:none}
+}
+@keyframes shinobi-healing-wash{
+ 0%{opacity:0;transform:scale(.84)}
+ 28%{opacity:.88;transform:scale(1)}
+ 60%{opacity:.57;transform:scale(1.04)}
+ 100%{opacity:0;transform:scale(1.08)}
+}
+@media(prefers-reduced-motion:reduce){
+ .shell .cv-page .cv-portrait.portrait-healing .cv-portrait-image,
+ .shell .portrait-editor-preview.portrait-healing img,
+ .shell .cv-page .cv-portrait.portrait-healing::after{animation:none!important}
+}
+@media print{.shell .cv-page .cv-portrait.portrait-healing::after{display:none!important}}
+
 </style>
 </head>
 <body>
@@ -1626,13 +1659,16 @@ function refreshPortraitUI(previousAutomatic=null){
  });
  const latest=portraitAutomatic(p);
  if(previousAutomatic!==null&&previousAutomatic!==latest){
-  const effect=latest==='grave'?'portrait-hit-grave':latest==='ferido'?'portrait-hit-wounded':null;
+  const before=portraitSeverity(previousAutomatic),after=portraitSeverity(latest);
+  const healing=after<before;
+  const effect=healing?'portrait-healing':after===2?'portrait-hit-grave':after===1?'portrait-hit-wounded':null;
+  if(after>before)playSfx(after===2?'critical':'wounded');
   document.querySelectorAll('.cv-portrait,.portrait-editor-preview').forEach(surface=>{
-   surface.classList.remove('portrait-hit-wounded','portrait-hit-grave');
+   surface.classList.remove('portrait-hit-wounded','portrait-hit-grave','portrait-healing');
    if(!effect)return;
    void surface.offsetWidth;
    surface.classList.add(effect);
-   setTimeout(()=>{if(surface.isConnected)surface.classList.remove(effect)},900);
+   setTimeout(()=>{if(surface.isConnected)surface.classList.remove(effect)},950);
   });
  }
 }
@@ -2384,6 +2420,7 @@ function canvaUpdateArray(el,preserveFocus=false){
 }
 function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="margin:15vh auto;max-width:500px"><h3>Carregando os arquivos shinobi...</h3><p>Conectando ao sistema de autenticação.</p></div>';return}if(CONFIGURED&&!S.user&&!['login'].includes(S.view))S.view='login';let screen={home,clans,sheet:canvaSheetView,guia:guideView,fichas:mySheets,admin:adminView,'admin-gate':adminGate,login}[S.view]||home;$('#app').innerHTML=screen();if(S.modal)$('#app').insertAdjacentHTML('beforeend',S.modal==='delete'?deleteModal():clanModal())}
   function nav(view){
+ if((view==='clans'||view==='fichas')&&view!==S.view)playSfx('menu');
  S.modal=null;
  if(view==='admin'){
    if(!canAdmin())return showToast('Acesso restrito ao mestre.',true);
@@ -2433,6 +2470,25 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
   function modifyItem(array,index,remove=false){if(!canEditCurrent())return;const p=active();if(!p||!['poderes','aptidoes','jutsus','inventario'].includes(array))return;if(remove){p[array].splice(index,1);render();scheduleSave();return}if(p[array].length>=MAX_ITEMS)return showToast('Limite de registros atingido.',true);if(array==='aptidoes'&&p.aptidoes.filter(x=>x?.nome?.trim()).length>=3&&totals(p).powers+2>currentNC().powers)return showToast('Faltam 2 pontos de poder para comprar outra aptidão.',true);const patterns={poderes:{nome:'',nivel:1,descricao:''},aptidoes:{nome:'',tipo:''},jutsus:{nome:'',nivel:1,acao:'',duracao:'',alvo:'',alcance:'',efeito:''},inventario:{nome:'',quantidade:1,obs:''}};if(array==='poderes'&&totals(p).powers+1>currentNC().powers)return showToast('Sem pontos de poder disponíveis.',true);p[array].push({id:randomId(),...patterns[array]});render();scheduleSave()}
   function roll(diceCount,bonus,label){const rolls=Array.from({length:diceCount},()=>1+Math.floor(Math.random()*8)),sum=rolls.reduce((a,b)=>a+b,0);let critical=diceCount===2&&(sum>=15?' · SUCESSO CRÍTICO':sum<=3?' · FALHA CRÍTICA':'');showToast(`${label}: ${rolls.join(' + ')} + ${bonus} = ${sum+bonus}${critical}`)}
   function exportSheet(){if(!active())return;const data=JSON.stringify(active(),null,2);const url=URL.createObjectURL(new Blob([data],{type:'application/json;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download=`shinobi-${active().nome.toLowerCase().replace(/[^a-z0-9]/g,'-')||'personagem'}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1200)}
+
+  
+  /* Sons fornecidos pelo servidor, arquivos locais hospedados no GitHub Pages. */
+  const SHINOBI_SFX={
+    menu:{url:'assets/audio/menu-transition.ogg',volume:.66},
+    wounded:{url:'assets/audio/injury-wounded.ogg',volume:.74},
+    critical:{url:'assets/audio/injury-critical.ogg',volume:.8}
+  };
+  const soundTracks=new Map();
+  function playSfx(kind){
+    const spec=SHINOBI_SFX[kind];if(!spec)return;
+    try{
+      let sound=soundTracks.get(kind);
+      if(!sound){sound=new Audio(spec.url);sound.preload='auto';sound.volume=spec.volume;soundTracks.set(kind,sound)}
+      sound.pause();sound.currentTime=0;
+      const started=sound.play();if(started&&typeof started.catch==='function')started.catch(()=>{});
+    }catch(err){console.warn('Som indisponível:',kind,err)}
+  }
+  function portraitSeverity(key){return key==='grave'?2:key==='ferido'?1:0}
 
   let createSheetAudio=null;
   function playCreateSheetSound(){
