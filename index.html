@@ -1407,6 +1407,41 @@
 .lib-mini-notice{font-size:11px;line-height:1.7;color:#617466;border:1px solid #c0c6ba;
  padding:11px;background:#e8e7dc}
 
+
+/* Biblioteca de aprendizado embutida no guia e na ficha */
+.int-library{padding:17px;margin:18px 0;border:1px solid #d5cebf;background:#faf8f2;min-width:0}
+.int-header{display:flex;justify-content:space-between;align-items:center;gap:15px;border-bottom:1px solid #ded7cd;padding-bottom:14px}
+.int-header h3{font:600 19px var(--serif);margin:5px 0}.int-header p,.int-hint{font-size:11px;color:#697168;line-height:1.7}
+.int-balance{display:flex;align-items:center;gap:9px;background:#f0eee5;padding:9px 12px;border:1px solid #d4cebf;white-space:nowrap}
+.int-balance strong{font:600 25px var(--serif)}.int-balance small{max-width:48px;white-space:normal;font-size:10px}
+.int-nav{display:flex;gap:5px;overflow-x:auto;margin:16px 0}.int-nav button{background:#fffefa;color:#6a6e66;border:1px solid #d9d2c5;padding:9px 14px;white-space:nowrap;font-size:11px;font-weight:700}
+.int-nav button.on{background:#2a352d;color:#fff;border-color:#2a352d}
+.int-filters{display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin:13px 0}
+.int-filters label{font-size:10px;font-weight:700;color:#687268;display:grid;gap:5px;flex:1;min-width:165px}
+.int-filters input,.int-filters select{background:#fffefa;border:1px solid #d6d0c3;min-height:38px;padding:8px 10px;width:100%;border-radius:4px}
+.int-filters small{font-size:10px;color:#777;padding-bottom:9px}
+.int-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;max-height:480px;overflow-y:auto;padding:2px}
+.int-card{background:#fffefa;border:1px solid #e2dbcf;padding:12px;min-width:0}
+.int-tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:9px}.int-tags span{background:#f1ece3;color:#786c5e;font-size:9px;padding:4px 6px}
+.int-row{display:flex;align-items:start;justify-content:space-between;gap:9px}.int-row strong{font:600 15px var(--serif)}
+.int-row p{font-size:11px;color:#687067;line-height:1.55;margin:5px 0}.int-row button{flex:0 0 auto;max-width:135px;white-space:normal;font-size:10px}
+.int-card details{font-size:10px;color:#6c746a;border-top:1px solid #eee7df;margin-top:9px;padding-top:8px;line-height:1.6}
+.int-card summary,.int-known summary,.int-manual summary{cursor:pointer;font-weight:700}
+.int-owned,.int-alert{display:block;font-size:10px;line-height:1.55;margin-top:7px}.int-owned{color:#397348;font-weight:700}.int-alert{color:#9d513d}
+.int-bottom{display:flex;gap:12px;flex-wrap:wrap;justify-content:space-between;align-items:center;margin-top:13px}
+.int-bottom small{font-size:10px;color:#71766f;line-height:1.5}
+.int-known{margin-top:17px;border-top:1px solid #d9d0c2;padding-top:15px}
+.int-known header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px}
+.int-known header div{display:grid;gap:4px}.int-known header b{font:600 16px var(--serif)}
+.int-known header small,.int-known-row small{font-size:10px;color:#787b74}
+.int-known header strong{color:#4b6880;font-size:11px}
+.int-known-row{display:flex;justify-content:space-between;align-items:center;gap:15px;border-bottom:1px solid #ebe6da;padding:11px 0}
+.int-known-row>div{min-width:0}.int-known-row b{font-size:12px}.int-known-row small{display:block;margin:5px 0;line-height:1.5}
+.int-known-row details{font-size:10px;color:#777}.int-known-row aside{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.int-known-row input{width:73px;padding:6px;border:1px solid #cfc8bd}.int-manual{padding-top:10px}
+.int-manual>summary{font-size:12px;color:#77554b;padding:13px 0}
+@media(max-width:720px){.int-library{padding:11px}.int-grid{grid-template-columns:1fr;max-height:410px}.int-header,.int-known-row{flex-wrap:wrap;align-items:flex-start}.int-known-row aside{justify-content:flex-start}}
+
 </style>
 </head>
 <body>
@@ -1619,7 +1654,7 @@
   const LIBRARY_SOURCES={title:'Naruto: Shinobi no Sho — 4ª edição (4.1b)',notes:'Poderes compram níveis; jutsus e efeitos dependem dos poderes e demais pré-requisitos.'};
   const TABS=[['identidade','Identidade'],['atributos','Atributos'],['pericias','Perícias'],['combate','Combate'],['tecnicas','Poderes e jutsus'],['inventario','Inventário'],['historia','História']];
 
-  const S={view:'home',tab:'identidade',authPane:'login',user:null,isAdmin:false,sheet:null,sheetId:null,adminSheets:[],activeClan:null,demo:!CONFIGURED,sheets:[],adminViewing:false,pendingDeleteId:null,pendingWrite:null,canvaPage:1,canvaMode:'original',loading:CONFIGURED,modal:null,saveTimer:null,saveState:'Pronto',authWorking:false,adminUnlocked:false,adminAuthBusy:false,adminLoginBusy:false,adminUnsubscribe:null,adminLive:false,adminLiveReady:false,adminLiveError:false,adminEvents:[],pendingRemote:null,locallyDirty:false,isSaving:false,lastSavedWrite:null,creating:false,portraitBusy:false,portraitPreview:null,portraitUploadSlot:'casual',guideStep:0,libraryKind:'all',libraryScope:'mine',librarySearch:'',libraryPowerId:''};
+  const S={view:'home',tab:'identidade',authPane:'login',user:null,isAdmin:false,sheet:null,sheetId:null,adminSheets:[],activeClan:null,demo:!CONFIGURED,sheets:[],adminViewing:false,pendingDeleteId:null,pendingWrite:null,canvaPage:1,canvaMode:'original',loading:CONFIGURED,modal:null,saveTimer:null,saveState:'Pronto',authWorking:false,adminUnlocked:false,adminAuthBusy:false,adminLoginBusy:false,adminUnsubscribe:null,adminLive:false,adminLiveReady:false,adminLiveError:false,adminEvents:[],pendingRemote:null,locallyDirty:false,isSaving:false,lastSavedWrite:null,creating:false,portraitBusy:false,portraitPreview:null,portraitUploadSlot:'casual',guideStep:0,libraryKind:'all',libraryScope:'mine',librarySearch:'',libraryPowerId:'',inlineKind:'power',inlineSearch:''};
   let fb=null;
   const $=sel=>document.querySelector(sel);
   const E=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -2107,6 +2142,100 @@ function themeStyle(){
     }
     scheduleSave();render();
     showToast((item.kind==='power'?'Poder atualizado: ':item.kind==='effect'?'Efeito selecionado: ':'Registrado: ')+item.name);
+  }
+
+
+  /* Biblioteca integrada: dados salvos na ficha, sem novas coleções Firebase. */
+  function integratedCost(record,item){
+    const written=String(item?.cost??record.custoChakra??'').trim();
+    if(/^\d+$/.test(written))return Number(written);
+    if(item?.cost)return null;
+    return n(record.nivel)>0?n(record.nivel):null;
+  }
+  function integratedBlock(p,record){
+    const item=catalogItem(record.catalogId);
+    if(!item||item.kind!=='jutsu')return '';
+    const shadow={...p,jutsus:(p.jutsus||[]).filter(j=>j!==record)};
+    const state=catalogGate(shadow,item);
+    return state.ok?'':state.reason;
+  }
+  function integratedUse(index){
+    const p=active();
+    if(!p||!canEditCurrent())return showToast('Ficha sem permissão de edição.',true);
+    const j=p.jutsus?.[index];
+    if(!j)return showToast('Jutsu não encontrado.',true);
+    const error=integratedBlock(p,j);
+    if(error)return showToast('Pré-requisito não atendido: '+error,true);
+    const item=catalogItem(j.catalogId);
+    let cost=integratedCost(j,item);
+    if(cost===null){
+      const input=document.querySelector('[data-integrated-cost="'+index+'"]');
+      if(!input||input.value.trim()==='')return showToast('Informe o custo variável de Chakra.',true);
+      cost=Number(input.value);
+    }
+    if(!Number.isInteger(cost)||cost<0||cost>999)return showToast('Custo de Chakra inválido.',true);
+    const chakra=p.recursos?.chakra===null||p.recursos?.chakra===undefined||p.recursos?.chakra===''?chakraMax(p):n(p.recursos.chakra);
+    if(chakra<cost)return showToast('Chakra insuficiente: '+chakra+' disponível.',true);
+    p.recursos={...p.recursos,chakra:chakra-cost};
+    scheduleSave();render();showToast(j.nome+': −'+cost+' Chakra.');
+  }
+  function integratedKnown(p){
+    const list=(p.jutsus||[]).filter(x=>String(x.nome||'').trim());
+    const chakra=p.recursos?.chakra===null||p.recursos?.chakra===undefined||p.recursos?.chakra===''?chakraMax(p):n(p.recursos.chakra);
+    return `<section class="int-known"><header><div><b>Técnicas do meu personagem</b><small>Use as técnicas durante a sessão e consulte os efeitos.</small></div><strong>Chakra: ${chakra} / ${chakraMax(p)}</strong></header>
+      ${list.length?list.map(j=>{
+        const i=p.jutsus.indexOf(j),item=catalogItem(j.catalogId),cost=integratedCost(j,item),error=integratedBlock(p,j);
+        return `<article class="int-known-row"><div><b>${E(j.nome)}</b><small>${E(j.acao||item?.action||'Ação conforme manual')} · ${E(j.alcance||item?.range||'Alcance conforme manual')} · ${cost===null?'custo variável':cost+' Chakra'}</small>
+        ${error?`<small class="int-alert">⚠ ${E(error)}</small>`:''}
+        <details><summary>Descrição e regras</summary><p>${E(j.efeito||item?.desc||'Consulte a descrição oficial.')}</p>${item?.page?`<small>Referência: Shinobi no Sho 4.1b, página ${item.page}</small>`:''}</details></div>
+        <aside>${cost===null?`<input type="number" min="0" max="999" step="1" placeholder="Chakra" aria-label="Custo em Chakra" data-integrated-cost="${i}">`:''}
+        <button type="button" class="button small" data-action="integrated-use" data-index="${i}" ${error?'disabled':''}>${cost===null?'Usar jutsu':'Usar · −'+cost}</button></aside></article>`;
+      }).join(''):'<p class="int-hint">Nenhum jutsu registrado. Escolha a aba Jutsus para adicioná-los.</p>'}</section>`;
+  }
+  function integratedFilter(){
+    const query=catalogKey(S.inlineSearch||'');let count=0;
+    document.querySelectorAll('[data-int-card]').forEach(el=>{
+      const yes=!query||String(el.dataset.intCard||'').includes(query);
+      el.hidden=!yes;if(yes)count++;
+    });
+    document.querySelectorAll('[data-int-count]').forEach(el=>el.textContent=count+' resultado(s)');
+    document.querySelectorAll('[data-int-empty]').forEach(el=>el.hidden=count>0);
+  }
+  function integratedLibrary(p,mode='powers'){
+    const aptitudeOnly=mode==='aptitudes';
+    const kind=aptitudeOnly?'aptitude':(['power','effect','jutsu','aptitude'].includes(S.inlineKind)?S.inlineKind:'power');
+    const powers=LIBRARY_ENTRIES.filter(x=>x.kind==='power'&&x.effectPower);
+    const chosen=powers.some(x=>x.id===S.libraryPowerId)?S.libraryPowerId:(powers.find(x=>catalogPower(p,x.id))?.id||'ninpou');
+    S.libraryPowerId=chosen;
+    const remaining=currentNC().powers-totals(p).powers;
+    const entries=LIBRARY_ENTRIES.filter(x=>x.kind===kind&&(x.clan==='comum'||x.clan===p.clanId));
+    const kinds=[['power','Poderes'],['effect','Efeitos'],['jutsu','Jutsus'],['aptitude','Aptidões']];
+    const cards=entries.map(x=>{
+      const gate=catalogGate(p,x),owned=x.kind==='power'?catalogPower(p,x.id):null;
+      const already=x.kind==='jutsu'?catalogTech(p,x):x.kind==='aptitude'?catalogApt(p,x.name):x.kind==='effect'?catalogHasEffect(p,chosen,x.name):false;
+      const meta=[x.kind==='power'?'Poder · '+(owned?'nível '+n(owned.nivel):'a aprender'):x.kind==='effect'?'Efeito':x.kind==='aptitude'?'Aptidão':'Jutsu',x.min?'Nível '+x.min:'',x.rank?'Rank '+x.rank:'',x.page?'p. '+x.page:''].filter(Boolean);
+      const cost=x.kind==='power'?'1 ponto de poder por nível':x.kind==='aptitude'?'3 gratuitas; extras 2 pontos':x.kind==='effect'?'1 efeito por nível':'registro gratuito; Chakra conforme nível ou descrição';
+      const details=x.kind==='jutsu'?'Ação: '+(x.action||'consultar livro')+'. Alcance: '+(x.range||'consultar livro')+'. Chakra: '+(x.cost||'conforme nível usado')+'. '+(x.power?'Poder: '+(catalogItem(x.power)?.name||x.power)+'.':''):
+        x.kind==='effect'?'Selecione um poder de efeitos adquirido. Efeitos são escolhidos em ordem, até o nível comprado.':
+        x.kind==='power'?'O nível adquirido determina efeitos e técnicas liberados. Limite atual: '+limit()+'.':
+        'Só pode ser aprendida quando os requisitos são atendidos.';
+      return `<article class="int-card" data-int-card="${E(catalogKey([x.name,x.desc,x.power,x.clan].join(' ')))}"><div class="int-tags">${meta.map(t=>`<span>${E(t)}</span>`).join('')}</div>
+      <div class="int-row"><div><strong>${E(x.name)}</strong><p>${E(x.desc)}</p></div><button type="button" class="button small ${gate.ok?'':'secondary'}" data-action="library-learn" data-id="${E(x.id)}" ${gate.ok?'':'disabled'}>${E(gate.text)}</button></div>
+      ${owned||already?`<small class="int-owned">✓ ${owned?'Adquirido · nível '+n(owned.nivel):'Na ficha'}</small>`:''}
+      ${!gate.ok&&!already&&!owned?`<small class="int-alert">${E(gate.reason)}</small>`:''}
+      <details><summary>Regras e requisitos</summary><p>${E(details)} ${E(cost)}.</p><small>Livro SNS 4.1b ${x.page?'· página '+x.page:''}. Testes, dano, área e duração específicos continuam conforme manual.</small></details></article>`;
+    }).join('');
+    return `<section class="int-library" aria-label="Biblioteca integrada na criação da ficha">
+      <header class="int-header"><div><div class="eyebrow">SISTEMA INTEGRADO · SHINOBI CHRONICLES</div><h3>Aprendizado de técnicas</h3><p>Adicione à ficha aqui mesmo. Requisitos e orçamento são conferidos antes da compra.</p></div><span class="int-balance"><strong>${remaining}</strong><small>pontos livres</small></span></header>
+      ${!aptitudeOnly?`<nav class="int-nav" aria-label="Escolher tipo de técnica">${kinds.map(([id,title])=>`<button type="button" data-action="integrated-kind" data-kind="${id}" class="${kind===id?'on':''}" aria-pressed="${kind===id}">${title}</button>`).join('')}</nav>`:
+      '<p class="int-hint">As três primeiras aptidões são gratuitas. Extras gastam 2 pontos de poder.</p>'}
+      <div class="int-filters"><label>Buscar <input type="search" data-int-search value="${E(S.inlineSearch||'')}" placeholder="Ex.: Katon, Sharingan, sombra..." autocomplete="off"></label>
+      ${kind==='effect'?`<label>Escolher efeito para <select data-library-power>${powers.map(x=>`<option value="${x.id}" ${x.id===chosen?'selected':''}>${E(x.name)}${catalogPower(p,x.id)?' ✓':''}</option>`).join('')}</select></label>`:''}
+      <small data-int-count>${entries.length} resultado(s)</small></div>
+      <div class="int-grid">${cards}</div><p class="int-hint" data-int-empty hidden>Nenhuma opção encontrada para esta busca.</p>
+      <div class="int-bottom"><small>Regras específicas e efeitos não cadastrados devem ser conferidos com o mestre.</small><button type="button" class="button secondary small" data-action="nav" data-view="biblioteca">Abrir biblioteca completa</button></div>
+      ${aptitudeOnly?'':integratedKnown(p)}
+    </section>`;
   }
 
 function libraryView(){
