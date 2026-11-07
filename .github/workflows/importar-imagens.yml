@@ -1,0 +1,68 @@
+name: Instalar imagens do Shinobi Chronicles
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Shinobi_Chronicles_Assets.zip'
+      - 'Shinobi_Banners_12.zip'
+      - 'Shinobi_Fichas_48.zip'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: shinobi-import-assets
+  cancel-in-progress: false
+
+jobs:
+  importar-imagens:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Obter repositório
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Extrair imagens originais, preservando nomes e pastas
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from zipfile import ZipFile
+          from pathlib import Path
+          allowed = ("assets/clas/", "assets/fichas/")
+          files = ("Shinobi_Chronicles_Assets.zip", "Shinobi_Banners_12.zip", "Shinobi_Fichas_48.zip")
+          total = 0
+          for source in files:
+              if not Path(source).is_file():
+                  continue
+              with ZipFile(source) as package:
+                  for member in package.infolist():
+                      path = member.filename
+                      if not (path.startswith(allowed) and path.endswith(".jpg") and member.file_size <= 5_000_000):
+                          continue
+                      parts = Path(path).parts
+                      if ".." in parts or len(parts) != 3:
+                          continue
+                      output = Path(path)
+                      output.parent.mkdir(parents=True, exist_ok=True)
+                      output.write_bytes(package.read(member))
+                      total += 1
+              print(f"Importado: {source}")
+          if total == 0:
+              raise SystemExit("Nenhuma imagem válida encontrada nos ZIPs.")
+          print(f"Total de imagens extraídas: {total}")
+          print(f"Banners: {len(list(Path('assets/clas').glob('*.jpg'))) if Path('assets/clas').exists() else 0}")
+          print(f"Páginas Canva: {len(list(Path('assets/fichas').glob('*.jpg'))) if Path('assets/fichas').exists() else 0}")
+          PY
+      - name: Publicar arquivos na branch principal
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/clas/ assets/fichas/
+          if git diff --cached --quiet; then
+            echo "Nenhuma imagem nova para publicar."
+          else
+            git commit -m "assets: publicar banners e fichas originais do Canva"
+            git push origin HEAD:main
+          fi
