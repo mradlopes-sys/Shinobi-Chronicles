@@ -2130,6 +2130,89 @@
 @media(prefers-reduced-motion:reduce){.journal-scroll-frame.is-unrolling .journal-scroll-paper,.journal-scroll-frame.is-unrolling .journal-scroll-rod,.journal-scroll-frame.is-unrolling .journal-ink-body{animation:none!important;transform:none!important;filter:none!important;opacity:1!important}}
 @media print{.journal-scroll-frame{max-width:none;margin:0;padding:0}.journal-scroll-rod,.journal-head-buttons,.journal-btn,.journal-section-toggle .journal-expand{display:none!important}.journal-scroll-paper{box-shadow:none!important;border:1px solid #a9a197}.journal-section-content{display:block!important}}
 
+
+/* Diário: pergaminho horizontal se desenrola do centro sem deformar o texto */
+.journal-scroll-frame.is-unrolling .journal-scroll-paper{
+  transform:none!important;transform-origin:center center;
+  animation:journal-reveal-paper 1.28s cubic-bezier(.2,.72,.21,1) both!important;
+  will-change:clip-path,opacity;
+}
+.journal-scroll-frame.is-unrolling .journal-scroll-rod.left{
+  animation:journal-move-left 1.28s cubic-bezier(.2,.72,.21,1) both!important;
+  will-change:left;
+}
+.journal-scroll-frame.is-unrolling .journal-scroll-rod.right{
+  animation:journal-move-right 1.28s cubic-bezier(.2,.72,.21,1) both!important;
+  will-change:right;
+}
+.journal-scroll-frame.is-unrolling .journal-ink-body{
+  animation:journal-ink-unroll 0.48s 0.79s ease-out both!important;
+}
+@keyframes journal-reveal-paper{
+  0%{clip-path:inset(0 49.7% 0 49.7%);opacity:.55;filter:brightness(.89)}
+  12%{opacity:1}
+  60%{clip-path:inset(0 17% 0 17%);filter:brightness(.98)}
+  85%{clip-path:inset(0 0 0 0)}
+  100%{clip-path:inset(0 0 0 0);opacity:1;filter:none}
+}
+@keyframes journal-move-left{
+  0%{left:calc(50% - 18px)}
+  83%{left:9px}
+  100%{left:14px}
+}
+@keyframes journal-move-right{
+  0%{right:calc(50% - 18px)}
+  83%{right:9px}
+  100%{right:14px}
+}
+@keyframes journal-ink-unroll{
+  from{opacity:0;filter:blur(2px);transform:translateY(5px)}
+  to{opacity:1;filter:none;transform:none}
+}
+.journal-stamp-overlay{position:fixed;inset:0;z-index:420;pointer-events:none;display:grid;place-items:center;
+  background:radial-gradient(ellipse 45% 42% at center,#d9c9a43a,transparent 80%);
+  animation:journal-stamp-dissolve 2.35s ease-out both}
+.journal-stamp-approval{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;width:clamp(186px,39vw,285px);min-height:clamp(158px,31vw,218px);padding:18px 10px 14px;
+  border:8px double #9a3231;border-radius:4px;color:#922e2c;background:#f7eee4c0;
+  box-shadow:0 7px 0 #82333118,inset 0 0 0 2px #aa4b4125;
+  transform-origin:55% 70%;animation:journal-stamp-strike 2.25s cubic-bezier(.2,.8,.26,1) both}
+.journal-stamp-approval:before{content:"";position:absolute;inset:9px;border:1px dashed #963c35c0;pointer-events:none}
+.journal-stamp-approval .kanji{font:500 clamp(53px,8vw,80px)/1 'Yuji Boku',var(--serif);letter-spacing:.08em}
+.journal-stamp-approval strong{font:700 clamp(13px,2.5vw,21px)/1.35 var(--sans);letter-spacing:.08em}
+.journal-stamp-approval small{font:600 clamp(10px,2vw,13px)/1.3 var(--sans);letter-spacing:.17em}
+.journal-stamp-approval .serial{font:600 9px/1.6 var(--sans);margin-top:8px;opacity:.8}
+.journal-stamp-puff{position:absolute;inset:0;pointer-events:none;border:2px dashed #ae5d4a7a;border-radius:50%;
+  transform:scale(.1);opacity:0;animation:journal-stamp-cloud 1.2s .31s ease-out both}
+@keyframes journal-stamp-strike{
+  0%{opacity:0;transform:translateY(-180px) rotate(-20deg) scale(1.75);filter:blur(5px)}
+  14%{opacity:1}
+  23%{transform:translateY(0) rotate(-9deg) scale(.94);filter:none}
+  32%{transform:translateY(-10px) rotate(-10deg) scale(1.07)}
+  44%{transform:translateY(0) rotate(-9deg) scale(1)}
+  73%{opacity:.98}
+  100%{opacity:0;transform:translateY(0) rotate(-9deg) scale(1)}
+}
+@keyframes journal-stamp-cloud{
+  0%,20%{opacity:0;transform:scale(.3)}
+  35%{opacity:.4}
+  100%{opacity:0;transform:scale(3)}
+}
+@keyframes journal-stamp-dissolve{0%,75%{opacity:1}100%{opacity:0}}
+@media(max-width:800px){
+  @keyframes journal-move-left{0%{left:calc(50% - 13px)}83%{left:3px}100%{left:6px}}
+  @keyframes journal-move-right{0%{right:calc(50% - 13px)}83%{right:3px}100%{right:6px}}
+}
+@media(prefers-reduced-motion:reduce){
+  .journal-scroll-frame.is-unrolling .journal-scroll-paper,
+  .journal-scroll-frame.is-unrolling .journal-scroll-rod,
+  .journal-scroll-frame.is-unrolling .journal-ink-body,
+  .journal-stamp-overlay,.journal-stamp-approval,.journal-stamp-puff{
+    animation:none!important;clip-path:none!important;transform:none!important;opacity:1!important;filter:none!important;
+  }
+}
+@media print{.journal-stamp-overlay{display:none!important}}
+
 </style>
 </head>
 <body>
@@ -3759,7 +3842,7 @@ function canvaTechniqueAppendix(p,clan){
     el.setAttribute('aria-hidden','true');
     el.innerHTML='<span class="cb-feedback-rune">'+symbols[type]+'</span><span class="cb-feedback-caption">'+E(label)+'</span>';
     shell.appendChild(el);
-    if(withCue)combatCue(type);
+    if(withCue){if(type==='healing')playSfx('healing');else combatCue(type)}
     window.setTimeout(()=>{
       el.remove();
       if(shell.isConnected)shell.classList.remove('cb-react-'+type);
@@ -4097,6 +4180,36 @@ function canvaUpdateArray(el,preserveFocus=false){
 }
 function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="margin:15vh auto;max-width:500px"><h3>Carregando os arquivos shinobi...</h3><p>Conectando ao sistema de autenticação.</p></div>';return}if(CONFIGURED&&!S.user&&!['login'].includes(S.view))S.view='login';let screen={home,clans,sheet:canvaSheetView,guia:guideView,biblioteca:libraryView,diario:diaryView,fichas:mySheets,admin:adminView,'admin-gate':adminGate,login}[S.view]||home;$('#app').innerHTML=screen();if(S.modal)$('#app').insertAdjacentHTML('beforeend',S.modal==='delete'?deleteModal():clanModal());if(S.view==='biblioteca')librarySearchFilter();integratedFilter();if(S.view==='diario'&&S.diaryEnterAnimate)S.diaryEnterAnimate=false}
 
+
+  /* Os três novos efeitos são entregues em assets/audio/journal-sounds.js,
+     pré-carregado antes deste módulo. Respeita o volume mestre existente. */
+  function playJournalSfx(kind,requestedVolume=.65){
+    const source=window.SHINOBI_JOURNAL_SOUNDS?.[kind];
+    if(!source){console.warn('Som de diário indisponível:',kind);return false}
+    try{
+      const clip=new Audio(source);
+      clip.preload='auto';
+      clip.volume=normalizedSoundVolume(requestedVolume);
+      const playing=clip.play();
+      if(playing?.catch)playing.catch(error=>console.warn('Reprodução de som bloqueada:',kind,error));
+      return true;
+    }catch(error){console.warn('Erro ao iniciar som:',kind,error);return false}
+  }
+  function showMissionApprovalStamp(){
+    document.querySelectorAll('.journal-stamp-overlay').forEach(el=>el.remove());
+    const overlay=document.createElement('div');
+    overlay.className='journal-stamp-overlay';
+    overlay.setAttribute('role','status');
+    overlay.setAttribute('aria-label','Missão concluída. Visto do Hokage.');
+    overlay.innerHTML='<div class="journal-stamp-approval" aria-hidden="true">'+
+      '<span class="kanji">火影</span><strong>MISSÃO CONCLUÍDA</strong>'+
+      '<small>VISTO DO HOKAGE</small><span class="serial">SHINOBI CHRONICLES</span>'+
+      '</div><span class="journal-stamp-puff" aria-hidden="true"></span>';
+    document.body.appendChild(overlay);
+    const remove=()=>overlay.remove();
+    window.setTimeout(remove,2400);
+  }
+
   // Diário individual: um documento por conta, guardado na coleção já protegida das fichas.
   const DIARY_MAX_COMPLETED=80;
   const diaryDocId=ownerUid=>String(ownerUid)+'_diario';
@@ -4222,6 +4335,7 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
     S.diaryDirty=false;S.diaryLoading=false;S.diaryVersion=0;S.diaryStatus='Diário carregado';
     S.diaryPanel='';S.diaryExpandedId='';
     S.diaryEnterAnimate=true;S.view='diario';S.combatMode=false;S.modal=null;
+    playJournalSfx('scroll',.62);
     render();window.scrollTo({top:0});
   }
   function diaryUpdateField(element){
@@ -4256,7 +4370,9 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
     if(!entry.titulo.trim())entry.titulo='Missão sem título';
     d.concluidas.unshift(entry);d.atual={titulo:'',descricao:'',objetivos:''};
     S.diaryPanel='completed';S.diaryExpandedId=entry.id;
-    diaryScheduleSave();render();showToast('Missão arquivada como concluída.');
+    diaryScheduleSave();render();
+    showMissionApprovalStamp();playJournalSfx('stamp',.58);
+    showToast('Missão arquivada como concluída.');
   }
   function diaryAddCompleted(){
     if(!diaryAuthorized())return;
@@ -4411,12 +4527,13 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
     menu:{url:'assets/audio/menu-transition.ogg',volume:.66},
     wounded:{url:'assets/audio/injury-wounded.ogg',volume:.74},
     critical:{url:'assets/audio/injury-critical.ogg',volume:.8},
-    healing:{url:'assets/audio/healing.mp3?v=2',fallback:'assets/audio/healing.ogg?v=2',volume:.9}
+    healing:{url:'custom',volume:.72} // o som original foi substituído pelo segundo áudio enviado
   };
   const soundTracks=new Map();
   function playSfx(kind){
     const spec=SHINOBI_SFX[kind];if(!spec)return;
-    if(kind==='healing'){
+    if(kind==='healing')return playJournalSfx('healing',spec.volume);
+    if(false){
       // Retratos de cura são eventos raros: abrir uma instância nova mantém a
       // reprodução ligada ao clique de Vitalidade, mesmo após cache de erro.
       const attempt=(url,allowFallback)=>{
