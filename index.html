@@ -4382,7 +4382,7 @@ function canvaUpdateArray(el,preserveFocus=false){
     }
     function updatesHTML(){
       if(!updates)return '';
-      return '<div class="pub-update-overlay" data-action="board-updates-close"><section class="pub-updates" role="dialog" aria-modal="true" aria-label="Notas de atualização"><div class="flex between"><h2>Notas de Atualização</h2><button class="button secondary small" data-action="board-updates-close">Fechar ×</button></div>'+CHANGELOG.map(c=>'<article><time>'+esc(c.date)+'</time><h3>'+esc(c.title)+'</h3><p>'+esc(c.body)+'</p></article>').join('')+'</section></div>';
+      return '<div class="pub-update-overlay"><section class="pub-updates" role="dialog" aria-modal="true" aria-label="Notas de atualização"><div class="flex between"><h2>Notas de Atualização</h2><button class="button secondary small" data-action="board-updates-close">Fechar ×</button></div>'+CHANGELOG.map(c=>'<article><time>'+esc(c.date)+'</time><h3>'+esc(c.title)+'</h3><p>'+esc(c.body)+'</p></article>').join('')+'</section></div>';
     }
     function view(){
       if(!S.user)return layout('<div class="pub-hub"><div class="pub-blank">Entre na sua conta para consultar os quadros shinobi.</div></div>');
