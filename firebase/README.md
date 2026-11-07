@@ -1,3 +1,15 @@
+## Retrato do personagem sem Firebase Storage
+
+Na página de identificação da ficha, clique em **Enviar retrato** (ou abra **Editor detalhado → Retrato do personagem**) para escolher um arquivo do computador ou celular. Formatos aceitos: JPG, PNG e WebP, com até **12 MB de origem**.
+
+O navegador comprime a imagem e a transforma em JPEG/WebP, tentando manter a representação em até aproximadamente **155 mil caracteres**. Ela é salva no campo `foto` do **próprio documento da ficha no Firestore**; por isso **não é necessário ativar Firebase Storage ou mudar de plano** apenas para esta função. Cada personagem tem sua própria imagem, e há botões de **trocar** e **remover**.
+
+**Limitações:** o Firestore permite no máximo 1 MiB por documento, e o retrato utiliza parte desse limite. Esta abordagem foi projetada para fotos pequenas em um RPG entre amigos, não para imagens originais em alta resolução nem grandes bibliotecas. Operações de leitura e gravação continuam sujeitas às quotas do plano Spark. Se a ficha inteira ficar grande demais ou as quotas forem excedidas, o salvamento pode falhar.
+
+A imagem enviada fica acessível apenas a quem as regras do Firestore permitem ler a ficha, incluindo administradores autorizados.
+
+---
+
 ## Acesso rápido do mestre (atualizado)
 
 A opção **Entrar como ADM** utiliza o login reservado `mestre_shinobi`. A primeira entrada cria a conta no Firebase Authentication com a senha que o mestre digitar; as próximas entradas exigem a mesma senha.
