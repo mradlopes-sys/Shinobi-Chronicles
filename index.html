@@ -980,6 +980,145 @@
  .shell .cv-page .cv-attr-spot .cv-stepper button{visibility:hidden!important}
 }
 
+
+/* ============================================================
+   RETRATOS DINÂMICOS · SHINOBI CHRONICLES
+   Transparência respeita a moldura desenhada no Canva.
+   Quatro versões, sem recorte de imagens half-body.
+   ============================================================ */
+.shell .cv-page .cv-portrait{
+ background:transparent!important;
+ box-shadow:none!important;
+ border:none!important;
+ border-radius:0!important;
+ overflow:visible!important;
+ display:block!important;
+}
+.shell .cv-page .cv-portrait .cv-portrait-image{
+ position:absolute!important;inset:0!important;
+ width:100%!important;height:100%!important;max-width:100%!important;
+ object-fit:contain!important;object-position:center bottom!important;
+ display:block!important;pointer-events:none;background:transparent!important;
+ border:0!important;border-radius:0!important;
+}
+.shell .cv-page .cv-portrait .cv-portrait-image[hidden],
+.shell .portrait-editor-preview [data-portrait-display][hidden]{
+ display:none!important;
+}
+.shell .cv-page .cv-portrait .cv-portrait-pick{
+ position:absolute!important;inset:auto auto 43px 50%!important;
+ transform:translateX(-50%)!important;
+ display:inline-flex!important;align-items:center!important;justify-content:center!important;
+ width:auto!important;min-width:96px!important;max-width:80%!important;height:auto!important;
+ padding:6px 10px!important;margin:0!important;
+ background:rgba(243,237,224,.92)!important;
+ border:1px solid rgba(var(--theme-rgb,93,123,105),.55)!important;
+ border-radius:4px!important;
+ color:var(--theme-deep,#38563f)!important;
+ font-size:10px!important;font-weight:800!important;
+ opacity:.88!important;white-space:nowrap;z-index:7;cursor:pointer;
+ box-shadow:0 2px 7px #262c2819!important;
+}
+.shell .cv-page .cv-portrait .cv-portrait-pick:hover,
+.shell .cv-page .cv-portrait .cv-portrait-pick:focus-visible{
+ background:#f6f1e6!important;opacity:1!important;
+ outline:2px solid rgba(var(--theme-rgb,93,123,105),.36)!important;
+}
+.shell .cv-page .cv-portrait .cv-portrait-status{
+ display:block;position:absolute;top:4px;left:4px;z-index:6;
+ color:#874b4a;font-size:9px;line-height:1.25;font-weight:800;
+ max-width:95%;padding:3px 6px;
+ background:rgba(248,239,225,.88);border-radius:3px;
+}
+.shell .cv-page .cv-portrait .cv-portrait-status:empty{display:none}
+.shell .cv-page .cv-portrait .cv-portrait-tabs{
+ position:absolute;left:4px;right:4px;bottom:4px;z-index:8;
+ display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;
+ border:0;background:transparent;box-shadow:none;
+}
+.shell .cv-page .cv-portrait .portrait-tab{
+ height:30px;min-width:0;width:100%;margin:0;padding:0;
+ position:relative;display:flex;align-items:center;justify-content:center;
+ border:1px solid rgba(var(--theme-rgb,93,123,105),.45);
+ border-radius:3px;background:rgba(245,239,226,.92);
+ color:#59675b;cursor:pointer;
+ box-shadow:0 1px 4px #111b1520;
+ transition:background .15s ease,border-color .15s ease;
+}
+.shell .cv-page .cv-portrait .portrait-tab span{font:700 16px/1 var(--serif);pointer-events:none}
+.shell .cv-page .cv-portrait .portrait-tab.is-current{
+ border-color:var(--theme-deep,#40644b);
+ color:var(--theme-deep,#38543f);
+ background:#f0e5cf;
+ box-shadow:inset 0 0 0 1px var(--theme-deep,#40644b);
+}
+.shell .cv-page .cv-portrait .portrait-tab:hover{background:#fff8eb}
+.shell .cv-page .cv-portrait .portrait-tab i{
+ position:absolute;width:5px;height:5px;bottom:2px;right:4px;
+ border-radius:50%;background:#52825b;
+}
+.shell .cv-page .cv-portrait .portrait-tab em{
+ position:absolute;bottom:0;right:4px;font:800 10px Arial,sans-serif;
+ color:#a87b5c;font-style:normal;
+}
+.shell .portrait-editor-gallery{
+ align-items:flex-start!important;background:linear-gradient(110deg,#eee7d9,#dde1d4)!important;
+ border-color:#bdc2b2!important;gap:17px!important;
+}
+.shell .portrait-editor-gallery .portrait-editor-preview{
+ width:122px!important;height:164px!important;flex:0 0 122px!important;
+ aspect-ratio:3/4!important;
+ background:transparent!important;
+}
+.shell .portrait-editor-gallery .portrait-editor-preview img{
+ width:100%!important;height:100%!important;object-fit:contain!important;
+ object-position:center bottom!important;
+}
+.shell .portrait-editor-gallery .portrait-editor-info{flex:1;min-width:0}
+.portrait-editor-state{
+ display:inline-block;font-size:11px;line-height:1.5;
+ background:rgba(var(--theme-rgb,93,123,105),.12);
+ border:1px solid rgba(var(--theme-rgb,93,123,105),.3);
+ padding:5px 8px;color:#4b6351;margin-bottom:9px;
+}
+.portrait-editor-state b{color:var(--theme-deep,#3f5a46)}
+.portrait-variant-grid{display:grid;grid-template-columns:1fr;gap:5px;margin:5px 0 9px}
+.portrait-variant-row{display:flex;align-items:stretch;gap:5px;min-width:0}
+.portrait-variant-view{
+ flex:1;min-width:0;min-height:34px;
+ display:flex;align-items:center;gap:9px;
+ background:#f0eadd;border:1px solid #b8bcab;
+ padding:6px 8px;cursor:pointer;text-align:left;
+ color:#415646;
+}
+.portrait-variant-view.is-current{
+ border-color:var(--theme-deep,#516c55);
+ box-shadow:inset 3px 0 0 var(--theme-deep,#516c55);
+ background:#e5e8dc;
+}
+.portrait-variant-view>span{width:21px;text-align:center;font:700 18px/1 var(--serif);color:var(--theme-deep,#4d6951)}
+.portrait-variant-view>b{font-size:11px;line-height:1.2;flex:1;min-width:0}
+.portrait-variant-view>small{font-size:9px;color:#6d806e;white-space:nowrap}
+.portrait-variant-upload,.portrait-variant-remove{
+ padding:4px 8px;border:1px solid #b2bba9;background:#ecf0e5;
+ font-size:11px;font-weight:700;color:#405b47;cursor:pointer;
+}
+.portrait-variant-upload:hover,.portrait-variant-remove:hover{background:#f8f2e3}
+.portrait-variant-remove{font-size:18px;color:#975d59;background:#f1e7de;border-color:#c9b1a8}
+.portrait-hint{display:block;color:#657465;font-size:10px;line-height:1.55}
+@media(max-width:700px){
+ .shell .portrait-editor-gallery{flex-direction:column!important}
+ .shell .portrait-editor-gallery .portrait-editor-preview{height:140px!important;width:106px!important;flex:0 0 auto!important}
+ .portrait-variant-view>b{font-size:11px}
+}
+@media print{
+ .shell .cv-page .cv-portrait .cv-portrait-pick,
+ .shell .cv-page .cv-portrait .cv-portrait-tabs,
+ .shell .cv-page .cv-portrait .cv-portrait-status{display:none!important}
+ .shell .cv-page .cv-portrait{background:transparent!important}
+ .shell .cv-page .cv-portrait .cv-portrait-image{object-fit:contain!important}
+}
+
 </style>
 </head>
 <body>
