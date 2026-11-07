@@ -19,7 +19,31 @@
     @media(max-width:1120px){.clans-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.four-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.shell{grid-template-columns:205px minmax(0,1fr)}.sidebar{padding:23px 12px}.topbar{padding:17px 25px}.content{padding:27px 25px 70px}}
     @media(max-width:720px){.shell{display:block}.sidebar{position:relative;height:auto;padding:10px 14px 0;gap:7px}.brand{padding:5px 8px 11px}.sidebar nav{display:flex;overflow-x:auto;gap:3px}.nav-category,.sidebar-bottom{display:none}.nav-item{white-space:nowrap;font-size:11px;padding:10px}.topbar{padding:13px 16px}.content{padding:16px 14px 50px}.hero{grid-template-columns:1fr;min-height:0}.hero-copy{padding:31px 22px}.hero-scene{min-height:150px}.clans-grid{gap:11px}.clan-art{height:122px}.clan-card-bottom{padding:13px}.clan-card h3{font-size:15px}.clan-card p{font-size:10px}.two-col,.three-col{grid-template-columns:1fr}.auth-shell{grid-template-columns:1fr}.auth-art{min-height:140px}.auth-art .auth-mark{font-size:90px}.auth-form-wrap{padding:33px 22px}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.sheet-banner{padding:23px}.attr-list{grid-template-columns:1fr}.skill-table td,.skill-table th{padding:9px 5px}.skill-table .narrow{width:39px}.admin-row{grid-template-columns:1fr 85px 78px;gap:5px}.admin-row .admin-date{display:none}.button.small{padding:8px}}
     @media print{.sidebar,.topbar,.tabs,.button,.footer-note,.notice,.toast{display:none!important}.shell{display:block}.content{max-width:100%;padding:0}.paper-panel,.mini-stat{break-inside:avoid}.sheet-banner{print-color-adjust:exact;-webkit-print-color-adjust:exact}body:before{display:none}}
-  </style>
+  
+  /* ===== FICHAS CANVA ORIGINAIS: PÁGINAS A4 COM CAMPOS EDITÁVEIS ===== */
+  .cv-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:24px 0 16px}
+  .cv-toolbar h2{font:600 22px var(--serif);margin:0}.cv-toolbar p{font-size:12px;color:var(--muted);margin:4px 0 0}
+  .cv-pages{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 22px}
+  .cv-pages button{padding:9px 14px;border:1px solid var(--line);background:#fffdfa;color:#4b4b4b;cursor:pointer;font-weight:700;font-size:12px}
+  .cv-pages button.active{background:#202723;color:white;border-color:#202723}
+  .cv-wrap{width:100%;display:flex;justify-content:center;overflow:auto;padding:8px 0 26px}
+  .cv-page{width:min(100%,828px);flex:0 0 auto;aspect-ratio:8.27/11.69;position:relative;background:linear-gradient(120deg,#f0e7df,#fff9f5 45%,#e6ddd3);box-shadow:0 10px 30px #1b242025;border:1px solid #eee2d7;overflow:hidden}
+  .cv-page img.cv-bg{width:100%;height:100%;display:block;position:absolute;inset:0;z-index:0;object-fit:fill}
+  .cv-page .cv-missing{position:absolute;top:20%;left:10%;right:10%;text-align:center;pointer-events:none;color:#80645f;opacity:.6;font:600 25px var(--serif)}
+  .cv-spot{position:absolute;z-index:2;overflow:hidden}
+  .cv-in{width:100%;height:100%;margin:0!important;display:block;min-width:0;padding:0 3px!important;background:rgba(255,255,255,.95)!important;border:1px solid rgba(100,79,76,.18)!important;border-radius:0!important;color:#2b2929!important;font-family:"DM Sans",sans-serif!important;font-size:clamp(7px,1vw,12px)!important;line-height:1.18!important;box-shadow:none!important}
+  .cv-in:focus{outline:1.5px solid #834b46!important;background:#fff!important;z-index:4}
+  .cv-spot textarea.cv-in{resize:none;overflow:auto;line-height:1.4!important;padding:3px!important}
+  .cv-readonly{height:100%;width:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.88);color:#6d333d;font-weight:700;font-size:clamp(7px,.95vw,12px)}
+  .cv-stepper{width:100%;height:100%;display:flex;align-items:center;justify-content:space-evenly;background:rgba(255,255,255,.95);gap:1px;color:#803c48}
+  .cv-stepper button{height:100%;flex:1;border:0;background:transparent;color:#803c48;font-weight:800;cursor:pointer;font-size:clamp(8px,1.2vw,15px)}
+  .cv-stepper button:hover{background:#e5c2c5}.cv-stepper b{flex:1;text-align:center;font-size:clamp(8px,1.25vw,15px)}
+  .cv-image{position:absolute;z-index:2;left:62.7%;top:17.2%;width:30.7%;height:22%;object-fit:cover;object-position:center}
+  .cv-status{font-size:12px;line-height:1.6;color:#65605c;text-align:center;margin:8px auto 28px;max-width:800px}
+  @media(max-width:700px){.cv-page{min-width:620px}.cv-wrap{justify-content:flex-start}.cv-in{font-size:10px!important}}
+  @media print{@page{size:A4;margin:0}.sidebar,.topbar,.cv-toolbar,.cv-pages,.cv-status,.statusbar,.cv-extra{display:none!important}.main-area,.content,.app-main{padding:0!important;margin:0!important}.cv-wrap{overflow:visible;padding:0}.cv-page{width:210mm!important;height:297mm!important;max-width:none;box-shadow:none;border:0}.cv-in{print-color-adjust:exact!important}}
+
+</style>
 </head>
 <body>
 <div id="app"><p style="text-align:center;padding:50px;font-family:Georgia">Carregando os arquivos shinobi...</p></div>
@@ -96,11 +120,11 @@
   const currentNC=()=>NC_TABLE[active()?.nc]||NC_TABLE[4];
   const limit=()=>Math.floor((active()?.nc||4)/2);
   const skillInfo=key=>SKILLS.find(s=>s[0]===key);
-  const skillTotal=(p,k)=>{const def=skillInfo(k);return def?Math.ceil(n(p.atributos[def[1]])/2)+n(p.pericias[k]):0};
+  const skillTotal=(p,k)=>{const def=skillInfo(k);return def?Math.ceil(n(p.atributos[def[1]])/2)+n(p.pericias[k])+n(p.periciaOutros?.[k]):0};
   const combat=(p,k)=>3+n(p.combateAjustes?.[k])+n(p.atributos[{CC:'FOR',CD:'DES',ESQ:'AGI',LM:'PER'}[k]]);
   const vitMax=p=>10+3*n(p.atributos.VIG)+5*n(p.nc);
   const chakraMax=p=>10+3*n(p.atributos.ESP);
-  const totals=p=>({attrs:ATTRS.reduce((s,[k])=>s+n(p.atributos[k]),0),skills:SKILLS.reduce((s,[k])=>s+n(p.pericias[k]),0),powers:p.poderes.reduce((s,x)=>s+n(x.nivel),0)+Math.max(0,p.aptidoes.length-3)*2,social:n(p.sociais.Carisma)+n(p.sociais.Manipulacao)});
+  const totals=p=>({attrs:ATTRS.reduce((s,[k])=>s+n(p.atributos[k]),0),skills:SKILLS.reduce((s,[k])=>s+n(p.pericias[k]),0),powers:p.poderes.reduce((s,x)=>s+n(x?.nivel),0)+Math.max(0,p.aptidoes.filter(x=>x?.nome?.trim()).length-3)*2,social:n(p.sociais.Carisma)+n(p.sociais.Manipulacao)});
   const trained=(p,key)=>{const a=skillInfo(key);return a&&!a[2]||n(p.pericias[key])>0};
   function fresh(clanId){const attrs=Object.fromEntries(ATTRS.map(([k])=>[k,0]));const skills=Object.fromEntries(SKILLS.map(([k])=>[k,0]));return{ownerUid:uid(),usuario:S.user?.displayName||'Visitante',clanId,nome:'',idade:'',vila:'Konohagakure',graduacao:'Genin',descricao:'',nc:4,atributos:attrs,sociais:{Carisma:0,Manipulacao:0},pericias:skills,combateAjustes:{CC:0,CD:0,ESQ:0,LM:0},poderes:[],aptidoes:[],jutsus:[],inventario:[],ryos:100,recursos:{vit:null,chakra:null},historico:'',historia:'',foto:'',criadoEm:Date.now(),atualizadoEm:Date.now(),versao:1}}
   function normalize(raw){const p={...fresh(raw.clanId||'semcla'),...raw};p.atributos={...fresh(p.clanId).atributos,...(raw.atributos||{})};p.pericias={...fresh(p.clanId).pericias,...(raw.pericias||{})};p.sociais={Carisma:0,Manipulacao:0,...(raw.sociais||{})};p.combateAjustes={CC:0,CD:0,ESQ:0,LM:0,...(raw.combateAjustes||{})};p.recursos={vit:null,chakra:null,...(raw.recursos||{})};for(const k of ['poderes','aptidoes','jutsus','inventario'])if(!Array.isArray(p[k]))p[k]=[];if(!NC_TABLE[p.nc])p.nc=4;return p}
@@ -130,7 +154,157 @@
   function adminView(){if(!canAdmin())return layout(`<div class="empty"><h3>Acesso restrito</h3><p>Somente administradores autorizados pelo Firebase podem consultar todas as fichas.</p></div>`);const items=S.adminSheets;return layout(`<div class="section-head" style="margin-top:0"><div><div class="eyebrow">PERMISSÕES DO MESTRE</div><h2>Administração</h2></div><button class="button secondary small" data-action="refresh-admin">↻ Atualizar</button></div><div class="four-grid"><div class="mini-stat"><span>Fichas registradas</span><strong>${items.length}</strong></div><div class="mini-stat"><span>Clãs utilizados</span><strong>${new Set(items.map(x=>x.clanId)).size}</strong></div><div class="mini-stat"><span>Maior NC</span><strong>${items.length?Math.max(...items.map(x=>n(x.nc))):'—'}</strong></div><div class="mini-stat"><span>Seus privilégios</span><strong style="font-size:16px;margin-top:14px">Mestre</strong></div></div><section class="paper-panel mt24"><h3>Fichas dos jogadores</h3><div class="field"><label>Pesquisar por personagem, jogador ou clã</label><input id="admin-filter" placeholder="Buscar..." autocomplete="off"></div><div id="admin-rows" class="mt16">${adminRows(items)}</div></section><div class="notice mt16">Este painel é protegido por regras do Firestore. A permissão de administrador é controlada pela coleção <code>admins</code> no Firebase, e não por um campo editável pelo jogador.</div>`)}
   function adminRows(items){return items.length?items.map(x=>`<div class="admin-row"><div><b>${E(x.nome||'Sem nome')}</b><small>${E(x.usuario||'Jogador')} · ${E(clanOf(x.clanId).name)}</small></div><div>NC ${n(x.nc)}</div><div class="admin-date">${x.atualizadoEm?new Date(x.atualizadoEm).toLocaleDateString('pt-BR'):'—'}</div><button class="button secondary small" data-action="open-admin" data-id="${E(x.__id)}">Abrir ficha</button></div>`).join(''):`<div class="empty"><h3>Nenhuma ficha encontrada</h3><p>Os personagens aparecerão aqui após serem criados pelos jogadores.</p></div>`}
   function clanModal(){const c=clanOf(S.activeClan);return `<div class="modalshade" data-action="close-modal"><div class="modalbox" role="dialog" aria-modal="true" aria-label="Clã ${E(c.name)}" ><div class="clan-art" style="--wash:${c.wash};height:164px;margin:-32px -32px 24px">${imageTag(c)}<span class="kanji">${c.kanji}</span></div><div class="eyebrow">CAMINHOS SHINOBI</div><h2>Clã ${E(c.name)}</h2><p class="panel-caption">${E(c.desc)} Esta escolha define a família do personagem e os poderes restritos disponíveis mediante cumprimento de pré-requisitos no SNS 4.1b.</p>${active()?`<div class="notice warn mt16">${S.demo?'Você está em modo demonstração. Criar outra ficha substituirá a ficha temporária.':'Você já possui uma ficha. Esta versão permite um personagem por conta para preservar a privacidade e a organização.'}</div>`:''}<div class="flex wrap mt24"><button class="button" data-action="create-sheet" ${active()&&!S.demo?'disabled':''}>${active()&&!S.demo?'Ficha já criada':'Criar personagem deste clã'}</button><button class="button secondary" data-action="close-modal">Cancelar</button></div></div></div>`}
-  function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="margin:15vh auto;max-width:500px"><h3>Carregando os arquivos shinobi...</h3><p>Conectando ao sistema de autenticação.</p></div>';return}if(CONFIGURED&&!S.user&&!['login'].includes(S.view))S.view='login';let screen={home,clans,sheet:sheetView,admin:adminView,login}[S.view]||home;$('#app').innerHTML=screen();if(S.modal)$('#app').insertAdjacentHTML('beforeend',clanModal())}
+  function cvWrap(inner,x,y,w,h){
+  const f=(a,b)=>(100*a/b).toFixed(4)+"%";
+  return `<div class="cv-spot" style="left:${f(x,8.27)};top:${f(y,11.69)};width:${f(w,8.27)};height:${f(h,11.69)}">${inner}</div>`;
+}
+function cvInput(path,value,x,y,w,h,opts={}){
+  const num=opts.num?'type="number" step="1"':'type="text"';
+  const val=E(value??'');
+  const label=E(opts.label||path);
+  let element=opts.multiline?
+    `<textarea class="cv-in" data-bind="${E(path)}" aria-label="${label}">${val}</textarea>`:
+    `<input class="cv-in" data-bind="${E(path)}" ${num} value="${val}" aria-label="${label}" autocomplete="off">`;
+  return cvWrap(element,x,y,w,h);
+}
+function cvArray(p,array,i,key,x,y,w,h,opts={}){
+  const v=p[array]?.[i]?.[key]??'';
+  const extra=`data-cv-array="${E(array)}" data-cv-index="${i}" data-cv-key="${E(key)}"`;
+  const field=opts.multiline?`<textarea class="cv-in" ${extra} aria-label="${E(array+' '+key)}">${E(v)}</textarea>`:
+    `<input class="cv-in" ${extra} ${opts.num?'type="number" step="1"':'type="text"'} value="${E(v)}" aria-label="${E(array+' '+key)}">`;
+  return cvWrap(field,x,y,w,h);
+}
+function cvDisplay(value,x,y,w,h){return cvWrap(`<span class="cv-readonly">${E(value)}</span>`,x,y,w,h);}
+function cvAttr(p,key,x,y,w,h){
+ const label=ATTRS.find(a=>a[0]===key)?.[1]||key;
+ return cvWrap(`<span class="cv-stepper"><button data-action="attr" data-key="${key}" data-delta="-1" aria-label="Reduzir ${label}">−</button><b>${n(p.atributos[key])}</b><button data-action="attr" data-key="${key}" data-delta="1" aria-label="Aumentar ${label}">+</button></span>`,x,y,w,h);
+}
+function cvSkill(p,key,x,y,w,h){
+ const val=n(p.pericias[key]);
+ return cvWrap(`<input class="cv-in" data-cv-skill="${E(key)}" type="number" min="0" max="${limit()}" step="1" value="${val}" aria-label="Pontos investidos em ${E(key)}">`,x,y,w,h);
+}
+function canvaPageBody(p,page){
+ const f=(path,x,y,w,h,opts={})=>cvInput(path,getAt(p,path),x,y,w,h,opts);
+ const d=cvDisplay;
+ let a='';
+ if(page===1){
+   a+=f('nome',3.63,1.98,1.16,.25,{label:'Nome do personagem'});
+   a+=f('idade',1.93,2.41,.60,.23);
+   a+=f('genero',4.18,2.41,.61,.23);
+   a+=f('vilaOrigem',3.63,2.83,1.17,.24);
+   a+=f('vila',3.63,3.25,1.17,.24);
+   a+=f('graduacao',1.93,3.67,.60,.24);
+   a+=cvWrap(`<select class="cv-in" data-bind="nc" aria-label="Nível da campanha">${Object.entries(NC_TABLE).map(([k])=>`<option value="${k}" ${n(k)===n(p.nc)?'selected':''}>NC ${k}</option>`).join('')}</select>`,4.16,3.67,.64,.26);
+   a+=f('tendencia',3.63,4.52,1.17,.25);
+   for(let i=0;i<ATTRS.length;i++){const key=ATTRS[i][0];a+=cvAttr(p,key,.65+i*1.054,6.31,.72,.25);}
+   a+=f('recursos.vit',3.20,7.36,.64,.25,{num:true,label:'Vitalidade atual'});
+   a+=d(vitMax(p),3.20,7.71,.64,.26);
+   a+=f('recursos.chakra',6.98,7.36,.64,.25,{num:true,label:'Chakra atual'});
+   a+=d(chakraMax(p),6.98,7.71,.64,.26);
+   a+=d(combat(p,'CC'),3.37,8.62,.56,.32);
+   a+=d(combat(p,'CD'),7.10,8.62,.56,.32);
+   a+=d(combat(p,'ESQ'),3.37,9.15,.56,.32);
+   a+=d(combat(p,'LM'),7.10,9.15,.56,.32);
+   a+=d('1d8 + '+(n(p.atributos.AGI)+skillTotal(p,'Prontidão')),1.6,10.24,1.03,.25);
+   a+=d(''+(9+combat(p,'ESQ')),4.55,10.24,.45,.25);
+   a+=d((10+Math.ceil(n(p.atributos.AGI)/2))+' m',6.87,10.24,.57,.25);
+   a+=f('sociais.Carisma',3.08,10.70,.57,.25,{num:true});
+   a+=f('sociais.Manipulacao',6.14,10.70,.56,.25,{num:true});
+   if(p.foto)a+=`<img class="cv-image" src="${E(p.foto)}" alt="Retrato do personagem" onerror="this.style.display='none'">`;
+ }
+ if(page===2){
+   const left=SKILLS.slice(0,9),right=SKILLS.slice(9,18);
+   for(const [column,arr] of [[0,left],[1,right]]){
+     arr.forEach(([name,attr],i)=>{
+       const y=2.31+i*.635, off=column*3.76;
+       a+=d(skillTotal(p,name),2.52+off,y,.35,.24);
+       a+=cvSkill(p,name,2.97+off,y,.28,.24);
+       a+=d(Math.ceil(n(p.atributos[attr])/2),3.37+off,y,.34,.24);
+       a+=f('periciaOutros.'+name,3.83+off,y,.27,.24,{num:true});
+     });
+   }
+   a+=d(totals(p).attrs+' / '+currentNC().attrs,.59,8.77,1.27,.20);
+   a+=d(totals(p).skills+' / '+currentNC().skills,2.49,8.77,1.28,.20);
+   a+=d(totals(p).powers+' / '+currentNC().powers,4.33,8.77,1.28,.20);
+   a+=d('3 gratuitas',6.15,8.77,1.28,.20);
+   a+=d(p.nc,3.28,10.37,.62,.25);
+   a+=f('xp',6.95,10.37,.65,.25,{num:true});
+   a+=d(Math.max(0,currentNC().attrs-totals(p).attrs),3.28,10.75,.62,.25);
+   a+=d(Math.max(0,currentNC().skills-totals(p).skills),6.95,10.75,.65,.25);
+ }
+ if(page===3){
+   for(let i=0;i<5;i++){
+    const y=1.78+i*.35;
+    a+=cvArray(p,'poderes',i,'nome',.55,y,1.68,.26);
+    a+=cvArray(p,'poderes',i,'nivel',2.53,y,.48,.26,{num:true});
+    a+=d(n(p.poderes[i]?.nivel),3.23,y,.42,.26);
+    a+=cvArray(p,'poderes',i,'descricao',3.79,y,3.86,.26);
+   }
+   a+=d(currentNC().powers,2.13,3.70,.58,.26);
+   a+=d(totals(p).powers,4.58,3.70,.60,.26);
+   a+=d(Math.max(0,currentNC().powers-totals(p).powers),7.06,3.70,.58,.26);
+   for(let i=0;i<6;i++){
+    const col=Math.floor(i/3),row=i%3;
+    a+=cvArray(p,'aptidoes',i,'nome',1.41+col*3.69,4.57+row*.36,2.42,.25);
+   }
+   for(let i=0;i<2;i++){
+    const o=i*3.75;
+    a+=cvArray(p,'jutsus',i,'nome',2.54+o,6.54,1.33,.24);
+    a+=cvArray(p,'jutsus',i,'nivel',1.64+o,6.92,.49,.24,{num:true});
+    a+=cvArray(p,'jutsus',i,'acao',3.05+o,6.92,.49,.24);
+    a+=cvArray(p,'jutsus',i,'custo',1.92+o,7.31,.48,.24,{num:true});
+    a+=cvArray(p,'jutsus',i,'duracao',3.13+o,7.31,.48,.24);
+    a+=cvArray(p,'jutsus',i,'alvo',1.92+o,7.69,.48,.24);
+    a+=cvArray(p,'jutsus',i,'alcance',3.13+o,7.69,.48,.24);
+    a+=cvArray(p,'jutsus',i,'efeito',.69+o,8.30,3.16,.42,{multiline:true});
+   }
+ }
+ if(page===4){
+   for(let i=0;i<7;i++){
+     const y=1.78+i*.34;
+     a+=cvArray(p,'inventario',i,'nome',.55,y,1.72,.23);
+     a+=cvArray(p,'inventario',i,'quantidade',3.04,y,.47,.23,{num:true});
+     a+=cvArray(p,'inventario',i,'compartimentos',3.75,y,.48,.23,{num:true});
+     a+=cvArray(p,'inventario',i,'obs',4.45,y,3.16,.23);
+   }
+   a+=f('ryos',3.33,4.29,.63,.25,{num:true});
+   a+=d(p.inventario.reduce((sum,it)=>sum+n(it?.quantidade)*n(it?.compartimentos),0),7.02,4.29,.63,.25);
+   a+=f('dureza',3.33,4.68,.63,.25,{num:true});
+   a+=f('absorcao',7.02,4.68,.63,.25,{num:true});
+   a+=f('historia',.65,5.96,6.84,.67,{multiline:true});
+   a+=f('personalidade',.65,7.34,3.14,.54,{multiline:true});
+   a+=f('familia',4.36,7.34,3.14,.54,{multiline:true});
+   a+=f('aliados',.65,8.55,1.90,.36,{multiline:true});
+   a+=f('inimigos',3.14,8.55,1.90,.36,{multiline:true});
+   a+=f('objetivos',5.64,8.55,1.90,.36,{multiline:true});
+   a+=f('historico',.59,9.58,6.85,1.12,{multiline:true});
+ }
+ return a;
+}
+function canvaSheetView(){
+ if(!active())return sheetView();
+ if(S.canvaMode==='advanced')return layout(`<div class="cv-toolbar"><div><h2>Editor detalhado</h2><p>Campos adicionais e edição avançada do mesmo personagem.</p></div><button class="button secondary" data-action="cv-mode">← Voltar à ficha do Canva</button></div>${sheetView().replace(/^.*?<div class="sheet-banner"/s,'<div class="sheet-banner')}`);
+ const p=active(),clan=clanOf(p.clanId),page=S.canvaPage||1;
+ const buttons=['Identificação','Perícias','Poderes e técnicas','Registro shinobi'];
+ return layout(`<div class="cv-toolbar"><div><div class="eyebrow">FICHA ORIGINAL DO CANVA / ${E(clan.name.toUpperCase())}</div><h2>${E(p.nome||'Meu personagem')}</h2><p>Modelo original de quatro páginas · SNS 4.1b · alterações salvas automaticamente</p></div><div class="flex wrap"><button class="button secondary small" data-action="cv-mode">Editor detalhado</button><button class="button secondary small" data-action="print">Imprimir</button><button class="button small" data-action="save">Salvar ficha</button></div></div><nav class="cv-pages" aria-label="Páginas da ficha">${buttons.map((label,i)=>`<button class="${page===i+1?'active':''}" data-action="cv-page" data-page="${i+1}" aria-current="${page===i+1?'page':'false'}">${i+1} / ${E(label)}</button>`).join('')}</nav><div class="cv-wrap"><div class="cv-page" aria-label="Ficha original ${E(clan.name)}, página ${page}"><div class="cv-missing">Ficha original do Canva · ${E(clan.name)} · ${page}/4</div><img class="cv-bg" src="assets/fichas/${E(clan.id)}-${page}.jpg" alt="Modelo original do Canva, página ${page}" onerror="this.style.display='none'">${canvaPageBody(p,page)}</div></div><p class="cv-status">Os campos digitais ficam sobre o layout original do Canva. Pontos de atributo, pontos de perícia, Vitalidade, Chakra e combate são calculados conforme SNS 4.1b. Poderes específicos e pré-requisitos de clã continuam sujeitos à validação do mestre.</p><div class="statusbar"><span id="save-footer">${CONFIGURED?E(S.saveState):'Prévia demonstrativa sem salvamento na nuvem'}</span><button class="button secondary small" data-action="export">Exportar dados (JSON)</button></div>`);
+}
+function canvaUpdateArray(el){
+ const p=active();if(!p)return;
+ const array=el.dataset.cvArray,index=Number(el.dataset.cvIndex),key=el.dataset.cvKey;
+ if(!['poderes','aptidoes','jutsus','inventario'].includes(array)||!Number.isInteger(index)||index<0||index>30)return;
+ const values=p[array]||[];
+ const old=values[index]?.[key]??'';
+ let value=el.value;
+ if(['nivel','quantidade','compartimentos','custo'].includes(key))value=bound(value,0,key==='nivel'?limit():9999);
+ if(array==='poderes'&&key==='nivel'&&value-n(old)>0&&totals(p).powers+(value-n(old))>currentNC().powers){el.value=old;showToast('Pontos de poder insuficientes.',true);return;}
+ if(array==='aptidoes'&&key==='nome'&&value.trim()&&!String(old).trim()&&p.aptidoes.filter(x=>x?.nome?.trim()).length>=3&&totals(p).powers+2>currentNC().powers){el.value=old;showToast('Sem pontos suficientes para mais uma aptidão.',true);return;}
+ while(values.length<=index)values.push({});
+ values[index][key]=value;
+ p[array]=values;
+ scheduleSave();
+ render();
+}
+function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="margin:15vh auto;max-width:500px"><h3>Carregando os arquivos shinobi...</h3><p>Conectando ao sistema de autenticação.</p></div>';return}if(CONFIGURED&&!S.user&&!['login'].includes(S.view))S.view='login';let screen={home,clans,sheet:canvaSheetView,admin:adminView,login}[S.view]||home;$('#app').innerHTML=screen();if(S.modal)$('#app').insertAdjacentHTML('beforeend',clanModal())}
   function nav(view){S.modal=null;if(view==='admin'){if(!canAdmin()){showToast('Acesso permitido somente ao mestre.',true);return}refreshAdmin();return}S.view=view;render();window.scrollTo({top:0,behavior:'smooth'})}
   function setStatus(st){S.saveState=st;const x=$('#save-status');if(x)x.textContent=st;const y=$('#save-footer');if(y)y.textContent=st}
   async function persist(){if(!active())return;if(!CONFIGURED||!fb){setStatus('Modo demonstração · sem nuvem');return}if(!S.user){showToast('Entre na sua conta para salvar.',true);return}const target=S.sheetId||uid();const data=JSON.parse(JSON.stringify(active()));data.atualizadoEm=Date.now();try{setStatus('Salvando...');await fb.setDoc(fb.doc(fb.db,'fichas',target),data);setStatus('Salvo na nuvem ✓')}catch(e){console.error(e);setStatus('Falha ao salvar');showToast('Não foi possível salvar. Verifique Firebase e regras de segurança.',true)}}
@@ -146,11 +320,11 @@
   async function refreshAdmin(){if(!fb||!canAdmin())return;try{const snap=await fb.getDocs(fb.collection(fb.db,'fichas'));S.adminSheets=snap.docs.map(d=>({...d.data(),__id:d.id}));S.view='admin';render()}catch(e){console.error(e);showToast('Falha ao carregar fichas. Verifique as permissões de administrador.',true)}}
   function pseudoEmail(raw){return raw.toLowerCase().trim()+'@players.shinobi-chronicles.invalid'}
   async function submitAuth(form){if(!fb)return;const fd=new FormData(form),username=String(fd.get('username')||'').toLowerCase().trim(),password=String(fd.get('password')||'');if(!/^[a-z0-9._-]{3,20}$/.test(username))return showToast('Usuário: 3 a 20 caracteres, letras sem acento, números, ponto, _ ou -.',true);if(password.length<6)return showToast('A senha deve ter pelo menos seis caracteres.',true);S.authWorking=true;const btn=form.querySelector('button[type=submit]');if(btn)btn.disabled=true;try{const credential=S.authPane==='login'?await fb.signInWithEmailAndPassword(fb.auth,pseudoEmail(username),password):await fb.createUserWithEmailAndPassword(fb.auth,pseudoEmail(username),password);if(S.authPane==='register')await fb.setDoc(fb.doc(fb.db,'users',credential.user.uid),{username,criadoEm:Date.now()});S.view='home';S.authWorking=false;showToast('Acesso autorizado. Bem-vindo aos arquivos shinobi.')}catch(e){const errors={'auth/email-already-in-use':'Esse nome de usuário já está ocupado.','auth/invalid-credential':'Usuário ou senha incorretos.','auth/wrong-password':'Usuário ou senha incorretos.','auth/weak-password':'A senha é muito fraca.','auth/operation-not-allowed':'Ative E-mail/senha no Firebase Authentication.','auth/invalid-email':'Configuração de login inválida.','permission-denied':'As regras do Firestore precisam ser configuradas.'};showToast(errors[e.code]||`Não foi possível autenticar (${e.code||'erro'}).`,true);console.error(e)}finally{S.authWorking=false;if(btn)btn.disabled=false}}
-  function clickAction(el){const action=el.dataset.action;if(!action)return;const p=active();if(action==='nav')return nav(el.dataset.view);if(action==='tab'){S.tab=el.dataset.tab;render();return}if(action==='clan'){S.activeClan=el.dataset.clan;S.modal='clan';render();return}if(action==='close-modal'){S.modal=null;render();return}if(action==='create-sheet')return createSheet();if(action==='auth-switch'){S.authPane=S.authPane==='login'?'register':'login';render();return}if(action==='logout'){if(fb)fb.signOut(fb.auth);else{S.user=null;S.sheet=null;S.view='home';render()}return}if(action==='save')return persist();if(action==='print')return window.print();if(action==='export')return exportSheet();if(action==='attr')return adjustAttr(el.dataset.key,n(el.dataset.delta));if(action==='skill')return adjustSkill(el.dataset.key,n(el.dataset.delta));if(action==='shift')return shiftCombat();if(action==='reset-shift'){p.combateAjustes={CC:0,CD:0,ESQ:0,LM:0};render();scheduleSave();return}if(action==='add-item')return modifyItem(el.dataset.array);if(action==='remove-item')return modifyItem(el.dataset.array,n(el.dataset.index),true);if(action==='roll-skill'){const k=el.dataset.key;if(!trained(p,k))return showToast('Esta perícia exige treinamento.',true);return roll(2,skillTotal(p,k),k)}if(action==='roll-combat')return roll(2,combat(p,el.dataset.key),'Combate corporal');if(action==='roll-initiative')return roll(1,n(p.atributos.AGI)+skillTotal(p,'Prontidão'),'Iniciativa');if(action==='refresh-admin')return refreshAdmin();if(action==='open-admin'){const x=S.adminSheets.find(a=>a.__id===el.dataset.id);if(x){const {__id,...safeData}=x;S.sheet=normalize(safeData);S.sheetId=__id;S.view='sheet';S.tab='identidade';render();}return}}
+  function clickAction(el){const action=el.dataset.action;if(!action)return;const p=active();if(action==='cv-page'){S.canvaPage=Number(el.dataset.page)||1;render();return}if(action==='cv-mode'){S.canvaMode=S.canvaMode==='advanced'?'original':'advanced';render();return}if(action==='nav')return nav(el.dataset.view);if(action==='tab'){S.tab=el.dataset.tab;render();return}if(action==='clan'){S.activeClan=el.dataset.clan;S.modal='clan';render();return}if(action==='close-modal'){S.modal=null;render();return}if(action==='create-sheet')return createSheet();if(action==='auth-switch'){S.authPane=S.authPane==='login'?'register':'login';render();return}if(action==='logout'){if(fb)fb.signOut(fb.auth);else{S.user=null;S.sheet=null;S.view='home';render()}return}if(action==='save')return persist();if(action==='print')return window.print();if(action==='export')return exportSheet();if(action==='attr')return adjustAttr(el.dataset.key,n(el.dataset.delta));if(action==='skill')return adjustSkill(el.dataset.key,n(el.dataset.delta));if(action==='shift')return shiftCombat();if(action==='reset-shift'){p.combateAjustes={CC:0,CD:0,ESQ:0,LM:0};render();scheduleSave();return}if(action==='add-item')return modifyItem(el.dataset.array);if(action==='remove-item')return modifyItem(el.dataset.array,n(el.dataset.index),true);if(action==='roll-skill'){const k=el.dataset.key;if(!trained(p,k))return showToast('Esta perícia exige treinamento.',true);return roll(2,skillTotal(p,k),k)}if(action==='roll-combat')return roll(2,combat(p,el.dataset.key),'Combate corporal');if(action==='roll-initiative')return roll(1,n(p.atributos.AGI)+skillTotal(p,'Prontidão'),'Iniciativa');if(action==='refresh-admin')return refreshAdmin();if(action==='open-admin'){const x=S.adminSheets.find(a=>a.__id===el.dataset.id);if(x){const {__id,...safeData}=x;S.sheet=normalize(safeData);S.sheetId=__id;S.view='sheet';S.tab='identidade';render();}return}}
   document.addEventListener('click',ev=>{const el=ev.target.closest('[data-action]');if(!el)return;if(el.classList.contains('modalshade')&&ev.target!==el)return;clickAction(el)});
   document.addEventListener('submit',ev=>{if(ev.target.id==='auth-form'){ev.preventDefault();submitAuth(ev.target)}});
   document.addEventListener('input',ev=>{const el=ev.target;if(el.id==='admin-filter'){const q=el.value.toLocaleLowerCase('pt-BR');$('#admin-rows').innerHTML=adminRows(S.adminSheets.filter(x=>[x.nome,x.usuario,clanOf(x.clanId).name].some(z=>String(z||'').toLocaleLowerCase('pt-BR').includes(q))));return}if(!el.dataset.bind||el.tagName==='SELECT')return;const old=getAt(active(),el.dataset.bind);if(!updateValue(el.dataset.bind,el.value)){el.value=old??''}});
-  document.addEventListener('change',ev=>{const el=ev.target;if(!el.dataset.bind||el.tagName!=='SELECT')return;updateValue(el.dataset.bind,el.value)});
+  document.addEventListener('change',ev=>{const el=ev.target;if(el.dataset.cvArray){canvaUpdateArray(el);return}if(el.dataset.cvSkill){const p=active(),k=el.dataset.cvSkill;if(!p)return;const old=n(p.pericias[k]),next=bound(el.value,0,limit()),delta=next-old;if(delta>0&&totals(p).skills+delta>currentNC().skills){el.value=old;showToast('Pontos de perícia insuficientes.',true);return}p.pericias[k]=next;render();scheduleSave();return}if(!el.dataset.bind||el.tagName!=='SELECT')return;updateValue(el.dataset.bind,el.value)});
   async function startFirebase(){try{const base=`https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}`;const [{initializeApp},{getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut},{getFirestore,doc,getDoc,setDoc,collection,getDocs}]=await Promise.all([import(base+'/firebase-app.js'),import(base+'/firebase-auth.js'),import(base+'/firebase-firestore.js')]);const app=initializeApp(FIREBASE_CONFIG),auth=getAuth(app),db=getFirestore(app);fb={auth,db,doc,getDoc,setDoc,collection,getDocs,signOut,createUserWithEmailAndPassword,signInWithEmailAndPassword};onAuthStateChanged(auth,async(user)=>{clearTimeout(S.saveTimer);if(!user){S.user=null;S.isAdmin=false;S.sheet=null;S.sheetId=null;S.loading=false;S.view='login';render();return}const fallback=user.email?.split('@')[0]||'Shinobi';S.user={uid:user.uid,displayName:fallback};try{const [profile,admin,sheet]=await Promise.all([getDoc(doc(db,'users',user.uid)),getDoc(doc(db,'admins',user.uid)),getDoc(doc(db,'fichas',user.uid))]);if(profile.exists())S.user.displayName=profile.data().username||fallback;S.isAdmin=admin.exists();if(sheet.exists()){S.sheet=normalize(sheet.data());S.sheetId=sheet.id}else{S.sheet=null;S.sheetId=null}S.loading=false;S.view='home';render()}catch(e){console.error(e);S.loading=false;S.view='home';render();showToast('Conta conectada, mas houve um erro ao carregar os dados. Confira as regras do Firestore.',true)}})}catch(e){console.error(e);S.loading=false;S.view='login';render();showToast('Falha ao inicializar Firebase. Confira as chaves e o domínio autorizado.',true)}}
   if(CONFIGURED)startFirebase();else{S.loading=false;render()}
 </script>
