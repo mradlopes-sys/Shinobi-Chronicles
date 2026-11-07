@@ -297,6 +297,180 @@
 .shell .cv-stepper button{color:var(--theme-deep)}
 .shell .cv-stepper button:hover{background:rgba(var(--theme-rgb), .2)}
 
+
+/* FASE DE ESTABILIZAÇÃO — correção de contraste para todos os doze temas */
+/* O fundo é papel washi realçado por pigmento, não branco chapado. */
+.shell,
+.shell.themed-shell{
+  --theme-rgb: 93,123,105;
+  --theme-accent: #688371;
+  --theme-deep: #344c40;
+}
+.shell.themed-shell{
+  --theme-rgb: var(--selected-clan-rgb, 93,123,105);
+}
+/* A variável inline (aplicada a cada conta) permanece soberana. */
+.shell[style*="--theme-rgb"]{
+  --theme-accent: var(--selected-clan-accent, var(--theme-accent));
+}
+.shell .main,
+.shell.home-ambient .main,
+.shell.themed-shell .main,
+.shell.themed-shell.home-ambient .main{
+  background:
+    radial-gradient(ellipse 44% 23% at 4% 8%,rgba(var(--theme-rgb),.29) 0%,rgba(var(--theme-rgb),.12) 52%,transparent 100%),
+    radial-gradient(ellipse 51% 24% at 94% 16%,rgba(var(--theme-rgb),.25) 0%,rgba(var(--theme-rgb),.08) 55%,transparent 96%),
+    radial-gradient(ellipse 63% 29% at 85% 82%,rgba(var(--theme-rgb),.2) 0%,transparent 95%),
+    radial-gradient(ellipse 62% 25% at 12% 76%,rgba(131,136,106,.16) 0%,transparent 93%),
+    linear-gradient(143deg,#e5dfd1 0%,#ddd8c9 35%,#e6ddcb 60%,#d6d4c7 100%)!important;
+}
+.shell .main::before{opacity:.12!important}
+.shell .main::after{opacity:.28!important}
+.shell .sidebar,
+.shell.themed-shell .sidebar,
+.shell.home-ambient .sidebar,
+.shell.themed-shell.home-ambient .sidebar{
+  background:radial-gradient(ellipse 95% 43% at 55% 5%,rgba(var(--theme-rgb),.22),transparent 83%),
+    linear-gradient(155deg,#202a24,#1d2824 54%,#151f1b)!important;
+  color:#f0eadb!important;
+  border-right:2px solid var(--theme-deep);
+}
+.shell .sidebar .brand-name,
+.shell .sidebar .side-account{color:#f4eddf!important}
+.shell .sidebar .brand-sub,
+.shell .sidebar .tiny,
+.shell .sidebar .nav-category{color:#afbbaf!important}
+.shell .sidebar .nav-item,
+.shell.themed-shell .sidebar .nav-item{color:#d8dccf!important}
+.shell .sidebar .nav-item.active,
+.shell.themed-shell .sidebar .nav-item.active{
+  color:#fff7e9!important;
+  background:linear-gradient(96deg,rgba(var(--theme-rgb),.5),rgba(var(--theme-rgb),.18))!important;
+  border:1px solid rgba(224,224,195,.22)!important;
+  border-left:3px solid var(--theme-accent)!important;
+}
+.shell .sidebar .nav-item:hover,
+.shell.themed-shell .sidebar .nav-item:hover{
+  color:#fffdf2!important;background:rgba(224,217,190,.12)!important;
+}
+.shell .topbar,
+.shell.themed-shell .topbar,
+.shell.home-ambient .topbar,
+.shell.themed-shell.home-ambient .topbar{
+  background:linear-gradient(100deg,#eee8dcf5,rgba(var(--theme-rgb),.095),#e9e2d6e9)!important;
+  border-bottom:1px solid #b9b3a1!important;
+  color:#29352c!important;
+}
+.shell .topbar .top-title{color:#2e342d!important}
+.shell .topbar .eyebrow{color:var(--theme-deep)!important}
+.shell .content{
+  color:#28332c!important;
+}
+.shell .hero.hero-inkwash,
+.shell.themed-shell .hero.hero-inkwash{
+  min-height:375px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  background:
+    radial-gradient(ellipse 59% 91% at 6% 15%,rgba(var(--theme-rgb),.17),transparent 96%),
+    linear-gradient(100deg,#e9e0d0 0%,#e8e0d1 55%,#d9d9c9 100%)!important;
+  border:1px solid rgba(var(--theme-rgb),.37)!important;
+  box-shadow:0 14px 34px #1a241a2a!important;
+}
+.shell .hero.hero-inkwash::before{
+  content:"";display:block;position:absolute;inset:0;z-index:0;
+  pointer-events:none;opacity:.4;
+  background:radial-gradient(ellipse 34% 30% at 2% 100%,rgba(var(--theme-rgb),.17),transparent 95%);
+}
+.shell .hero.hero-inkwash::after{
+  content:"";position:absolute;inset:12px;z-index:0;
+  pointer-events:none;border:1px solid #8f86705e!important;
+}
+.shell .hero.hero-inkwash .hero-copy{
+  position:relative;z-index:3;
+  padding:56px clamp(28px,4vw,65px)!important;
+  display:flex;flex-direction:column;justify-content:center;
+}
+.shell .hero.hero-inkwash .hero-copy h1{
+  color:#352c29!important;text-shadow:none!important;
+  font:600 clamp(34px,3.6vw,54px)/1.19 var(--serif);
+  letter-spacing:-.04em;
+}
+.shell .hero.hero-inkwash .hero-copy p{
+  color:#4d534a!important;
+  font-size:13px;line-height:1.92;
+  font-weight:500;
+}
+.shell .hero.hero-inkwash .hero-copy .eyebrow{
+  color:var(--theme-deep)!important;
+  font-weight:800;
+}
+.shell .hero.hero-inkwash .hero-scene{
+  display:block;position:relative;
+  background:#d6d1c3!important;
+  min-height:350px;
+  overflow:hidden;
+  border-left:1px solid #b8b1a3a6;
+}
+.shell .hero.hero-inkwash .hero-scene::before{
+  display:none!important;
+}
+.shell .hero.hero-inkwash .hero-scene .hero-illustration{
+  display:block;position:absolute;inset:0;
+  width:100%;height:100%;object-fit:cover;object-position:65% 46%;
+  opacity:1;
+  filter:saturate(.91) contrast(1.06);
+}
+.shell .hero.hero-inkwash .hero-scene:after{
+  content:"";pointer-events:none;position:absolute;inset:0;
+  background:linear-gradient(90deg,rgba(231,223,207,.72),transparent 13%),
+    linear-gradient(0deg,rgba(48,55,42,.15),transparent 34%);
+}
+.shell .hero.hero-inkwash .button,
+.shell.themed-shell .hero.hero-inkwash .button{
+  min-width:135px;box-shadow:none!important;
+}
+.shell .hero.hero-inkwash .button:not(.secondary),
+.shell.themed-shell .hero.hero-inkwash .button:not(.secondary){
+  background:var(--theme-deep)!important;border-color:var(--theme-deep)!important;color:#fbf3e9!important;
+}
+.shell .hero.hero-inkwash .button.secondary,
+.shell.themed-shell .hero.hero-inkwash .button.secondary{
+  background:#e5dbcc!important;border-color:#aaa18f!important;color:#29342b!important;
+}
+.shell .hero.hero-inkwash .button:hover{filter:brightness(1.09)}
+/* Cada seção usa a mesma base de papel, preservando a arte e as cores da ficha real. */
+.shell .content .paper-panel,
+.shell .content .my-sheet-card,
+.shell .content .clan-card,
+.shell .content .empty{
+  background:linear-gradient(150deg,rgba(237,230,217,.97),rgba(228,225,215,.96))!important;
+  border-color:#b6b09f!important;
+  color:#303b32!important;
+}
+.shell .content .mini-stat{background:#e6dfd0ed!important;color:#29342b!important}
+.shell .content .paper-panel h3,
+.shell .content .clan-card h3,
+.shell .content .my-sheet-card h3{color:#292d27!important}
+.shell .content .clan-card p,
+.shell .content .my-sheet-card p,
+.shell .content .panel-caption{color:#595f55!important}
+.shell .cv-wrap{background:linear-gradient(135deg,rgba(var(--theme-rgb),.12),#d9d2c3 45%,rgba(var(--theme-rgb),.18))!important}
+.shell .cv-page{background:#eee5d6!important}
+.shell .cv-page .cv-bg{filter:none!important;opacity:1!important}
+.shell .cv-toolbar h2{color:#28342b!important}
+.shell .theme-chip{color:var(--theme-deep)!important}
+.shell .hero-stamp{display:none!important}
+@media(max-width:800px){
+  .shell .hero.hero-inkwash{grid-template-columns:1fr!important}
+  .shell .hero.hero-inkwash .hero-copy{padding:30px!important}
+  .shell .hero.hero-inkwash .hero-scene{min-height:210px!important}
+}
+@media(max-width:720px){
+ .shell .sidebar,.shell.themed-shell .sidebar{border-right:0!important;border-bottom:2px solid var(--theme-deep)}
+}
+@media print{.shell .hero.hero-inkwash{display:none!important}}
+
 </style>
 </head>
 <body>
@@ -600,20 +774,8 @@ function themeStyle(){
   function side(){return `<aside class="sidebar"><div class="brand"><div class="brandmark">忍</div><div><div class="brand-name">Shinobi<br>Chronicles</div><div class="brand-sub">Arquivos Shinobi</div></div></div><nav aria-label="Menu principal"><div class="nav-category">NAVEGAÇÃO</div>${[['home','⌂','Início'],['clans','◈','Os Clãs'],['fichas','▤','Minhas Fichas'],['sheet','✎','Editar Ficha'],...(canAdmin()?[['admin','♜','Administração']]:[])].map(([view,ic,label])=>`<button class="nav-item ${S.view===view?'active':''}" data-action="nav" data-view="${view}"><span class="nav-icon">${ic}</span>${label}</button>`).join('')}</nav><div class="sidebar-bottom"><div class="tiny">SHINOBI NO SHO · SISTEMA D8</div><div class="side-account">${E(S.user?.displayName|| (CONFIGURED?'Conta não conectada':'Modo demonstração'))}</div><div class="tiny">${CONFIGURED?'Dados privados no Firebase.':'Prévia local, sem salvamento na nuvem.'}</div>${S.user?'<button class="nav-item" data-action="logout"><span class="nav-icon">↪</span>Sair da conta</button>':''}</div></aside>`}
   function top(){const currentTheme=themeClan();let titles={home:'Início',clans:'Guia dos clãs',sheet:'Registro do personagem',fichas:'Minhas fichas',admin:'Administração','admin-gate':'Entrada do mestre',login:'Acesso shinobi'};return `<header class="topbar"><div><div class="eyebrow">SHINOBI CHRONICLES / ARQUIVO</div><div class="top-title">${titles[S.view]||'Arquivo'}</div></div><div class="top-actions">${currentTheme?`<span class="theme-chip"><span class="theme-chip-dot"></span>${E(currentTheme.name)}</span>`:''}${S.user?`<span class="pill">${E(S.user.displayName)}</span>`:!CONFIGURED?'<span class="pill">Prévia demonstrativa</span>':'<button class="button small" data-action="nav" data-view="login">Entrar</button>'}${S.view==='sheet'?`<span id="save-status" class="pill">${E(S.saveState)}</span>`:''}</div></header>`}
   function layout(inner){return `<div class="shell ${S.view==='home'?'home-ambient':''} ${themeClan()?'themed-shell':''}" ${themeStyle()}>${side()}<main class="main">${top()}<div class="content">${inner}<footer class="footer-note">SHINOBI CHRONICLES · Sistema D8 / SNS 4.1b · Plataforma independente de fichas · Ilustrações dos clãs serão adicionadas pelo projeto.</footer></div></main></div>`}
-  const heroArt=`<svg viewBox="0 0 720 430" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-<defs>
-<filter id="wc" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency=".016" numOctaves="3" seed="8" result="noise"/><feDisplacementMap in="SourceGraphic" in2="noise" scale="13"/></filter>
-<radialGradient id="haze"><stop stop-color="#bf8a74" stop-opacity=".74"/><stop offset="1" stop-color="#bf8a74" stop-opacity="0"/></radialGradient>
-<linearGradient id="mountain" x2="0" y2="1"><stop stop-color="#c2cdbd" stop-opacity=".8"/><stop offset="1" stop-color="#6b8473" stop-opacity=".35"/></linearGradient>
-</defs>
-<circle cx="535" cy="107" r="126" fill="url(#haze)"/>
-<path fill="url(#mountain)" filter="url(#wc)" d="M-30 350L42 268 128 316 220 152 310 290 394 174 493 316 573 246 665 305 745 266V450H-30Z"/>
-<path fill="#567063" filter="url(#wc)" opacity=".8" d="M-30 399L90 307 178 346 258 287 371 344 473 263 583 359 670 323 745 351V450H-30Z"/>
-<path fill="#29443a" filter="url(#wc)" opacity=".75" d="M-30 431Q125 351 244 404T480 398T745 389V470H-30Z"/>
-<g fill="none" stroke="#19332c" stroke-linecap="round" opacity=".83"><path d="M487 365V203M640 365V203" stroke-width="12"/><path d="M467 215Q557 187 657 218" stroke-width="20"/><path d="M487 248Q569 231 642 249" stroke-width="9"/></g>
-<g fill="none" stroke="#d9d5c5" opacity=".34" stroke-width="2"><path d="M10 393Q120 359 246 394"/><path d="M280 389Q400 354 515 392"/><path d="M465 418Q602 378 720 407"/></g>
-</svg>`;
-  function home(){const c=active()?clanOf(active().clanId):null;return layout(`<section class="hero hero-inkwash"><div class="hero-copy"><div class="eyebrow">UM NOVO CICLO · SHINOBI CHRONICLES</div><h1>Seu caminho<br>começa aqui.</h1><p>Explore as famílias shinobi, registre seu personagem e acompanhe sua evolução com uma ficha automatizada pelo sistema D8.</p><div class="flex wrap mt24"><button class="button" data-action="nav" data-view="clans">Explorar os clãs <span>↗</span></button><button class="button secondary" data-action="nav" data-view="fichas">Minhas fichas</button></div></div><div class="hero-scene">${heroArt}<div class="hero-stamp">忍</div></div></section>${!CONFIGURED?`<div class="notice warn mt16"><b>Modo de demonstração.</b> A interface e os cálculos já funcionam, mas os dados não serão salvos online até configurar o Firebase no arquivo <code>index.html</code>. É possível testar a ficha agora.</div>`:''}<div class="section-head"><div><div class="eyebrow">ARQUIVOS DE KONOHA</div><h2>Explore os clãs</h2></div><p>11 linhagens e um caminho independente</p></div><div class="clans-grid">${CLANS.slice(0,6).map(clanCard).join('')}</div><div class="section-head"><div><div class="eyebrow">O SEU REGISTRO</div><h2>Ficha de personagem</h2></div></div>${c?`<div class="paper-panel"><div class="flex between wrap"><div><div class="eyebrow">PERSONAGEM ATIVO</div><h3 style="margin:8px 0">${E(active().nome||'Personagem sem nome')} · ${E(c.name)}</h3><div class="panel-caption">Nível de Campanha ${active().nc} · ${E(active().graduacao)}</div></div><button class="button" data-action="nav" data-view="sheet">Continuar edição ↗</button></div></div>`:`<div class="empty"><h3>Sua história ainda não foi registrada</h3><p>Escolha um clã e crie sua ficha; os atributos e as perícias serão calculados automaticamente.</p><button class="button" data-action="nav" data-view="clans">Escolher clã</button></div>`}`)}
+  const heroArt=`<img class="hero-illustration" src="hero-konoha.svg" alt="Ilustração da Vila Oculta da Folha com casario, cerejeiras e aquarela japonesa" loading="eager" decoding="async">`;
+  function home(){const c=active()?clanOf(active().clanId):null;return layout(`<section class="hero hero-inkwash"><div class="hero-copy"><div class="eyebrow">UM NOVO CICLO · SHINOBI CHRONICLES</div><h1>Seu caminho<br>começa aqui.</h1><p>Explore as famílias shinobi, registre seu personagem e acompanhe sua evolução com uma ficha automatizada pelo sistema D8.</p><div class="flex wrap mt24"><button class="button" data-action="nav" data-view="clans">Explorar os clãs <span>↗</span></button><button class="button secondary" data-action="nav" data-view="fichas">Minhas fichas</button></div></div><div class="hero-scene">${heroArt}</div></section>${!CONFIGURED?`<div class="notice warn mt16"><b>Modo de demonstração.</b> A interface e os cálculos já funcionam, mas os dados não serão salvos online até configurar o Firebase no arquivo <code>index.html</code>. É possível testar a ficha agora.</div>`:''}<div class="section-head"><div><div class="eyebrow">ARQUIVOS DE KONOHA</div><h2>Explore os clãs</h2></div><p>11 linhagens e um caminho independente</p></div><div class="clans-grid">${CLANS.slice(0,6).map(clanCard).join('')}</div><div class="section-head"><div><div class="eyebrow">O SEU REGISTRO</div><h2>Ficha de personagem</h2></div></div>${c?`<div class="paper-panel"><div class="flex between wrap"><div><div class="eyebrow">PERSONAGEM ATIVO</div><h3 style="margin:8px 0">${E(active().nome||'Personagem sem nome')} · ${E(c.name)}</h3><div class="panel-caption">Nível de Campanha ${active().nc} · ${E(active().graduacao)}</div></div><button class="button" data-action="nav" data-view="sheet">Continuar edição ↗</button></div></div>`:`<div class="empty"><h3>Sua história ainda não foi registrada</h3><p>Escolha um clã e crie sua ficha; os atributos e as perícias serão calculados automaticamente.</p><button class="button" data-action="nav" data-view="clans">Escolher clã</button></div>`}`)}
   function clans(){return layout(`<div class="section-head" style="margin-top:0"><div><div class="eyebrow">AS FAMÍLIAS SHINOBI</div><h2>Guia de Clãs</h2></div><p>Clique em uma família para conhecer e escolher seu caminho.</p></div><div class="notice">A escolha de um clã não concede pontos automaticamente no Shinobi no Sho. Ela habilita técnicas e aptidões restritas, que dependem da compra e dos requisitos do sistema.</div><div class="clans-grid mt24">${CLANS.map(clanCard).join('')}</div>`)}
   function login(){
  if(!CONFIGURED)return layout('<div class="empty"><h3>Conecte o Firebase para ativar contas</h3></div>');
