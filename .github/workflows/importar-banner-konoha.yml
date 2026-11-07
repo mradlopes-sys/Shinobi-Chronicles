@@ -15,12 +15,12 @@ jobs:
         env:
           SOURCE_URL: 'https://media.canva.com/v2/image-resize/format:JPG/height:768/quality:75/uri:ifs%3A%2F%2FM%2Fa75ec794-2938-414c-a247-acd953f110a3/watermark:F/width:1376?csig=AAAAAAAAAAAAAAAAAAAAAFbnToiuL_2VIl8JJYaEZeo3tbvDcLkAsBq78of9UpzH&exp=1794050593&osig=AAAAAAAAAAAAAAAAAAAAAHd2vB9-dKUtJ2f3fHdWV02g21UJnNl2l3KaubHR8vus&signer=media-rpc&token=AAIAAU0AJGE3NWVjNzk0LTI5MzgtNDE0Yy1hMjQ3LWFjZDk1oxfDZWkUm33S9hCwDCprXwQNQ&x-canva-quality=thumbnail'
         run: |
-          curl --location --fail --silent --show-error --retry 2 "$SOURCE_URL" --output hero-konoha-user.jpg
-          file hero-konoha-user.jpg
-          test "$(stat --printf=%s hero-konoha-user.jpg)" -gt 20000
+          curl --location --fail --silent --show-error --retry 2 "$SOURCE_URL" --output hero-konoha-novo.jpg
+          file hero-konoha-novo.jpg
+          test "$(stat --printf=%s hero-konoha-novo.jpg)" -gt 20000
           python3 - <<'PY'
           from pathlib import Path
-          data=Path('hero-konoha-user.jpg').read_bytes()
+          data=Path('hero-konoha-novo.jpg').read_bytes()
           assert data[:3]==b'\xff\xd8\xff', "Servidor nao retornou JPEG"
           print('Imagem recebida:',len(data),'bytes')
           PY
@@ -28,6 +28,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add hero-konoha-user.jpg
-          git commit -m "assets: adicionar banner Konoha enviado pelo usuario"
+          git add hero-konoha-novo.jpg
+          git commit -m "assets: publicar imagem Konoha enviada pelo usuario"
           git push
