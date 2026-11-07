@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 700" role="img" aria-labelledby="title description">
+<title id="title">Vila da Folha em aquarela</title>
+<desc id="description">Casario tradicional de Konoha, torre circular da vila e ramos de cerejeira ilustrados em tinta japonesa sobre papel washi.</desc>
+<defs>
+ <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f4eadd"/><stop offset=".48" stop-color="#e9dfd0"/><stop offset="1" stop-color="#cfd3c3"/></linearGradient>
+ <radialGradient id="sun"><stop stop-color="#b96d62" stop-opacity=".63"/><stop offset=".64" stop-color="#b96d62" stop-opacity=".21"/><stop offset="1" stop-color="#b96d62" stop-opacity="0"/></radialGradient>
+ <linearGradient id="tower" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#c17e62"/><stop offset=".52" stop-color="#ad6451"/><stop offset="1" stop-color="#965a4e"/></linearGradient>
+ <linearGradient id="roof" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#64766e"/><stop offset=".54" stop-color="#354d4c"/><stop offset="1" stop-color="#223b3b"/></linearGradient>
+ <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#ebdfc9"/><stop offset="1" stop-color="#c5b3a0"/></linearGradient>
+ <linearGradient id="farTrees" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#9baa94" stop-opacity=".7"/><stop offset="1" stop-color="#768a7c" stop-opacity=".3"/></linearGradient>
+ <filter id="bleed" x="-13%" y="-13%" width="126%" height="126%">
+  <feTurbulence type="fractalNoise" baseFrequency=".022" numOctaves="3" seed="4" result="noise"/>
+  <feDisplacementMap in="SourceGraphic" in2="noise" scale="9" xChannelSelector="R" yChannelSelector="G"/>
+ </filter>
+ <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency=".22" numOctaves="3" stitchTiles="stitch" seed="5"/><feColorMatrix type="saturate" values="0"/></filter>
+ <filter id="soft"><feGaussianBlur stdDeviation="11"/></filter>
+ <g id="roofBuilding" stroke="#4c5046" stroke-width="3" stroke-linejoin="round">
+  <path d="M15 55H240V185H15Z" fill="url(#wall)"/>
+  <path d="M-12 66L76 3 182 3 266 66Q132 49-12 66Z" fill="url(#roof)" stroke="#303f3e" stroke-width="8"/>
+  <path d="M25 60L85 17 182 17 233 60" stroke="#b2b6aa" stroke-width="2" fill="none"/>
+  <path d="M30 82h190M30 128h190" stroke="#8d8a7c" stroke-width="3" opacity=".5"/>
+  <path d="M55 83v78h45V83ZM143 83v78h45V83Z" fill="#9a9a88" stroke="#606a63" stroke-width="3"/>
+  <path d="M66 100h22M154 100h22M66 118h22M154 118h22" stroke="#dfd6c3" stroke-width="4"/>
+ </g>
+ <g id="tree" stroke="#425748" stroke-linecap="round" stroke-linejoin="round">
+   <path d="M0 120Q-8 66 4 0M2 62Q-27 22-45 15M3 47Q23 11 47-5" fill="none" stroke-width="10"/>
+   <path d="M-48 10q-35-43 5-63q22-39 50-18q49-11 51 28q39 25 7 60q-66 30-113-7Z" fill="#82917d" stroke="none" filter="url(#bleed)"/>
+   <path d="M-35-25q37-48 75-8M-23-7q42-21 72 6" fill="none" stroke="#c4c5aa" stroke-width="4" opacity=".46"/>
+ </g>
+</defs>
+<rect width="1400" height="700" fill="url(#paper)"/>
+<!-- Pigmento difuso no papel, sem montanhas triangulares -->
+<g filter="url(#bleed)" opacity=".44">
+ <path fill="#8c9d8c" d="M0 177Q280 79 551 152Q785 214 1107 106Q1258 58 1400 146V485Q1080 397 872 476Q515 523 0 376Z"/>
+ <path fill="#b9857d" d="M661 27Q1088-40 1371 115Q1462 192 1326 332Q1113 280 903 354Q754 267 661 27Z" opacity=".36"/>
+ <path fill="#92a696" d="M0 449Q217 386 400 451Q602 487 740 446Q1044 364 1400 455V700H0Z" opacity=".64"/>
+</g>
+<circle cx="1057" cy="151" r="187" fill="url(#sun)"/>
+<!-- Céu e nuvens desenhados a pincel -->
+<g stroke="#a7a59a" stroke-width="3" fill="none" opacity=".38" stroke-linecap="round">
+<path d="M115 144q120-40 224 0M210 160q94-21 181 12M711 154q117-30 224-7M1010 105q110-22 230 5"/>
+<path d="M49 267q116-27 211-1M541 235q67-24 147-5M1108 247q109-28 210-3"/>
+</g>
+<!-- Fundo urbano: templos, telhados e árvores -->
+<g opacity=".46">
+ <use href="#roofBuilding" transform="translate(42 277) scale(.48)"/>
+ <use href="#roofBuilding" transform="translate(195 256) scale(.62)"/>
+ <use href="#roofBuilding" transform="translate(339 287) scale(.43)"/>
+ <use href="#roofBuilding" transform="translate(1039 280) scale(.55)"/>
+ <use href="#roofBuilding" transform="translate(1196 266) scale(.49)"/>
+ <use href="#tree" transform="translate(136 393) scale(.72)"/>
+ <use href="#tree" transform="translate(1248 416) scale(.78)"/>
+ <use href="#tree" transform="translate(447 425) scale(.63)"/>
+</g>
+<!-- Torre principal da Vila Oculta da Folha -->
+<g stroke="#564b44" stroke-linejoin="round" stroke-linecap="round">
+ <path d="M674 478V269Q683 246 720 241H976Q1012 248 1023 273V478Z" fill="url(#tower)" stroke-width="6"/>
+ <path d="M660 306Q839 281 1034 305" fill="none" stroke="#794e49" stroke-width="9"/>
+ <path d="M661 270Q673 227 713 211Q838 189 985 210Q1028 222 1040 273Q848 251 661 270Z" fill="#7a6459" stroke="#554e47" stroke-width="7"/>
+ <path d="M686 218Q839 181 1012 217L992 201Q838 177 711 199Z" fill="#b57361" stroke-width="3"/>
+ <path d="M725 197V163M771 189V157M819 185V151M867 184V151M916 191V156M968 199V162" stroke="#7c584e" stroke-width="7"/>
+ <path d="M735 321h227M735 339h227" stroke="#e6c59b" stroke-width="3" opacity=".5"/>
+ <rect x="774" y="352" width="125" height="91" rx="9" fill="#dbc2a3" opacity=".94"/>
+ <path d="M824 404q27-27 52-3q-29 2-36 31q-20-13-16-28M822 407q3-31 43-31M841 432q7-35 48-27" fill="none" stroke="#a35650" stroke-width="9"/>
+ <g fill="#493f3c" stroke-width="1">
+  <rect x="703" y="319" width="18" height="33" rx="5"/><rect x="970" y="320" width="18" height="33" rx="5"/>
+  <rect x="707" y="373" width="23" height="36" rx="5"/><rect x="964" y="373" width="24" height="36" rx="5"/>
+ </g>
+ <path d="M658 477H1042" stroke="#534943" stroke-width="12"/>
+</g>
+<!-- Primeiro plano: ruas e edifícios tradicionais -->
+<g>
+ <use href="#roofBuilding" transform="translate(62 409) scale(1.1)"/>
+ <use href="#roofBuilding" transform="translate(321 451) scale(.86)"/>
+ <use href="#roofBuilding" transform="translate(984 420) scale(1.08)"/>
+ <use href="#roofBuilding" transform="translate(1198 452) scale(.85)"/>
+</g>
+<!-- Rua sinuosa, tinta orgânica -->
+<path d="M568 700Q615 588 704 540Q776 506 839 491Q787 552 837 700Z" fill="#d1bba2" opacity=".68" filter="url(#bleed)"/>
+<path d="M601 700Q637 599 735 546M812 700Q773 588 811 530" fill="none" stroke="#968779" stroke-width="5" opacity=".35"/>
+<!-- Cercas e pequenos fios de telhado -->
+<path d="M32 627L364 587M1154 591L1404 617" stroke="#4c5853" stroke-width="6" opacity=".63"/>
+<g stroke="#727f71" stroke-width="3" opacity=".38" fill="none"><path d="M0 465Q327 410 617 453"/><path d="M978 454Q1208 419 1400 462"/></g>
+<!-- Vegetação suave entre as casas -->
+<g opacity=".85">
+<use href="#tree" transform="translate(68 597) scale(1.18)"/>
+<use href="#tree" transform="translate(1330 624) scale(1.07)"/>
+<use href="#tree" transform="translate(411 614) scale(.78)"/>
+</g>
+<!-- Cerejeira inkwork no canto superior, flores vermelhas em aquarela -->
+<g fill="none" stroke="#3f3e37" stroke-linecap="round">
+<path d="M-15 0Q144 62 354 28Q445 9 515-35" stroke-width="19"/>
+<path d="M81 20Q132 83 152 142M207 33Q248 104 328 137M342 14Q378 53 438 83" stroke-width="10"/>
+<path d="M141 90Q114 107 80 112M299 111Q326 83 361 83" stroke-width="5"/>
+</g>
+<g fill="#bd746c" opacity=".85" filter="url(#bleed)">
+<circle cx="55" cy="45" r="21"/><circle cx="86" cy="78" r="18"/><circle cx="145" cy="118" r="23"/>
+<circle cx="194" cy="35" r="17"/><circle cx="247" cy="79" r="25"/><circle cx="316" cy="128" r="17"/>
+<circle cx="369" cy="42" r="23"/><circle cx="429" cy="73" r="19"/><circle cx="96" cy="120" r="17"/>
+<circle cx="490" cy="22" r="16"/>
+</g>
+<g fill="#8a4d4d" opacity=".64">
+<circle cx="290" cy="164" r="5"/><circle cx="365" cy="184" r="4"/><circle cx="442" cy="154" r="6"/>
+<circle cx="214" cy="173" r="4"/><circle cx="504" cy="118" r="4"/><circle cx="112" cy="191" r="6"/>
+</g>
+<!-- Mancha branca da bruma e textura translúcida de papel -->
+<g filter="url(#bleed)" opacity=".22">
+<path d="M-20 593Q139 544 250 589Q355 562 441 607Q616 558 746 585Q962 540 1099 607Q1244 555 1424 608V732H-20Z" fill="#e4dfd1"/>
+</g>
+<rect width="1400" height="700" opacity=".12" filter="url(#grain)" style="mix-blend-mode:multiply"/>
+</svg>
