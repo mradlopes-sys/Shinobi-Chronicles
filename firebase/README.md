@@ -1,3 +1,13 @@
+## Guia de criação de personagem no site
+
+Depois de escolher um clã e clicar em **Criar personagem**, o Shinobi Chronicles abre automaticamente a aba **Guia de criação**, com **11 etapas** baseadas no *Naruto Shinobi no Sho 4.1b* e no Resumo/Manual de Criação enviado ao projeto. A ficha continua sendo salva no Firestore.
+
+O guia acompanha **NC, pontos de atributos, perícias, poderes, sociais e aptidões** do personagem em tempo real. Cada etapa possui o botão **Abrir esta parte da ficha**, que encaminha à página correspondente do modelo original do Canva ou ao editor detalhado, quando necessário. O jogador pode voltar ao guia pelo menu lateral ou pelo botão na ficha.
+
+O padrão de criação é **Genin NC 4**: 12 pontos de atributos, 8 de perícias, 4 de poderes, 2 sociais e três aptidões gratuitas. Valores dos outros NCs acompanham a tabela já implementada no projeto. As progressões intermediárias do site são adaptações e devem ser aprovadas pelo mestre. O guia explica o sistema, mas não valida automaticamente todos os pré-requisitos específicos de clãs, técnicas e aptidões do livro.
+
+---
+
 ## Retrato do personagem sem Firebase Storage
 
 Na página de identificação da ficha, clique em **Enviar retrato** (ou abra **Editor detalhado → Retrato do personagem**) para escolher um arquivo do computador ou celular. Formatos aceitos: JPG, PNG e WebP, com até **12 MB de origem**.
