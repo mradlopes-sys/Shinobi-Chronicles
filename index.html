@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<link rel="preload" href="assets/audio/create-sheet.mp3" as="audio" type="audio/mpeg">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#171b19">
@@ -482,6 +483,24 @@
 .live-event p{font-size:12px;color:#626d61;margin:4px 0 0}.live-event time{font-size:11px;color:#7d8173;white-space:nowrap}
 .admin-sync-note{font-size:11px;border:1px solid #a3baa2;background:#dcebdd;color:#3c6346;border-radius:50px;padding:8px 10px}
 .admin-sync-note.has-update{border-color:#b68c55;background:#efe3bd;color:#785a2e;cursor:pointer}
+
+
+/* Abertura da ficha: pincelada curta, papel japonês e selo, sem bloquear a navegação */
+.shinobi-entrance{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;isolation:isolate;opacity:0;pointer-events:auto;transition:opacity .26s ease-out}
+.shinobi-entrance:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 48% 48% at 50% 50%,rgba(224,212,188,.96),rgba(213,206,187,.95) 66%,rgba(39,57,46,.87));clip-path:circle(0% at 50% 50%);transition:clip-path .42s cubic-bezier(.16,.7,.31,1);box-shadow:0 0 70px #3548374d inset}
+.shinobi-entrance:after{content:"";position:absolute;inset:0;opacity:.2;pointer-events:none;background:repeating-linear-gradient(110deg,transparent 0 6px,rgba(53,70,56,.1) 7px,transparent 8px 16px)}
+.shinobi-entrance.is-opening{opacity:1}
+.shinobi-entrance.is-opening:before{clip-path:circle(85% at 50% 50%)}
+.shinobi-entrance-ink{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:11px;opacity:0;transform:translateY(15px) scale(.94);transition:opacity .28s ease .10s,transform .32s ease .10s;text-align:center;color:#27392f}
+.shinobi-entrance.is-opening .shinobi-entrance-ink{opacity:1;transform:translateY(0) scale(1)}
+.shinobi-entrance-symbol{display:grid;place-items:center;border:2px solid #ad6d64;border-radius:50%;width:75px;height:75px;font:700 39px var(--serif);color:#864e4b;background:rgba(254,248,235,.3)}
+.shinobi-entrance-title{font-size:11px;font-weight:800;letter-spacing:.21em}
+.shinobi-entrance-ink small{font-size:12px;letter-spacing:.03em;color:#606b60}
+.shinobi-entrance.is-closing{opacity:0;pointer-events:none;transition:opacity .36s ease}
+.shinobi-entrance.is-closing .shinobi-entrance-ink{opacity:0;transform:translateY(-9px)}
+@media(prefers-reduced-motion:reduce){
+ .shinobi-entrance,.shinobi-entrance:before,.shinobi-entrance-ink{transition-duration:.01s!important}
+}
 
 </style>
 </head>
@@ -1136,6 +1155,43 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
   function modifyItem(array,index,remove=false){if(!canEditCurrent())return;const p=active();if(!p||!['poderes','aptidoes','jutsus','inventario'].includes(array))return;if(remove){p[array].splice(index,1);render();scheduleSave();return}if(p[array].length>=MAX_ITEMS)return showToast('Limite de registros atingido.',true);if(array==='aptidoes'&&p.aptidoes.filter(x=>x?.nome?.trim()).length>=3&&totals(p).powers+2>currentNC().powers)return showToast('Faltam 2 pontos de poder para comprar outra aptidão.',true);const patterns={poderes:{nome:'',nivel:1,descricao:''},aptidoes:{nome:'',tipo:''},jutsus:{nome:'',nivel:1,acao:'',duracao:'',alvo:'',alcance:'',efeito:''},inventario:{nome:'',quantidade:1,obs:''}};if(array==='poderes'&&totals(p).powers+1>currentNC().powers)return showToast('Sem pontos de poder disponíveis.',true);p[array].push({id:randomId(),...patterns[array]});render();scheduleSave()}
   function roll(diceCount,bonus,label){const rolls=Array.from({length:diceCount},()=>1+Math.floor(Math.random()*8)),sum=rolls.reduce((a,b)=>a+b,0);let critical=diceCount===2&&(sum>=15?' · SUCESSO CRÍTICO':sum<=3?' · FALHA CRÍTICA':'');showToast(`${label}: ${rolls.join(' + ')} + ${bonus} = ${sum+bonus}${critical}`)}
   function exportSheet(){if(!active())return;const data=JSON.stringify(active(),null,2);const url=URL.createObjectURL(new Blob([data],{type:'application/json;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download=`shinobi-${active().nome.toLowerCase().replace(/[^a-z0-9]/g,'-')||'personagem'}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1200)}
+
+  let createSheetAudio=null;
+  function playCreateSheetSound(){
+    try{
+      if(!createSheetAudio){
+        createSheetAudio=new Audio('assets/audio/create-sheet.mp3');
+        createSheetAudio.preload='auto';
+        createSheetAudio.volume=.68;
+      }
+      createSheetAudio.pause();
+      createSheetAudio.currentTime=0;
+      const playing=createSheetAudio.play();
+      if(playing?.catch)playing.catch(()=>{});
+    }catch(error){console.warn('Áudio não disponível:',error)}
+  }
+  async function createSheetAnimated(){
+    if(S.creating||!S.activeClan)return;
+    if(S.sheets.length>=40)return showToast('Máximo de 40 fichas por conta.',true);
+    S.creating=true;
+    playCreateSheetSound();
+    S.modal=null;render();
+    const layer=document.createElement('div');
+    layer.className='shinobi-entrance';
+    layer.setAttribute('role','status');
+    layer.setAttribute('aria-label','Abrindo sua nova ficha shinobi');
+    layer.innerHTML='<div class="shinobi-entrance-ink"><span class="shinobi-entrance-symbol">忍</span><span class="shinobi-entrance-title">SHINOBI CHRONICLES</span><small>Preparando seu registro...</small></div>';
+    document.body.appendChild(layer);
+    requestAnimationFrame(()=>layer.classList.add('is-opening'));
+    await new Promise(resolve=>setTimeout(resolve,540));
+    try{await createSheet();window.scrollTo({top:0,behavior:'instant'})}
+    catch(error){console.error('Erro ao abrir ficha:',error);showToast('Não foi possível abrir a ficha. Tente novamente.',true)}
+    finally{
+      layer.classList.add('is-closing');
+      setTimeout(()=>{layer.remove();S.creating=false},370);
+    }
+  }
+
   async function createSheet(){
   if(!S.activeClan)return;
   if(ownsCurrent()&&S.saveTimer){clearTimeout(S.saveTimer);S.saveTimer=null;await persist()}
@@ -1206,7 +1262,7 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
   if(button?.isConnected)button.disabled=false;
  }
 }
-  function clickAction(el){const action=el.dataset.action;if(!action)return;const p=active();if(action==='cv-page'){S.canvaPage=Number(el.dataset.page)||1;render();return}if(action==='cv-mode'){S.canvaMode=S.canvaMode==='advanced'?'original':'advanced';render();return}if(action==='open-sheet')return openSheet(el.dataset.id);if(action==='ask-delete')return askDelete(el.dataset.id);if(action==='confirm-delete')return deleteSheet();if(action==='lock-admin')return lockAdmin();if(action==='apply-remote')return applyRemoteSheet();if(action==='nav')return nav(el.dataset.view);if(action==='tab'){S.tab=el.dataset.tab;render();return}if(action==='clan'){S.activeClan=el.dataset.clan;S.modal='clan';render();return}if(action==='close-modal'){S.modal=null;render();return}if(action==='create-sheet')return createSheet();if(action==='auth-pane'){S.authPane=el.dataset.pane==='admin'?'admin':'login';render();return}if(action==='auth-switch'){S.authPane=S.authPane==='register'?'login':'register';render();return}if(action==='logout'){S.adminUnlocked=false;stopAdminLive();S.adminSheets=[];if(fb)fb.signOut(fb.auth);else{S.user=null;S.sheet=null;S.sheetId=null;S.sheets=[];S.view='home';render()}return}if(action==='save')return persist();if(action==='print')return window.print();if(action==='export')return exportSheet();if(action==='attr')return adjustAttr(el.dataset.key,n(el.dataset.delta));if(action==='skill')return adjustSkill(el.dataset.key,n(el.dataset.delta));if(action==='shift')return shiftCombat();if(action==='reset-shift'){if(!canEditCurrent())return;p.combateAjustes={CC:0,CD:0,ESQ:0,LM:0};render();scheduleSave();return}if(action==='add-item')return modifyItem(el.dataset.array);if(action==='remove-item')return modifyItem(el.dataset.array,n(el.dataset.index),true);if(action==='roll-skill'){const k=el.dataset.key;if(!trained(p,k))return showToast('Esta perícia exige treinamento.',true);return roll(2,skillTotal(p,k),k)}if(action==='roll-combat')return roll(2,combat(p,el.dataset.key),'Combate corporal');if(action==='roll-initiative')return roll(1,n(p.atributos.AGI)+skillTotal(p,'Prontidão'),'Iniciativa');if(action==='refresh-admin')return refreshAdmin();if(action==='open-admin'){if(!canAdmin()||!S.adminUnlocked)return showToast('Confirme a senha para acessar as fichas.',true);const x=S.adminSheets.find(a=>a.__id===el.dataset.id);if(x){const {__id,...safeData}=x;S.sheet=normalize(safeData);S.sheetId=__id;S.adminViewing=true;S.canvaMode='original';S.view='sheet';S.tab='identidade';render();}return}}
+  function clickAction(el){const action=el.dataset.action;if(!action)return;const p=active();if(action==='cv-page'){S.canvaPage=Number(el.dataset.page)||1;render();return}if(action==='cv-mode'){S.canvaMode=S.canvaMode==='advanced'?'original':'advanced';render();return}if(action==='open-sheet')return openSheet(el.dataset.id);if(action==='ask-delete')return askDelete(el.dataset.id);if(action==='confirm-delete')return deleteSheet();if(action==='lock-admin')return lockAdmin();if(action==='apply-remote')return applyRemoteSheet();if(action==='nav')return nav(el.dataset.view);if(action==='tab'){S.tab=el.dataset.tab;render();return}if(action==='clan'){S.activeClan=el.dataset.clan;S.modal='clan';render();return}if(action==='close-modal'){S.modal=null;render();return}if(action==='create-sheet')return createSheetAnimated();if(action==='auth-pane'){S.authPane=el.dataset.pane==='admin'?'admin':'login';render();return}if(action==='auth-switch'){S.authPane=S.authPane==='register'?'login':'register';render();return}if(action==='logout'){S.adminUnlocked=false;stopAdminLive();S.adminSheets=[];if(fb)fb.signOut(fb.auth);else{S.user=null;S.sheet=null;S.sheetId=null;S.sheets=[];S.view='home';render()}return}if(action==='save')return persist();if(action==='print')return window.print();if(action==='export')return exportSheet();if(action==='attr')return adjustAttr(el.dataset.key,n(el.dataset.delta));if(action==='skill')return adjustSkill(el.dataset.key,n(el.dataset.delta));if(action==='shift')return shiftCombat();if(action==='reset-shift'){if(!canEditCurrent())return;p.combateAjustes={CC:0,CD:0,ESQ:0,LM:0};render();scheduleSave();return}if(action==='add-item')return modifyItem(el.dataset.array);if(action==='remove-item')return modifyItem(el.dataset.array,n(el.dataset.index),true);if(action==='roll-skill'){const k=el.dataset.key;if(!trained(p,k))return showToast('Esta perícia exige treinamento.',true);return roll(2,skillTotal(p,k),k)}if(action==='roll-combat')return roll(2,combat(p,el.dataset.key),'Combate corporal');if(action==='roll-initiative')return roll(1,n(p.atributos.AGI)+skillTotal(p,'Prontidão'),'Iniciativa');if(action==='refresh-admin')return refreshAdmin();if(action==='open-admin'){if(!canAdmin()||!S.adminUnlocked)return showToast('Confirme a senha para acessar as fichas.',true);const x=S.adminSheets.find(a=>a.__id===el.dataset.id);if(x){const {__id,...safeData}=x;S.sheet=normalize(safeData);S.sheetId=__id;S.adminViewing=true;S.canvaMode='original';S.view='sheet';S.tab='identidade';render();}return}}
   document.addEventListener('click',ev=>{const el=ev.target.closest('[data-action]');if(!el)return;if(el.classList.contains('modalshade')&&ev.target!==el)return;clickAction(el)});
   document.addEventListener('submit',ev=>{if(ev.target.id==='auth-form'){ev.preventDefault();submitAuth(ev.target)}else if(ev.target.id==='admin-auth-form'){ev.preventDefault();unlockAdmin(ev.target)}});
   document.addEventListener('input',ev=>{const el=ev.target;if(el.id==='admin-filter'){const q=el.value.toLocaleLowerCase('pt-BR');$('#admin-rows').innerHTML=adminRows(S.adminSheets.filter(x=>[x.nome,x.usuario,clanOf(x.clanId).name].some(z=>String(z||'').toLocaleLowerCase('pt-BR').includes(q))));return}if(!el.dataset.bind||el.tagName==='SELECT')return;const old=getAt(active(),el.dataset.bind);if(!updateValue(el.dataset.bind,el.value)){el.value=old??''}});
