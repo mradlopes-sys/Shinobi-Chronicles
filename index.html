@@ -2214,6 +2214,12 @@
 @media print{.journal-stamp-overlay{display:none!important}}
 
 
+
+/* Nota fixa na lateral superior do mural, inclusive ao rolar o grande quadro */
+.pub-fixed-update{position:sticky;top:12px;z-index:30;float:right;display:block;margin:-9px 14px 8px 12px;padding:13px 17px;background:#f1d68e;color:#67412a;border:1px solid #cfa863;border-radius:3px;box-shadow:2px 5px 9px #30201555;transform:rotate(2deg);font:600 15px 'Yuji Boku',var(--serif);cursor:pointer}
+.pub-fixed-update:hover{filter:brightness(1.07);transform:rotate(0deg)}
+.pub-hub:after{content:"";display:table;clear:both}
+
 /* QUADROS SHINOBI — PERFIS PUBLICOS */
 .shell:has(.pub-hub) .content{max-width:none;padding:24px clamp(15px,2.2vw,36px) 70px}
 .pub-hub{color:#392b25;--pin:#994b3e;--card:#f5ead4}
@@ -4270,6 +4276,7 @@ function canvaUpdateArray(el,preserveFocus=false){
     function status(label){const el=document.querySelector('[data-board-status]');if(el)el.textContent=label}
     async function load(){
       if(!S.user||!fb)return;
+      if(obsTimer)await saveObservation();
       loading=true;render();
       try{
         const docs=await fb.getDocs(fb.collection(fb.db,'perfisPublicos'));
@@ -4282,6 +4289,7 @@ function canvaUpdateArray(el,preserveFocus=false){
     }
     function enter(){S.view='quadros';S.modal=null;render();if(!loading)void load()}
     async function open(key){
+      if(obsTimer)await saveObservation();
       if(draft&&permitted()&&version)await persist();
       clearTimeout(saveTimer);id=key;draft=current()?structuredClone(current()):null;observation='';render();if(draft)void loadObservation();
     }
@@ -4313,6 +4321,7 @@ function canvaUpdateArray(el,preserveFocus=false){
       }catch(error){busy=false;console.error('Salvamento do quadro:',error);status('Erro ao salvar');showToast('Não foi possível salvar o quadro. Confira as regras do Firestore.',true)}
     }
     async function create(key){
+      if(obsTimer)await saveObservation();
       const sheet=S.sheets.find(x=>x.id===key);
       if(!sheet||!S.user)return showToast('Selecione uma ficha da sua conta.',true);
       if(current()&&permitted()&&version)await persist();
@@ -4380,7 +4389,7 @@ function canvaUpdateArray(el,preserveFocus=false){
       const own=S.sheets.filter(s=>!all.some(a=>a.id===s.id));
       const isOwner=permitted();
       let output='<div class="pub-hub"><div class="pub-intro"><div class="eyebrow">ARQUIVOS PÚBLICOS DA VILA</div><h1>Mural de Konoha</h1><p>Conheça os shinobi do servidor pelos retratos, histórias e bilhetes publicados por seus jogadores. As estatísticas, atributos, recursos, perícias e demais dados privados das fichas não são exibidos aqui.</p></div>';
-      output+='<div class="pub-actions"><button class="button secondary small" data-action="board-refresh" '+(loading?'disabled':'')+'>↻ Atualizar mural</button>';
+      output+='<button class="pub-fixed-update" data-action="board-updates-open" title="Abrir notas de atualização">📌 Atualizações</button><div class="pub-actions"><button class="button secondary small" data-action="board-refresh" '+(loading?'disabled':'')+'>↻ Atualizar mural</button>';
       if(own.length)output+='<select class="pub-select" id="pub-new-sheet" aria-label="Escolher personagem para publicar"><option value="">Selecione sua ficha para criar um quadro</option>'+own.map(s=>'<option value="'+esc(s.id)+'">'+esc(s.data.nome||'Personagem sem nome')+'</option>').join('')+'</select><button class="button small" data-action="board-create">+ Publicar meu personagem</button>';
       output+='<span class="pub-readonly" data-board-status>'+ (loading?'Buscando registros…':busy?'Salvando…':'Cada personagem tem seu próprio quadro.') +'</span></div>';
       if(all.length)output+='<div class="pub-choose" aria-label="Quadros dos jogadores">'+all.map(p=>'<button class="pub-chip '+(p.id===id?'active':'')+'" data-action="board-open" data-id="'+esc(p.id)+'"><b>'+esc(p.nome)+'</b><small>'+esc(p.clan)+' · '+esc(p.graduacao)+(p.ownerUid===uid()?' · Seu quadro':'')+'</small></button>').join('')+'</div>';
@@ -4393,7 +4402,7 @@ function canvaUpdateArray(el,preserveFocus=false){
         output+='<div class="pub-topcloth"><span>木ノ葉 · '+esc(draft.nome)+'</span><div class="pub-cork-head">ARQUIVO DE PERSONAGEM · NOTÍCIAS E ANOTAÇÕES</div></div>';
         for(const note of draft.notes)output+=noteHTML(note,isOwner);
         output+='<section class="pub-note obs" style="left:1230px;top:680px;width:278px;height:325px;--tilt:-2deg"><i class="pub-pin" aria-hidden="true"></i><h3>✎ Minhas observações</h3><textarea maxlength="5000" data-board-observation placeholder="Anote aqui o que você sabe, descobriu ou pensa sobre este personagem. Só você poderá ler suas observações.">'+esc(observation)+'</textarea></section>';
-        output+='<button class="pub-permanent" data-action="board-updates-open" title="Abrir notas de atualização">📌 Notas de<br>Atualização</button></div></div></div>';
+        output+='</div></div></div>';
         output+='<p class="pub-note-help">'+(isOwner?'Arraste pelo símbolo ⠿, redimensione pelo canto inferior direito das notas e use o controle de zoom. As alterações são salvas automaticamente.':'Você pode explorar este quadro, aumentar o zoom e escrever suas próprias observações privadas sobre o personagem.')+'</p>';
       }
       output+='</div>'+updatesHTML();
@@ -4410,7 +4419,7 @@ function canvaUpdateArray(el,preserveFocus=false){
       if(key==='board-center'){const target=document.querySelector('#pub-viewport');if(target){target.scrollLeft=0;target.scrollTop=0}return}
       if(key==='board-color'){if(!permitted())return;const n=draft.notes.find(x=>x.id===el.dataset.id);if(!n)return;const colors=['cream','sage','pink','blue','lavender'];n.color=colors[(colors.indexOf(n.color)+1)%colors.length];const card=el.closest('.pub-note');if(card)card.dataset.color=n.color;queueSave();return}
       if(key==='board-updates-open'){updates=true;render();return}
-      if(key==='board-updates-close'){if(el.classList.contains('pub-update-overlay')&&el!==event.target)return;updates=false;render();return}
+      if(key==='board-updates-close'){updates=false;render();return}
     }
     function change(target){
       if(target.matches('[data-board-zoom]')){
