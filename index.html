@@ -471,6 +471,18 @@
 }
 @media print{.shell .hero.hero-inkwash{display:none!important}}
 
+
+.admin-live-pill{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;padding:8px 11px;border-radius:30px;border:1px solid #b2a99a;background:#ebe3d5;color:#6b675a;white-space:nowrap}
+.admin-live-pill.is-live{border-color:#63806a;background:#d7e5d5;color:#365e3e}
+.admin-live-pill.is-live:before{content:"";width:7px;height:7px;background:#4c8a57;box-shadow:0 0 0 3px #4c8a571e;border-radius:50%}
+.admin-live-pill.is-waiting{background:#f0e8d6;color:#745c43}
+.live-event{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(73,85,72,.17)}
+.live-event:last-child{border-bottom:0}.live-event-dot{width:7px;height:7px;flex-shrink:0;border-radius:50%;background:#6c9471;box-shadow:0 0 0 4px #6c94711d}
+.live-event>div{flex:1;min-width:0}.live-event strong{font-size:13px;color:#2d3b30}
+.live-event p{font-size:12px;color:#626d61;margin:4px 0 0}.live-event time{font-size:11px;color:#7d8173;white-space:nowrap}
+.admin-sync-note{font-size:11px;border:1px solid #a3baa2;background:#dcebdd;color:#3c6346;border-radius:50px;padding:8px 10px}
+.admin-sync-note.has-update{border-color:#b68c55;background:#efe3bd;color:#785a2e;cursor:pointer}
+
 </style>
 </head>
 <body>
@@ -681,7 +693,7 @@
   const COMMON_POWERS=['Ninpou','Doton','Fuuton','Katon','Raiton','Suiton','Fuuinjutsu','Iryou Ninjutsu','Rasengan'];
   const TABS=[['identidade','Identidade'],['atributos','Atributos'],['pericias','Perícias'],['combate','Combate'],['tecnicas','Poderes e jutsus'],['inventario','Inventário'],['historia','História']];
 
-  const S={view:'home',tab:'identidade',authPane:'login',user:null,isAdmin:false,sheet:null,sheetId:null,adminSheets:[],activeClan:null,demo:!CONFIGURED,sheets:[],adminViewing:false,pendingDeleteId:null,pendingWrite:null,canvaPage:1,canvaMode:'original',loading:CONFIGURED,modal:null,saveTimer:null,saveState:'Pronto',authWorking:false,adminUnlocked:false,adminAuthBusy:false,adminLoginBusy:false};
+  const S={view:'home',tab:'identidade',authPane:'login',user:null,isAdmin:false,sheet:null,sheetId:null,adminSheets:[],activeClan:null,demo:!CONFIGURED,sheets:[],adminViewing:false,pendingDeleteId:null,pendingWrite:null,canvaPage:1,canvaMode:'original',loading:CONFIGURED,modal:null,saveTimer:null,saveState:'Pronto',authWorking:false,adminUnlocked:false,adminAuthBusy:false,adminLoginBusy:false,adminUnsubscribe:null,adminLive:false,adminLiveReady:false,adminLiveError:false,adminEvents:[],pendingRemote:null,locallyDirty:false,isSaving:false,lastSavedWrite:null,creating:false};
   let fb=null;
   const $=sel=>document.querySelector(sel);
   const E=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -730,7 +742,7 @@ async function openSheet(id){
  S.sheet=item.data;S.sheetId=id;S.adminViewing=false;S.canvaMode='original';S.canvaPage=1;S.tab='identidade';S.view='sheet';S.modal=null;render();window.scrollTo({top:0});
 }
 function sheetSwitcher(){
- if(S.adminViewing)return `<div class="my-sheet-strip"><span class="pill">Modo mestre · edição autorizada</span><button class="button small" data-action="save">Salvar alterações</button><button class="button secondary small" data-action="nav" data-view="admin">← Voltar ao painel do mestre</button></div>`;
+ if(S.adminViewing)return `<div class="my-sheet-strip"><span class="pill">Modo mestre · edição autorizada</span><button id="admin-sheet-sync" class="admin-sync-note ${S.pendingRemote?'has-update':''}" data-action="apply-remote">${S.pendingRemote?'Alteração externa recebida · clique para atualizar':'Sincronização ao vivo'}</button><button class="button small" data-action="save">Salvar alterações</button><button class="button secondary small" data-action="nav" data-view="admin">← Voltar ao painel do mestre</button></div>`;
  return `<div class="my-sheet-strip"><button class="button secondary small" data-action="nav" data-view="fichas">← Minhas fichas</button><span class="pill">${S.sheets.length} ficha(s) na conta</span><button class="button secondary small danger-quiet" data-action="ask-delete" data-id="${E(S.sheetId)}">Excluir esta ficha</button></div>`;
 }
 function askDelete(id){if(S.adminViewing||!S.sheets.some(x=>x.id===id))return showToast('Exclusão não permitida.',true);S.pendingDeleteId=id;S.modal='delete';render()}
@@ -826,11 +838,101 @@ async function unlockAdmin(form){
 async function lockAdmin(){
  if(S.adminViewing&&S.saveTimer){clearTimeout(S.saveTimer);S.saveTimer=null;await persist()}
  if(S.pendingWrite)await S.pendingWrite.catch(()=>{});
- S.adminUnlocked=false;S.adminSheets=[];S.adminViewing=false;
+ S.adminUnlocked=false;stopAdminLive();S.adminSheets=[];S.adminEvents=[];S.adminViewing=false;
  const own=ownSheets()[0];S.sheet=own?.data||null;S.sheetId=own?.id||null;S.view='home';S.modal=null;
  render();showToast('Administração bloqueada.');
 }
-  function adminView(){if(!canAdmin()||!S.adminUnlocked)return layout(`<div class="empty"><h3>Acesso restrito</h3><p>Somente administradores autorizados pelo Firebase podem consultar todas as fichas.</p></div>`);const items=S.adminSheets;return layout(`<div class="section-head" style="margin-top:0"><div><div class="eyebrow">PERMISSÕES DO MESTRE</div><h2>Administração</h2></div><div class="flex wrap"><button class="button secondary small" data-action="refresh-admin">↻ Atualizar</button><button class="button secondary small" data-action="lock-admin">Bloquear painel</button></div></div><div class="four-grid"><div class="mini-stat"><span>Fichas registradas</span><strong>${items.length}</strong></div><div class="mini-stat"><span>Clãs utilizados</span><strong>${new Set(items.map(x=>x.clanId)).size}</strong></div><div class="mini-stat"><span>Maior NC</span><strong>${items.length?Math.max(...items.map(x=>n(x.nc))):'—'}</strong></div><div class="mini-stat"><span>Seus privilégios</span><strong style="font-size:16px;margin-top:14px">Mestre</strong></div></div><section class="paper-panel mt24"><h3>Fichas dos jogadores</h3><div class="field"><label>Pesquisar por personagem, jogador ou clã</label><input id="admin-filter" placeholder="Buscar..." autocomplete="off"></div><div id="admin-rows" class="mt16">${adminRows(items)}</div></section><div class="notice mt16">Como mestre, você pode consultar e alterar fichas de todos os jogadores. A permissão vem da coleção <code>admins</code> e as alterações são registradas no Firestore sem mudar o proprietário.</div>`)}
+
+function stopAdminLive(){
+ if(S.adminUnsubscribe){try{S.adminUnsubscribe()}catch(_){ }S.adminUnsubscribe=null}
+ S.adminLive=false;S.adminLiveReady=false;S.adminLiveError=false;S.pendingRemote=null;
+}
+function describeSheetChange(before,after,type){
+ if(type==='added')return 'Nova ficha criada';
+ if(type==='removed')return 'Ficha excluída';
+ if(!before)return 'Ficha sincronizada';
+ for(const [path,label] of [['nome','Nome'],['nc','NC'],['graduacao','Graduação'],['recursos.vit','Vitalidade'],['recursos.chakra','Chakra']]){
+  const a=getAt(before,path),b=getAt(after,path);
+  if(String(a??'')!==String(b??''))return label+': '+String(a??'—').slice(0,30)+' → '+String(b??'—').slice(0,30);
+ }
+ for(const [key,name] of ATTRS)if(n(before.atributos?.[key])!==n(after.atributos?.[key]))return name+': '+n(before.atributos?.[key])+' → '+n(after.atributos?.[key]);
+ for(const [name] of SKILLS)if(n(before.pericias?.[name])!==n(after.pericias?.[name]))return 'Perícia '+name+': '+n(before.pericias?.[name])+' → '+n(after.pericias?.[name]);
+ for(const [field,label] of [['jutsus','Jutsus'],['poderes','Poderes'],['aptidoes','Aptidões'],['inventario','Inventário'],['historia','História']])
+   if(JSON.stringify(before[field]||'')!==JSON.stringify(after[field]||''))return label+' atualizados';
+ return 'Dados da ficha atualizados';
+}
+function adminEventsHTML(){
+ if(!S.adminEvents.length)return '<p class="muted" style="font-size:12px">As próximas alterações dos jogadores aparecerão aqui automaticamente.</p>';
+ return S.adminEvents.map(x=>'<div class="live-event"><span class="live-event-dot" aria-hidden="true"></span><div><strong>'+E(x.nome)+'</strong><p>'+E(x.resumo)+'</p></div><time>'+E(x.hora)+'</time></div>').join('');
+}
+function showAdminLiveUI(){
+ if(S.view!=='admin')return;
+ const status=$('#admin-live-status');
+ if(status){status.textContent=S.adminLiveError?'Conexão interrompida':S.adminLive?'Acompanhando ao vivo':'Conectando…';status.className='admin-live-pill '+(S.adminLive?'is-live':'is-waiting')}
+ const rows=$('#admin-rows');
+ if(rows){
+  const q=String($('#admin-filter')?.value||'').toLocaleLowerCase('pt-BR');
+  rows.innerHTML=adminRows(S.adminSheets.filter(x=>[x.nome,x.usuario,clanOf(x.clanId).name].some(z=>String(z||'').toLocaleLowerCase('pt-BR').includes(q))));
+ }
+ const events=$('#admin-events');if(events)events.innerHTML=adminEventsHTML();
+ const total=$('#admin-live-total'),clans=$('#admin-live-clans'),highest=$('#admin-live-nc');
+ if(total)total.textContent=S.adminSheets.length;
+ if(clans)clans.textContent=new Set(S.adminSheets.map(x=>x.clanId)).size;
+ if(highest)highest.textContent=S.adminSheets.length?Math.max(...S.adminSheets.map(x=>n(x.nc))):'—';
+}
+function applyRemoteSheet(){
+ if(!S.adminViewing||!S.pendingRemote)return;
+ if(S.saveTimer||S.isSaving||S.locallyDirty)return showToast('Salve primeiro suas alterações locais.',true);
+ S.sheet=normalize(S.pendingRemote);S.pendingRemote=null;render();
+}
+function startAdminLive(){
+ if(!fb||!canAdmin()||!S.adminUnlocked||S.adminUnsubscribe)return;
+ S.adminLive=false;S.adminLiveError=false;S.adminLiveReady=false;
+ S.adminUnsubscribe=fb.onSnapshot(fb.collection(fb.db,'fichas'),snapshot=>{
+   if(!canAdmin()||!S.adminUnlocked)return;
+   const previous=new Map(S.adminSheets.map(x=>[x.__id,x]));
+   const next=snapshot.docs.map(d=>({...d.data(),__id:d.id}));
+   if(S.adminLiveReady){
+     for(const change of snapshot.docChanges()){
+       const after=change.doc.data(),before=previous.get(change.doc.id);
+       if(S.lastSavedWrite?.id===change.doc.id&&n(S.lastSavedWrite?.stamp)===n(after?.atualizadoEm))continue;
+       S.adminEvents.unshift({nome:after.nome||before?.nome||'Personagem',resumo:describeSheetChange(before,after,change.type),hora:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})});
+     }
+     S.adminEvents=S.adminEvents.slice(0,20);
+   }
+   S.adminLiveReady=true;S.adminLive=true;S.adminLiveError=false;S.adminSheets=next;
+   if(S.adminViewing&&S.sheetId){
+     const remote=next.find(x=>x.__id===S.sheetId);
+     if(remote&&n(remote.atualizadoEm)!==n(S.sheet?.atualizadoEm)){
+       const own=S.lastSavedWrite?.id===S.sheetId&&n(S.lastSavedWrite?.stamp)===n(remote.atualizadoEm);
+       if(!own){
+         const focus=!!document.activeElement?.matches?.('[data-bind],[data-cv-array],[data-cv-skill],input,textarea,select');
+         if(focus||S.locallyDirty||S.saveTimer||S.isSaving){
+           S.pendingRemote=remote;const label=$('#admin-sheet-sync');
+           if(label){label.textContent='Alteração externa recebida · clique para atualizar';label.classList.add('has-update')}
+         }else{S.sheet=normalize(remote);S.pendingRemote=null;render()}
+       }else S.sheet.atualizadoEm=remote.atualizadoEm;
+     }
+   }
+   showAdminLiveUI();
+ },error=>{
+   console.error('Firestore ao vivo:',error.code||error);
+   S.adminLive=false;S.adminLiveError=true;
+   if(S.adminUnsubscribe){try{S.adminUnsubscribe()}catch(_){}S.adminUnsubscribe=null}
+   showAdminLiveUI();showToast('A sincronização do mestre foi interrompida. Confira as regras do Firestore.',true);
+ });
+ showAdminLiveUI();
+}
+
+  function adminView(){
+ if(!canAdmin()||!S.adminUnlocked)return layout('<div class="empty"><h3>Acesso restrito</h3></div>');
+ const items=S.adminSheets;
+ return layout(`<div class="section-head" style="margin-top:0"><div><div class="eyebrow">CENTRAL DO MESTRE / SINCRONIZAÇÃO</div><h2>Administração ao vivo</h2></div><div class="flex wrap"><span id="admin-live-status" class="admin-live-pill ${S.adminLive?'is-live':'is-waiting'}">${S.adminLive?'Acompanhando ao vivo':'Conectando…'}</span><button class="button secondary small" data-action="refresh-admin">↻ Sincronizar</button><button class="button secondary small" data-action="lock-admin">Encerrar modo ADM</button></div></div>
+  <div class="four-grid"><div class="mini-stat"><span>Fichas monitoradas</span><strong id="admin-live-total">${items.length}</strong></div><div class="mini-stat"><span>Clãs utilizados</span><strong id="admin-live-clans">${new Set(items.map(x=>x.clanId)).size}</strong></div><div class="mini-stat"><span>Maior NC</span><strong id="admin-live-nc">${items.length?Math.max(...items.map(x=>n(x.nc))):'—'}</strong></div><div class="mini-stat"><span>Modo do mestre</span><strong style="font-size:16px;margin-top:14px">Ativo</strong></div></div>
+  <section class="paper-panel mt24"><h3>Fichas dos jogadores</h3><p class="muted" style="font-size:12px">Mudanças salvas pelos jogadores aparecem automaticamente, sem atualizar a página.</p><div class="field"><label>Pesquisar por personagem, jogador ou clã</label><input id="admin-filter" placeholder="Buscar..." autocomplete="off"></div><div id="admin-rows" class="mt16">${adminRows(items)}</div></section>
+  <section class="paper-panel mt16"><div class="flex between wrap"><h3>Atividade recente</h3><span class="admin-live-pill is-live">Histórico da sessão</span></div><div id="admin-events" aria-live="polite">${adminEventsHTML()}</div></section>
+  <div class="notice mt16">O modo ADM continua ativo ao visitar outras abas. Só será encerrado por <strong>Encerrar modo ADM</strong> ou ao sair da conta. O monitor reflete os dados assim que forem gravados no Firebase.</div>`);
+}
   function adminRows(items){return items.length?items.map(x=>`<div class="admin-row"><div><b>${E(x.nome||'Sem nome')}</b><small>${E(x.usuario||'Jogador')} · ${E(clanOf(x.clanId).name)}</small></div><div>NC ${n(x.nc)}</div><div class="admin-date">${x.atualizadoEm?new Date(x.atualizadoEm).toLocaleDateString('pt-BR'):'—'}</div><button class="button secondary small" data-action="open-admin" data-id="${E(x.__id)}">Editar ficha</button></div>`).join(''):`<div class="empty"><h3>Nenhuma ficha encontrada</h3><p>Os personagens aparecerão aqui após serem criados pelos jogadores.</p></div>`}
   function clanModal(){const c=clanOf(S.activeClan);return `<div class="modalshade" data-action="close-modal"><div class="modalbox" role="dialog" aria-modal="true" aria-label="Clã ${E(c.name)}" ><div class="clan-art" style="--wash:${c.wash};height:164px;margin:-32px -32px 24px">${imageTag(c)}<span class="kanji">${c.kanji}</span></div><div class="eyebrow">CAMINHOS SHINOBI</div><h2>Clã ${E(c.name)}</h2><p class="panel-caption">${E(c.desc)} Esta escolha define a família do personagem e os poderes restritos disponíveis mediante cumprimento de pré-requisitos no SNS 4.1b.</p><div class="notice mt16">Você pode criar vários personagens por login, inclusive do mesmo clã.</div><div class="flex wrap mt24"><button class="button" data-action="create-sheet">Criar personagem deste clã</button><button class="button secondary" data-action="close-modal">Cancelar</button></div></div></div>`}
   function cvWrap(inner,x,y,w,h){
@@ -987,21 +1089,15 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
   function nav(view){
  S.modal=null;
  if(view==='admin'){
-   if(!canAdmin()){showToast('Acesso restrito ao mestre.',true);return}
+   if(!canAdmin())return showToast('Acesso restrito ao mestre.',true);
    if(!S.adminUnlocked){S.view='admin-gate';render();window.scrollTo({top:0});return}
-   refreshAdmin();return;
- }
- if(view!=='admin-gate'&&(S.adminUnlocked||S.view==='admin-gate')){
-   S.adminUnlocked=false;S.adminSheets=[];
+   void refreshAdmin();return;
  }
  if(S.adminViewing){
    if(S.saveTimer){clearTimeout(S.saveTimer);S.saveTimer=null;void persist()}
-   const first=ownSheets()[0];S.sheet=first?.data||null;S.sheetId=first?.id||null;S.adminViewing=false;
+   const first=ownSheets()[0];S.sheet=first?.data||null;S.sheetId=first?.id||null;S.adminViewing=false;S.pendingRemote=null;
  }
- if(view==='sheet'&&!active()){
-   const first=ownSheets()[0];
-   if(first){S.sheet=first.data;S.sheetId=first.id}else view='fichas';
- }
+ if(view==='sheet'&&!active()){const first=ownSheets()[0];if(first){S.sheet=first.data;S.sheetId=first.id}else view='fichas'}
  S.view=view;render();window.scrollTo({top:0,behavior:'smooth'});
 }
   function setStatus(st){S.saveState=st;const x=$('#save-status');if(x)x.textContent=st;const y=$('#save-footer');if(y)y.textContent=st}
@@ -1012,10 +1108,10 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
  if(!S.user){showToast('Entre na conta para salvar.',true);return false}
  const target=S.sheetId;
  const original=S.adminViewing?S.adminSheets.find(x=>x.__id===target):null;
- const data=JSON.parse(JSON.stringify(active()));
+ const data=JSON.parse(JSON.stringify(active()));S.isSaving=true;
  data.ownerUid=S.adminViewing?original?.ownerUid:uid();
- if(!data.ownerUid)return false;
- data.atualizadoEm=Date.now();
+ if(!data.ownerUid){S.isSaving=false;return false}
+ data.atualizadoEm=Date.now();S.lastSavedWrite={id:target,stamp:data.atualizadoEm};
  const own=S.sheets.find(x=>x.id===target);
  try{
    setStatus('Salvando...');
@@ -1023,16 +1119,16 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
    await S.pendingWrite;
    if(own)own.data.atualizadoEm=data.atualizadoEm;
    if(original)Object.assign(original,data);
-   setStatus('Salvo no Firebase ✓');
+   S.locallyDirty=false;S.isSaving=false;setStatus('Salvo no Firebase ✓');
    return true;
  }catch(error){
    console.error('Erro ao salvar ficha:',error.code||error);
-   setStatus('Falha ao salvar');
+   S.isSaving=false;setStatus('Falha ao salvar');
    showToast('Não foi possível salvar. Confira a publicação das regras do Firestore.',true);
    return false;
  }
 }
-  function scheduleSave(){if(!active()||!canEditCurrent())return;setStatus(CONFIGURED?'Alterações pendentes':'Prévia local');clearTimeout(S.saveTimer);S.saveTimer=setTimeout(persist,950)}
+  function scheduleSave(){if(!active()||!canEditCurrent())return;S.locallyDirty=true;setStatus(CONFIGURED?'Alterações pendentes':'Prévia local');clearTimeout(S.saveTimer);S.saveTimer=setTimeout(()=>void persist(),280)}
   function updateValue(path,val){const p=active();if(!p||!canEditCurrent())return;const isArray=path.startsWith('@');if(isArray){const bits=path.slice(1).split('.');const [a,index,...rest]=bits;const obj=p[a]?.[Number(index)];if(!obj)return;const key=rest.join('.');let next=val;const numFields=['nivel','quantidade'];if(a==='aptidoes'&&key==='nome'&&String(next).trim()&&!String(obj[key]||'').trim()&&p.aptidoes.filter(x=>x?.nome?.trim()).length>=3&&totals(p).powers+2>currentNC().powers){showToast('Faltam pontos de poder para outra aptidão.',true);return false}if(numFields.includes(key)){next=bound(val,0,key==='nivel'?limit():9999);if(key==='nivel'&&a==='poderes'){const diff=next-n(obj[key]);if(diff>0&&totals(p).powers+diff>currentNC().powers){showToast('Pontos de poder insuficientes.',true);return false}}}obj[key]=next}else{let next=val;if(path==='nc'){const newNC=n(val);if(!NC_TABLE[newNC])return false;p.nc=newNC;render();scheduleSave();return true}if(['ryos','sociais.Carisma','sociais.Manipulacao','recursos.vit','recursos.chakra'].includes(path)){next=bound(val,path.startsWith('recursos')?-99:0,99999);if(path.startsWith('sociais')){next=bound(val,0,limit());const before=n(getAt(p,path));if(totals(p).social-before+next>currentNC().social){showToast('Pontos sociais insuficientes.',true);return false}}}setAt(p,path,next)}scheduleSave();return true}
   function adjustAttr(key,delta){if(!canEditCurrent())return;const p=active(),t=totals(p),cur=n(p.atributos[key]),next=cur+delta;if(next<0||next>p.nc)return showToast(`Atributos vão de 0 até NC ${p.nc}.`,true);if(delta>0&&t.attrs>=currentNC().attrs)return showToast('Todos os pontos de atributo disponíveis foram usados.',true);p.atributos[key]=next;render();scheduleSave()}
   function adjustSkill(key,delta){if(!canEditCurrent())return;const p=active(),t=totals(p),cur=n(p.pericias[key]),next=cur+delta;if(next<0||next>limit())return showToast(`Máximo de ${limit()} pontos nesta perícia.`,true);if(delta>0&&t.skills>=currentNC().skills)return showToast('Pontos de perícia insuficientes.',true);if(key==='Venefício'&&p.nc<8&&delta>0)return showToast('Venefício não pode ser comprada no NC 4.',true);p.pericias[key]=next;render();scheduleSave()}
@@ -1053,17 +1149,12 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
   async function refreshAdmin(){
  if(!fb||!canAdmin()||!S.adminUnlocked)return;
  try{
-  if(S.adminViewing&&S.saveTimer){clearTimeout(S.saveTimer);S.saveTimer=null;await persist()}
-  if(S.pendingWrite)await S.pendingWrite.catch(()=>{});
-  const snap=await fb.getDocs(fb.collection(fb.db,'fichas'));
-  S.adminSheets=snap.docs.map(d=>({...d.data(),__id:d.id}));
-  const own=ownSheets()[0];
-  S.adminViewing=false;S.sheet=own?.data||null;S.sheetId=own?.id||null;
-  S.view='admin';render();
- }catch(error){
-  console.error('Falha ao carregar fichas da administração:',error.code||error);
-  showToast('Não foi possível carregar as fichas. Publique as novas regras do Firestore.',true);
- }
+   if(S.adminViewing&&S.saveTimer){clearTimeout(S.saveTimer);S.saveTimer=null;await persist()}
+   if(S.pendingWrite)await S.pendingWrite.catch(()=>{});
+   if(!S.adminUnsubscribe)startAdminLive();
+   const first=ownSheets()[0];S.adminViewing=false;S.pendingRemote=null;S.sheet=first?.data||null;S.sheetId=first?.id||null;
+   S.view='admin';render();showAdminLiveUI();
+ }catch(err){console.error(err);showToast('Não foi possível sincronizar o painel.',true)}
 }
   function pseudoEmail(raw){return raw.toLowerCase().trim()+'@players.shinobi-chronicles.invalid'}
   async function submitAuth(form){
@@ -1115,12 +1206,12 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
   if(button?.isConnected)button.disabled=false;
  }
 }
-  function clickAction(el){const action=el.dataset.action;if(!action)return;const p=active();if(action==='cv-page'){S.canvaPage=Number(el.dataset.page)||1;render();return}if(action==='cv-mode'){S.canvaMode=S.canvaMode==='advanced'?'original':'advanced';render();return}if(action==='open-sheet')return openSheet(el.dataset.id);if(action==='ask-delete')return askDelete(el.dataset.id);if(action==='confirm-delete')return deleteSheet();if(action==='lock-admin')return lockAdmin();if(action==='nav')return nav(el.dataset.view);if(action==='tab'){S.tab=el.dataset.tab;render();return}if(action==='clan'){S.activeClan=el.dataset.clan;S.modal='clan';render();return}if(action==='close-modal'){S.modal=null;render();return}if(action==='create-sheet')return createSheet();if(action==='auth-pane'){S.authPane=el.dataset.pane==='admin'?'admin':'login';render();return}if(action==='auth-switch'){S.authPane=S.authPane==='register'?'login':'register';render();return}if(action==='logout'){S.adminUnlocked=false;S.adminSheets=[];if(fb)fb.signOut(fb.auth);else{S.user=null;S.sheet=null;S.sheetId=null;S.sheets=[];S.view='home';render()}return}if(action==='save')return persist();if(action==='print')return window.print();if(action==='export')return exportSheet();if(action==='attr')return adjustAttr(el.dataset.key,n(el.dataset.delta));if(action==='skill')return adjustSkill(el.dataset.key,n(el.dataset.delta));if(action==='shift')return shiftCombat();if(action==='reset-shift'){if(!canEditCurrent())return;p.combateAjustes={CC:0,CD:0,ESQ:0,LM:0};render();scheduleSave();return}if(action==='add-item')return modifyItem(el.dataset.array);if(action==='remove-item')return modifyItem(el.dataset.array,n(el.dataset.index),true);if(action==='roll-skill'){const k=el.dataset.key;if(!trained(p,k))return showToast('Esta perícia exige treinamento.',true);return roll(2,skillTotal(p,k),k)}if(action==='roll-combat')return roll(2,combat(p,el.dataset.key),'Combate corporal');if(action==='roll-initiative')return roll(1,n(p.atributos.AGI)+skillTotal(p,'Prontidão'),'Iniciativa');if(action==='refresh-admin')return refreshAdmin();if(action==='open-admin'){if(!canAdmin()||!S.adminUnlocked)return showToast('Confirme a senha para acessar as fichas.',true);const x=S.adminSheets.find(a=>a.__id===el.dataset.id);if(x){const {__id,...safeData}=x;S.sheet=normalize(safeData);S.sheetId=__id;S.adminViewing=true;S.canvaMode='original';S.view='sheet';S.tab='identidade';render();}return}}
+  function clickAction(el){const action=el.dataset.action;if(!action)return;const p=active();if(action==='cv-page'){S.canvaPage=Number(el.dataset.page)||1;render();return}if(action==='cv-mode'){S.canvaMode=S.canvaMode==='advanced'?'original':'advanced';render();return}if(action==='open-sheet')return openSheet(el.dataset.id);if(action==='ask-delete')return askDelete(el.dataset.id);if(action==='confirm-delete')return deleteSheet();if(action==='lock-admin')return lockAdmin();if(action==='apply-remote')return applyRemoteSheet();if(action==='nav')return nav(el.dataset.view);if(action==='tab'){S.tab=el.dataset.tab;render();return}if(action==='clan'){S.activeClan=el.dataset.clan;S.modal='clan';render();return}if(action==='close-modal'){S.modal=null;render();return}if(action==='create-sheet')return createSheet();if(action==='auth-pane'){S.authPane=el.dataset.pane==='admin'?'admin':'login';render();return}if(action==='auth-switch'){S.authPane=S.authPane==='register'?'login':'register';render();return}if(action==='logout'){S.adminUnlocked=false;stopAdminLive();S.adminSheets=[];if(fb)fb.signOut(fb.auth);else{S.user=null;S.sheet=null;S.sheetId=null;S.sheets=[];S.view='home';render()}return}if(action==='save')return persist();if(action==='print')return window.print();if(action==='export')return exportSheet();if(action==='attr')return adjustAttr(el.dataset.key,n(el.dataset.delta));if(action==='skill')return adjustSkill(el.dataset.key,n(el.dataset.delta));if(action==='shift')return shiftCombat();if(action==='reset-shift'){if(!canEditCurrent())return;p.combateAjustes={CC:0,CD:0,ESQ:0,LM:0};render();scheduleSave();return}if(action==='add-item')return modifyItem(el.dataset.array);if(action==='remove-item')return modifyItem(el.dataset.array,n(el.dataset.index),true);if(action==='roll-skill'){const k=el.dataset.key;if(!trained(p,k))return showToast('Esta perícia exige treinamento.',true);return roll(2,skillTotal(p,k),k)}if(action==='roll-combat')return roll(2,combat(p,el.dataset.key),'Combate corporal');if(action==='roll-initiative')return roll(1,n(p.atributos.AGI)+skillTotal(p,'Prontidão'),'Iniciativa');if(action==='refresh-admin')return refreshAdmin();if(action==='open-admin'){if(!canAdmin()||!S.adminUnlocked)return showToast('Confirme a senha para acessar as fichas.',true);const x=S.adminSheets.find(a=>a.__id===el.dataset.id);if(x){const {__id,...safeData}=x;S.sheet=normalize(safeData);S.sheetId=__id;S.adminViewing=true;S.canvaMode='original';S.view='sheet';S.tab='identidade';render();}return}}
   document.addEventListener('click',ev=>{const el=ev.target.closest('[data-action]');if(!el)return;if(el.classList.contains('modalshade')&&ev.target!==el)return;clickAction(el)});
   document.addEventListener('submit',ev=>{if(ev.target.id==='auth-form'){ev.preventDefault();submitAuth(ev.target)}else if(ev.target.id==='admin-auth-form'){ev.preventDefault();unlockAdmin(ev.target)}});
   document.addEventListener('input',ev=>{const el=ev.target;if(el.id==='admin-filter'){const q=el.value.toLocaleLowerCase('pt-BR');$('#admin-rows').innerHTML=adminRows(S.adminSheets.filter(x=>[x.nome,x.usuario,clanOf(x.clanId).name].some(z=>String(z||'').toLocaleLowerCase('pt-BR').includes(q))));return}if(!el.dataset.bind||el.tagName==='SELECT')return;const old=getAt(active(),el.dataset.bind);if(!updateValue(el.dataset.bind,el.value)){el.value=old??''}});
   document.addEventListener('change',ev=>{const el=ev.target;if(el.dataset.cvArray){canvaUpdateArray(el);return}if(el.dataset.cvSkill){const p=active(),k=el.dataset.cvSkill;if(!p||!canEditCurrent())return;const old=n(p.pericias[k]),next=bound(el.value,0,limit()),delta=next-old;if(delta>0&&totals(p).skills+delta>currentNC().skills){el.value=old;showToast('Pontos de perícia insuficientes.',true);return}p.pericias[k]=next;render();scheduleSave();return}if(!el.dataset.bind||el.tagName!=='SELECT')return;updateValue(el.dataset.bind,el.value)});
-  async function startFirebase(){try{const base=`https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}`;const [{initializeApp},{getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,reauthenticateWithCredential,EmailAuthProvider},{getFirestore,doc,getDoc,setDoc,deleteDoc,collection,getDocs,query,where}]=await Promise.all([import(base+'/firebase-app.js'),import(base+'/firebase-auth.js'),import(base+'/firebase-firestore.js')]);const app=initializeApp(FIREBASE_CONFIG),auth=getAuth(app),db=getFirestore(app);fb={auth,db,doc,getDoc,setDoc,deleteDoc,collection,getDocs,query,where,reauthenticateWithCredential,EmailAuthProvider,signOut,createUserWithEmailAndPassword,signInWithEmailAndPassword};onAuthStateChanged(auth,async(user)=>{clearTimeout(S.saveTimer);if(!user){S.adminUnlocked=false;S.adminAuthBusy=false;S.adminLoginBusy=false;S.adminSheets=[];S.user=null;S.isAdmin=false;S.sheet=null;S.sheetId=null;S.sheets=[];S.adminViewing=false;S.loading=false;S.view='login';render();return}const fallback=user.email?.split('@')[0]||'Shinobi';S.user={uid:user.uid,displayName:fallback};try{const [profile,admin,found]=await Promise.all([getDoc(doc(db,'users',user.uid)),getDoc(doc(db,'admins',user.uid)),getDocs(query(collection(db,'fichas'),where('ownerUid','==',user.uid)))]);if(profile.exists())S.user.displayName=profile.data().username||fallback;S.isAdmin=admin.exists()||user.email===MASTER_EMAIL;S.sheets=found.docs.map(d=>({id:d.id,data:normalize(d.data())}));const first=ownSheets()[0];S.sheet=first?.data||null;S.sheetId=first?.id||null;S.adminViewing=false;S.loading=false;S.view=S.adminUnlocked&&S.isAdmin?'admin':S.authPane==='admin'?'login':'home';render()}catch(e){console.error(e);S.loading=false;S.view='home';render();showToast('Conta conectada, mas houve um erro ao carregar os dados. Confira as regras do Firestore.',true)}})}catch(e){console.error(e);S.loading=false;S.view='login';render();showToast('Falha ao inicializar Firebase. Confira as chaves e o domínio autorizado.',true)}}
+  async function startFirebase(){try{const base=`https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}`;const [{initializeApp},{getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,reauthenticateWithCredential,EmailAuthProvider},{getFirestore,doc,getDoc,setDoc,deleteDoc,collection,getDocs,query,where,onSnapshot}]=await Promise.all([import(base+'/firebase-app.js'),import(base+'/firebase-auth.js'),import(base+'/firebase-firestore.js')]);const app=initializeApp(FIREBASE_CONFIG),auth=getAuth(app),db=getFirestore(app);fb={auth,db,doc,getDoc,setDoc,deleteDoc,collection,getDocs,query,where,onSnapshot,reauthenticateWithCredential,EmailAuthProvider,signOut,createUserWithEmailAndPassword,signInWithEmailAndPassword};onAuthStateChanged(auth,async(user)=>{clearTimeout(S.saveTimer);if(!user){stopAdminLive();S.adminUnlocked=false;S.adminAuthBusy=false;S.adminLoginBusy=false;S.adminSheets=[];S.user=null;S.isAdmin=false;S.sheet=null;S.sheetId=null;S.sheets=[];S.adminViewing=false;S.loading=false;S.view='login';render();return}const fallback=user.email?.split('@')[0]||'Shinobi';S.user={uid:user.uid,displayName:fallback};try{const [profile,admin,found]=await Promise.all([getDoc(doc(db,'users',user.uid)),getDoc(doc(db,'admins',user.uid)),getDocs(query(collection(db,'fichas'),where('ownerUid','==',user.uid)))]);if(profile.exists())S.user.displayName=profile.data().username||fallback;S.isAdmin=admin.exists()||user.email===MASTER_EMAIL;if(user.email===MASTER_EMAIL)S.adminUnlocked=true;S.sheets=found.docs.map(d=>({id:d.id,data:normalize(d.data())}));const first=ownSheets()[0];S.sheet=first?.data||null;S.sheetId=first?.id||null;S.adminViewing=false;S.loading=false;if(S.adminUnlocked&&S.isAdmin)startAdminLive();S.view=S.adminUnlocked&&S.isAdmin?'admin':S.authPane==='admin'?'login':'home';render()}catch(e){console.error(e);S.loading=false;S.view='home';render();showToast('Conta conectada, mas houve um erro ao carregar os dados. Confira as regras do Firestore.',true)}})}catch(e){console.error(e);S.loading=false;S.view='login';render();showToast('Falha ao inicializar Firebase. Confira as chaves e o domínio autorizado.',true)}}
   if(CONFIGURED)startFirebase();else{S.loading=false;render()}
 </script>
 </body>
