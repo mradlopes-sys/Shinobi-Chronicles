@@ -4255,7 +4255,7 @@ function canvaUpdateArray(el,preserveFocus=false){
       {date:'07/11/2026',title:'Observações individuais e atualização permanente',body:'Cada jogador pode escrever observações particulares sobre o personagem que está consultando. A nota amarela no canto superior direito sempre abre o histórico de mudanças.'}
     ];
     let all=[],id='',draft=null,observation='',zoom=0.88,busy=false,loading=false,updates=false;
-    let saveTimer=0,obsTimer=0,version=0,obsVersion=0,saveChain=Promise.resolve(),obsChain=Promise.resolve(),obsRequest=0;
+    let saveTimer=0,obsTimer=0,version=0,obsVersion=0,saveChain=Promise.resolve(),obsChain=Promise.resolve(),obsRequest=0,sharedIds=new Set(),publicReadDenied=false;
     const clip=(v,n=8000)=>String(v??'').slice(0,n);
     const esc=E;
     const safePhoto=(value)=>{const s=String(value||'');return /^data:image\/(jpeg|jpg|png|webp);base64,[a-zA-Z0-9+/=]+$/.test(s)||/^https:\/\//.test(s)?s:''};
@@ -4284,6 +4284,13 @@ function canvaUpdateArray(el,preserveFocus=false){
       const p=entry.data;return normalizeProfile({ownerUid:uid(),nome:p.nome||'Novo Shinobi',clan:clanOf(p.clanId).name,vila:p.vila||'Konoha',graduacao:p.graduacao||'Genin',portrait:safePhoto(p.foto||p.retratos?.casual||p.retratos?.ninja),notes:seededNotes(p)},entry.id);
     }
     function current(){return all.find(x=>x.id===id)}
+    function privateDrafts(){
+      return S.sheets.filter(s=>s.data?.quadroCompartilhavel&&s.data?.ownerUid===uid()).map(s=>
+        normalizeProfile({...s.data.quadroCompartilhavel,ownerUid:uid()},s.id));
+    }
+    function backupSheet(key){return S.sheets.find(s=>s.id===key&&s.data?.ownerUid===uid())}
+    function isPermissionError(error){return String(error?.code||'').includes('permission-denied')}
+
     function status(label){const el=document.querySelector('[data-board-status]');if(el)el.textContent=label}
     function repaint(){
       const old=document.querySelector('#pub-viewport');
@@ -4350,13 +4357,24 @@ function canvaUpdateArray(el,preserveFocus=false){
       if(obsTimer)await saveObservation();
       loading=true;render();
       try{
-        const docs=await fb.getDocs(fb.collection(fb.db,'perfisPublicos'));
-        all=docs.docs.map(d=>normalizeProfile(d.data(),d.id)).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+        let remote=[];
+        publicReadDenied=false;
+        try{
+          const docs=await fb.getDocs(fb.collection(fb.db,'perfisPublicos'));
+          remote=docs.docs.map(d=>normalizeProfile(d.data(),d.id));
+        }catch(error){
+          publicReadDenied=true;
+          console.warn('Lista pública indisponível; carregando quadros da própria ficha:',error.code||error);
+        }
+        sharedIds=new Set(remote.map(p=>p.id));
+        all=[...remote,...privateDrafts().filter(p=>!sharedIds.has(p.id))]
+          .sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
         if(!all.some(x=>x.id===id))id=all.find(x=>x.ownerUid===uid())?.id||all[0]?.id||'';
         draft=current()?structuredClone(current()):null;
         loading=false;render();
         if(draft)await loadObservation();
-      }catch(error){loading=false;console.error('Perfis públicos:',error);render();showToast('Não foi possível carregar os perfis públicos. Confira as regras do Firestore.',true)}
+        if(publicReadDenied)status('Rascunhos pessoais disponíveis · compartilhamento depende das permissões atuais');
+      }catch(error){loading=false;console.error('Perfis públicos:',error);render();showToast('Falha ao carregar os quadros.',true)}
     }
     function enter(){S.view='quadros';S.modal=null;render();if(!loading)void load()}
     async function open(key){
@@ -4371,7 +4389,14 @@ function canvaUpdateArray(el,preserveFocus=false){
       try{
         const doc=await fb.getDoc(fb.doc(fb.db,'observacoesShinobi',uid()+'__'+key));
         if(request===obsRequest&&key===id){observation=clip(doc.exists()?doc.data().texto:'',5000);refreshObservation();}
-      }catch(error){console.warn('Observação privada não carregada:',error.code||error);if(key===id)status('Não foi possível ler suas observações')}
+      }catch(error){
+        // As fichas privadas já têm permissões próprias; reutilizar apenas as do visitante.
+        const host=S.sheets.find(s=>s.data?.ownerUid===uid());
+        if(request===obsRequest&&key===id){
+          observation=clip(host?.data?.observacoesDoMural?.[key]||'',5000);refreshObservation();
+          if(!host)status('Anotações sem salvamento: crie uma ficha para ativá-las');
+        }
+      }
     }
     function refreshObservation(){
       const area=document.querySelector('[data-board-observation]');
@@ -4384,11 +4409,25 @@ function canvaUpdateArray(el,preserveFocus=false){
       snapshot.updatedAt=Date.now();delete snapshot.id;
       busy=true;status('Salvando quadro…');
       try{
-        saveChain=saveChain.catch(()=>{}).then(()=>fb.setDoc(fb.doc(fb.db,'perfisPublicos',id),snapshot));
+        let savedAs='public';
+        const key=id;
+        saveChain=saveChain.catch(()=>{}).then(async()=>{
+          try{
+            await fb.setDoc(fb.doc(fb.db,'perfisPublicos',key),snapshot);
+            sharedIds.add(key);
+          }catch(error){
+            if(!isPermissionError(error))throw error;
+            const sheet=backupSheet(key);
+            if(!sheet)throw error;
+            await fb.setDoc(fb.doc(fb.db,'fichas',key),{quadroCompartilhavel:snapshot},{merge:true});
+            sheet.data.quadroCompartilhavel=structuredClone(snapshot);
+            savedAs='draft';
+          }
+        });
         await saveChain;
-        const pos=all.findIndex(x=>x.id===id);
-        if(pos>=0)all[pos]=normalizeProfile(snapshot,id);else all.push(normalizeProfile(snapshot,id));
-        if(version===v){busy=false;status('Salvo na nuvem ✓')}else {busy=false;queueSave()}
+        const pos=all.findIndex(x=>x.id===key);
+        if(pos>=0)all[pos]=normalizeProfile(snapshot,key);else all.push(normalizeProfile(snapshot,key));
+        if(version===v){busy=false;status(savedAs==='public'?'Publicado e salvo na nuvem ✓':'Salvo na sua ficha ✓ · Visível só para você até liberar os perfis públicos')}else {busy=false;queueSave()}
       }catch(error){busy=false;console.error('Salvamento do quadro:',error);status('Erro ao salvar');showToast('Não foi possível salvar o quadro. Confira as regras do Firestore.',true)}
     }
     async function create(key){
@@ -4402,11 +4441,18 @@ function canvaUpdateArray(el,preserveFocus=false){
     }
     async function hide(){
       if(!permitted()||!fb)return;
-      if(!confirm('Retirar este quadro da área pública? As notas do quadro deixarão de aparecer para outros jogadores.'))return;
+      if(!confirm('Retirar este quadro? Ele deixará de aparecer no mural e na sua lista de rascunhos.'))return;
       clearTimeout(saveTimer);
       try{
-        await fb.deleteDoc(fb.doc(fb.db,'perfisPublicos',id));
-        all=all.filter(x=>x.id!==id);id=all[0]?.id||'';draft=current()?structuredClone(current()):null;observation='';render();if(draft)void loadObservation();showToast('Quadro retirado do mural público.');
+        const key=id;
+        if(sharedIds.has(key))await fb.deleteDoc(fb.doc(fb.db,'perfisPublicos',key));
+        const sheet=backupSheet(key);
+        if(sheet?.data?.quadroCompartilhavel){
+          await fb.setDoc(fb.doc(fb.db,'fichas',key),{quadroCompartilhavel:null},{merge:true});
+          sheet.data.quadroCompartilhavel=null;
+        }
+        sharedIds.delete(key);
+        all=all.filter(x=>x.id!==key);id=all[0]?.id||'';draft=current()?structuredClone(current()):null;observation='';render();if(draft)void loadObservation();showToast('Quadro retirado do mural.');
       }catch(error){console.error(error);showToast('Não foi possível retirar o quadro.',true)}
     }
     function addNote(){
@@ -4436,8 +4482,21 @@ function canvaUpdateArray(el,preserveFocus=false){
       const target=id,text=observation,v=obsVersion;
       status('Salvando observação…');
       try{
-        obsChain=obsChain.catch(()=>{}).then(()=>fb.setDoc(fb.doc(fb.db,'observacoesShinobi',uid()+'__'+target),{ownerUid:uid(),profileId:target,texto:text,updatedAt:Date.now()}));
-        await obsChain;if(target===id)status(v===obsVersion?'Sua observação foi salva ✓':'Alterações pendentes');
+        let privateFallback=false;
+        obsChain=obsChain.catch(()=>{}).then(async()=>{
+          try{
+            await fb.setDoc(fb.doc(fb.db,'observacoesShinobi',uid()+'__'+target),{ownerUid:uid(),profileId:target,texto:text,updatedAt:Date.now()});
+          }catch(error){
+            if(!isPermissionError(error))throw error;
+            const host=S.sheets.find(s=>s.data?.ownerUid===uid());
+            if(!host)throw error;
+            await fb.setDoc(fb.doc(fb.db,'fichas',host.id),{observacoesDoMural:{[target]:text}},{merge:true});
+            if(!host.data.observacoesDoMural)host.data.observacoesDoMural={};
+            host.data.observacoesDoMural[target]=text;
+            privateFallback=true;
+          }
+        });
+        await obsChain;if(target===id)status(v===obsVersion?(privateFallback?'Observação salva na sua ficha privada ✓':'Sua observação foi salva ✓'):'Alterações pendentes');
         if(target===id&&v!==obsVersion)saveObservation();
       }catch(error){console.error(error);status('Falha ao salvar a observação');showToast('A observação não pôde ser salva. Confira as regras de acesso.',true)}
     }
@@ -4462,12 +4521,14 @@ function canvaUpdateArray(el,preserveFocus=false){
       const isOwner=permitted();
       let output='<div class="pub-hub"><div class="pub-intro"><button type="button" class="pub-fixed-update" data-action="board-updates-open" title="Abrir notas de atualização">📌 Notas de Atualização</button><div class="eyebrow">ARQUIVOS PÚBLICOS DA VILA</div><h1>Mural de Konoha</h1><p>Conheça os shinobi do servidor pelos retratos, histórias e bilhetes publicados por seus jogadores. As estatísticas, atributos, recursos, perícias e demais dados privados das fichas não são exibidos aqui.</p></div>';
       output+='<div class="pub-actions"><button class="button secondary small" data-action="board-refresh" '+(loading?'disabled':'')+'>↻ Atualizar mural</button>';
+      if(publicReadDenied)output+='<span class="pub-readonly" title="As regras atuais restringem a lista pública. Você pode editar seus próprios quadros.">Visualização pública indisponível · seus quadros continuam editáveis</span>';
       if(own.length)output+='<select class="pub-select" id="pub-new-sheet" aria-label="Escolher personagem para publicar"><option value="">Selecione sua ficha para criar um quadro</option>'+own.map(s=>'<option value="'+esc(s.id)+'">'+esc(s.data.nome||'Personagem sem nome')+'</option>').join('')+'</select><button class="button small" data-action="board-create">+ Publicar meu personagem</button>';
       output+='<span class="pub-readonly" data-board-status>'+ (loading?'Buscando registros…':busy?'Salvando…':'Cada personagem tem seu próprio quadro.') +'</span></div>';
-      if(all.length)output+='<div class="pub-choose" aria-label="Quadros dos jogadores">'+all.map(p=>'<button class="pub-chip '+(p.id===id?'active':'')+'" data-action="board-open" data-id="'+esc(p.id)+'"><b>'+esc(p.nome)+'</b><small>'+esc(p.clan)+' · '+esc(p.graduacao)+(p.ownerUid===uid()?' · Seu quadro':'')+'</small></button>').join('')+'</div>';
+      if(all.length)output+='<div class="pub-choose" aria-label="Quadros dos jogadores">'+all.map(p=>'<button class="pub-chip '+(p.id===id?'active':'')+'" data-action="board-open" data-id="'+esc(p.id)+'"><b>'+esc(p.nome)+'</b><small>'+esc(p.clan)+' · '+esc(p.graduacao)+(p.ownerUid===uid()?(sharedIds.has(p.id)?' · Seu quadro':' · Rascunho privado'):'')+'</small></button>').join('')+'</div>';
       if(!draft)output+='<div class="pub-blank"><h3>Nenhum quadro selecionado</h3><p>Os perfis compartilhados aparecerão aqui. Publique um personagem seu usando o seletor acima.</p></div>';
       else {
         output+='<div class="pub-board-toolbar"><b>'+esc(draft.nome)+' · '+esc(draft.clan)+'</b><span class="pub-spacer"></span>';
+        if(isOwner&&!sharedIds.has(draft.id))output+='<span class="pub-zoom-level">Rascunho privado</span><button class="button secondary small" data-action="board-save">↻ Tentar publicar</button>';
         if(isOwner)output+='<button class="button small" data-action="board-add">+ Colar bilhete</button><button class="button secondary small" data-action="board-save">Salvar quadro</button><button class="button secondary small" data-action="board-hide">Retirar da vitrine</button>';
         output+='<span class="pub-zoom-level">🖱️ Roda: zoom · Arraste: mover · <b data-board-zoom-level>'+Math.round(zoom*100)+'%</b></span><button class="button secondary small" data-action="board-center">Centralizar</button></div>';
         output+='<div class="pub-viewport" id="pub-viewport"><div class="pub-zoomframe" style="width:'+(W*zoom)+'px;height:'+(H*zoom)+'px"><div class="pub-scene" style="transform:scale('+zoom+')">';
@@ -4496,7 +4557,7 @@ function canvaUpdateArray(el,preserveFocus=false){
       if(key==='board-updates-close'){updates=false;render();return}
     }
     function change(target){
-      if(target.matches('[data-board-image-file]')){const file=target.files?.[0];target.value='';void uploadPortrait(file);return true}
+      if(target.matches('[data-board-image-file]'))return true;
       return input(target);
     }
     let dragging=null,panning=null;
@@ -5044,7 +5105,7 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
   document.addEventListener('keydown',ev=>{if(ev.target.matches?.('[data-vitality-input]')){if(ev.key==='Enter'){ev.preventDefault();ev.target.blur();return}if(ev.key==='Escape'){ev.preventDefault();ev.stopPropagation();ev.target.value=String(vitalityValue(active()));ev.target.blur();return}}if(ev.key==='Escape'&&document.querySelector('.evo-rise-layer')){ev.preventDefault();evolutionDismiss();return}if(ev.key==='Escape'&&S.view==='sheet'&&S.combatMode){ev.preventDefault();combatExit()}});
   document.addEventListener('submit',ev=>{if(ev.target.id==='auth-form'){ev.preventDefault();submitAuth(ev.target)}else if(ev.target.id==='admin-auth-form'){ev.preventDefault();unlockAdmin(ev.target)}});
   document.addEventListener('input',ev=>{const el=ev.target;if(PublicBoard.change(el))return;if(el.matches('[data-diary-field],[data-diary-completed]')){diaryUpdateField(el);return}if(el.matches('[data-vitality-input]'))return;if(el.matches('[data-int-search]')){S.inlineSearch=el.value;integratedFilter();return}if(el.matches('[data-library-search]')){S.librarySearch=el.value;librarySearchFilter();return}if(el.id==='admin-filter'){const q=el.value.toLocaleLowerCase('pt-BR');$('#admin-rows').innerHTML=adminRows(S.adminSheets.filter(x=>[x.nome,x.usuario,clanOf(x.clanId).name].some(z=>String(z||'').toLocaleLowerCase('pt-BR').includes(q))));return}if(el.dataset.cvArray){canvaUpdateArray(el,true);return}if(el.dataset.cvSkill){updateCanvaSkill(el,true);return}if(!el.dataset.bind||el.tagName==='SELECT')return;const current=active(),path=el.dataset.bind,old=getAt(current,path.startsWith('@')?path.slice(1):path);if(!updateValue(path,el.value)){el.value=old??''}else refreshGuideFeedback()});
-  document.addEventListener('change',ev=>{const el=ev.target;if(el.matches('[data-board-observation]')){void PublicBoard.saveObservation();return}if(el.matches('[data-board-zoom]'))return;if(el.matches('[data-diary-field],[data-diary-completed]')){if(S.diaryDirty)void persistDiary();return}if(el.matches('[data-vitality-input]')){commitVitalityInput(el);return}if(el.matches('[data-library-power]')){S.libraryPowerId=el.value;render();return}if(el.matches('[data-library-scope]')){S.libraryScope=el.value;render();return}if(el.matches('[data-portrait-file]')){const file=el.files?.[0];el.value='';void handlePortraitSelected(file,S.portraitUploadSlot);return}if(el.dataset.cvArray){canvaUpdateArray(el);return}if(el.dataset.cvSkill){updateCanvaSkill(el);return}if(!el.dataset.bind||el.tagName!=='SELECT')return;updateValue(el.dataset.bind,el.value)});
+  document.addEventListener('change',ev=>{const el=ev.target;if(el.matches('[data-board-image-file]')){const file=el.files?.[0];el.value='';void PublicBoard.uploadPortrait(file);return}if(el.matches('[data-board-observation]')){void PublicBoard.saveObservation();return}if(el.matches('[data-board-zoom]'))return;if(el.matches('[data-diary-field],[data-diary-completed]')){if(S.diaryDirty)void persistDiary();return}if(el.matches('[data-vitality-input]')){commitVitalityInput(el);return}if(el.matches('[data-library-power]')){S.libraryPowerId=el.value;render();return}if(el.matches('[data-library-scope]')){S.libraryScope=el.value;render();return}if(el.matches('[data-portrait-file]')){const file=el.files?.[0];el.value='';void handlePortraitSelected(file,S.portraitUploadSlot);return}if(el.dataset.cvArray){canvaUpdateArray(el);return}if(el.dataset.cvSkill){updateCanvaSkill(el);return}if(!el.dataset.bind||el.tagName!=='SELECT')return;updateValue(el.dataset.bind,el.value)});
   async function startFirebase(){try{const base=`https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}`;const [{initializeApp},{getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,reauthenticateWithCredential,EmailAuthProvider},{getFirestore,doc,getDoc,setDoc,deleteDoc,collection,getDocs,query,where,onSnapshot}]=await Promise.all([import(base+'/firebase-app.js'),import(base+'/firebase-auth.js'),import(base+'/firebase-firestore.js')]);const app=initializeApp(FIREBASE_CONFIG),auth=getAuth(app),db=getFirestore(app);fb={auth,db,doc,getDoc,setDoc,deleteDoc,collection,getDocs,query,where,onSnapshot,reauthenticateWithCredential,EmailAuthProvider,signOut,createUserWithEmailAndPassword,signInWithEmailAndPassword};onAuthStateChanged(auth,async(user)=>{clearTimeout(S.saveTimer);if(!user){clearTimeout(S.diarySaveTimer);S.diarySaveTimer=null;S.diary=null;S.diaryOwnerUid=null;S.diaryStorage=null;S.diaryHostId=null;S.diaryNoHost=false;S.diaryFromAdmin=false;S.diaryDirty=false;S.diaryRequest++;stopAdminLive();S.adminUnlocked=false;S.adminAuthBusy=false;S.adminLoginBusy=false;S.adminSheets=[];S.user=null;S.isAdmin=false;S.sheet=null;S.sheetId=null;S.sheets=[];S.adminViewing=false;S.loading=false;S.view='login';render();return}const fallback=user.email?.split('@')[0]||'Shinobi';S.user={uid:user.uid,displayName:fallback};try{const [profile,admin,found]=await Promise.all([getDoc(doc(db,'users',user.uid)),getDoc(doc(db,'admins',user.uid)),getDocs(query(collection(db,'fichas'),where('ownerUid','==',user.uid)))]);if(profile.exists())S.user.displayName=profile.data().username||fallback;S.isAdmin=admin.exists()||user.email===MASTER_EMAIL;if(user.email===MASTER_EMAIL)S.adminUnlocked=true;const personalDiary=found.docs.find(d=>d.data().tipo==='diario'&&d.data().ownerUid===user.uid);
 S.diary=personalDiary?normalizeDiary(personalDiary.data(),user.uid,S.user.displayName):null;
 S.diaryStorage=personalDiary?'legacy':null;S.diaryHostId=null;S.diaryNoHost=false;
