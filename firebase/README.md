@@ -1,3 +1,15 @@
+## Atualização do painel administrativo (novembro de 2026)
+
+A navegação **Administração** aparece apenas para contas cujo UID possui um documento em `admins/{uid}` no Firestore. Ao entrar, o site pede **a senha da própria conta** e valida essa senha novamente no Firebase Authentication. Depois de usar o painel, clique em **Bloquear painel**. A senha nunca é inserida no código do GitHub nem gravada no Firestore.
+
+**Importante:** a verificação de senha é a proteção adicional da interface administrativa. O direito de ler as fichas de outros jogadores continua sendo dado pelas regras do Firestore, que verificam o documento `admins/{uid}`. A versão atual não possui uma segunda senha mestra independente.
+
+## Seleção de NC
+
+A ficha aceita qualquer **NC de 4 a 20**. Os valores publicados no resumo SNS 4.1b para NCs 4, 8, 10, 12, 16 e 20 foram mantidos. Os níveis intermediários foram preenchidos pela progressão de +6 pontos de atributos e +4 pontos de perícias por NC. Os poderes de NC 17 a 19 foram interpolados em +3 por NC para coincidir com os 40 pontos do NC 20 na tabela de referência. Essa interpolação é uma adaptação da plataforma, não uma tabela literalmente presente no resumo original.
+
+---
+
 # Shinobi Chronicles — configuração do Firebase
 
 O site inteiro está em **index.html**, publicado pelo **GitHub Pages**.  
