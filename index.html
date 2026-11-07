@@ -3100,6 +3100,7 @@ function showAdminLiveUI(){
   const q=String($('#admin-filter')?.value||'').toLocaleLowerCase('pt-BR');
   rows.innerHTML=adminRows(S.adminSheets.filter(x=>[x.nome,x.usuario,clanOf(x.clanId).name].some(z=>String(z||'').toLocaleLowerCase('pt-BR').includes(q))));
  }
+ const roster=$('#admin-diary-roster');if(roster)roster.innerHTML=adminDiaryRoster();
  const events=$('#admin-events');if(events)events.innerHTML=adminEventsHTML();
  const total=$('#admin-live-total'),clans=$('#admin-live-clans'),highest=$('#admin-live-nc');
  if(total)total.textContent=S.adminSheets.length;
@@ -3186,7 +3187,7 @@ function startAdminLive(){
   <section class="paper-panel mt24"><h3>Fichas dos jogadores</h3><p class="muted" style="font-size:12px">Mudanças salvas pelos jogadores aparecem automaticamente, sem atualizar a página.</p><div class="field"><label>Pesquisar por personagem, jogador ou clã</label><input id="admin-filter" placeholder="Buscar..." autocomplete="off"></div><div id="admin-rows" class="mt16">${adminRows(items)}</div></section>
   <section class="paper-panel mt16"><div class="flex between wrap"><h3>Diários particulares dos jogadores</h3><span class="admin-live-pill">Somente mestre autorizado</span></div>
    <p class="muted" style="font-size:12px">Abra o pergaminho pessoal de cada jogador, inclusive daqueles com mais de uma ficha. Os registros não aparecem na lista de personagens.</p>
-   <div class="journal-admin-roster">${adminDiaryRoster()}</div></section>
+   <div id="admin-diary-roster" class="journal-admin-roster">${adminDiaryRoster()}</div></section>
   <section class="paper-panel mt16"><div class="flex between wrap"><h3>Atividade recente</h3><span class="admin-live-pill is-live">Histórico da sessão</span></div><div id="admin-events" aria-live="polite">${adminEventsHTML()}</div></section>
   <div class="notice mt16">O modo ADM continua ativo ao visitar outras abas. Só será encerrado por <strong>Encerrar modo ADM</strong> ou ao sair da conta. O monitor reflete os dados assim que forem gravados no Firebase.</div>`);
 }
