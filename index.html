@@ -1554,9 +1554,12 @@
     if(oldValue===next)return;
     const previous=portraitAutomatic(p);
     p.recursos.vit=next;
+    const latest=portraitAutomatic(p);
+    // O MP3 inicia imediatamente no clique, antes da atualização dos elementos.
+    if(portraitSeverity(latest)<portraitSeverity(previous))playSfx('healing');
     S.portraitPreview=null;
     syncVitalityControls(p);
-    refreshPortraitUI(previous);
+    refreshPortraitUI(previous,{skipHealingAudio:true});
     scheduleSave();
   }
   function adjustMaxVitality(p,oldMax){
@@ -1639,7 +1642,7 @@ function portraitEditor(p){
  </div></div>`;
 }
 
-function refreshPortraitUI(previousAutomatic=null){
+function refreshPortraitUI(previousAutomatic=null,options={}){
  const p=active();if(!p)return;
  const key=portraitShowing(p),photo=portraitPhoto(p,key);
  document.querySelectorAll('[data-portrait-display]').forEach(img=>{
@@ -1662,7 +1665,7 @@ function refreshPortraitUI(previousAutomatic=null){
   const before=portraitSeverity(previousAutomatic),after=portraitSeverity(latest);
   const healing=after<before;
   const effect=healing?'portrait-healing':after===2?'portrait-hit-grave':after===1?'portrait-hit-wounded':null;
-  if(healing)playSfx('healing');
+  if(healing&&!options.skipHealingAudio)playSfx('healing');
   else if(after>before)playSfx(after===2?'critical':'wounded');
   document.querySelectorAll('.cv-portrait,.portrait-editor-preview').forEach(surface=>{
    surface.classList.remove('portrait-hit-wounded','portrait-hit-grave','portrait-healing');
@@ -2477,16 +2480,38 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
     menu:{url:'assets/audio/menu-transition.ogg',volume:.66},
     wounded:{url:'assets/audio/injury-wounded.ogg',volume:.74},
     critical:{url:'assets/audio/injury-critical.ogg',volume:.8},
-    healing:{url:'assets/audio/healing.ogg',volume:.72}
+    healing:{url:'assets/audio/healing.mp3?v=2',fallback:'assets/audio/healing.ogg?v=2',volume:.9}
   };
   const soundTracks=new Map();
   function playSfx(kind){
     const spec=SHINOBI_SFX[kind];if(!spec)return;
+    if(kind==='healing'){
+      // Retratos de cura são eventos raros: abrir uma instância nova mantém a
+      // reprodução ligada ao clique de Vitalidade, mesmo após cache de erro.
+      const attempt=(url,allowFallback)=>{
+        try{
+          const sound=new Audio(url);
+          sound.preload='auto';
+          sound.muted=false;
+          sound.volume=spec.volume;
+          const started=sound.play();
+          if(started?.catch)started.catch(error=>{
+            console.warn('Áudio de cura não iniciou:',url,error);
+            if(allowFallback&&spec.fallback)attempt(spec.fallback,false);
+          });
+        }catch(error){
+          console.warn('Erro no áudio de cura:',url,error);
+          if(allowFallback&&spec.fallback)attempt(spec.fallback,false);
+        }
+      };
+      return attempt(spec.url,true);
+    }
     try{
       let sound=soundTracks.get(kind);
       if(!sound){sound=new Audio(spec.url);sound.preload='auto';sound.volume=spec.volume;soundTracks.set(kind,sound)}
       sound.pause();sound.currentTime=0;
-      const started=sound.play();if(started&&typeof started.catch==='function')started.catch(()=>{});
+      const started=sound.play();
+      if(started?.catch)started.catch(error=>console.warn('Áudio não iniciou:',kind,error));
     }catch(err){console.warn('Som indisponível:',kind,err)}
   }
   function portraitSeverity(key){return key==='grave'?2:key==='ferido'?1:0}
