@@ -13,15 +13,22 @@ O padrão inicial é **Genin NC 4**: 12 pontos de atributos, 8 de perícias, 4 d
 
 ---
 
-## Retrato do personagem sem Firebase Storage
+## Galeria de quatro retratos sem Firebase Storage
 
-Na página de identificação da ficha, clique em **Enviar retrato** (ou abra **Editor detalhado → Retrato do personagem**) para escolher um arquivo do computador ou celular. Formatos aceitos: JPG, PNG e WebP, com até **12 MB de origem**.
+A ficha permite enviar **quatro imagens distintas do personagem**: **Casual**, **Ninja**, **Ferido** e **Gravemente ferido**. Na primeira página da ficha Canva, quatro pequenos ícones aparecem dentro da moldura original, abaixo do botão de envio. Clique no ícone para visualizar uma versão já enviada; um ícone com **+** permite enviar a versão que está faltando. Para gerenciar todas as imagens com seus nomes, abra **Guia de criação → Identidade** ou **Editor detalhado → Identidade**.
 
-O navegador comprime a imagem e a transforma em JPEG/WebP, tentando manter a representação em até aproximadamente **155 mil caracteres**. Ela é salva no campo `foto` do **próprio documento da ficha no Firestore**; por isso **não é necessário ativar Firebase Storage ou mudar de plano** apenas para esta função. Cada personagem tem sua própria imagem, e há botões de **trocar** e **remover**.
+**Troca automática por Vitalidade atual** (em relação à Vitalidade máxima calculada):
+- **Acima de 50%:** retrato **Casual** ou **Ninja**, conforme a seleção normal.
+- **50% ou menos:** retrato **Ferido**.
+- **25% ou menos:** retrato **Gravemente ferido**.
+- Ao recuperar Vitalidade, o retrato retorna à categoria adequada automaticamente.
 
-**Limitações:** o Firestore permite no máximo 1 MiB por documento, e o retrato utiliza parte desse limite. Esta abordagem foi projetada para fotos pequenas em um RPG entre amigos, não para imagens originais em alta resolução nem grandes bibliotecas. Operações de leitura e gravação continuam sujeitas às quotas do plano Spark. Se a ficha inteira ficar grande demais ou as quotas forem excedidas, o salvamento pode falhar.
+Os quatro retratos são opcionais. Se uma versão não tiver sido enviada, o site mostra uma imagem disponível do personagem. O retrato antigo do campo `foto` continua visível como **Casual**, sem exigir novo upload. Ao enviar uma nova imagem, o dado antigo é migrado para `retratos.casual` e o campo legado `foto` deixa de duplicá-la.
 
-A imagem enviada fica acessível apenas a quem as regras do Firestore permitem ler a ficha, incluindo administradores autorizados.
+O site aceita arquivos JPG, PNG e WebP com até 12 MB na origem. O navegador reduz o arquivo antes de salvar **sem distorcer proporções ou recortar personagens half-body**, preservando a transparência quando possível, e limita cada retrato a cerca de **122 mil caracteres**. Os quatro retratos ficam no mapa `retratos` do mesmo documento da ficha em Firestore. O site também verifica um tamanho de segurança de aproximadamente **860 kB** para evitar ultrapassar o limite de 1 MiB por documento do Firestore.
+
+**Não é necessário Firebase Storage nem alterar o plano do projeto** para este recurso. O armazenamento de cada imagem, entretanto, consome quota de documentos no plano Spark e pode falhar caso uma ficha fique muito extensa ou as cotas gratuitas sejam atingidas. Como as imagens integram a ficha, as regras de acesso são as mesmas da ficha do jogador.
+
 
 ---
 
