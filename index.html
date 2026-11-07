@@ -2342,7 +2342,7 @@
   const LIBRARY_SOURCES={title:'Naruto: Shinobi no Sho — 4ª edição (4.1b)',notes:'Poderes compram níveis; jutsus e efeitos dependem dos poderes e demais pré-requisitos.'};
   const TABS=[['identidade','Identidade'],['atributos','Atributos'],['pericias','Perícias'],['combate','Combate'],['tecnicas','Poderes e jutsus'],['inventario','Inventário'],['historia','História']];
 
-  const S={view:'home',tab:'identidade',authPane:'login',user:null,isAdmin:false,sheet:null,sheetId:null,adminSheets:[],activeClan:null,demo:!CONFIGURED,sheets:[],adminViewing:false,pendingDeleteId:null,pendingWrite:null,canvaPage:1,canvaMode:'original',loading:CONFIGURED,modal:null,saveTimer:null,saveState:'Pronto',authWorking:false,adminUnlocked:false,adminAuthBusy:false,adminLoginBusy:false,adminUnsubscribe:null,adminLive:false,adminLiveReady:false,adminLiveError:false,adminEvents:[],pendingRemote:null,locallyDirty:false,isSaving:false,lastSavedWrite:null,creating:false,portraitBusy:false,portraitPreview:null,portraitUploadSlot:'casual',guideStep:0,libraryKind:'all',libraryScope:'mine',librarySearch:'',libraryPowerId:'',inlineKind:'power',inlineSearch:'',combatMode:false,combatTransitioning:false};
+  const S={view:'home',tab:'identidade',authPane:'login',user:null,isAdmin:false,sheet:null,sheetId:null,adminSheets:[],activeClan:null,demo:!CONFIGURED,sheets:[],adminViewing:false,pendingDeleteId:null,pendingWrite:null,canvaPage:1,canvaMode:'original',loading:CONFIGURED,modal:null,saveTimer:null,saveState:'Pronto',authWorking:false,adminUnlocked:false,adminAuthBusy:false,adminLoginBusy:false,adminUnsubscribe:null,adminLive:false,adminLiveReady:false,adminLiveError:false,adminEvents:[],pendingRemote:null,locallyDirty:false,isSaving:false,lastSavedWrite:null,creating:false,portraitBusy:false,portraitPreview:null,portraitUploadSlot:'casual',guideStep:0,libraryKind:'all',libraryScope:'mine',librarySearch:'',libraryPowerId:'',inlineKind:'power',inlineSearch:'',combatMode:false,combatTransitioning:false,diary:null,diaryOwnerUid:null,diaryFromAdmin:false,diaryLoading:false,diaryDirty:false,diaryVersion:0,diarySaveTimer:null,diaryPendingWrite:null,diaryStatus:'',diaryPanel:'',diaryExpandedId:'',diaryEnterAnimate:false,diaryRequest:0,adminDiaries:[]};
   let fb=null;
   const $=sel=>document.querySelector(sel);
   const E=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -2705,8 +2705,8 @@ function themeStyle(){
  const deepHex='#'+deep.map(x=>x.toString(16).padStart(2,'0')).join('');
  return `style="--theme-accent:${clan.color};--theme-rgb:${rgb.join(',')};--theme-deep:${deepHex};--theme-wash:${clan.wash}" data-theme="${clan.id}"`;
 }
-  function side(){return `<aside class="sidebar"><div class="brand"><div class="brandmark">忍</div><div><div class="brand-name">Shinobi<br>Chronicles</div><div class="brand-sub">Arquivos Shinobi</div></div></div><nav aria-label="Menu principal"><div class="nav-category">NAVEGAÇÃO</div>${[['home','⌂','Início'],['clans','◈','Os Clãs'],['fichas','▤','Minhas Fichas'],['sheet','✎','Editar Ficha'],...(S.sheets.length?[['guia','☷','Guia de criação'],['biblioteca','巻','Biblioteca de técnicas']]:[]),...(canAdmin()?[['admin','♜','Administração']]:[])].map(([view,ic,label])=>`<button class="nav-item ${S.view===view?'active':''}" data-action="nav" data-view="${view}"><span class="nav-icon">${ic}</span>${label}</button>`).join('')}</nav><div class="sidebar-bottom"><div class="tiny">SHINOBI NO SHO · SISTEMA D8</div><div class="side-account">${E(S.user?.displayName|| (CONFIGURED?'Conta não conectada':'Modo demonstração'))}</div><div class="tiny">${CONFIGURED?'Dados privados no Firebase.':'Prévia local, sem salvamento na nuvem.'}</div>${S.user?'<button class="nav-item" data-action="logout"><span class="nav-icon">↪</span>Sair da conta</button>':''}</div></aside>`}
-  function top(){const currentTheme=themeClan();let titles={home:'Início',clans:'Guia dos clãs',sheet:'Registro do personagem',guia:'Guia de criação',biblioteca:'Biblioteca de técnicas',fichas:'Minhas fichas',admin:'Administração','admin-gate':'Entrada do mestre',login:'Acesso shinobi'};return `<header class="topbar"><div><div class="eyebrow">SHINOBI CHRONICLES / ARQUIVO</div><div class="top-title">${titles[S.view]||'Arquivo'}</div></div><div class="top-actions">${currentTheme?`<span class="theme-chip"><span class="theme-chip-dot"></span>${E(currentTheme.name)}</span>`:''}${S.user?`<span class="pill">${E(S.user.displayName)}</span>`:!CONFIGURED?'<span class="pill">Prévia demonstrativa</span>':'<button class="button small" data-action="nav" data-view="login">Entrar</button>'}${S.view==='sheet'?`<span id="save-status" class="pill">${E(S.saveState)}</span>`:''}</div></header>`}
+  function side(){return `<aside class="sidebar"><div class="brand"><div class="brandmark">忍</div><div><div class="brand-name">Shinobi<br>Chronicles</div><div class="brand-sub">Arquivos Shinobi</div></div></div><nav aria-label="Menu principal"><div class="nav-category">NAVEGAÇÃO</div>${[['home','⌂','Início'],['clans','◈','Os Clãs'],['fichas','▤','Minhas Fichas'],...(S.user?[['diario','巻','Diário de Missões']]:[]),['sheet','✎','Editar Ficha'],...(S.sheets.length?[['guia','☷','Guia de criação'],['biblioteca','巻','Biblioteca de técnicas']]:[]),...(canAdmin()?[['admin','♜','Administração']]:[])].map(([view,ic,label])=>`<button class="nav-item ${S.view===view?'active':''}" data-action="nav" data-view="${view}"><span class="nav-icon">${ic}</span>${label}</button>`).join('')}</nav><div class="sidebar-bottom"><div class="tiny">SHINOBI NO SHO · SISTEMA D8</div><div class="side-account">${E(S.user?.displayName|| (CONFIGURED?'Conta não conectada':'Modo demonstração'))}</div><div class="tiny">${CONFIGURED?'Dados privados no Firebase.':'Prévia local, sem salvamento na nuvem.'}</div>${S.user?'<button class="nav-item" data-action="logout"><span class="nav-icon">↪</span>Sair da conta</button>':''}</div></aside>`}
+  function top(){const currentTheme=themeClan();let titles={home:'Início',clans:'Guia dos clãs',sheet:'Registro do personagem',guia:'Guia de criação',biblioteca:'Biblioteca de técnicas',fichas:'Minhas fichas',diario:'Diário de Missões',admin:'Administração','admin-gate':'Entrada do mestre',login:'Acesso shinobi'};return `<header class="topbar"><div><div class="eyebrow">SHINOBI CHRONICLES / ARQUIVO</div><div class="top-title">${titles[S.view]||'Arquivo'}</div></div><div class="top-actions">${currentTheme?`<span class="theme-chip"><span class="theme-chip-dot"></span>${E(currentTheme.name)}</span>`:''}${S.user?`<span class="pill">${E(S.user.displayName)}</span>`:!CONFIGURED?'<span class="pill">Prévia demonstrativa</span>':'<button class="button small" data-action="nav" data-view="login">Entrar</button>'}${S.view==='sheet'?`<span id="save-status" class="pill">${E(S.saveState)}</span>`:''}</div></header>`}
   function layout(inner){return `<div class="shell ${S.view==='home'?'home-ambient':''} ${themeClan()?'themed-shell':''}" ${themeStyle()}>${side()}<main class="main">${top()}<div class="content">${inner}<footer class="footer-note">SHINOBI CHRONICLES · Sistema D8 / SNS 4.1b · Plataforma independente de fichas · Ilustrações dos clãs serão adicionadas pelo projeto.</footer></div></main></div>`}
   const heroArt=`<img class="hero-illustration" src="hero-konoha-novo.jpg" onerror="this.onerror=null;this.src='hero-konoha.svg'" alt="Ilustração em tinta mangá e aquarela da Vila Oculta da Folha, com arquitetura tradicional e cerejeiras" loading="eager" decoding="async">`;
   function home(){const c=active()?clanOf(active().clanId):null;return layout(`<section class="hero hero-inkwash"><div class="hero-copy"><div class="eyebrow">UM NOVO CICLO · SHINOBI CHRONICLES</div><h1>Seu caminho<br>começa aqui.</h1><p>Explore as famílias shinobi, registre seu personagem e acompanhe sua evolução com uma ficha automatizada pelo sistema D8.</p><div class="flex wrap mt24"><button class="button" data-action="nav" data-view="clans">Explorar os clãs <span>↗</span></button><button class="button secondary" data-action="nav" data-view="fichas">Minhas fichas</button></div></div><div class="hero-scene">${heroArt}</div></section>${!CONFIGURED?`<div class="notice warn mt16"><b>Modo de demonstração.</b> A interface e os cálculos já funcionam, mas os dados não serão salvos online até configurar o Firebase no arquivo <code>index.html</code>. É possível testar a ficha agora.</div>`:''}<div class="section-head"><div><div class="eyebrow">ARQUIVOS DE KONOHA</div><h2>Explore os clãs</h2></div><p>11 linhagens e um caminho independente</p></div><div class="clans-grid">${CLANS.slice(0,6).map(clanCard).join('')}</div><div class="section-head"><div><div class="eyebrow">O SEU REGISTRO</div><h2>Ficha de personagem</h2></div></div>${c?`<div class="paper-panel"><div class="flex between wrap"><div><div class="eyebrow">PERSONAGEM ATIVO</div><h3 style="margin:8px 0">${E(active().nome||'Personagem sem nome')} · ${E(c.name)}</h3><div class="panel-caption">Nível de Campanha ${active().nc} · ${E(active().graduacao)}</div></div><button class="button" data-action="nav" data-view="sheet">Continuar edição ↗</button></div></div>`:`<div class="empty"><h3>Sua história ainda não foi registrada</h3><p>Escolha um clã e crie sua ficha; os atributos e as perícias serão calculados automaticamente.</p><button class="button" data-action="nav" data-view="clans">Escolher clã</button></div>`}`)}
@@ -3064,14 +3064,14 @@ async function unlockAdmin(form){
 async function lockAdmin(){
  if(S.adminViewing&&S.saveTimer){clearTimeout(S.saveTimer);S.saveTimer=null;await persist()}
  if(S.pendingWrite)await S.pendingWrite.catch(()=>{});
- S.adminUnlocked=false;stopAdminLive();S.adminSheets=[];S.adminEvents=[];S.adminViewing=false;
+ S.adminUnlocked=false;stopAdminLive();S.adminSheets=[];S.adminDiaries=[];S.adminEvents=[];S.adminViewing=false;
  const own=ownSheets()[0];S.sheet=own?.data||null;S.sheetId=own?.id||null;S.view='home';S.modal=null;
  render();showToast('Administração bloqueada.');
 }
 
 function stopAdminLive(){
  if(S.adminUnsubscribe){try{S.adminUnsubscribe()}catch(_){ }S.adminUnsubscribe=null}
- S.adminLive=false;S.adminLiveReady=false;S.adminLiveError=false;S.pendingRemote=null;
+ S.adminLive=false;S.adminLiveReady=false;S.adminLiveError=false;S.pendingRemote=null;S.adminDiaries=[];
 }
 function describeSheetChange(before,after,type){
  if(type==='added')return 'Nova ficha criada';
@@ -3117,10 +3117,13 @@ function startAdminLive(){
  S.adminUnsubscribe=fb.onSnapshot(fb.collection(fb.db,'fichas'),snapshot=>{
    if(!canAdmin()||!S.adminUnlocked)return;
    const previous=new Map(S.adminSheets.map(x=>[x.__id,x]));
-   const next=snapshot.docs.map(d=>({...d.data(),__id:d.id}));
+   const all=snapshot.docs.map(d=>({...d.data(),__id:d.id}));
+   const next=all.filter(x=>x.tipo!=='diario');
+   S.adminDiaries=all.filter(x=>x.tipo==='diario');
    if(S.adminLiveReady){
      for(const change of snapshot.docChanges()){
        const after=change.doc.data(),before=previous.get(change.doc.id);
+       if(after.tipo==='diario'||before?.tipo==='diario')continue;
        if(S.lastSavedWrite?.id===change.doc.id&&n(S.lastSavedWrite?.stamp)===n(after?.atualizadoEm))continue;
        S.adminEvents.unshift({nome:after.nome||before?.nome||'Personagem',resumo:describeSheetChange(before,after,change.type),hora:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})});
      }
@@ -3140,6 +3143,14 @@ function startAdminLive(){
        }else S.sheet.atualizadoEm=remote.atualizadoEm;
      }
    }
+   if(S.view==='diario'&&S.diaryFromAdmin&&S.diary&&!S.diaryDirty){
+     const freshDiary=S.adminDiaries.find(x=>x.ownerUid===S.diaryOwnerUid);
+     if(freshDiary&&n(freshDiary.atualizadoEm)>n(S.diary.atualizadoEm)
+       &&!document.activeElement?.matches?.('[data-diary-field],[data-diary-completed]')){
+       S.diary=normalizeDiary(freshDiary,S.diaryOwnerUid,freshDiary.usuario);
+       render();
+     }
+   }
    showAdminLiveUI();
  },error=>{
    console.error('Firestore ao vivo:',error.code||error);
@@ -3150,12 +3161,32 @@ function startAdminLive(){
  showAdminLiveUI();
 }
 
+
+  function adminDiaryRoster(){
+    const players=new Map();
+    for(const sheet of S.adminSheets){
+      if(!sheet.ownerUid)continue;
+      if(!players.has(sheet.ownerUid))players.set(sheet.ownerUid,{uid:sheet.ownerUid,name:sheet.usuario||'Jogador'});
+    }
+    for(const diary of S.adminDiaries){
+      if(!diary.ownerUid)continue;
+      players.set(diary.ownerUid,{uid:diary.ownerUid,name:diary.usuario||players.get(diary.ownerUid)?.name||'Jogador'});
+    }
+    if(!players.size)return '<p class="muted">Nenhum jogador disponível no momento.</p>';
+    return [...players.values()].sort((a,b)=>a.name.localeCompare(b.name,'pt-BR')).map(player=>
+      '<article class="journal-admin-player"><div><b>'+E(player.name)+'</b><small>Diário privado da conta</small></div>'+
+      '<button type="button" class="button secondary small" data-action="open-admin-diary" data-uid="'+E(player.uid)+'" data-name="'+E(player.name)+'">Abrir diário</button></article>').join('');
+  }
+
   function adminView(){
  if(!canAdmin()||!S.adminUnlocked)return layout('<div class="empty"><h3>Acesso restrito</h3></div>');
  const items=S.adminSheets;
  return layout(`<div class="section-head" style="margin-top:0"><div><div class="eyebrow">CENTRAL DO MESTRE / SINCRONIZAÇÃO</div><h2>Administração ao vivo</h2></div><div class="flex wrap"><span id="admin-live-status" class="admin-live-pill ${S.adminLive?'is-live':'is-waiting'}">${S.adminLive?'Acompanhando ao vivo':'Conectando…'}</span><button class="button secondary small" data-action="refresh-admin">↻ Sincronizar</button><button class="button secondary small" data-action="lock-admin">Encerrar modo ADM</button></div></div>
   <div class="four-grid"><div class="mini-stat"><span>Fichas monitoradas</span><strong id="admin-live-total">${items.length}</strong></div><div class="mini-stat"><span>Clãs utilizados</span><strong id="admin-live-clans">${new Set(items.map(x=>x.clanId)).size}</strong></div><div class="mini-stat"><span>Maior NC</span><strong id="admin-live-nc">${items.length?Math.max(...items.map(x=>n(x.nc))):'—'}</strong></div><div class="mini-stat"><span>Modo do mestre</span><strong style="font-size:16px;margin-top:14px">Ativo</strong></div></div>
   <section class="paper-panel mt24"><h3>Fichas dos jogadores</h3><p class="muted" style="font-size:12px">Mudanças salvas pelos jogadores aparecem automaticamente, sem atualizar a página.</p><div class="field"><label>Pesquisar por personagem, jogador ou clã</label><input id="admin-filter" placeholder="Buscar..." autocomplete="off"></div><div id="admin-rows" class="mt16">${adminRows(items)}</div></section>
+  <section class="paper-panel mt16"><div class="flex between wrap"><h3>Diários particulares dos jogadores</h3><span class="admin-live-pill">Somente mestre autorizado</span></div>
+   <p class="muted" style="font-size:12px">Abra o pergaminho pessoal de cada jogador, inclusive daqueles com mais de uma ficha. Os registros não aparecem na lista de personagens.</p>
+   <div class="journal-admin-roster">${adminDiaryRoster()}</div></section>
   <section class="paper-panel mt16"><div class="flex between wrap"><h3>Atividade recente</h3><span class="admin-live-pill is-live">Histórico da sessão</span></div><div id="admin-events" aria-live="polite">${adminEventsHTML()}</div></section>
   <div class="notice mt16">O modo ADM continua ativo ao visitar outras abas. Só será encerrado por <strong>Encerrar modo ADM</strong> ou ao sair da conta. O monitor reflete os dados assim que forem gravados no Firebase.</div>`);
 }
@@ -4042,7 +4073,7 @@ function canvaUpdateArray(el,preserveFocus=false){
  scheduleSave();
  if(!preserveFocus)render();
 }
-function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="margin:15vh auto;max-width:500px"><h3>Carregando os arquivos shinobi...</h3><p>Conectando ao sistema de autenticação.</p></div>';return}if(CONFIGURED&&!S.user&&!['login'].includes(S.view))S.view='login';let screen={home,clans,sheet:canvaSheetView,guia:guideView,biblioteca:libraryView,fichas:mySheets,admin:adminView,'admin-gate':adminGate,login}[S.view]||home;$('#app').innerHTML=screen();if(S.modal)$('#app').insertAdjacentHTML('beforeend',S.modal==='delete'?deleteModal():clanModal());if(S.view==='biblioteca')librarySearchFilter();integratedFilter()}
+function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="margin:15vh auto;max-width:500px"><h3>Carregando os arquivos shinobi...</h3><p>Conectando ao sistema de autenticação.</p></div>';return}if(CONFIGURED&&!S.user&&!['login'].includes(S.view))S.view='login';let screen={home,clans,sheet:canvaSheetView,guia:guideView,biblioteca:libraryView,diario:diaryView,fichas:mySheets,admin:adminView,'admin-gate':adminGate,login}[S.view]||home;$('#app').innerHTML=screen();if(S.modal)$('#app').insertAdjacentHTML('beforeend',S.modal==='delete'?deleteModal():clanModal());if(S.view==='biblioteca')librarySearchFilter();integratedFilter();if(S.view==='diario'&&S.diaryEnterAnimate)S.diaryEnterAnimate=false}
 
   // Diário individual: um documento por conta, guardado na coleção já protegida das fichas.
   const DIARY_MAX_COMPLETED=80;
@@ -4255,6 +4286,8 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
   function nav(view){
  S.modal=null;
  S.combatMode=false;
+ if(S.view==='diario'&&S.diaryDirty)void persistDiary();
+ if(view==='diario')return void openDiaryFor(uid(),S.user?.displayName||'Jogador',false);
  if(view==='admin'){
    if(!canAdmin())return showToast('Acesso restrito ao mestre.',true);
    if(!S.adminUnlocked){S.view='admin-gate';render();window.scrollTo({top:0});return}
