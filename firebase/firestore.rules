@@ -1,0 +1,58 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // O administrador é autorizado exclusivamente por um documento criado
+    // manualmente no Console do Firebase usando o UID da conta.
+    function isAdmin() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // Cada jogador só pode ler o próprio perfil.
+    match /users/{userId} {
+      allow get: if signedIn() && (request.auth.uid == userId || isAdmin());
+      allow list: if false;
+      allow create: if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.keys().hasOnly(['username', 'criadoEm'])
+        && request.resource.data.username is string
+        && request.resource.data.username.size() >= 3
+        && request.resource.data.username.size() <= 20;
+      allow update, delete: if false;
+    }
+
+    // A ficha usa o UID como ID; um jogador nunca lê ou edita a ficha alheia.
+    // O administrador pode consultar todas, mas não alterar as dos outros.
+    match /fichas/{fichaId} {
+      allow get: if signedIn()
+        && (fichaId == request.auth.uid || isAdmin());
+      allow list: if isAdmin();
+      allow create: if signedIn()
+        && fichaId == request.auth.uid
+        && request.resource.data.ownerUid == request.auth.uid;
+      allow update: if signedIn()
+        && fichaId == request.auth.uid
+        && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerUid == request.auth.uid;
+      allow delete: if signedIn()
+        && fichaId == request.auth.uid
+        && resource.data.ownerUid == request.auth.uid;
+    }
+
+    // Nunca permita ao navegador conceder ou remover privilégios.
+    // Cadastre administradores apenas pelo Console / Admin SDK.
+    match /admins/{adminId} {
+      allow get: if signedIn() && request.auth.uid == adminId;
+      allow list, create, update, delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
