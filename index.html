@@ -1592,28 +1592,28 @@
 .cb-entry-kunai.is-right{animation:cb-kunai-right 1.03s cubic-bezier(.19,.85,.22,1) both}
 .cb-entry-impact{position:absolute;width:18px;height:18px;border:2px solid #fff4ce;border-radius:50%;box-shadow:0 0 45px 13px #eac9a088;top:50%;left:50%;transform:translate(-50%,-50%) scale(.2);animation:cb-hit-pulse 1.08s ease-out both}
 .cb-entry-spark{position:absolute;left:50%;top:50%;height:3px;width:125px;transform-origin:left center;background:linear-gradient(90deg,#fff8e9,transparent);animation:cb-spark 1.08s ease-out both}
-.cb-entry-spark:nth-of-type(5){transform:rotate(45deg)}
-.cb-entry-spark:nth-of-type(6){transform:rotate(135deg)}
-.cb-entry-spark:nth-of-type(7){transform:rotate(225deg)}
-.cb-entry-spark:nth-of-type(8){transform:rotate(315deg)}
+.cb-entry-spark.s1{transform:rotate(45deg)}
+.cb-entry-spark.s2{transform:rotate(135deg)}
+.cb-entry-spark.s3{transform:rotate(225deg)}
+.cb-entry-spark.s4{transform:rotate(315deg)}
 .cb-entry.is-leaving{animation:cb-entry-fade-out .28s ease-in both}
 @keyframes cb-entry-fade-in{from{opacity:0}to{opacity:1}}
 @keyframes cb-entry-fade-out{from{opacity:1}to{opacity:0}}
 @keyframes cb-kunai-left{
-  0%{transform:translate(-345px,185px) rotate(-35deg) scale(.82);opacity:0}
+  0%{transform:translate(-345px,185px) rotate(38deg) scale(.82);opacity:0}
   16%{opacity:1}
-  47%{transform:translate(-21px,11px) rotate(45deg) scale(1);opacity:1}
-  57%{transform:translate(-13px,7px) rotate(46deg) scale(1.02)}
-  77%{transform:translate(-130px,75px) rotate(27deg) scale(.86);opacity:1}
-  100%{transform:translate(-260px,140px) rotate(15deg) scale(.67);opacity:0}
+  47%{transform:translate(-21px,11px) rotate(42deg) scale(1);opacity:1}
+  57%{transform:translate(-13px,7px) rotate(44deg) scale(1.02)}
+  77%{transform:translate(-130px,75px) rotate(23deg) scale(.86);opacity:1}
+  100%{transform:translate(-260px,140px) rotate(10deg) scale(.67);opacity:0}
 }
 @keyframes cb-kunai-right{
-  0%{transform:translate(345px,185px) rotate(215deg) scale(.82);opacity:0}
+  0%{transform:translate(345px,185px) rotate(-38deg) scale(.82);opacity:0}
   16%{opacity:1}
-  47%{transform:translate(21px,11px) rotate(135deg) scale(1);opacity:1}
-  57%{transform:translate(13px,7px) rotate(134deg) scale(1.02)}
-  77%{transform:translate(130px,75px) rotate(153deg) scale(.86);opacity:1}
-  100%{transform:translate(260px,140px) rotate(165deg) scale(.67);opacity:0}
+  47%{transform:translate(21px,11px) rotate(-42deg) scale(1);opacity:1}
+  57%{transform:translate(13px,7px) rotate(-44deg) scale(1.02)}
+  77%{transform:translate(130px,75px) rotate(-23deg) scale(.86);opacity:1}
+  100%{transform:translate(260px,140px) rotate(-10deg) scale(.67);opacity:0}
 }
 @keyframes cb-hit-pulse{
   0%,41%{opacity:0;transform:translate(-50%,-50%) scale(.1)}
@@ -3117,7 +3117,7 @@ function canvaTechniqueAppendix(p,clan){
 
   // Duas kunais em silhueta SVG (independente de imagem ou serviço externo).
   const COMBAT_KUNAI_SVG=`<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-   <g transform="translate(100 100) rotate(-45)">
+   <g transform="translate(100 100)">
     <path d="M0 -94 L-19 -34 L0 -24 L19 -34 Z" fill="#e9e9df" stroke="#4e5450" stroke-width="3"/>
     <path d="M0 -90 L0 -25 L-18 -34 Z" fill="#aebbb9" opacity=".65"/>
     <path d="M-7 -25 L7 -25 L8 42 L-8 42 Z" fill="#b0a59a" stroke="#4f5953" stroke-width="3"/>
@@ -3168,7 +3168,7 @@ function canvaTechniqueAppendix(p,clan){
       <div class="cb-top-actions"><button type="button" class="button secondary cb-back" data-action="combat-exit">← Voltar à ficha</button>
        <button type="button" class="button secondary small" data-action="save" ${!editable?'disabled':''}>Salvar</button></div>
      </header>
-     <main class="cb-grid">
+     <div class="cb-grid">
       <aside class="cb-side left" aria-label="Ataques e defesas">
        <section class="cb-panel"><header class="cb-panel-header"><span class="cb-num">01</span><h2>Habilidades de combate</h2><small>D8</small></header>
         ${actions.map(([key,name,attr])=>`<div class="cb-stat"><div><b>${name}</b><small>${key} · Base ${3+n(p.combateAjustes?.[key])} + ${attr}</small></div><strong>${combat(p,key)}</strong></div>`).join('')}
@@ -3216,7 +3216,7 @@ function canvaTechniqueAppendix(p,clan){
          <button type="button" class="button secondary small" data-action="combat-to-techniques" style="margin-top:12px;width:100%">Ver ficha de técnicas</button>
        </section>
       </aside>
-     </main>
+     </div>
      <div class="cb-actions-help"><div class="cb-help-card"><strong>Rodadas</strong><p>Uma ação padrão, uma de movimento e uma parcial; outras ações seguem o manual.</p></div>
       <div class="cb-help-card"><strong>Ataques</strong><p>A rolagem de ataque é 2d8 somados à precisão CC ou CD.</p></div>
       <div class="cb-help-card"><strong>Sincronização</strong><p>Vitalidade, Chakra e jutsus pertencem à mesma ficha salva no Firebase.</p></div></div>
@@ -3236,7 +3236,7 @@ function canvaTechniqueAppendix(p,clan){
       <div class="cb-entry-kunai is-left">${COMBAT_KUNAI_SVG}</div>
       <div class="cb-entry-kunai is-right">${COMBAT_KUNAI_SVG}</div>
       <div class="cb-entry-impact" aria-hidden="true"></div>
-      <span class="cb-entry-spark"></span><span class="cb-entry-spark"></span><span class="cb-entry-spark"></span><span class="cb-entry-spark"></span>
+      <span class="cb-entry-spark s1"></span><span class="cb-entry-spark s2"></span><span class="cb-entry-spark s3"></span><span class="cb-entry-spark s4"></span>
       <div class="cb-entry-badge">MODO DE COMBATE</div>`;
     document.body.appendChild(overlay);
     window.setTimeout(()=>{
@@ -3507,6 +3507,7 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
 }
   function clickAction(el){const action=el.dataset.action;if(!action)return;const p=active();if(action==='combat-enter')return combatEnter();if(action==='combat-exit')return combatExit();if(action==='combat-chakra-step')return combatStepChakra(n(el.dataset.delta));if(action==='combat-portrait-next')return combatNextPortrait();if(action==='combat-to-techniques')return combatToTechniques();if(action==='integrated-use')return integratedUse(n(el.dataset.index));if(action==='integrated-kind'){S.inlineKind=el.dataset.kind||'power';S.inlineSearch='';render();return}if(action==='library-learn')return catalogLearn(el.dataset.id);if(action==='library-forget-effect')return forgetCatalogEffect(n(el.dataset.powerIndex),n(el.dataset.index));if(action==='library-kind'){S.libraryKind=el.dataset.kind||'all';render();return}if(action==='guide-step'){S.inlineSearch='';S.inlineKind='power';S.guideStep=bound(el.dataset.step,0,GUIDE_STEPS.length-1);S.view='guia';render();window.scrollTo({top:0,behavior:'smooth'});return}if(action==='guide-open'){if(!active())return nav('clans');S.canvaPage=bound(el.dataset.page||1,1,4);S.canvaMode=el.dataset.advanced==='true'?'advanced':'original';S.tab=el.dataset.tab||'identidade';S.view='sheet';render();window.scrollTo({top:0,behavior:'smooth'});return}if(action==='cv-page'){S.inlineSearch='';S.canvaPage=Number(el.dataset.page)||1;render();return}if(action==='cv-mode'){S.canvaMode=S.canvaMode==='advanced'?'original':'advanced';render();return}if(action==='open-sheet')return openSheet(el.dataset.id);if(action==='ask-delete')return askDelete(el.dataset.id);if(action==='confirm-delete')return deleteSheet();if(action==='lock-admin')return lockAdmin();if(action==='apply-remote')return applyRemoteSheet();if(action==='exit-sheet-to-list'){if(S.view==='sheet'&&!S.adminViewing&&active()){playSfx('menu');return nav('fichas')}return}if(action==='nav')return nav(el.dataset.view);if(action==='tab'){S.tab=el.dataset.tab;render();return}if(action==='clan'){S.activeClan=el.dataset.clan;S.modal='clan';render();return}if(action==='close-modal'){S.modal=null;render();return}if(action==='create-sheet')return createSheetAnimated();if(action==='auth-pane'){S.authPane=el.dataset.pane==='admin'?'admin':'login';render();return}if(action==='auth-switch'){S.authPane=S.authPane==='register'?'login':'register';render();return}if(action==='logout'){S.adminUnlocked=false;stopAdminLive();S.adminSheets=[];if(fb)fb.signOut(fb.auth);else{S.user=null;S.sheet=null;S.sheetId=null;S.sheets=[];S.view='home';render()}return}if(action==='portrait-upload')return uploadPortrait(el.dataset.slot);if(action==='portrait-switch')return switchPortrait(el.dataset.slot);if(action==='portrait-remove')return removePortrait(el.dataset.slot);if(action==='save')return persist();if(action==='print')return window.print();if(action==='export')return exportSheet();if(action==='vitality-step')return adjustVitality(n(el.dataset.delta));if(action==='social')return adjustSocial(el.dataset.key,n(el.dataset.delta));if(action==='attr')return adjustAttr(el.dataset.key,n(el.dataset.delta));if(action==='skill')return adjustSkill(el.dataset.key,n(el.dataset.delta));if(action==='shift')return shiftCombat();if(action==='reset-shift'){if(!canEditCurrent())return;p.combateAjustes={CC:0,CD:0,ESQ:0,LM:0};render();scheduleSave();return}if(action==='add-item')return modifyItem(el.dataset.array);if(action==='remove-item')return modifyItem(el.dataset.array,n(el.dataset.index),true);if(action==='roll-skill'){const k=el.dataset.key;if(!trained(p,k))return showToast('Esta perícia exige treinamento.',true);return roll(2,skillTotal(p,k),k)}if(action==='roll-combat'){const key=el.dataset.key;return roll(2,combat(p,key),key==='CD'?'Combate à distância':'Combate corporal')}if(action==='roll-initiative')return roll(1,n(p.atributos.AGI)+skillTotal(p,'Prontidão'),'Iniciativa');if(action==='refresh-admin')return refreshAdmin();if(action==='open-admin'){if(!canAdmin()||!S.adminUnlocked)return showToast('Confirme a senha para acessar as fichas.',true);const x=S.adminSheets.find(a=>a.__id===el.dataset.id);if(x){const {__id,...safeData}=x;S.sheet=normalize(safeData);S.sheetId=__id;S.adminViewing=true;S.canvaMode='original';S.view='sheet';S.tab='identidade';render();}return}}
   document.addEventListener('click',ev=>{const el=ev.target.closest('[data-action]');if(!el)return;if(el.classList.contains('modalshade')&&ev.target!==el)return;clickAction(el)});
+  document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&S.view==='sheet'&&S.combatMode){ev.preventDefault();combatExit()}});
   document.addEventListener('submit',ev=>{if(ev.target.id==='auth-form'){ev.preventDefault();submitAuth(ev.target)}else if(ev.target.id==='admin-auth-form'){ev.preventDefault();unlockAdmin(ev.target)}});
   document.addEventListener('input',ev=>{const el=ev.target;if(el.matches('[data-int-search]')){S.inlineSearch=el.value;integratedFilter();return}if(el.matches('[data-library-search]')){S.librarySearch=el.value;librarySearchFilter();return}if(el.id==='admin-filter'){const q=el.value.toLocaleLowerCase('pt-BR');$('#admin-rows').innerHTML=adminRows(S.adminSheets.filter(x=>[x.nome,x.usuario,clanOf(x.clanId).name].some(z=>String(z||'').toLocaleLowerCase('pt-BR').includes(q))));return}if(el.dataset.cvArray){canvaUpdateArray(el,true);return}if(el.dataset.cvSkill){updateCanvaSkill(el,true);return}if(!el.dataset.bind||el.tagName==='SELECT')return;const current=active(),path=el.dataset.bind,old=getAt(current,path.startsWith('@')?path.slice(1):path);if(!updateValue(path,el.value)){el.value=old??''}else refreshGuideFeedback()});
   document.addEventListener('change',ev=>{const el=ev.target;if(el.matches('[data-library-power]')){S.libraryPowerId=el.value;render();return}if(el.matches('[data-library-scope]')){S.libraryScope=el.value;render();return}if(el.matches('[data-portrait-file]')){const file=el.files?.[0];el.value='';void handlePortraitSelected(file,S.portraitUploadSlot);return}if(el.dataset.cvArray){canvaUpdateArray(el);return}if(el.dataset.cvSkill){updateCanvaSkill(el);return}if(!el.dataset.bind||el.tagName!=='SELECT')return;updateValue(el.dataset.bind,el.value)});
