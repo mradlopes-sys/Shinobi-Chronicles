@@ -2046,6 +2046,90 @@
 .cb-resource-actions .vital-stepper input[data-vitality-input]{font-size:15px}
 @media print{.vital-stepper input[data-vitality-input]{background:transparent!important;border-color:transparent!important}}
 
+
+/* DIÁRIO DE MISSÕES · pergaminho horizontal, tinta e privacidade */
+.journal-head{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;margin:0 auto 17px;max-width:1070px}
+.journal-head .eyebrow{color:#5f765f}.journal-head h1{font:600 clamp(27px,4vw,36px)/1.2 var(--serif);margin:6px 0;color:#2c3d30}
+.journal-head p{margin:0;font-size:12px;color:#727a6d;line-height:1.65}
+.journal-head-buttons{display:flex;flex-wrap:wrap;align-items:center;gap:7px}
+.journal-save{font-size:10px;color:#4c674d;border:1px solid #cfdbca;background:#f5f8f0;padding:9px 12px;white-space:nowrap}
+.journal-sealed{font-size:10px;color:#75806f;display:flex;align-items:center;gap:7px}
+.journal-scroll-frame{position:relative;max-width:1110px;margin:0 auto 24px;padding:0 31px;isolation:isolate}
+.journal-scroll-paper{--journal-green:#33513c;position:relative;z-index:1;min-height:490px;overflow:visible;
+ background:
+ radial-gradient(ellipse 23% 33% at 0 4%,#baa8782b,transparent 90%),
+ radial-gradient(ellipse 30% 36% at 100% 96%,#bca37c35,transparent 85%),
+ repeating-linear-gradient(0deg,transparent 0,transparent 16px,#846f4909 17px,transparent 19px),
+ linear-gradient(90deg,#ded0ad 0%,#fff8e9 4%,#fbf5e7 49%,#fff8e9 96%,#dfd0af);
+ border:1px solid #baaa8a;box-shadow:inset 12px 0 18px -13px #896b4088,inset -12px 0 18px -13px #896b4088,0 18px 45px #26261c21;padding:clamp(18px,3.1vw,36px) clamp(14px,4vw,44px) 27px
+}
+.journal-scroll-paper:before{content:"";position:absolute;inset:11px;border:1px solid #7b725335;pointer-events:none}
+.journal-scroll-rod{position:absolute;z-index:4;top:-11px;bottom:-11px;width:35px;border-radius:12px;
+ background:linear-gradient(90deg,#453525,#b99866 27%,#f3d79c 52%,#917449 72%,#3e3022);
+ border:1px solid #775f40;box-shadow:5px 6px 12px #191a1470}
+.journal-scroll-rod:before,.journal-scroll-rod:after{content:"";position:absolute;left:-5px;width:43px;height:23px;border-radius:6px;
+ border:1px solid #624b2e;background:linear-gradient(90deg,#352618,#a88751 49%,#4e3924)}
+.journal-scroll-rod:before{top:-5px}.journal-scroll-rod:after{bottom:-5px}
+.journal-scroll-rod.left{left:14px}.journal-scroll-rod.right{right:14px}
+.journal-scroll-frame.is-unrolling .journal-scroll-paper{transform-origin:center;animation:journal-open-horizontal .92s cubic-bezier(.19,.71,.25,1) both}
+.journal-scroll-frame.is-unrolling .journal-scroll-rod.left{animation:journal-rod-left .92s cubic-bezier(.19,.71,.25,1) both}
+.journal-scroll-frame.is-unrolling .journal-scroll-rod.right{animation:journal-rod-right .92s cubic-bezier(.19,.71,.25,1) both}
+.journal-scroll-frame.is-unrolling .journal-ink-body{animation:journal-ink-appear .7s .65s both}
+@keyframes journal-open-horizontal{0%{transform:scaleX(.015);opacity:.65;filter:blur(7px)}30%{opacity:1}78%{transform:scaleX(1.025);filter:blur(0)}100%{transform:scaleX(1);filter:none}}
+@keyframes journal-rod-left{0%{transform:translateX(47vw)}85%{transform:translateX(-5px)}100%{transform:none}}
+@keyframes journal-rod-right{0%{transform:translateX(-47vw)}85%{transform:translateX(5px)}100%{transform:none}}
+@keyframes journal-ink-appear{0%{opacity:0;filter:blur(3px);transform:translateY(5px)}100%{opacity:1;filter:none;transform:none}}
+.journal-ink-body{position:relative;z-index:2}
+.journal-scroll-title{text-align:center;border-bottom:1px solid #a79b7b8c;padding-bottom:22px;margin-bottom:24px}
+.journal-scroll-title .eyebrow{font-size:9px;letter-spacing:.24em;color:#807155}
+.journal-scroll-title h2{font:400 clamp(32px,4.4vw,49px)/1.12 'Caveat Brush','Yuji Boku',var(--serif);color:#1f3829;margin:10px 0 4px}
+.journal-scroll-title p{font-size:12px;color:#767367;margin:0;line-height:1.6}
+.journal-scroll-title .journal-seal{position:absolute;right:8px;top:1px;border:3px double #855f45;color:#855f45;
+ width:46px;height:46px;display:grid;place-items:center;transform:rotate(-10deg);font:500 27px var(--serif);opacity:.75}
+.journal-sections{display:grid;gap:13px}
+.journal-section{border:1px solid #cfc2a5;background:#fffcf5c4;box-shadow:0 3px 12px #30271a08}
+.journal-section-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 18px;
+ border:0;background:transparent;cursor:pointer;text-align:left;color:#354937}
+.journal-section-toggle:hover{background:#faf4e8}.journal-section-toggle[aria-expanded=true]{background:#f5efdf}
+.journal-section-toggle .journal-symbol{font:500 28px var(--serif);color:#73816b;width:30px;flex:0 0 30px}
+.journal-section-toggle .journal-title{display:flex;align-items:center;gap:11px;min-width:0}
+.journal-section-toggle b{font:600 17px var(--serif);display:block}.journal-section-toggle small{font-size:10px;color:#818276;margin-top:4px;display:block}
+.journal-section-toggle .journal-expand{font-size:20px;color:#567257}
+.journal-section-content{border-top:1px solid #ddd2ba;padding:17px clamp(12px,2vw,22px) 19px;display:grid;gap:12px}
+.journal-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.journal-field{display:grid;gap:5px;min-width:0}.journal-field.wide{grid-column:1/-1}
+.journal-field span{font-size:10px;font-weight:800;color:#65715c;letter-spacing:.06em;text-transform:uppercase}
+.journal-field input,.journal-field textarea{width:100%;box-sizing:border-box;background:#fffdf7;border:1px solid #c7bea9;
+ padding:11px 12px;color:#313d33;font:500 12px/1.6 var(--sans);border-radius:2px;resize:vertical;min-width:0}
+.journal-field textarea{min-height:106px}.journal-field input:focus,.journal-field textarea:focus{outline:2px solid #758b6f;outline-offset:0}
+.journal-field textarea.journal-notes{min-height:190px}
+.journal-field input:disabled,.journal-field textarea:disabled{opacity:.65;background:#eee9df}
+.journal-btn{font:700 11px var(--sans);color:#fffaf0;background:#3c5941;border:1px solid #3c5941;padding:10px 15px;cursor:pointer}
+.journal-btn:hover:not(:disabled){background:#506f53}.journal-btn.secondary{background:#f8f4ea;color:#526651;border-color:#bfc4b5}
+.journal-btn.secondary:hover:not(:disabled){background:#e7ece2}.journal-btn:disabled{opacity:.4;cursor:not-allowed}
+.journal-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;justify-content:space-between}
+.journal-hint{font-size:10px;color:#7d8073;line-height:1.65;margin:0}
+.journal-complete-list{display:grid;gap:9px}
+.journal-entry{border:1px solid #d4c8b2;background:#faf6ec}.journal-entry-header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px}
+.journal-entry-header button{cursor:pointer;border:0;background:transparent;color:#405d44;text-align:left;font:600 14px var(--serif);min-width:0;overflow-wrap:anywhere}
+.journal-entry-header time{font-size:10px;color:#877b67;white-space:nowrap}
+.journal-entry-fields{border-top:1px solid #e1d5bf;padding:13px;background:#fffdf8}
+.journal-entry-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+.journal-danger{font:600 10px var(--sans);background:transparent;border:1px solid #cfb4aa;color:#a24e40;cursor:pointer;padding:9px 12px}
+.journal-empty{padding:18px;background:#fdf9ef;border:1px dashed #c9b997;text-align:center;color:#797869;font:12px/1.7 var(--sans)}
+.journal-footnote{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin:19px 0 0;
+ font-size:10px;color:#808173}
+.journal-admin-roster{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:15px}
+.journal-admin-player{background:#faf8f2;border:1px solid #d6cebf;padding:13px;display:flex;gap:11px;align-items:center;justify-content:space-between}
+.journal-admin-player>div{min-width:0}.journal-admin-player b{font-size:12px;color:#35473a;display:block}.journal-admin-player small{font-size:10px;color:#898479}
+@media(max-width:800px){.journal-admin-roster{grid-template-columns:1fr}.journal-scroll-frame{padding:0 20px}.journal-scroll-rod{width:25px}.journal-scroll-rod.left{left:6px}.journal-scroll-rod.right{right:6px}
+ .journal-scroll-rod:before,.journal-scroll-rod:after{width:32px;height:20px}.journal-scroll-paper{padding:27px 15px 19px}.journal-scroll-title .journal-seal{position:static;margin:0 auto 8px}
+ .journal-scroll-title{padding-bottom:15px;margin-bottom:17px}.journal-form-grid{grid-template-columns:1fr}
+ .journal-section-toggle{padding:12px}.journal-section-content{padding:13px}
+}
+@media(prefers-reduced-motion:reduce){.journal-scroll-frame.is-unrolling .journal-scroll-paper,.journal-scroll-frame.is-unrolling .journal-scroll-rod,.journal-scroll-frame.is-unrolling .journal-ink-body{animation:none!important;transform:none!important;filter:none!important;opacity:1!important}}
+@media print{.journal-scroll-frame{max-width:none;margin:0;padding:0}.journal-scroll-rod,.journal-head-buttons,.journal-btn,.journal-section-toggle .journal-expand{display:none!important}.journal-scroll-paper{box-shadow:none!important;border:1px solid #a9a197}.journal-section-content{display:block!important}}
+
 </style>
 </head>
 <body>
@@ -3959,6 +4043,215 @@ function canvaUpdateArray(el,preserveFocus=false){
  if(!preserveFocus)render();
 }
 function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="margin:15vh auto;max-width:500px"><h3>Carregando os arquivos shinobi...</h3><p>Conectando ao sistema de autenticação.</p></div>';return}if(CONFIGURED&&!S.user&&!['login'].includes(S.view))S.view='login';let screen={home,clans,sheet:canvaSheetView,guia:guideView,biblioteca:libraryView,fichas:mySheets,admin:adminView,'admin-gate':adminGate,login}[S.view]||home;$('#app').innerHTML=screen();if(S.modal)$('#app').insertAdjacentHTML('beforeend',S.modal==='delete'?deleteModal():clanModal());if(S.view==='biblioteca')librarySearchFilter();integratedFilter()}
+
+  // Diário individual: um documento por conta, guardado na coleção já protegida das fichas.
+  const DIARY_MAX_COMPLETED=80;
+  const diaryDocId=ownerUid=>String(ownerUid)+'_diario';
+  function newDiary(ownerUid,username){
+    return {tipo:'diario',ownerUid,usuario:username||'Jogador',atual:{titulo:'',descricao:'',objetivos:''},
+      concluidas:[],anotacoes:'',criadoEm:Date.now(),atualizadoEm:Date.now(),versao:1};
+  }
+  function normalizeDiary(raw={},ownerUid='',username=''){
+    const first=newDiary(ownerUid,username);
+    const current=raw.atual&&typeof raw.atual==='object'?raw.atual:{};
+    const value=(v,max)=>typeof v==='string'?v.slice(0,max):'';
+    const completed=Array.isArray(raw.concluidas)?raw.concluidas.slice(0,DIARY_MAX_COMPLETED):[];
+    return {...first,ownerUid,usuario:value(raw.usuario||username||first.usuario,70),
+      criadoEm:n(raw.criadoEm)||first.criadoEm,atualizadoEm:n(raw.atualizadoEm)||first.atualizadoEm,
+      atual:{titulo:value(current.titulo,120),descricao:value(current.descricao,4800),objetivos:value(current.objetivos,3800)},
+      concluidas:completed.map(item=>({id:String(item?.id||randomId()),titulo:value(item?.titulo,120),
+        descricao:value(item?.descricao,4800),objetivos:value(item?.objetivos,3800),concluidaEm:n(item?.concluidaEm)||Date.now()})),
+      anotacoes:value(raw.anotacoes,13000)};
+  }
+  function diaryAuthorized(){
+    if(!S.user||!S.diary||!S.diaryOwnerUid)return false;
+    if(S.diary.ownerUid!==S.diaryOwnerUid)return false;
+    if(S.diaryOwnerUid===uid())return true;
+    return Boolean(S.diaryFromAdmin&&canAdmin()&&S.adminUnlocked);
+  }
+  function diarySetStatus(message){
+    S.diaryStatus=message;
+    const el=$('#diary-save-status');if(el)el.textContent=message;
+  }
+  function diaryScheduleSave(){
+    if(!diaryAuthorized())return;
+    S.diaryDirty=true;S.diaryVersion=(S.diaryVersion||0)+1;
+    diarySetStatus(CONFIGURED?'Alterações pendentes':'Prévia local');
+    clearTimeout(S.diarySaveTimer);
+    S.diarySaveTimer=setTimeout(()=>void persistDiary(),650);
+  }
+  async function persistDiary(){
+    clearTimeout(S.diarySaveTimer);S.diarySaveTimer=null;
+    if(!diaryAuthorized()||!S.diaryDirty)return false;
+    if(!CONFIGURED||!fb||!S.user){diarySetStatus('Entre na conta para salvar');return false}
+    const docId=diaryDocId(S.diaryOwnerUid),ownerUid=S.diaryOwnerUid,version=S.diaryVersion;
+    const data=JSON.parse(JSON.stringify(S.diary));
+    data.tipo='diario';data.ownerUid=ownerUid;data.atualizadoEm=Date.now();
+    try{
+      diarySetStatus('Salvando diário...');
+      S.diaryPendingWrite=(S.diaryPendingWrite||Promise.resolve()).catch(()=>{}).then(()=>fb.setDoc(fb.doc(fb.db,'fichas',docId),data));
+      await S.diaryPendingWrite;
+      if(S.diaryOwnerUid===ownerUid&&S.diaryVersion===version&&S.diary){
+        S.diaryDirty=false;S.diary.atualizadoEm=data.atualizadoEm;
+        diarySetStatus('Diário salvo ✓');
+      }
+      return true;
+    }catch(error){
+      console.error('Falha ao salvar diário:',error.code||error);
+      if(S.diaryOwnerUid===ownerUid)diarySetStatus('Falha ao salvar');
+      showToast('Não foi possível salvar o diário. Verifique as permissões do Firebase.',true);
+      return false;
+    }
+  }
+  async function openDiaryFor(ownerUid,username='',fromAdmin=false){
+    if(!S.user||!CONFIGURED||!fb)return showToast('Entre na sua conta para abrir o diário.',true);
+    const authorized=ownerUid===uid()||fromAdmin&&canAdmin()&&S.adminUnlocked;
+    if(!authorized)return showToast('Acesso ao diário não permitido.',true);
+    if(fromAdmin&&ownerUid!==uid()){
+      const playerExists=S.adminSheets.some(x=>x.ownerUid===ownerUid)||S.adminDiaries.some(x=>x.ownerUid===ownerUid);
+      if(!playerExists)return showToast('Jogador não encontrado no painel do mestre.',true);
+    }
+    if(S.diaryDirty)void persistDiary();
+    const request=++S.diaryRequest,Saved=S.diaryOwnerUid===ownerUid?S.diary:null;
+    S.diaryFromAdmin=fromAdmin&&ownerUid!==uid();S.diaryOwnerUid=ownerUid;
+    S.diary=null;S.diaryDirty=false;S.diaryLoading=true;S.diaryVersion=0;
+    S.diaryPanel='';S.diaryExpandedId='';S.view='diario';S.combatMode=false;S.modal=null;
+    render();window.scrollTo({top:0});
+    try{
+      const snap=await fb.getDoc(fb.doc(fb.db,'fichas',diaryDocId(ownerUid)));
+      if(request!==S.diaryRequest||S.view!=='diario')return;
+      const raw=snap.exists()?snap.data():null;
+      if(raw&&raw.tipo!=='diario'||raw&&raw.ownerUid!==ownerUid)throw Error('Documento de diário inválido');
+      S.diary=normalizeDiary(raw||Saved||{},ownerUid,username||raw?.usuario);
+      S.diaryLoading=false;S.diaryEnterAnimate=true;
+      render();window.scrollTo({top:0});
+      if(!snap.exists()){S.diaryDirty=true;void persistDiary()}
+    }catch(error){
+      if(request!==S.diaryRequest)return;
+      S.diary=null;S.diaryLoading=false;S.diaryStatus='Sem acesso';
+      console.error('Não foi possível acessar o diário:',error.code||error);
+      render();showToast('O diário não pôde ser carregado. Confira as permissões do Firebase.',true);
+    }
+  }
+  function diaryUpdateField(element){
+    if(!diaryAuthorized())return;
+    const d=S.diary,text=String(element.value||'');
+    if(element.dataset.diaryField){
+      const key=element.dataset.diaryField;
+      if(key==='anotacoes')d.anotacoes=text.slice(0,13000);
+      else if(['titulo','descricao','objetivos'].includes(key))d.atual[key]=text.slice(0,key==='titulo'?120:key==='descricao'?4800:3800);
+      else return;
+    }else if(element.dataset.diaryCompleted){
+      const entry=d.concluidas.find(x=>x.id===element.dataset.diaryCompleted);
+      const key=element.dataset.diaryCompletedField;
+      if(!entry||!['titulo','descricao','objetivos'].includes(key))return;
+      entry[key]=text.slice(0,key==='titulo'?120:key==='descricao'?4800:3800);
+    }else return;
+    diaryScheduleSave();
+  }
+  function diaryCurrentHasContent(d){
+    return ['titulo','descricao','objetivos'].some(k=>String(d?.atual?.[k]||'').trim());
+  }
+  function diaryCompleteCurrent(){
+    if(!diaryAuthorized())return;
+    const d=S.diary;
+    if(!diaryCurrentHasContent(d))return showToast('Escreva a missão atual antes de concluí-la.',true);
+    if(d.concluidas.length>=DIARY_MAX_COMPLETED)return showToast('Limite de missões concluídas atingido.',true);
+    const entry={...d.atual,id:randomId(),concluidaEm:Date.now()};
+    if(!entry.titulo.trim())entry.titulo='Missão sem título';
+    d.concluidas.unshift(entry);d.atual={titulo:'',descricao:'',objetivos:''};
+    S.diaryPanel='completed';S.diaryExpandedId=entry.id;
+    diaryScheduleSave();render();showToast('Missão arquivada como concluída.');
+  }
+  function diaryAddCompleted(){
+    if(!diaryAuthorized())return;
+    if(S.diary.concluidas.length>=DIARY_MAX_COMPLETED)return showToast('Limite de missões concluídas atingido.',true);
+    const entry={id:randomId(),titulo:'',descricao:'',objetivos:'',concluidaEm:Date.now()};
+    S.diary.concluidas.unshift(entry);S.diaryPanel='completed';S.diaryExpandedId=entry.id;
+    diaryScheduleSave();render();
+    document.querySelector('[data-diary-completed="'+entry.id+'"][data-diary-completed-field="titulo"]')?.focus();
+  }
+  function diaryRemoveCompleted(id){
+    if(!diaryAuthorized())return;
+    const item=S.diary.concluidas.find(x=>x.id===id);
+    if(!item)return;
+    if(!window.confirm('Excluir permanentemente a missão "'+(item.titulo||'Sem título')+'"?'))return;
+    S.diary.concluidas=S.diary.concluidas.filter(x=>x.id!==id);
+    if(S.diaryExpandedId===id)S.diaryExpandedId='';
+    diaryScheduleSave();render();
+  }
+  function diaryRestoreMission(id){
+    if(!diaryAuthorized())return;
+    const item=S.diary.concluidas.find(x=>x.id===id);if(!item)return;
+    if(diaryCurrentHasContent(S.diary)&&!window.confirm('Substituir a missão atual pela missão escolhida?'))return;
+    S.diary.atual={titulo:item.titulo,descricao:item.descricao,objetivos:item.objetivos};
+    S.diary.concluidas=S.diary.concluidas.filter(x=>x.id!==id);
+    S.diaryPanel='current';S.diaryExpandedId='';
+    diaryScheduleSave();render();
+  }
+  function diarySection(key){S.diaryPanel=S.diaryPanel===key?'':key;render()}
+  function diaryField(key,label,value,opts={}){
+    const attr=key==='anotacoes'?'data-diary-field="anotacoes"':'data-diary-field="'+key+'"';
+    const editable=diaryAuthorized()?'':'disabled';
+    const max=key==='titulo'?120:key==='anotacoes'?13000:key==='objetivos'?3800:4800;
+    return '<label class="journal-field '+(opts.wide?'wide':'')+'"><span>'+E(label)+'</span>'+
+      (key==='titulo'?'<input '+attr+' maxlength="'+max+'" value="'+E(value)+'" placeholder="'+E(opts.placeholder||'Nome da missão')+'" '+editable+'>':
+      '<textarea '+attr+' maxlength="'+max+'" rows="'+(key==='anotacoes'?9:4)+'" class="'+(key==='anotacoes'?'journal-notes':'')+'" placeholder="'+E(opts.placeholder||'Escreva aqui...')+'" '+editable+'>'+E(value)+'</textarea>')+'</label>';
+  }
+  function diaryCompletedField(item,key,label){
+    const disabled=diaryAuthorized()?'':'disabled';
+    const data='data-diary-completed="'+E(item.id)+'" data-diary-completed-field="'+key+'"';
+    const max=key==='titulo'?120:key==='objetivos'?3800:4800;
+    return '<label class="journal-field '+(key==='titulo'?'wide':'')+'"><span>'+E(label)+'</span>'+
+      (key==='titulo'?'<input '+data+' maxlength="'+max+'" value="'+E(item[key]||'')+'" placeholder="Nome da missão concluída" '+disabled+'>':
+       '<textarea '+data+' maxlength="'+max+'" rows="4" placeholder="Registro da missão..." '+disabled+'>'+E(item[key]||'')+'</textarea>')+'</label>';
+  }
+  function diaryView(){
+    if(!S.user||!CONFIGURED)return layout('<div class="empty"><h3>Diário pessoal</h3><p>Entre na sua conta para acessar este registro.</p></div>');
+    if(S.diaryLoading)return layout('<div class="empty"><h3>Buscando seu pergaminho...</h3><p>Carregando o diário protegido do jogador.</p></div>');
+    if(!diaryAuthorized())return layout('<div class="empty"><h3>Diário indisponível</h3><p>Não foi possível validar a permissão de acesso. Retorne às suas fichas.</p><button class="button secondary" data-action="nav" data-view="fichas">Voltar</button></div>');
+    const d=S.diary,isAdmin=S.diaryFromAdmin,currentOpen=S.diaryPanel==='current',completedOpen=S.diaryPanel==='completed',notesOpen=S.diaryPanel==='notes';
+    const count=d.concluidas.length;
+    const tabs=(id,symbol,title,sub)=>'<button type="button" class="journal-section-toggle" data-action="diary-section" data-section="'+id+'" aria-expanded="'+(S.diaryPanel===id)+'">'+
+      '<span class="journal-title"><span class="journal-symbol">'+symbol+'</span><span><b>'+title+'</b><small>'+E(sub)+'</small></span></span><span class="journal-expand">'+(S.diaryPanel===id?'−':'+')+'</span></button>';
+    return layout('<div class="journal-head"><div><div class="eyebrow">ARQUIVO PRIVADO · SHINOBI CHRONICLES</div>'+
+      '<h1>'+E(isAdmin?'Diário do jogador: '+d.usuario:'Diário de Missões')+'</h1><p>Missões, descobertas e registros pessoais em um único pergaminho.</p></div>'+
+      '<div class="journal-head-buttons"><span id="diary-save-status" class="journal-save">'+E(S.diaryStatus||'Diário carregado')+'</span>'+
+      '<button type="button" class="button secondary small" data-action="diary-save">Salvar diário</button>'+
+      (isAdmin?'<button type="button" class="button secondary small" data-action="nav" data-view="admin">← Painel do mestre</button>':'')+'</div></div>'+
+      '<div class="journal-scroll-frame '+(S.diaryEnterAnimate?'is-unrolling':'')+'"><div class="journal-scroll-rod left" aria-hidden="true"></div>'+
+      '<div class="journal-scroll-paper"><div class="journal-ink-body">'+
+      '<div class="journal-scroll-title"><span class="journal-seal" aria-hidden="true">巻</span>'+
+      '<div class="eyebrow">ANOTAÇÕES RESERVADAS · '+E(d.usuario.toUpperCase())+'</div><h2>Registros de Missões</h2>'+
+      '<p>Um pergaminho pessoal para acompanhar a jornada shinobi.</p></div>'+
+      '<div class="journal-sections">'+
+      '<section class="journal-section">'+tabs('current','任','Missão atual',d.atual.titulo||'Clique para escrever a missão em andamento')+
+      (currentOpen?'<div class="journal-section-content"><div class="journal-form-grid">'+
+        diaryField('titulo','Nome da missão',d.atual.titulo,{wide:true,placeholder:'Ex.: Patrulha na fronteira do País do Fogo'})+
+        diaryField('descricao','Descrição / acontecimentos',d.atual.descricao,{wide:true,placeholder:'O que aconteceu e quem está envolvido?'})+
+        diaryField('objetivos','Objetivos e próximos passos',d.atual.objetivos,{wide:true,placeholder:'O que ainda precisa ser feito?'})+
+        '</div><div class="journal-actions"><p class="journal-hint">Suas alterações são salvas automaticamente.</p>'+
+        '<button type="button" class="journal-btn" data-action="diary-complete-current" '+(!diaryCurrentHasContent(d)?'disabled':'')+'>✓ Marcar como concluída</button></div></div>':'')+'</section>'+
+      '<section class="journal-section">'+tabs('completed','完','Missões concluídas',count+' '+(count===1?'registro arquivado':'registros arquivados'))+
+      (completedOpen?'<div class="journal-section-content"><div class="journal-complete-list">'+
+        (count?d.concluidas.map(item=>'<div class="journal-entry"><div class="journal-entry-header">'+
+          '<button type="button" data-action="diary-completed-toggle" data-id="'+E(item.id)+'" aria-expanded="'+(S.diaryExpandedId===item.id)+'">'+E(item.titulo||'Missão sem título')+' '+(S.diaryExpandedId===item.id?'−':'+')+'</button>'+
+          '<time>'+new Date(n(item.concluidaEm)||Date.now()).toLocaleDateString('pt-BR')+'</time></div>'+
+          (S.diaryExpandedId===item.id?'<div class="journal-entry-fields"><div class="journal-form-grid">'+
+            diaryCompletedField(item,'titulo','Nome da missão')+diaryCompletedField(item,'descricao','Resumo e acontecimentos')+
+            diaryCompletedField(item,'objetivos','Resultados e objetivos')+'</div><div class="journal-entry-footer">'+
+            '<button type="button" class="journal-btn secondary" data-action="diary-restore" data-id="'+E(item.id)+'">Retomar missão</button>'+
+            '<button type="button" class="journal-danger" data-action="diary-remove" data-id="'+E(item.id)+'">Excluir registro</button></div></div>':'')+'</div>').join(''):
+          '<div class="journal-empty">Nenhuma missão concluída. Conclua sua missão atual ou crie um registro manualmente.</div>')+
+        '</div><div class="journal-actions"><p class="journal-hint">Clique em qualquer missão para editar o nome, descrição ou objetivos.</p>'+
+          '<button type="button" class="journal-btn secondary" data-action="diary-add-completed" '+(count>=DIARY_MAX_COMPLETED?'disabled':'')+'>+ Adicionar missão concluída</button></div></div>':'')+'</section>'+
+      '<section class="journal-section">'+tabs('notes','筆','Anotações pessoais','Pistas, NPCs, lembranças e informações importantes')+
+      (notesOpen?'<div class="journal-section-content">'+diaryField('anotacoes','Caderno de anotações',d.anotacoes,{wide:true,placeholder:'Nomes, pistas, detalhes de sessões, informações a lembrar...'})+
+        '<p class="journal-hint">As anotações ficam vinculadas à sua conta, não a uma ficha específica.</p></div>':'')+'</section>'+
+      '</div><div class="journal-footnote"><span>CONTEÚDO PESSOAL · '+E(d.usuario)+'</span><span>Somente titular e administrador autorizado</span></div>'+
+      '</div></div><div class="journal-scroll-rod right" aria-hidden="true"></div></div>');
+  }
+
   function nav(view){
  S.modal=null;
  S.combatMode=false;
