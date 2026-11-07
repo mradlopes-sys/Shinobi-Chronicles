@@ -2207,7 +2207,7 @@ function themeStyle(){
       const special=item.id==='goukakyuu'&&p.clanId==='uchiha'&&catalogApt(p,'Elemento Natural: Katon');
       p.jutsus.push({id:randomId(),nome:item.name,nivel:item.free?0:(special?4:n(item.min)||1),
         acao:item.action||'',duracao:'',alvo:'',alcance:item.range||'',efeito:item.desc,
-        origemPoder:item.power||'',catalogId:item.id,rank:item.rank||'',custoChakra:item.cost||'Ver descrição do poder'});
+        origemPoder:item.power||'',catalogId:item.id,rank:item.rank||'',custoChakra:item.cost||'Ver descrição do poder',custo:/^\d+$/.test(String(item.cost??''))?Number(item.cost):''});
     }
     scheduleSave();render();
     showToast((item.kind==='power'?'Poder atualizado: ':item.kind==='effect'?'Efeito selecionado: ':'Registrado: ')+item.name);
@@ -2216,10 +2216,14 @@ function themeStyle(){
 
   /* Biblioteca integrada: dados salvos na ficha, sem novas coleções Firebase. */
   function integratedCost(record,item){
-    const written=String(item?.cost??record.custoChakra??'').trim();
-    if(/^\d+$/.test(written))return Number(written);
-    if(item?.cost)return null;
-    return n(record.nivel)>0?n(record.nivel):null;
+    const official=String(item?.cost??'').trim();
+    if(official)return /^\d+$/.test(official)?Number(official):null;
+    // Campo numérico da ficha Canva e da continuação.
+    const typed=String(record?.custo??'').trim();
+    if(/^\d+$/.test(typed))return Number(typed);
+    const note=String(record?.custoChakra??'').trim();
+    if(note)return /^\d+$/.test(note)?Number(note):null;
+    return n(record?.nivel)>0?n(record.nivel):null;
   }
   function integratedBlock(p,record){
     const item=catalogItem(record.catalogId);
@@ -2963,7 +2967,7 @@ function canvaTechniqueAppendix(p,clan){
  const powers=(p.poderes||[]).filter(x=>String(x.nome||'').trim()).length;
  const aptitudes=(p.aptidoes||[]).filter(x=>String(x.nome||'').trim()).length;
  return `<section class="cv-appendix-container" aria-label="Continuação editável da ficha do Canva" style="--cv-accent:${E(clan.color)};--cv-wash:${E(clan.wash)}">
-  <div class="cv-appendix-intro"><div><div class="eyebrow">ANEXO OFICIAL · PÁGINA 3</div>
+  <div class="cv-appendix-intro"><div><div class="eyebrow">CONTINUAÇÃO DA FICHA · PÁGINA 3</div>
     <h2>Continuação de Poderes & Técnicas</h2>
     <p>O mesmo registro da ficha Canva, agora com espaço para todas as técnicas do seu personagem.</p></div>
     <div class="cv-appendix-counter"><span>${rows.length} ${rows.length===1?'jutsu':'jutsus'}</span><small>${pageCount} ${pageCount===1?'folha extra':'folhas extras'}</small></div></div>
