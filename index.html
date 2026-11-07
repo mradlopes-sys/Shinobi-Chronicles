@@ -1442,6 +1442,75 @@
 .int-manual>summary{font-size:12px;color:#77554b;padding:13px 0}
 @media(max-width:720px){.int-library{padding:11px}.int-grid{grid-template-columns:1fr;max-height:410px}.int-header,.int-known-row{flex-wrap:wrap;align-items:flex-start}.int-known-row aside{justify-content:flex-start}}
 
+
+/* Fichas Canva: continuação responsiva e impressa para todos os clãs */
+.cv-appendix-container{max-width:828px;margin:28px auto 24px;color:#30362f}
+.cv-appendix-intro{display:flex;justify-content:space-between;align-items:center;gap:18px;margin:0 0 15px}
+.cv-appendix-intro h2{font:600 clamp(21px,2.3vw,27px) var(--serif);margin:7px 0}
+.cv-appendix-intro p{font-size:12px;line-height:1.7;color:#687065;margin:0}
+.cv-appendix-counter{border:1px solid #d5cab9;padding:11px 14px;white-space:nowrap;background:#f3eee5;display:grid;gap:3px;text-align:center}
+.cv-appendix-counter span{font-weight:700;font-size:13px}.cv-appendix-counter small{font-size:10px;color:#777}
+.cv-appendix-paper{position:relative;isolation:isolate;width:100%;min-height:880px;margin:0 0 21px;padding:34px clamp(18px,4.1vw,39px) 23px;border:1px solid #d7cabc;box-shadow:0 10px 29px #1d272019;background:radial-gradient(ellipse 60% 33% at 96% 0%,var(--cv-wash),transparent 77%),radial-gradient(ellipse 55% 40% at 0 96%,#bfc6b530,transparent 76%),linear-gradient(120deg,#f3eee7,#fffaf4 48%,#eee6dc)}
+.cv-appendix-paper:before{content:"";position:absolute;inset:10px;border:1px solid #d0c4b5;pointer-events:none;opacity:.68;z-index:-1}
+.cv-appendix-stamp{position:absolute;top:20px;right:14%;font:600 120px/1 var(--serif);opacity:.095;color:var(--cv-accent);pointer-events:none;z-index:-1}
+.cv-appendix-paper-head{display:flex;align-items:start;justify-content:space-between;gap:16px;padding-bottom:15px;border-bottom:1px solid #cfc9bb;position:relative}
+.cv-appendix-paper-head .eyebrow{font-size:9px;color:var(--cv-accent);font-weight:800}
+.cv-appendix-paper-head h3{font:600 24px var(--serif);margin:6px 0}
+.cv-appendix-paper-head p{color:#73736b;font-size:11px;margin:0;line-height:1.6}
+.cv-appendix-folio{border:1px solid #bcb6a7;color:#6e695d;font:600 13px var(--serif);padding:10px 14px;white-space:nowrap}
+.cv-appendix-ledgers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:18px 0}
+.cv-appendix-ledger{min-width:0;background:#fffdf8c9;border:1px solid #d9d0c3;padding:13px}
+.cv-appendix-ledger>header{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e3ddd2;padding-bottom:9px;margin-bottom:8px}
+.cv-appendix-ledger>header span{font-size:8px;letter-spacing:.15em;color:var(--cv-accent)}
+.cv-appendix-ledger>header h4{font:600 16px var(--serif);margin:3px 0}.cv-appendix-ledger>header b{font:600 16px var(--serif);color:var(--cv-accent)}
+.cv-ledger-entry{display:flex;align-items:start;gap:5px;border-bottom:1px solid #e6e1d8;padding:8px 0}
+.cv-ledger-entry>small{padding-top:19px;font-size:9px;color:#9b968b}
+.cv-ledger-fields{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 61px;gap:6px;min-width:0}
+.cv-ledger-fields .cv-appendix-field.wide{grid-column:1/-1}
+.cv-appendix-field{display:grid;align-content:start;gap:4px;min-width:0;font-size:9px;color:#767469}
+.cv-appendix-field span{text-transform:uppercase;letter-spacing:.055em;font-weight:700}
+.cv-appendix-field input,.cv-appendix-field textarea{display:block;box-sizing:border-box;width:100%;min-width:0;background:#fffefa;border:1px solid #d6d0c7;border-radius:2px;color:#313630;padding:7px 8px;font-size:12px;font-family:var(--sans);line-height:1.4}
+.cv-appendix-field input:focus,.cv-appendix-field textarea:focus{outline:1px solid var(--cv-accent);border-color:var(--cv-accent)}
+.cv-appendix-field textarea{min-height:80px;resize:vertical}
+.cv-appendix-remove{border:0;background:transparent;color:#9c645d;font-size:10px;white-space:nowrap;padding:5px;cursor:pointer}
+.cv-appendix-remove:hover{color:#782f2c;background:#eedfda}
+.cv-appendix-muted{font-size:11px;color:#858078;padding:8px 0}
+.cv-appendix-add{border:1px solid #c2bbae;color:#4a5d4c;background:#f6f2ea;padding:8px 10px;font-size:10px;font-weight:700;cursor:pointer}
+.cv-appendix-add:hover{background:#e9e6dc}
+.cv-appendix-ledger>.cv-appendix-add{margin-top:10px;width:100%}
+.cv-appendix-section-head{display:flex;justify-content:space-between;align-items:end;gap:12px;border-bottom:1px solid #d8d1c6;padding-bottom:11px;margin:20px 0 14px}
+.cv-appendix-section-head span{font-size:9px;letter-spacing:.14em;color:var(--cv-accent);font-weight:800}
+.cv-appendix-section-head h4{font:600 18px var(--serif);margin:5px 0}
+.cv-appendix-section-head p{font-size:10px;color:#72756c;margin:0;line-height:1.6}
+.cv-appendix-jutsu-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:13px}
+.cv-appendix-jutsu{min-width:0;background:#fffefaee;border:1px solid #d9d1c5;padding:13px;break-inside:avoid}
+.cv-appendix-jutsu-title{display:flex;align-items:start;justify-content:space-between;gap:6px;margin-bottom:11px;padding-bottom:9px;border-bottom:1px solid #e5dfd4}
+.cv-appendix-jutsu-title span{font-size:9px;color:var(--cv-accent);font-weight:800;letter-spacing:.1em}
+.cv-appendix-jutsu-title strong{display:block;font:600 15px var(--serif);margin-top:4px;overflow-wrap:anywhere}
+.cv-appendix-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.cv-appendix-fields .cv-appendix-field.wide{grid-column:1/-1}
+.cv-appendix-fields .cv-appendix-field:nth-child(5),.cv-appendix-fields .cv-appendix-field:nth-child(6),.cv-appendix-fields .cv-appendix-field:nth-child(7){grid-column:auto}
+.cv-appendix-meta,.cv-appendix-alert{display:block;font-size:9px;line-height:1.6;margin-top:10px;color:#73746b}
+.cv-appendix-alert{color:#a34e3f;font-weight:700}
+.cv-appendix-placeholder{grid-column:1/-1;padding:45px 22px;border:1px dashed #c8c1b2;background:#f7f3ec;min-height:180px;display:grid;place-items:center;color:#888178;text-align:center;font:12px/1.7 var(--sans)}
+.cv-appendix-paper-footer{display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap;border-top:1px solid #d2cabe;padding-top:12px;margin-top:23px;font-size:9px;color:#807c71;letter-spacing:.035em}
+.cv-appendix-actions{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-top:10px}
+.cv-appendix-actions span{color:#72786e;font-size:11px;line-height:1.6}
+.cv-known-after{max-width:828px;margin:22px auto;padding:16px 21px;background:#fbf8f0;border:1px solid #dcd2c3}
+.cv-known-after .int-known{margin-top:0;border-top:0;padding-top:0}
+.cv-learning-after{max-width:100%;margin:25px auto 0}
+.cv-learning-after .int-library{margin-top:0}
+@media(max-width:720px){.cv-appendix-paper{padding:22px 15px;min-height:0}.cv-appendix-ledgers,.cv-appendix-jutsu-grid{grid-template-columns:1fr}.cv-appendix-intro,.cv-appendix-paper-head{flex-wrap:wrap}.cv-appendix-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.cv-appendix-fields .cv-appendix-field.wide{grid-column:1/-1}.cv-known-after{padding:14px}.cv-appendix-stamp{font-size:70px}}
+@media print{
+ .cv-appendix-intro,.cv-appendix-actions,.cv-appendix-add,.cv-appendix-remove,.cv-learning-after,.cv-known-after{display:none!important}
+ .cv-appendix-container{margin:0 auto;width:210mm;max-width:none}
+ .cv-appendix-paper{width:210mm;min-height:297mm;max-width:none;margin:0;box-shadow:none;border:0;padding:14mm 13mm 12mm;break-before:page;page-break-before:always;break-inside:auto;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+ .cv-appendix-field input,.cv-appendix-field textarea{background:transparent!important;border-color:transparent!important;padding:2px 0!important;resize:none!important;overflow:visible!important}
+ .cv-appendix-paper:before{inset:6mm}
+ .cv-appendix-jutsu{break-inside:avoid;page-break-inside:avoid}
+ .cv-appendix-ledger{break-inside:avoid}
+}
+
 </style>
 </head>
 <body>
@@ -2138,7 +2207,7 @@ function themeStyle(){
       const special=item.id==='goukakyuu'&&p.clanId==='uchiha'&&catalogApt(p,'Elemento Natural: Katon');
       p.jutsus.push({id:randomId(),nome:item.name,nivel:item.free?0:(special?4:n(item.min)||1),
         acao:item.action||'',duracao:'',alvo:'',alcance:item.range||'',efeito:item.desc,
-        origemPoder:item.power||'',catalogId:item.id,rank:item.rank||'',custoChakra:item.cost||'Ver descrição do poder'});
+        origemPoder:item.power||'',catalogId:item.id,rank:item.rank||'',custoChakra:item.cost||'Ver descrição do poder',custo:/^\d+$/.test(String(item.cost??''))?Number(item.cost):''});
     }
     scheduleSave();render();
     showToast((item.kind==='power'?'Poder atualizado: ':item.kind==='effect'?'Efeito selecionado: ':'Registrado: ')+item.name);
@@ -2147,10 +2216,14 @@ function themeStyle(){
 
   /* Biblioteca integrada: dados salvos na ficha, sem novas coleções Firebase. */
   function integratedCost(record,item){
-    const written=String(item?.cost??record.custoChakra??'').trim();
-    if(/^\d+$/.test(written))return Number(written);
-    if(item?.cost)return null;
-    return n(record.nivel)>0?n(record.nivel):null;
+    const official=String(item?.cost??'').trim();
+    if(official)return /^\d+$/.test(official)?Number(official):null;
+    // Campo numérico da ficha Canva e da continuação.
+    const typed=String(record?.custo??'').trim();
+    if(/^\d+$/.test(typed))return Number(typed);
+    const note=String(record?.custoChakra??'').trim();
+    if(note)return /^\d+$/.test(note)?Number(note):null;
+    return n(record?.nivel)>0?n(record.nivel):null;
   }
   function integratedBlock(p,record){
     const item=catalogItem(record.catalogId);
@@ -2234,7 +2307,7 @@ function themeStyle(){
       <small data-int-count>${entries.length} resultado(s)</small></div>
       <div class="int-grid">${cards}</div><p class="int-hint" data-int-empty hidden>Nenhuma opção encontrada para esta busca.</p>
       <div class="int-bottom"><small>Regras específicas e efeitos não cadastrados devem ser conferidos com o mestre.</small><button type="button" class="button secondary small" data-action="nav" data-view="biblioteca">Abrir biblioteca completa</button></div>
-      ${aptitudeOnly?'':integratedKnown(p)}
+      ${aptitudeOnly||mode==='canva'?'':integratedKnown(p)}
     </section>`;
   }
 
@@ -2845,12 +2918,85 @@ function socialPanel(p){
  </section>`;
 }
 
+
+/* Continuação da página 3 de todas as fichas Canva: nenhum limite visual de dois jutsus. */
+function canvaAppendixField(array,index,key,label,opts={}){
+ const value=active()?.[array]?.[index]?.[key]??'';
+ const data=`data-bind="@${E(array)}.${index}.${E(key)}" aria-label="${E(label)}"`;
+ return `<label class="cv-appendix-field ${opts.wide?'wide':''}"><span>${E(label)}</span>${opts.area?
+  `<textarea ${data} rows="3" placeholder="Descreva a técnica...">${E(value)}</textarea>`:
+  `<input ${data} type="${opts.number?'number':'text'}" ${opts.number?'min="0" step="1"':''} value="${E(value)}" placeholder="${E(opts.placeholder||'')}" autocomplete="off">`}
+ </label>`;
+}
+function canvaAppendixLedger(p,arr,label,fields){
+ const entries=p[arr]||[];
+ return `<section class="cv-appendix-ledger" aria-label="${E(label)}">
+  <header><div><span>REGISTRO</span><h4>${E(label)}</h4></div><b>${entries.length}</b></header>
+  <div class="cv-ledger-rows">${entries.length?entries.map((item,i)=>`<div class="cv-ledger-entry">
+    <small>${String(i+1).padStart(2,'0')}</small>
+    <div class="cv-ledger-fields">${fields.map(([title,key,num,wide])=>canvaAppendixField(arr,i,key,title,{number:!!num,wide:!!wide})).join('')}</div>
+    <button type="button" class="cv-appendix-remove" data-action="remove-item" data-array="${arr}" data-index="${i}" aria-label="Remover ${E(label)} ${i+1}" title="Remover registro">×</button>
+   </div>`).join(''):'<p class="cv-appendix-muted">Nenhum registro ainda.</p>'}</div>
+  <button type="button" class="cv-appendix-add" data-action="add-item" data-array="${arr}">+ Adicionar ${arr==='poderes'?'poder': 'aptidão'}</button>
+ </section>`;
+}
+function canvaAppendixJutsu(p,j,index){
+ const entry=catalogItem(j.catalogId),blocked=integratedBlock(p,j);
+ return `<article class="cv-appendix-jutsu" id="cv-appendix-jutsu-${index}">
+  <header class="cv-appendix-jutsu-title"><div><span>TÉCNICA ${String(index+1).padStart(2,'0')}</span>
+  <strong>${E(j.nome||'Nova técnica')}</strong></div>
+  <button type="button" class="cv-appendix-remove" data-action="remove-item" data-array="jutsus" data-index="${index}" aria-label="Remover técnica ${index+1}">Remover ×</button></header>
+  <div class="cv-appendix-fields">
+    ${canvaAppendixField('jutsus',index,'nome','Nome do jutsu',{wide:true})}
+    ${canvaAppendixField('jutsus',index,'nivel','Nível',{number:true})}
+    ${canvaAppendixField('jutsus',index,'acao','Ação')}
+    ${canvaAppendixField('jutsus',index,'custo','Chakra gasto',{number:true})}
+    ${canvaAppendixField('jutsus',index,'duracao','Duração')}
+    ${canvaAppendixField('jutsus',index,'alvo','Alvo / área')}
+    ${canvaAppendixField('jutsus',index,'alcance','Alcance')}
+    ${canvaAppendixField('jutsus',index,'efeito','Descrição e efeitos',{area:true,wide:true})}
+  </div>
+  ${entry?`<footer class="cv-appendix-meta">Referência · SNS 4.1b, página ${entry.page||'—'}${entry.cost?' · custo indicado: '+E(entry.cost):''}</footer>`:''}
+  ${blocked?`<p class="cv-appendix-alert">⚠ ${E(blocked)}</p>`:''}
+ </article>`;
+}
+function canvaTechniqueAppendix(p,clan){
+ const rows=p.jutsus||[],perPage=4;
+ const pageCount=Math.max(1,Math.ceil(rows.length/perPage));
+ const groups=Array.from({length:pageCount},(_,i)=>rows.slice(i*perPage,(i+1)*perPage));
+ const powers=(p.poderes||[]).filter(x=>String(x.nome||'').trim()).length;
+ const aptitudes=(p.aptidoes||[]).filter(x=>String(x.nome||'').trim()).length;
+ return `<section class="cv-appendix-container" aria-label="Continuação editável da ficha do Canva" style="--cv-accent:${E(clan.color)};--cv-wash:${E(clan.wash)}">
+  <div class="cv-appendix-intro"><div><div class="eyebrow">CONTINUAÇÃO DA FICHA · PÁGINA 3</div>
+    <h2>Continuação de Poderes & Técnicas</h2>
+    <p>O mesmo registro da ficha Canva, agora com espaço para todas as técnicas do seu personagem.</p></div>
+    <div class="cv-appendix-counter"><span>${rows.length} ${rows.length===1?'jutsu':'jutsus'}</span><small>${pageCount} ${pageCount===1?'folha extra':'folhas extras'}</small></div></div>
+  ${groups.map((group,pageIndex)=>`<article class="cv-appendix-paper" aria-label="Continuação da ficha, folha ${pageIndex+1}">
+    <div class="cv-appendix-stamp" aria-hidden="true">${E(clan.kanji)}</div>
+    <header class="cv-appendix-paper-head"><div><div class="eyebrow">SHINOBI CHRONICLES · ${E(clan.name)}</div>
+     <h3>Registro complementar</h3><p>${E(p.nome||'Personagem sem nome')} · NC ${n(p.nc)} · ${E(p.graduacao||'Shinobi')}</p></div>
+     <span class="cv-appendix-folio">03 · ${String(pageIndex+1).padStart(2,'0')}</span></header>
+    ${pageIndex===0?`<div class="cv-appendix-ledgers">
+      ${canvaAppendixLedger(p,'poderes','Poderes',[['Nome','nome',false,true],['Nível','nivel',true],['Notas','descricao',false,true]])}
+      ${canvaAppendixLedger(p,'aptidoes','Aptidões',[['Nome','nome',false,true],['Categoria / requisito','tipo',false,true]])}
+    </div>`:''}
+    <div class="cv-appendix-section-head"><div><span>ARSENAL DO PERSONAGEM</span><h4>Jutsus registrados</h4><p>${pageIndex===0?'Os dois primeiros também aparecem na ficha original. Todos podem ser editados aqui.':'Continuação dos registros, sem precisar reduzir descrições.'}</p></div>
+      ${pageIndex===0?`<button type="button" class="cv-appendix-add" data-action="add-item" data-array="jutsus">+ Adicionar jutsu</button>`:''}</div>
+    <div class="cv-appendix-jutsu-grid">${group.length?group.map((j,i)=>canvaAppendixJutsu(p,j,pageIndex*perPage+i)).join(''):
+      '<div class="cv-appendix-placeholder">Os jutsus adquiridos na biblioteca aparecerão neste espaço. Você também pode adicionar técnicas próprias autorizadas pelo mestre.</div>'}</div>
+    <footer class="cv-appendix-paper-footer"><span>${E(clan.name)} · ${powers} poder(es) · ${aptitudes} aptidão(ões)</span><span>CONTINUAÇÃO ${pageIndex+1} / ${pageCount}</span></footer>
+  </article>`).join('')}
+  <div class="cv-appendix-actions"><span>Todos os campos desta continuação usam a mesma ficha e são salvos automaticamente.</span>
+   <button type="button" class="button secondary small" data-action="add-item" data-array="jutsus">+ Novo jutsu personalizado</button></div>
+ </section>`;
+}
+
 function canvaSheetView(){
  if(!active())return mySheets();
  if(S.canvaMode==='advanced')return sheetView().replace('<div class="sheet-banner"', '<div class="cv-toolbar"><div><h2>Editor detalhado</h2><p>Campos adicionais do mesmo personagem.</p></div><button class="button secondary" data-action="cv-mode">← Voltar à ficha do Canva</button></div><div class="sheet-banner"');
  const p=active(),clan=clanOf(p.clanId),page=S.canvaPage||1;
  const buttons=['Identificação','Perícias','Poderes e técnicas','Registro shinobi'];
- return layout(`${portraitFileInput()}${sheetSwitcher()}<div class="cv-toolbar"><div><div class="eyebrow">FICHA ORIGINAL DO CANVA / ${E(clan.name.toUpperCase())}</div><h2>${E(p.nome||'Meu personagem')}</h2><p>Modelo original de quatro páginas · SNS 4.1b · alterações salvas automaticamente</p></div><div class="flex wrap"><button class="button secondary small" data-action="cv-mode">Editor detalhado</button><button class="button secondary small" data-action="print">Imprimir</button><button class="button small" data-action="save">Salvar ficha</button></div></div><nav class="cv-pages" aria-label="Páginas da ficha">${buttons.map((label,i)=>`<button class="${page===i+1?'active':''}" data-action="cv-page" data-page="${i+1}" aria-current="${page===i+1?'page':'false'}">${i+1} / ${E(label)}</button>`).join('')}</nav>${page===3?integratedLibrary(p,'canva'):''}<div class="cv-wrap"><div class="cv-page" aria-label="Ficha original ${E(clan.name)}, página ${page}"><div class="cv-missing">Ficha original do Canva · ${E(clan.name)} · ${page}/4</div><img class="cv-bg" src="${E(clan.id)}-${page}.jpg" alt="Modelo original do Canva, página ${page}" onerror="this.style.display='none';document.querySelector('[data-action=cv-mode]')?.click()">${canvaPageBody(p,page)}</div></div><p class="cv-status">Os campos digitais ficam sobre o layout original do Canva. Pontos de atributo, pontos de perícia, Vitalidade, Chakra e combate são calculados conforme SNS 4.1b. Poderes específicos e pré-requisitos de clã continuam sujeitos à validação do mestre.</p><div class="statusbar"><span id="save-footer">${CONFIGURED?E(S.saveState):'Prévia demonstrativa sem salvamento na nuvem'}</span><button class="button secondary small" data-action="export">Exportar dados (JSON)</button></div>`);
+ return layout(`${portraitFileInput()}${sheetSwitcher()}<div class="cv-toolbar"><div><div class="eyebrow">FICHA ORIGINAL DO CANVA / ${E(clan.name.toUpperCase())}</div><h2>${E(p.nome||'Meu personagem')}</h2><p>Modelo original de quatro páginas · SNS 4.1b · alterações salvas automaticamente</p></div><div class="flex wrap"><button class="button secondary small" data-action="cv-mode">Editor detalhado</button><button class="button secondary small" data-action="print">Imprimir</button><button class="button small" data-action="save">Salvar ficha</button></div></div><nav class="cv-pages" aria-label="Páginas da ficha">${buttons.map((label,i)=>`<button class="${page===i+1?'active':''}" data-action="cv-page" data-page="${i+1}" aria-current="${page===i+1?'page':'false'}">${i+1} / ${E(label)}</button>`).join('')}</nav><div class="cv-wrap"><div class="cv-page" aria-label="Ficha original ${E(clan.name)}, página ${page}"><div class="cv-missing">Ficha original do Canva · ${E(clan.name)} · ${page}/4</div><img class="cv-bg" src="${E(clan.id)}-${page}.jpg" alt="Modelo original do Canva, página ${page}" onerror="this.style.display='none';document.querySelector('[data-action=cv-mode]')?.click()">${canvaPageBody(p,page)}</div></div>${page===3?`${canvaTechniqueAppendix(p,clan)}<div class="cv-known-after">${integratedKnown(p)}</div><div class="cv-learning-after">${integratedLibrary(p,'canva')}</div>`:''}<p class="cv-status">Os campos digitais ficam sobre o layout original do Canva. Pontos de atributo, pontos de perícia, Vitalidade, Chakra e combate são calculados conforme SNS 4.1b. Poderes específicos e pré-requisitos de clã continuam sujeitos à validação do mestre.</p><div class="statusbar"><span id="save-footer">${CONFIGURED?E(S.saveState):'Prévia demonstrativa sem salvamento na nuvem'}</span><button class="button secondary small" data-action="export">Exportar dados (JSON)</button></div>`);
 }
 function updateCanvaSkill(el,preserveFocus=false){
  const p=active(),k=el.dataset.cvSkill;
