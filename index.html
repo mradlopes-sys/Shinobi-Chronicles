@@ -2213,60 +2213,6 @@
 }
 @media print{.journal-stamp-overlay{display:none!important}}
 
-
-/* HUD 2026 · pigmento de clã um pouco mais presente, sem perder o sumi-ê clean.
-   Somente contas com tema de clã ativo; mantém as demais áreas e fichas intactas. */
-.shell.themed-shell .sidebar{
-  background:
-    radial-gradient(ellipse 125% 42% at 45% 0%,rgba(var(--theme-rgb),.40) 0%,rgba(var(--theme-rgb),.12) 53%,transparent 90%),
-    radial-gradient(ellipse 105% 55% at -25% 65%,rgba(var(--theme-rgb),.18) 0%,transparent 90%),
-    linear-gradient(154deg,#202b26 0%,#1e2925 55%,#17211c 100%)!important;
-  border-right:3px solid var(--theme-accent)!important;
-  box-shadow:inset -13px 0 23px -21px rgba(var(--theme-rgb),.8);
-}
-.shell.themed-shell .sidebar .brand{
-  border-bottom-color:rgba(var(--theme-rgb),.34);
-}
-.shell.themed-shell .sidebar .brandmark{
-  background:radial-gradient(circle at 45% 35%,rgba(var(--theme-rgb),.34),rgba(var(--theme-rgb),.11) 77%)!important;
-  border-color:var(--theme-accent);
-  box-shadow:0 0 0 3px rgba(var(--theme-rgb),.09);
-}
-.shell.themed-shell .sidebar .nav-item.active{
-  background:linear-gradient(94deg,rgba(var(--theme-rgb),.57),rgba(var(--theme-rgb),.22))!important;
-  border-left:3px solid var(--theme-accent)!important;
-  border-top-color:rgba(var(--theme-rgb),.27)!important;
-  border-right-color:rgba(var(--theme-rgb),.16)!important;
-  border-bottom-color:rgba(var(--theme-rgb),.22)!important;
-}
-.shell.themed-shell .sidebar .nav-item:not(.active):hover{
-  background:rgba(var(--theme-rgb),.17)!important;
-}
-.shell.themed-shell .sidebar .nav-item.active .nav-icon{
-  color:#fff9f0;
-  text-shadow:0 0 8px rgba(var(--theme-rgb),.72);
-}
-.shell.themed-shell .sidebar .sidebar-bottom{
-  border-top-color:rgba(var(--theme-rgb),.34);
-}
-.shell.themed-shell .topbar{
-  background:linear-gradient(100deg,rgba(var(--theme-rgb),.17),#eee8dce9 46%,rgba(var(--theme-rgb),.10))!important;
-  border-bottom-color:rgba(var(--theme-rgb),.40)!important;
-}
-.shell.themed-shell .theme-chip{
-  background:rgba(var(--theme-rgb),.22)!important;
-  border-color:rgba(var(--theme-rgb),.48);
-}
-@media(max-width:720px){
-  .shell.themed-shell .sidebar{
-    border-right:0!important;
-    border-bottom:3px solid var(--theme-accent)!important;
-  }
-}
-@media print{
-  .shell.themed-shell .sidebar,.shell.themed-shell .topbar{box-shadow:none!important}
-}
-
 </style>
 </head>
 <body>
