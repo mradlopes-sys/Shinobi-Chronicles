@@ -1633,6 +1633,31 @@
 @media(prefers-reduced-motion:reduce){.cb-entry,.cb-entry *{animation:none!important;transition:none!important}.cb-meter span{transition:none!important}}
 @media print{.cb-entry,.cb-back,.cb-launch,.cb-roll,.cb-chakra-buttons,.cb-portrait-actions,.cb-jutsu-panel button{display:none!important}.cb-grid{display:grid;grid-template-columns:1fr 1.2fr 1fr}.cb-portrait-inner,.cb-portrait-image{height:350px;min-height:350px}.cb-top,.cb-panel,.cb-portrait-shell{box-shadow:none!important}}
 
+
+/* Raios discretos no exato choque das kunais; som começa aos 485 ms. */
+.cb-entry-lightning{
+  position:absolute;left:50%;top:50%;width:315px;height:315px;
+  transform:translate(-50%,-50%);pointer-events:none;
+  filter:drop-shadow(0 0 5px #c1e6f7b3);
+  animation:cb-lightning-glint 1.08s ease-out both;
+}
+.cb-entry-lightning svg{display:block;width:100%;height:100%;overflow:visible}
+.cb-entry-lightning path{
+  fill:none;stroke:#dff4ff;stroke-width:3.5;stroke-linejoin:round;stroke-linecap:round;
+}
+.cb-entry-lightning path:nth-child(2),.cb-entry-lightning path:nth-child(4){stroke:#ffeac3;stroke-width:2.8}
+@keyframes cb-lightning-glint{
+  0%,42%{opacity:0;scale:.6}
+  46%{opacity:0;scale:.8}
+  48%{opacity:.92;scale:1}
+  51%{opacity:.4;scale:1.06}
+  54%{opacity:.82;scale:1.09}
+  65%{opacity:.18;scale:1.15}
+  78%,100%{opacity:0;scale:1.25}
+}
+@media(max-width:420px){.cb-entry-lightning{width:245px;height:245px}}
+@media(prefers-reduced-motion:reduce){.cb-entry-lightning{display:none!important}}
+
 </style>
 </head>
 <body>
@@ -3223,11 +3248,57 @@ function canvaTechniqueAppendix(p,clan){
      <div class="statusbar mt24"><span id="save-footer">${CONFIGURED?E(S.saveState):'Prévia local'}</span><button type="button" class="button secondary small" data-action="combat-exit">← Voltar à ficha</button></div>
     </div>`);
   }
+
+  // Efeito enviado pelo mestre, convertido para MP3 compacto e embutido no site.
+  const COMBAT_IMPACT_B64="AUDIO_PENDENTE";
+  let combatImpactCtx=null;
+  let combatImpactDecoded=null;
+  function playCombatImpactAt(delayMs=485){
+    const fallback=()=>{
+      try{
+        const sound=new Audio('data:audio/mpeg;base64,'+COMBAT_IMPACT_B64);
+        sound.volume=.73;
+        window.setTimeout(()=>{const playing=sound.play();if(playing?.catch)playing.catch(()=>{});},Math.max(0,delayMs));
+      }catch(error){console.warn('Efeito de combate indisponível.',error)}
+    };
+    try{
+      const AudioEngine=window.AudioContext||window.webkitAudioContext;
+      if(!AudioEngine)return fallback();
+      const ctx=combatImpactCtx||(combatImpactCtx=new AudioEngine());
+      if(ctx.state==='suspended')void ctx.resume().catch(()=>{});
+      if(!combatImpactDecoded){
+        const binary=atob(COMBAT_IMPACT_B64);
+        const bytes=new Uint8Array(binary.length);
+        for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+        combatImpactDecoded=ctx.decodeAudioData(bytes.buffer).catch(error=>{
+          console.warn('Não foi possível decodificar o som das kunais.',error);
+          return null;
+        });
+      }
+      const started=performance.now();
+      void combatImpactDecoded.then(buffer=>{
+        if(!buffer)return fallback();
+        if(S.view!=='sheet')return;
+        const source=ctx.createBufferSource();
+        const gain=ctx.createGain();
+        source.buffer=buffer;
+        gain.gain.value=.74;
+        source.connect(gain);
+        gain.connect(ctx.destination);
+        const remaining=Math.max(0,(delayMs-(performance.now()-started))/1000);
+        source.start(ctx.currentTime+remaining);
+      });
+    }catch(error){
+      console.warn('Efeito sonoro de combate não pôde iniciar.',error);
+      fallback();
+    }
+  }
+
   function combatEnter(){
     if(!active()||S.view!=='sheet'||S.combatMode||S.combatTransitioning)return;
     S.combatTransitioning=true;
     const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
-    if(reduced){S.combatMode=true;S.combatTransitioning=false;render();window.scrollTo(0,0);return}
+    if(reduced){playCombatImpactAt(0);S.combatMode=true;S.combatTransitioning=false;render();window.scrollTo(0,0);return}
     const overlay=document.createElement('div');
     overlay.className='cb-entry';
     overlay.setAttribute('role','status');
@@ -3235,10 +3306,17 @@ function canvaTechniqueAppendix(p,clan){
     overlay.innerHTML=`<span class="cb-entry-symbol" aria-hidden="true">戦</span>
       <div class="cb-entry-kunai is-left">${COMBAT_KUNAI_SVG}</div>
       <div class="cb-entry-kunai is-right">${COMBAT_KUNAI_SVG}</div>
+      <div class="cb-entry-lightning" aria-hidden="true"><svg viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg">
+        <path d="M157 157L136 135L138 122L109 105L123 132L115 141L147 157"/>
+        <path d="M164 157L183 132L198 135L221 104L207 137L216 145L174 159"/>
+        <path d="M157 167L133 183L130 201L98 222L121 188L114 177L151 162"/>
+        <path d="M166 166L188 181L190 201L225 220L199 191L209 178L173 163"/>
+      </svg></div>
       <div class="cb-entry-impact" aria-hidden="true"></div>
       <span class="cb-entry-spark s1"></span><span class="cb-entry-spark s2"></span><span class="cb-entry-spark s3"></span><span class="cb-entry-spark s4"></span>
       <div class="cb-entry-badge">MODO DE COMBATE</div>`;
     document.body.appendChild(overlay);
+    playCombatImpactAt(485);
     window.setTimeout(()=>{
       if(S.view==='sheet'&&active()){S.combatMode=true;render();window.scrollTo(0,0)}
     },570);
