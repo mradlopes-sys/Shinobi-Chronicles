@@ -1,3 +1,11 @@
+## Acesso rápido do mestre (atualizado)
+
+A opção **Entrar como ADM** utiliza o login reservado `mestre_shinobi`. A primeira entrada cria a conta no Firebase Authentication com a senha que o mestre digitar; as próximas entradas exigem a mesma senha.
+
+**Obrigatório:** publique o arquivo atualizado `firebase/firestore.rules` no Firebase Console. O modo mestre reconhece esse e-mail reservado nas regras. Faça a primeira entrada antes de compartilhar o site com amigos. Para entender a segurança e o procedimento, consulte [ADMIN.md](./ADMIN.md).
+
+---
+
 ## Atualização do painel administrativo (novembro de 2026)
 
 A navegação **Administração** aparece apenas para contas cujo UID possui um documento em `admins/{uid}` no Firestore. Ao entrar, o site pede **a senha da própria conta** e valida essa senha novamente no Firebase Authentication. Depois de usar o painel, clique em **Bloquear painel**. A senha nunca é inserida no código do GitHub nem gravada no Firestore.
