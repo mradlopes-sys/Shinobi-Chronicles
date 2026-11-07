@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Yuji+Boku&display=swap" rel="stylesheet">
   <style>
     :root{--paper:#f6f3ed;--paper-2:#eeeae1;--paper-3:#e4dfd4;--ink:#222723;--muted:#6c716b;--line:#d9d4c8;--red:#a24645;--gold:#ab895c;--radius:12px;--serif:'Noto Serif JP',Georgia,serif;--sans:'DM Sans',Arial,sans-serif}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:var(--sans);color:var(--ink);background:var(--paper);-webkit-font-smoothing:antialiased}
@@ -1769,6 +1770,176 @@
 @media(max-width:580px){.evo-scroll-stage{grid-template-rows:26px minmax(0,1fr) 26px}.evo-scroll-rod{height:26px}.evo-scroll-rod:before,.evo-scroll-rod:after{height:32px;width:15px}.evo-scroll-paper{height:min(660px,calc(100dvh - 70px));min-height:300px}.evo-ink-body{padding:23px 17px}.evo-ink-rewards{gap:4px 7px}.evo-ink-reward{padding:5px 4px}}
 @media(prefers-reduced-motion:reduce){.evo-scroll-stage,.evo-scroll-paper,.evo-scroll-rod,.evo-ink-body *,.evo-ink-divider path{animation:none!important;opacity:1!important;transform:none!important;filter:none!important;clip-path:none!important;stroke-dashoffset:0!important}}
 
+
+/* Pergaminho em nanquim — estética de ilustração japonesa com tinta e caligrafia */
+.evo-scroll-stage{
+  --evo-brush:'Caveat Brush','Yuji Boku','Segoe Print',cursive;
+  --evo-shodo:'Yuji Boku','Noto Serif JP',serif;
+  width:min(100%,570px);
+  filter:drop-shadow(0 19px 22px #050d0bc0);
+}
+.evo-rise-layer{
+  background:radial-gradient(ellipse 65% 65% at 50% 48%,#1f2b22e8,#0b1310f8 85%);
+}
+.evo-scroll-paper{
+  border-left:5px solid #a3977d;
+  border-right:5px solid #a3977d;
+  background:
+    radial-gradient(ellipse 74% 50% at 10% 8%,#bcb49a1f,transparent 73%),
+    radial-gradient(ellipse 45% 50% at 93% 87%,#9a947e14,transparent 80%),
+    repeating-linear-gradient(8deg,transparent 0px,transparent 7px,#7d77600a 8px,transparent 12px),
+    linear-gradient(90deg,#d8d1be 0%,#f9f4e8 5%,#fffaf0 50%,#f7f0e0 95%,#d8d0bd);
+  box-shadow:inset 14px 0 18px -14px #62574565,inset -14px 0 18px -14px #62574565,0 12px 28px #0007;
+}
+.evo-scroll-paper:before{
+  inset:13px 21px;
+  border-color:#2a3d3030;
+  box-shadow:0 0 0 4px #273c2710;
+}
+.evo-scroll-rod{
+  height:24px;
+  border-radius:4px;
+  background:linear-gradient(#473b30,#928167 22%,#c3b397 49%,#857359 80%,#4d4030);
+  box-shadow:0 4px 9px #0d151195;
+}
+.evo-scroll-rod:before,.evo-scroll-rod:after{
+  width:15px;height:31px;
+  background:linear-gradient(90deg,#2d3028,#928b6e 52%,#4e493b);
+  border:1px solid #776e55;
+  border-radius:3px;
+}
+.evo-scroll-stage{grid-template-rows:24px minmax(0,1fr) 24px}
+.evo-scroll-paper{height:min(610px,calc(100dvh - 72px))}
+.evo-ink-body{
+  padding:clamp(24px,5vh,39px) clamp(21px,5vw,48px) 21px;
+  color:#1b2821;
+}
+.evo-ink-body:before{
+  content:"";
+  position:absolute;
+  pointer-events:none;
+  z-index:-1;
+  top:13%;left:9%;width:82%;height:28%;
+  background:radial-gradient(ellipse at 50% 50%,#17271b15,transparent 66%);
+  filter:blur(14px);
+}
+.evo-ink-header{
+  font:500 10px/1.5 var(--evo-shodo);
+  letter-spacing:.16em;
+  color:#766f5f;
+}
+.evo-ink-crest{
+  display:block;
+  width:60px;
+  height:61px;
+  margin:9px auto -9px;
+  color:var(--evo-color,#a24645);
+  font:400 48px/1.2 var(--evo-shodo);
+  opacity:.7;
+  transform:rotate(-8deg);
+  animation:evo-ink-reveal .6s 1.03s both;
+}
+.evo-calligraphy{
+  font:400 clamp(42px,7vw,55px)/1.03 var(--evo-brush);
+  letter-spacing:-.025em;
+  color:#182a21;
+  margin:0 auto 4px;
+  text-shadow:0 1px 0 #20312826,1px 0 0 #20312826;
+  filter:url(#evo-ink-edge);
+  -webkit-font-smoothing:auto;
+}
+.evo-ink-subtitle{
+  font:400 14px/1.55 var(--evo-shodo);
+  color:#646658;
+  letter-spacing:.035em;
+}
+.evo-ink-divider{margin:7px auto 4px;height:20px}
+.evo-ink-divider path{
+  stroke:#1f3328;
+  stroke-width:4;
+  stroke-linecap:round;
+}
+.evo-new-level{
+  font:400 clamp(39px,7vw,50px)/1.15 var(--evo-brush);
+  color:#1d3325;
+  gap:18px;
+  margin:7px 0 4px;
+}
+.evo-new-level small{
+  font:400 26px/1 var(--evo-brush);
+  color:#858377;
+}
+.evo-new-level strong{font-weight:400}
+.evo-level-arrow{font:400 28px var(--evo-brush);color:#817f6e}
+.evo-ink-rank{
+  color:#3c4b3f;
+  font:500 14px/1.45 var(--evo-shodo);
+  letter-spacing:.04em;
+}
+.evo-ink-name{
+  font:400 12px/1.5 var(--evo-shodo);
+  color:#5e625a;
+}
+.evo-ink-rewards{
+  max-width:390px;
+  column-gap:18px;
+  margin:14px auto 0;
+}
+.evo-ink-reward{
+  min-width:0;
+  border-bottom:1px solid #30463248;
+  padding:5px 4px 6px;
+  background:linear-gradient(180deg,transparent 88%,#28352e12);
+}
+.evo-ink-reward span{
+  font:500 12px/1.4 var(--evo-shodo);
+  color:#454c42;
+}
+.evo-ink-reward strong{
+  font:400 27px/1 var(--evo-brush);
+  color:#1e3327;
+}
+.evo-ink-vitality{
+  font:400 14px/1.5 var(--evo-shodo);
+  color:#4b574a;
+  margin:13px auto 3px;
+}
+.evo-ink-stamp{
+  font:400 31px/1 var(--evo-shodo);
+  color:var(--evo-color,#ab4542);
+  border:3px solid var(--evo-color,#ab4542);
+  border-radius:3px;
+  width:48px;height:48px;
+  margin:9px auto 5px;
+}
+.evo-ink-note{
+  font:400 11px/1.55 var(--evo-shodo);
+  color:#777768;
+  max-width:380px;
+}
+.evo-ink-footer button{
+  background:#26382c;
+  border-color:#26382c;
+  border-radius:2px;
+  font:600 11px var(--sans);
+  letter-spacing:.045em;
+}
+.evo-ink-footer button:hover{background:#405843}
+.evo-scroll-stage .evo-rise-close{
+  background:#e6e1d2;border-color:#a49b84;color:#3a4638;
+}
+@media(max-width:580px){
+ .evo-scroll-stage{grid-template-rows:23px minmax(0,1fr) 23px}
+ .evo-scroll-rod{height:23px}
+ .evo-scroll-rod:before,.evo-scroll-rod:after{height:30px}
+ .evo-scroll-paper{height:min(660px,calc(100dvh - 66px))}
+ .evo-ink-body{padding:24px 17px}
+ .evo-calligraphy{font-size:clamp(34px,9vw,45px)}
+ .evo-ink-crest{font-size:42px;height:51px;width:51px}
+ .evo-new-level{font-size:39px}
+ .evo-ink-rewards{gap:6px 9px}
+}
+
 </style>
 </head>
 <body>
@@ -3514,7 +3685,7 @@ function canvaTechniqueAppendix(p,clan){
     if(!EVOLUTION_SOUND_URL)return;
     try{
       const clip=new Audio(EVOLUTION_SOUND_URL);
-      clip.volume=.82;
+      clip.volume=.14; // volume suave para a evolução (antes: 0.82)
       const started=clip.play();
       if(started?.catch)started.catch(error=>console.warn('Som de evolução indisponível:',error));
     }catch(error){console.warn('Falha ao reproduzir a evolução:',error)}
@@ -3533,11 +3704,13 @@ function canvaTechniqueAppendix(p,clan){
     panel.innerHTML=`<div class="evo-scroll-stage" style="--evo-color:${E(clan.color)};--evo-wash:${E(clan.wash)}">
       <div class="evo-scroll-rod top" aria-hidden="true"></div>
       <div class="evo-scroll-paper"><div class="evo-ink-body">
-        <div class="evo-ink-header">SHINOBI CHRONICLES · REGISTRO DE EVOLUÇÃO</div>
-        <h2 class="evo-calligraphy">Um novo estágio</h2>
-        <div class="evo-ink-subtitle">Seu caminho shinobi continua.</div>
+        <svg aria-hidden="true" width="0" height="0" style="position:absolute;pointer-events:none"><filter id="evo-ink-edge"><feTurbulence type="fractalNoise" baseFrequency=".018 .052" numOctaves="2" seed="7" result="grain"/><feDisplacementMap in="SourceGraphic" in2="grain" scale="1.4" xChannelSelector="R" yChannelSelector="G"/></filter></svg>
+        <div class="evo-ink-header">REGISTRO SHINOBI · EVOLUÇÃO</div>
+        <div class="evo-ink-crest" aria-hidden="true">${E(clan.kanji)}</div>
+        <h2 class="evo-calligraphy">Evolução Shinobi</h2>
+        <div class="evo-ink-subtitle">Registro de progressão</div>
         <svg class="evo-ink-divider" viewBox="0 0 450 22" role="presentation" aria-hidden="true">
-          <path d="M12 12 Q90 5 176 12 T340 12 Q395 10 434 12"/>
+          <path d="M13 13 Q64 9 105 12 C165 18 190 7 225 11 S333 16 384 10 Q410 8 435 12"/><path d="M39 17 Q90 18 152 16 M278 17 Q325 15 378 16" stroke-width="1.2" opacity=".4"/>
         </svg>
         <div class="evo-new-level">
           <small>NC ${before}</small><span class="evo-level-arrow" aria-hidden="true">→</span><strong>NC ${after}</strong>
