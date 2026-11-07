@@ -49,7 +49,7 @@ https://mradlopes-sys.github.io/Shinobi-Chronicles/
 > Importante: o repositório se chama `Shinobi-Chronicles`, com letras maiúsculas. O GitHub Pages diferencia maiúsculas/minúsculas no caminho.
 
 ## 8. Imagens dos clãs
-O código espera 12 banners em `assets/clas/` e 48 páginas das fichas em `assets/fichas/`, no próprio repositório GitHub Pages. Ex.: `assets/clas/uchiha.jpg` e `assets/fichas/uchiha-1.jpg`. O pacote das imagens deve ser extraído e a pasta `assets` enviada ao GitHub, preservando subpastas e nomes. Se os arquivos não estiverem publicados, o site utiliza o editor detalhado como alternativa, em vez de exibir uma página vazia.
+As 60 imagens (12 banners e 48 páginas de fichas) já foram enviadas pelo proprietário à **raiz do repositório**. O `index.html` está configurado para carregar arquivos como `uchiha.jpg` e `uchiha-1.jpg` diretamente da raiz. **Não exclua nem reenvie as imagens** para outras pastas. Se alguma imagem for removida, o editor detalhado continua disponível como alternativa.
 
 ## Observações
 - No modo sem configuração Firebase, o site oferece uma **prévia local**, sem persistência entre sessões ou isolamento real entre jogadores.
