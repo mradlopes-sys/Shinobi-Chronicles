@@ -2213,6 +2213,55 @@
 }
 @media print{.journal-stamp-overlay{display:none!important}}
 
+
+/* QUADROS SHINOBI — PERFIS PUBLICOS */
+.shell:has(.pub-hub) .content{max-width:none;padding:24px clamp(15px,2.2vw,36px) 70px}
+.pub-hub{color:#392b25;--pin:#994b3e;--card:#f5ead4}
+.pub-intro{position:relative;overflow:hidden;border-radius:16px;padding:30px 34px;margin-bottom:17px;background:linear-gradient(90deg,#f5ebd9f2,#f5ebd9a8 62%,#f7edde77),url("hero-konoha-novo.jpg") center 46%/cover;box-shadow:0 8px 30px #38281b13;border:1px solid #bca99070}
+.pub-intro h1{font:600 clamp(25px,3vw,39px) 'Yuji Boku',var(--serif);margin:5px 0 8px;color:#493025}
+.pub-intro p{max-width:740px;font-size:13px;line-height:1.65;color:#584d3e;margin:0}
+.pub-actions,.pub-choose,.pub-board-toolbar{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.pub-actions{margin:15px 0}.pub-select{max-width:270px;border-radius:8px;background:#fff8e9;border:1px solid #c6b49c;padding:10px;color:#342d27}
+.pub-choose{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:thin;margin:15px 0 18px;padding:4px 2px 12px}
+.pub-chip{border:1px solid #b9a18280;border-radius:12px;background:#fffaf0;color:#49392d;padding:11px 15px;text-align:left;min-width:170px;max-width:240px;flex:0 0 auto;box-shadow:0 2px 5px #513c2110;transition:.15s}
+.pub-chip.active{background:#eee0c8;border-color:#9e5d45;box-shadow:0 0 0 2px #9e5d4520}
+.pub-chip b{display:block;font-family:var(--serif);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pub-chip small{display:block;margin-top:4px;color:#8e7059;font-size:10px}
+.pub-board-toolbar{background:#f4e9d4;border:1px solid #c4a886;border-radius:10px;padding:10px 12px;margin-bottom:10px}
+.pub-board-toolbar b{font-size:12px}.pub-board-toolbar .pub-spacer{flex:1}.pub-board-toolbar button{white-space:nowrap}
+.pub-zoom{width:110px;accent-color:#905044}
+.pub-viewport{position:relative;overflow:auto;max-width:100%;max-height:min(76vh,920px);min-height:590px;border:8px solid #684534;border-radius:14px;box-shadow:0 12px 40px #24180f50,inset 0 0 0 3px #ad7c52;background:#8c674b;scrollbar-color:#977658 #e9dbc0}
+.pub-zoomframe{position:relative}
+.pub-scene{position:relative;width:1580px;height:1160px;overflow:hidden;transform-origin:0 0;background:linear-gradient(180deg,#fff3dd34,#f2e2c021 48%,#98714d3d),url("assets/quadros/konoha-aquarela.jpg"),url("hero-konoha-novo.jpg");background-position:center;background-size:cover;background-color:#e6d7b9}
+.pub-scene:before{content:"";position:absolute;inset:24px 26px 28px;background:repeating-linear-gradient(0deg,#51331f09 0 2px,transparent 2px 9px),radial-gradient(ellipse at 50% 28%,#ca9d63e8,#9c6b43e8);border:17px ridge #805236;border-radius:12px;box-shadow:0 7px 20px #24170f80,inset 0 0 24px #3a271f6e;pointer-events:none}
+.pub-scene:after{content:"";position:absolute;inset:51px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.45' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' opacity='.16' filter='url(%23n)'/%3E%3C/svg%3E");opacity:.36;pointer-events:none}
+.pub-topcloth{position:absolute;z-index:3;top:31px;left:70px;right:310px;text-align:center;font:600 29px 'Yuji Boku',var(--serif);letter-spacing:.04em;color:#452a1f;text-shadow:0 1px 0 #e9d0a6}
+.pub-cork-head{font-size:12px;opacity:.75;letter-spacing:.2em;margin-top:2px}
+.pub-note{position:absolute;z-index:5;padding:14px 17px 16px;background:#faf0d8;color:#382d26;border:1px solid #c2a786;box-shadow:2px 8px 16px #2e1c1750,0 0 20px #8d593b08 inset;overflow:auto;resize:both;min-width:155px;min-height:140px;max-width:780px;max-height:740px;transform:rotate(var(--tilt,0deg));background-image:repeating-linear-gradient(180deg,transparent 0 30px,#956d4621 31px 32px)}
+.pub-note[data-color="sage"]{background-color:#e4e9d5}.pub-note[data-color="pink"]{background-color:#f4dcd5}.pub-note[data-color="blue"]{background-color:#e2e9e6}.pub-note[data-color="lavender"]{background-color:#e6dfe6}
+.pub-note .pub-pin{position:absolute;top:1px;left:50%;width:13px;height:13px;background:#b23c35;border:2px solid #772b24;border-radius:50%;box-shadow:1px 3px 3px #0005;transform:translateX(-50%)}
+.pub-note h3{font:600 19px 'Yuji Boku',var(--serif);margin:5px 0 9px;display:flex;justify-content:space-between;gap:8px;align-items:center;color:#513129}
+.pub-note h3 .pub-note-tools{display:flex;gap:4px}
+.pub-note textarea,.pub-note input{background:transparent;box-shadow:none!important;color:#463a30;width:100%;border:0!important;outline:0;font:14px/1.6 'DM Sans',sans-serif}
+.pub-note textarea{height:calc(100% - 58px);min-height:50px;resize:none}
+.pub-note input{font-weight:600}
+.pub-note .pub-note-body{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.7}
+.pub-note button.pub-tool{border:0;color:#795242;background:#ffffff70;border-radius:5px;font:700 13px var(--sans);padding:4px 7px}
+.pub-note .pub-drag{cursor:grab;touch-action:none;user-select:none}.pub-note .pub-drag:active{cursor:grabbing}
+.pub-note.portrait{background:#f0e4ce;padding:15px}.pub-portrait-picture{height:calc(100% - 55px);min-height:135px;width:100%;background:#e0ccac;display:grid;place-items:center;border:6px solid #fff7e8;box-shadow:0 1px 4px #0003;overflow:hidden}
+.pub-portrait-picture img{width:100%;height:100%;object-fit:contain}.pub-portrait-picture .pub-silhouette{font:92px var(--serif);color:#927d64}
+.pub-note.obs{background:#f7e7b4;z-index:7;border:1px solid #b79a4e}
+.pub-note.obs textarea{font-family:'Caveat Brush',cursive;font-size:18px}
+.pub-permanent{position:absolute;z-index:12;right:85px;top:50px;width:205px;height:88px;background:#f5d88e;box-shadow:2px 5px 12px #2a1c1359;border:1px solid #caa868;transform:rotate(3deg);font:600 17px 'Yuji Boku',var(--serif);text-align:center;padding:17px 8px;cursor:pointer;color:#65372b}
+.pub-permanent:before{content:"";position:absolute;top:4px;left:50%;background:#a23832;width:11px;height:11px;border-radius:50%;box-shadow:1px 2px 2px #0005}
+.pub-note-help{font-size:11px;color:#765e49;margin-top:9px}
+.pub-blank{padding:28px;border-radius:13px;background:#f6ead8;border:1px solid #d7c5ac;color:#5a4838}
+.pub-update-overlay{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:#1d1717a6;padding:20px}
+.pub-updates{width:min(570px,95vw);max-height:80vh;overflow:auto;background:#f5e8cd;border:8px double #8d6545;padding:26px;box-shadow:0 16px 45px #0005;color:#452d23;border-radius:10px}
+.pub-updates h2{font:700 27px 'Yuji Boku',var(--serif);margin:0 0 16px}
+.pub-updates article{padding:15px 2px;border-top:1px solid #ac9274}.pub-updates article h3{font:600 17px var(--serif);margin:4px 0}.pub-updates article p{margin:0;font-size:13px;line-height:1.65}.pub-updates time{font-size:11px;color:#856b53}
+.pub-readonly{font-size:12px;color:#715a49;margin:8px 0}
+@media(max-width:780px){.pub-intro{padding:21px}.pub-viewport{min-height:570px;max-height:72vh}.pub-chip{min-width:155px}.pub-board-toolbar{gap:6px}.pub-zoom{width:85px}}
+
 </style>
 </head>
 <body>
@@ -2808,8 +2857,8 @@ function themeStyle(){
  const deepHex='#'+deep.map(x=>x.toString(16).padStart(2,'0')).join('');
  return `style="--theme-accent:${clan.color};--theme-rgb:${rgb.join(',')};--theme-deep:${deepHex};--theme-wash:${clan.wash}" data-theme="${clan.id}"`;
 }
-  function side(){return `<aside class="sidebar"><div class="brand"><div class="brandmark">忍</div><div><div class="brand-name">Shinobi<br>Chronicles</div><div class="brand-sub">Arquivos Shinobi</div></div></div><nav aria-label="Menu principal"><div class="nav-category">NAVEGAÇÃO</div>${[['home','⌂','Início'],['clans','◈','Os Clãs'],['fichas','▤','Minhas Fichas'],...(S.user?[['diario','巻','Diário de Missões']]:[]),['sheet','✎','Editar Ficha'],...(S.sheets.length?[['guia','☷','Guia de criação'],['biblioteca','巻','Biblioteca de técnicas']]:[]),...(canAdmin()?[['admin','♜','Administração']]:[])].map(([view,ic,label])=>`<button class="nav-item ${S.view===view?'active':''}" data-action="nav" data-view="${view}"><span class="nav-icon">${ic}</span>${label}</button>`).join('')}</nav><div class="sidebar-bottom"><div class="tiny">SHINOBI NO SHO · SISTEMA D8</div><div class="side-account">${E(S.user?.displayName|| (CONFIGURED?'Conta não conectada':'Modo demonstração'))}</div><div class="tiny">${CONFIGURED?'Dados privados no Firebase.':'Prévia local, sem salvamento na nuvem.'}</div>${S.user?'<button class="nav-item" data-action="logout"><span class="nav-icon">↪</span>Sair da conta</button>':''}</div></aside>`}
-  function top(){const currentTheme=themeClan();let titles={home:'Início',clans:'Guia dos clãs',sheet:'Registro do personagem',guia:'Guia de criação',biblioteca:'Biblioteca de técnicas',fichas:'Minhas fichas',diario:'Diário de Missões',admin:'Administração','admin-gate':'Entrada do mestre',login:'Acesso shinobi'};return `<header class="topbar"><div><div class="eyebrow">SHINOBI CHRONICLES / ARQUIVO</div><div class="top-title">${titles[S.view]||'Arquivo'}</div></div><div class="top-actions">${currentTheme?`<span class="theme-chip"><span class="theme-chip-dot"></span>${E(currentTheme.name)}</span>`:''}${S.user?`<span class="pill">${E(S.user.displayName)}</span>`:!CONFIGURED?'<span class="pill">Prévia demonstrativa</span>':'<button class="button small" data-action="nav" data-view="login">Entrar</button>'}${S.view==='sheet'?`<span id="save-status" class="pill">${E(S.saveState)}</span>`:''}</div></header>`}
+  function side(){return `<aside class="sidebar"><div class="brand"><div class="brandmark">忍</div><div><div class="brand-name">Shinobi<br>Chronicles</div><div class="brand-sub">Arquivos Shinobi</div></div></div><nav aria-label="Menu principal"><div class="nav-category">NAVEGAÇÃO</div>${[['home','⌂','Início'],['clans','◈','Os Clãs'],['fichas','▤','Minhas Fichas'],...(S.user?[['quadros','▧','Mural de Konoha']]:[]),...(S.user?[['diario','巻','Diário de Missões']]:[]),['sheet','✎','Editar Ficha'],...(S.sheets.length?[['guia','☷','Guia de criação'],['biblioteca','巻','Biblioteca de técnicas']]:[]),...(canAdmin()?[['admin','♜','Administração']]:[])].map(([view,ic,label])=>`<button class="nav-item ${S.view===view?'active':''}" data-action="nav" data-view="${view}"><span class="nav-icon">${ic}</span>${label}</button>`).join('')}</nav><div class="sidebar-bottom"><div class="tiny">SHINOBI NO SHO · SISTEMA D8</div><div class="side-account">${E(S.user?.displayName|| (CONFIGURED?'Conta não conectada':'Modo demonstração'))}</div><div class="tiny">${CONFIGURED?'Dados privados no Firebase.':'Prévia local, sem salvamento na nuvem.'}</div>${S.user?'<button class="nav-item" data-action="logout"><span class="nav-icon">↪</span>Sair da conta</button>':''}</div></aside>`}
+  function top(){const currentTheme=themeClan();let titles={home:'Início',clans:'Guia dos clãs',sheet:'Registro do personagem',guia:'Guia de criação',biblioteca:'Biblioteca de técnicas',fichas:'Minhas fichas',quadros:'Mural de Konoha',diario:'Diário de Missões',admin:'Administração','admin-gate':'Entrada do mestre',login:'Acesso shinobi'};return `<header class="topbar"><div><div class="eyebrow">SHINOBI CHRONICLES / ARQUIVO</div><div class="top-title">${titles[S.view]||'Arquivo'}</div></div><div class="top-actions">${currentTheme?`<span class="theme-chip"><span class="theme-chip-dot"></span>${E(currentTheme.name)}</span>`:''}${S.user?`<span class="pill">${E(S.user.displayName)}</span>`:!CONFIGURED?'<span class="pill">Prévia demonstrativa</span>':'<button class="button small" data-action="nav" data-view="login">Entrar</button>'}${S.view==='sheet'?`<span id="save-status" class="pill">${E(S.saveState)}</span>`:''}</div></header>`}
   function layout(inner){return `<div class="shell ${S.view==='home'?'home-ambient':''} ${themeClan()?'themed-shell':''}" ${themeStyle()}>${side()}<main class="main">${top()}<div class="content">${inner}<footer class="footer-note">SHINOBI CHRONICLES · Sistema D8 / SNS 4.1b · Plataforma independente de fichas · Ilustrações dos clãs serão adicionadas pelo projeto.</footer></div></main></div>`}
   const heroArt=`<img class="hero-illustration" src="hero-konoha-novo.jpg" onerror="this.onerror=null;this.src='hero-konoha.svg'" alt="Ilustração em tinta mangá e aquarela da Vila Oculta da Folha, com arquitetura tradicional e cerejeiras" loading="eager" decoding="async">`;
   function home(){const c=active()?clanOf(active().clanId):null;return layout(`<section class="hero hero-inkwash"><div class="hero-copy"><div class="eyebrow">UM NOVO CICLO · SHINOBI CHRONICLES</div><h1>Seu caminho<br>começa aqui.</h1><p>Explore as famílias shinobi, registre seu personagem e acompanhe sua evolução com uma ficha automatizada pelo sistema D8.</p><div class="flex wrap mt24"><button class="button" data-action="nav" data-view="clans">Explorar os clãs <span>↗</span></button><button class="button secondary" data-action="nav" data-view="fichas">Minhas fichas</button></div></div><div class="hero-scene">${heroArt}</div></section>${!CONFIGURED?`<div class="notice warn mt16"><b>Modo de demonstração.</b> A interface e os cálculos já funcionam, mas os dados não serão salvos online até configurar o Firebase no arquivo <code>index.html</code>. É possível testar a ficha agora.</div>`:''}<div class="section-head"><div><div class="eyebrow">ARQUIVOS DE KONOHA</div><h2>Explore os clãs</h2></div><p>11 linhagens e um caminho independente</p></div><div class="clans-grid">${CLANS.slice(0,6).map(clanCard).join('')}</div><div class="section-head"><div><div class="eyebrow">O SEU REGISTRO</div><h2>Ficha de personagem</h2></div></div>${c?`<div class="paper-panel"><div class="flex between wrap"><div><div class="eyebrow">PERSONAGEM ATIVO</div><h3 style="margin:8px 0">${E(active().nome||'Personagem sem nome')} · ${E(c.name)}</h3><div class="panel-caption">Nível de Campanha ${active().nc} · ${E(active().graduacao)}</div></div><button class="button" data-action="nav" data-view="sheet">Continuar edição ↗</button></div></div>`:`<div class="empty"><h3>Sua história ainda não foi registrada</h3><p>Escolha um clã e crie sua ficha; os atributos e as perícias serão calculados automaticamente.</p><button class="button" data-action="nav" data-view="clans">Escolher clã</button></div>`}`)}
@@ -4180,7 +4229,227 @@ function canvaUpdateArray(el,preserveFocus=false){
  scheduleSave();
  if(!preserveFocus)render();
 }
-function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="margin:15vh auto;max-width:500px"><h3>Carregando os arquivos shinobi...</h3><p>Conectando ao sistema de autenticação.</p></div>';return}if(CONFIGURED&&!S.user&&!['login'].includes(S.view))S.view='login';let screen={home,clans,sheet:canvaSheetView,guia:guideView,biblioteca:libraryView,diario:diaryView,fichas:mySheets,admin:adminView,'admin-gate':adminGate,login}[S.view]||home;$('#app').innerHTML=screen();if(S.modal)$('#app').insertAdjacentHTML('beforeend',S.modal==='delete'?deleteModal():clanModal());if(S.view==='biblioteca')librarySearchFilter();integratedFilter();if(S.view==='diario'&&S.diaryEnterAnimate)S.diaryEnterAnimate=false}
+
+  /* QUADROS SHINOBI: documentos publicos separados da ficha e observacoes privadas por visitante */
+  const PublicBoard=(()=>{
+    const W=1580,H=1160;
+    const CHANGELOG=[
+      {date:'07/11/2026',title:'Quadros shinobi compartilháveis',body:'Cada personagem pode ganhar um grande quadro público com retrato, clã, graduação, vila, história e recados organizados livremente. Adicionamos movimentação, redimensionamento, zoom e salvamento na nuvem.'},
+      {date:'07/11/2026',title:'Observações individuais e atualização permanente',body:'Cada jogador pode escrever observações particulares sobre o personagem que está consultando. A nota amarela no canto superior direito sempre abre o histórico de mudanças.'}
+    ];
+    let all=[],id='',draft=null,observation='',zoom=0.88,busy=false,loading=false,updates=false;
+    let saveTimer=0,obsTimer=0,version=0,obsVersion=0,saveChain=Promise.resolve(),obsChain=Promise.resolve(),obsRequest=0;
+    const clip=(v,n=8000)=>String(v??'').slice(0,n);
+    const esc=E;
+    const safePhoto=(value)=>{const s=String(value||'');return /^data:image\/(jpeg|jpg|png|webp);base64,[a-zA-Z0-9+/=]+$/.test(s)||/^https:\/\//.test(s)?s:''};
+    const whereNote=(kind)=>draft?.notes?.find(x=>x.kind===kind);
+    const permitted=()=>Boolean(S.user&&draft?.ownerUid===uid()&&id===draft?.id);
+    const limitNumber=(v,min,max,def)=>Number.isFinite(+v)?Math.max(min,Math.min(max,+v)):def;
+    function sanitizeNote(r){
+      return {id:clip(r.id,75)||randomId(),kind:['portrait','text'].includes(r.kind)?r.kind:'text',title:clip(r.title,80),text:clip(r.text,6000),x:limitNumber(r.x,38,W-220,70),y:limitNumber(r.y,105,H-200,135),w:limitNumber(r.w,165,650,310),h:limitNumber(r.h,145,660,200),rotation:limitNumber(r.rotation,-9,9,0),color:['cream','sage','pink','blue','lavender'].includes(r.color)?r.color:'cream'};
+    }
+    function normalizeProfile(p,key){
+      return {id:key,ownerUid:clip(p.ownerUid,150),nome:clip(p.nome||'Shinobi sem nome',80),clan:clip(p.clan,70),vila:clip(p.vila,100),graduacao:clip(p.graduacao,60),portrait:safePhoto(p.portrait),notes:Array.isArray(p.notes)?p.notes.slice(0,22).map(sanitizeNote):[],createdAt:+p.createdAt||Date.now(),updatedAt:+p.updatedAt||Date.now()};
+    }
+    function seededNotes(p){
+      return [
+        {id:'portrait',kind:'portrait',title:'Retrato',text:'',x:87,y:155,w:295,h:370,rotation:-3,color:'cream'},
+        {id:'clan',kind:'text',title:'Clã',text:clanOf(p.clanId).name,x:422,y:156,w:260,h:160,rotation:2,color:'sage'},
+        {id:'rank',kind:'text',title:'Graduação',text:p.graduacao||'Genin',x:714,y:151,w:265,h:160,rotation:-2,color:'cream'},
+        {id:'village',kind:'text',title:'Vila',text:p.vila||'Konoha',x:424,y:347,w:260,h:155,rotation:-1,color:'blue'},
+        {id:'story',kind:'text',title:'História',text:clip(p.historia||p.historico||'',6000),x:1023,y:160,w:370,h:450,rotation:2,color:'cream'},
+        {id:'links',kind:'text',title:'Relacionamentos',text:'',x:85,y:583,w:315,h:225,rotation:1,color:'pink'},
+        {id:'info',kind:'text',title:'Curiosidades',text:'',x:461,y:582,w:340,h:250,rotation:-2,color:'lavender'},
+        {id:'missions',kind:'text',title:'Histórias e acontecimentos',text:'',x:845,y:671,w:365,h:260,rotation:2,color:'sage'}
+      ].map(sanitizeNote);
+    }
+    function fromSheet(entry){
+      const p=entry.data;return normalizeProfile({ownerUid:uid(),nome:p.nome||'Novo Shinobi',clan:clanOf(p.clanId).name,vila:p.vila||'Konoha',graduacao:p.graduacao||'Genin',portrait:safePhoto(p.foto||p.retratos?.casual||p.retratos?.ninja),notes:seededNotes(p)},entry.id);
+    }
+    function current(){return all.find(x=>x.id===id)}
+    function status(label){const el=document.querySelector('[data-board-status]');if(el)el.textContent=label}
+    async function load(){
+      if(!S.user||!fb)return;
+      loading=true;render();
+      try{
+        const docs=await fb.getDocs(fb.collection(fb.db,'perfisPublicos'));
+        all=docs.docs.map(d=>normalizeProfile(d.data(),d.id)).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+        if(!all.some(x=>x.id===id))id=all.find(x=>x.ownerUid===uid())?.id||all[0]?.id||'';
+        draft=current()?structuredClone(current()):null;
+        loading=false;render();
+        if(draft)await loadObservation();
+      }catch(error){loading=false;console.error('Perfis públicos:',error);render();showToast('Não foi possível carregar os perfis públicos. Confira as regras do Firestore.',true)}
+    }
+    function enter(){S.view='quadros';S.modal=null;render();if(!loading)void load()}
+    async function open(key){
+      if(draft&&permitted()&&version)await persist();
+      clearTimeout(saveTimer);id=key;draft=current()?structuredClone(current()):null;observation='';render();if(draft)void loadObservation();
+    }
+    async function loadObservation(){
+      const key=id,request=++obsRequest;
+      observation='';render();
+      if(!key||!S.user||!fb)return;
+      try{
+        const doc=await fb.getDoc(fb.doc(fb.db,'observacoesShinobi',uid()+'__'+key));
+        if(request===obsRequest&&key===id){observation=clip(doc.exists()?doc.data().texto:'',5000);refreshObservation();}
+      }catch(error){console.warn('Observação privada não carregada:',error.code||error);if(key===id)status('Não foi possível ler suas observações')}
+    }
+    function refreshObservation(){
+      const area=document.querySelector('[data-board-observation]');
+      if(area&&document.activeElement!==area)area.value=observation;
+    }
+    function queueSave(){if(!permitted())return;version++;status('Alterações pendentes');clearTimeout(saveTimer);saveTimer=setTimeout(()=>void persist(),800)}
+    async function persist(){
+      if(!permitted()||!fb)return;
+      clearTimeout(saveTimer);saveTimer=0;const v=version,snapshot=structuredClone(draft);
+      snapshot.updatedAt=Date.now();delete snapshot.id;
+      busy=true;status('Salvando quadro…');
+      try{
+        saveChain=saveChain.catch(()=>{}).then(()=>fb.setDoc(fb.doc(fb.db,'perfisPublicos',id),snapshot));
+        await saveChain;
+        const pos=all.findIndex(x=>x.id===id);
+        if(pos>=0)all[pos]=normalizeProfile(snapshot,id);else all.push(normalizeProfile(snapshot,id));
+        if(version===v){busy=false;status('Salvo na nuvem ✓')}else {busy=false;queueSave()}
+      }catch(error){busy=false;console.error('Salvamento do quadro:',error);status('Erro ao salvar');showToast('Não foi possível salvar o quadro. Confira as regras do Firestore.',true)}
+    }
+    async function create(key){
+      const sheet=S.sheets.find(x=>x.id===key);
+      if(!sheet||!S.user)return showToast('Selecione uma ficha da sua conta.',true);
+      if(current()&&permitted()&&version)await persist();
+      id=key;draft=fromSheet(sheet);observation='';render();
+      await persist();
+      if(all.some(x=>x.id===id))showToast('Quadro público criado para '+draft.nome+'.');
+    }
+    async function hide(){
+      if(!permitted()||!fb)return;
+      if(!confirm('Retirar este quadro da área pública? As notas do quadro deixarão de aparecer para outros jogadores.'))return;
+      clearTimeout(saveTimer);
+      try{
+        await fb.deleteDoc(fb.doc(fb.db,'perfisPublicos',id));
+        all=all.filter(x=>x.id!==id);id=all[0]?.id||'';draft=current()?structuredClone(current()):null;observation='';render();if(draft)void loadObservation();showToast('Quadro retirado do mural público.');
+      }catch(error){console.error(error);showToast('Não foi possível retirar o quadro.',true)}
+    }
+    function addNote(){
+      if(!permitted()||draft.notes.length>=22)return;
+      draft.notes.push(sanitizeNote({id:randomId(),title:'Nova anotação',kind:'text',text:'',x:130+(draft.notes.length%4)*275,y:300+(draft.notes.length%3)*190,w:270,h:195,rotation:(draft.notes.length%3-1)*2,color:'cream'}));
+      queueSave();render();
+    }
+    function removeNote(key){if(!permitted())return;draft.notes=draft.notes.filter(x=>x.id!==key);queueSave();render()}
+    function input(target){
+      if(target.matches('[data-board-observation]')){
+        observation=clip(target.value,5000);obsVersion++;status('Observação pendente');clearTimeout(obsTimer);obsTimer=setTimeout(()=>void saveObservation(),800);return true;
+      }
+      if(!permitted())return false;
+      if(target.dataset.boardTitle!==undefined){draft.nome=clip(target.value,80);queueSave();return true}
+      if(target.dataset.boardNoteField!==undefined){
+        const note=draft.notes.find(x=>x.id===target.dataset.boardNote);
+        if(!note)return true;
+        if(target.dataset.boardNoteField==='title')note.title=clip(target.value,80);
+        if(target.dataset.boardNoteField==='text')note.text=clip(target.value,6000);
+        queueSave();return true;
+      }
+      return false;
+    }
+    async function saveObservation(){
+      if(!S.user||!draft||!fb)return;
+      clearTimeout(obsTimer);obsTimer=0;
+      const target=id,text=observation,v=obsVersion;
+      status('Salvando observação…');
+      try{
+        obsChain=obsChain.catch(()=>{}).then(()=>fb.setDoc(fb.doc(fb.db,'observacoesShinobi',uid()+'__'+target),{ownerUid:uid(),profileId:target,texto:text,updatedAt:Date.now()}));
+        await obsChain;if(target===id)status(v===obsVersion?'Sua observação foi salva ✓':'Alterações pendentes');
+        if(target===id&&v!==obsVersion)saveObservation();
+      }catch(error){console.error(error);status('Falha ao salvar a observação');showToast('A observação não pôde ser salva. Confira as regras de acesso.',true)}
+    }
+    function noteHTML(note,canEdit){
+      const style='left:'+note.x+'px;top:'+note.y+'px;width:'+note.w+'px;height:'+note.h+'px;--tilt:'+note.rotation+'deg';
+      const heading='<h3>'+(canEdit?'<button type="button" class="pub-tool pub-drag" data-board-drag="'+esc(note.id)+'" title="Arrastar nota" aria-label="Arrastar nota">⠿</button><input maxlength="80" aria-label="Título da nota" data-board-note="'+esc(note.id)+'" data-board-note-field="title" value="'+esc(note.title)+'">':esc(note.title))+
+        (canEdit?'<span class="pub-note-tools"><button class="pub-tool" data-action="board-color" data-id="'+esc(note.id)+'" title="Alterar cor">◐</button><button class="pub-tool" data-action="board-remove" data-id="'+esc(note.id)+'" title="Descolar nota">×</button></span>':'')+'</h3>';
+      const body=note.kind==='portrait'?
+        '<div class="pub-portrait-picture">'+(draft?.portrait?'<img src="'+esc(draft.portrait)+'" alt="Retrato de '+esc(draft.nome)+'">':'<span class="pub-silhouette">忍</span>')+'</div>':
+        canEdit?'<textarea maxlength="6000" data-board-note="'+esc(note.id)+'" data-board-note-field="text" placeholder="Escreva aqui...">'+esc(note.text)+'</textarea>':
+        '<div class="pub-note-body">'+(esc(note.text)||'<span style="opacity:.6">Nenhuma anotação publicada.</span>')+'</div>';
+      return '<section class="pub-note '+(note.kind==='portrait'?'portrait':'')+'" data-public-note="'+esc(note.id)+'" data-color="'+esc(note.color)+'" style="'+style+'" '+(!canEdit?'data-readonly="true"':'')+'><i class="pub-pin" aria-hidden="true"></i>'+heading+body+'</section>';
+    }
+    function updatesHTML(){
+      if(!updates)return '';
+      return '<div class="pub-update-overlay" data-action="board-updates-close"><section class="pub-updates" role="dialog" aria-modal="true" aria-label="Notas de atualização"><div class="flex between"><h2>Notas de Atualização</h2><button class="button secondary small" data-action="board-updates-close">Fechar ×</button></div>'+CHANGELOG.map(c=>'<article><time>'+esc(c.date)+'</time><h3>'+esc(c.title)+'</h3><p>'+esc(c.body)+'</p></article>').join('')+'</section></div>';
+    }
+    function view(){
+      if(!S.user)return layout('<div class="pub-hub"><div class="pub-blank">Entre na sua conta para consultar os quadros shinobi.</div></div>');
+      const own=S.sheets.filter(s=>!all.some(a=>a.id===s.id));
+      const isOwner=permitted();
+      let output='<div class="pub-hub"><div class="pub-intro"><div class="eyebrow">ARQUIVOS PÚBLICOS DA VILA</div><h1>Mural de Konoha</h1><p>Conheça os shinobi do servidor pelos retratos, histórias e bilhetes publicados por seus jogadores. As estatísticas, atributos, recursos, perícias e demais dados privados das fichas não são exibidos aqui.</p></div>';
+      output+='<div class="pub-actions"><button class="button secondary small" data-action="board-refresh" '+(loading?'disabled':'')+'>↻ Atualizar mural</button>';
+      if(own.length)output+='<select class="pub-select" id="pub-new-sheet" aria-label="Escolher personagem para publicar"><option value="">Selecione sua ficha para criar um quadro</option>'+own.map(s=>'<option value="'+esc(s.id)+'">'+esc(s.data.nome||'Personagem sem nome')+'</option>').join('')+'</select><button class="button small" data-action="board-create">+ Publicar meu personagem</button>';
+      output+='<span class="pub-readonly" data-board-status>'+ (loading?'Buscando registros…':busy?'Salvando…':'Cada personagem tem seu próprio quadro.') +'</span></div>';
+      if(all.length)output+='<div class="pub-choose" aria-label="Quadros dos jogadores">'+all.map(p=>'<button class="pub-chip '+(p.id===id?'active':'')+'" data-action="board-open" data-id="'+esc(p.id)+'"><b>'+esc(p.nome)+'</b><small>'+esc(p.clan)+' · '+esc(p.graduacao)+(p.ownerUid===uid()?' · Seu quadro':'')+'</small></button>').join('')+'</div>';
+      if(!draft)output+='<div class="pub-blank"><h3>Nenhum quadro selecionado</h3><p>Os perfis compartilhados aparecerão aqui. Publique um personagem seu usando o seletor acima.</p></div>';
+      else {
+        output+='<div class="pub-board-toolbar"><b>'+esc(draft.nome)+' · '+esc(draft.clan)+'</b><span class="pub-spacer"></span>';
+        if(isOwner)output+='<button class="button small" data-action="board-add">+ Colar bilhete</button><button class="button secondary small" data-action="board-save">Salvar quadro</button><button class="button secondary small" data-action="board-hide">Retirar da vitrine</button>';
+        output+='<label style="font-size:12px">Zoom <input class="pub-zoom" type="range" min="0.65" max="1.3" step="0.05" data-board-zoom value="'+zoom+'"></label><button class="button secondary small" data-action="board-center">Recentrar</button></div>';
+        output+='<div class="pub-viewport" id="pub-viewport"><div class="pub-zoomframe" style="width:'+(W*zoom)+'px;height:'+(H*zoom)+'px"><div class="pub-scene" style="transform:scale('+zoom+')">';
+        output+='<div class="pub-topcloth"><span>木ノ葉 · '+esc(draft.nome)+'</span><div class="pub-cork-head">ARQUIVO DE PERSONAGEM · NOTÍCIAS E ANOTAÇÕES</div></div>';
+        for(const note of draft.notes)output+=noteHTML(note,isOwner);
+        output+='<section class="pub-note obs" style="left:1230px;top:680px;width:278px;height:325px;--tilt:-2deg"><i class="pub-pin" aria-hidden="true"></i><h3>✎ Minhas observações</h3><textarea maxlength="5000" data-board-observation placeholder="Anote aqui o que você sabe, descobriu ou pensa sobre este personagem. Só você poderá ler suas observações.">'+esc(observation)+'</textarea></section>';
+        output+='<button class="pub-permanent" data-action="board-updates-open" title="Abrir notas de atualização">📌 Notas de<br>Atualização</button></div></div></div>';
+        output+='<p class="pub-note-help">'+(isOwner?'Arraste pelo símbolo ⠿, redimensione pelo canto inferior direito das notas e use o controle de zoom. As alterações são salvas automaticamente.':'Você pode explorar este quadro, aumentar o zoom e escrever suas próprias observações privadas sobre o personagem.')+'</p>';
+      }
+      output+='</div>'+updatesHTML();
+      return layout(output);
+    }
+    function action(key,el){
+      if(key==='board-refresh')return void load();
+      if(key==='board-open')return void open(el.dataset.id);
+      if(key==='board-create'){const val=document.querySelector('#pub-new-sheet')?.value;if(!val)return showToast('Escolha uma ficha para publicar.');return void create(val)}
+      if(key==='board-add')return addNote();
+      if(key==='board-remove')return removeNote(el.dataset.id);
+      if(key==='board-save')return void persist();
+      if(key==='board-hide')return void hide();
+      if(key==='board-center'){const target=document.querySelector('#pub-viewport');if(target){target.scrollLeft=0;target.scrollTop=0}return}
+      if(key==='board-color'){if(!permitted())return;const n=draft.notes.find(x=>x.id===el.dataset.id);if(!n)return;const colors=['cream','sage','pink','blue','lavender'];n.color=colors[(colors.indexOf(n.color)+1)%colors.length];const card=el.closest('.pub-note');if(card)card.dataset.color=n.color;queueSave();return}
+      if(key==='board-updates-open'){updates=true;render();return}
+      if(key==='board-updates-close'){if(el.classList.contains('pub-update-overlay')&&el!==event.target)return;updates=false;render();return}
+    }
+    function change(target){
+      if(target.matches('[data-board-zoom]')){
+        zoom=limitNumber(target.value,.65,1.3,.85);
+        const scene=document.querySelector('.pub-scene'),frame=document.querySelector('.pub-zoomframe');
+        if(scene)scene.style.transform='scale('+zoom+')';
+        if(frame){frame.style.width=(W*zoom)+'px';frame.style.height=(H*zoom)+'px'}
+        return true;
+      }
+      return input(target);
+    }
+    let dragging=null;
+    document.addEventListener('pointerdown',ev=>{
+      const handle=ev.target.closest('[data-board-drag]');
+      if(!handle||S.view!=='quadros'||!permitted())return;
+      const node=handle.closest('[data-public-note]');
+      const note=draft.notes.find(x=>x.id===handle.dataset.boardDrag);
+      if(!node||!note)return;
+      dragging={node,note,x:ev.clientX,y:ev.clientY,left:note.x,top:note.y};
+      node.style.zIndex='11';handle.setPointerCapture?.(ev.pointerId);ev.preventDefault();
+    });
+    document.addEventListener('pointermove',ev=>{
+      if(!dragging)return;const d=dragging;
+      d.node.style.left=limitNumber(d.left+(ev.clientX-d.x)/zoom,35,W-d.note.w-26,35)+'px';
+      d.node.style.top=limitNumber(d.top+(ev.clientY-d.y)/zoom,100,H-d.note.h-30,100)+'px';
+    });
+    document.addEventListener('pointerup',ev=>{
+      if(dragging){const d=dragging;d.note.x=parseFloat(d.node.style.left)||d.note.x;d.note.y=parseFloat(d.node.style.top)||d.note.y;d.node.style.zIndex='5';dragging=null;queueSave();return}
+      const node=ev.target.closest?.('[data-public-note]');
+      if(!node||S.view!=='quadros'||!permitted())return;
+      const note=draft.notes.find(x=>x.id===node.dataset.publicNote);
+      if(!note)return;
+      const w=Math.round(node.offsetWidth),h=Math.round(node.offsetHeight);
+      if(Math.abs(note.w-w)>2||Math.abs(note.h-h)>2){note.w=w;note.h=h;queueSave()}
+    });
+    return {view,enter,action,change,load,saveObservation,persist};
+  })();
+
+function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="margin:15vh auto;max-width:500px"><h3>Carregando os arquivos shinobi...</h3><p>Conectando ao sistema de autenticação.</p></div>';return}if(CONFIGURED&&!S.user&&!['login'].includes(S.view))S.view='login';let screen={quadros:PublicBoard.view,home,clans,sheet:canvaSheetView,guia:guideView,biblioteca:libraryView,diario:diaryView,fichas:mySheets,admin:adminView,'admin-gate':adminGate,login}[S.view]||home;$('#app').innerHTML=screen();if(S.modal)$('#app').insertAdjacentHTML('beforeend',S.modal==='delete'?deleteModal():clanModal());if(S.view==='biblioteca')librarySearchFilter();integratedFilter();if(S.view==='diario'&&S.diaryEnterAnimate)S.diaryEnterAnimate=false}
 
 
   /* Os três novos efeitos são entregues em assets/audio/journal-sounds.js,
@@ -4470,6 +4739,7 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
  S.modal=null;
  S.combatMode=false;
  if(S.view==='diario'&&S.diaryDirty)void persistDiary();
+ if(view==='quadros')return PublicBoard.enter();
  if(view==='diario')return void openDiaryFor(uid(),S.user?.displayName||'Jogador',false);
  if(view==='admin'){
    if(!canAdmin())return showToast('Acesso restrito ao mestre.',true);
@@ -4652,7 +4922,7 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
   if(button?.isConnected)button.disabled=false;
  }
 }
-  function clickAction(el){const action=el.dataset.action;if(!action)return;const p=active();if(action==='open-admin-diary')return void openDiaryFor(el.dataset.uid,el.dataset.name,true);
+  function clickAction(el){const action=el.dataset.action;if(!action)return;if(action.startsWith('board-'))return PublicBoard.action(action,el);const p=active();if(action==='open-admin-diary')return void openDiaryFor(el.dataset.uid,el.dataset.name,true);
    if(action==='diary-save')return void persistDiary();
    if(action==='diary-section')return diarySection(el.dataset.section);
    if(action==='diary-complete-current')return diaryCompleteCurrent();
@@ -4664,8 +4934,8 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
   document.addEventListener('click',ev=>{const el=ev.target.closest('[data-action]');if(!el)return;if(el.classList.contains('modalshade')&&ev.target!==el)return;clickAction(el)});
   document.addEventListener('keydown',ev=>{if(ev.target.matches?.('[data-vitality-input]')){if(ev.key==='Enter'){ev.preventDefault();ev.target.blur();return}if(ev.key==='Escape'){ev.preventDefault();ev.stopPropagation();ev.target.value=String(vitalityValue(active()));ev.target.blur();return}}if(ev.key==='Escape'&&document.querySelector('.evo-rise-layer')){ev.preventDefault();evolutionDismiss();return}if(ev.key==='Escape'&&S.view==='sheet'&&S.combatMode){ev.preventDefault();combatExit()}});
   document.addEventListener('submit',ev=>{if(ev.target.id==='auth-form'){ev.preventDefault();submitAuth(ev.target)}else if(ev.target.id==='admin-auth-form'){ev.preventDefault();unlockAdmin(ev.target)}});
-  document.addEventListener('input',ev=>{const el=ev.target;if(el.matches('[data-diary-field],[data-diary-completed]')){diaryUpdateField(el);return}if(el.matches('[data-vitality-input]'))return;if(el.matches('[data-int-search]')){S.inlineSearch=el.value;integratedFilter();return}if(el.matches('[data-library-search]')){S.librarySearch=el.value;librarySearchFilter();return}if(el.id==='admin-filter'){const q=el.value.toLocaleLowerCase('pt-BR');$('#admin-rows').innerHTML=adminRows(S.adminSheets.filter(x=>[x.nome,x.usuario,clanOf(x.clanId).name].some(z=>String(z||'').toLocaleLowerCase('pt-BR').includes(q))));return}if(el.dataset.cvArray){canvaUpdateArray(el,true);return}if(el.dataset.cvSkill){updateCanvaSkill(el,true);return}if(!el.dataset.bind||el.tagName==='SELECT')return;const current=active(),path=el.dataset.bind,old=getAt(current,path.startsWith('@')?path.slice(1):path);if(!updateValue(path,el.value)){el.value=old??''}else refreshGuideFeedback()});
-  document.addEventListener('change',ev=>{const el=ev.target;if(el.matches('[data-diary-field],[data-diary-completed]')){if(S.diaryDirty)void persistDiary();return}if(el.matches('[data-vitality-input]')){commitVitalityInput(el);return}if(el.matches('[data-library-power]')){S.libraryPowerId=el.value;render();return}if(el.matches('[data-library-scope]')){S.libraryScope=el.value;render();return}if(el.matches('[data-portrait-file]')){const file=el.files?.[0];el.value='';void handlePortraitSelected(file,S.portraitUploadSlot);return}if(el.dataset.cvArray){canvaUpdateArray(el);return}if(el.dataset.cvSkill){updateCanvaSkill(el);return}if(!el.dataset.bind||el.tagName!=='SELECT')return;updateValue(el.dataset.bind,el.value)});
+  document.addEventListener('input',ev=>{const el=ev.target;if(PublicBoard.change(el))return;if(el.matches('[data-diary-field],[data-diary-completed]')){diaryUpdateField(el);return}if(el.matches('[data-vitality-input]'))return;if(el.matches('[data-int-search]')){S.inlineSearch=el.value;integratedFilter();return}if(el.matches('[data-library-search]')){S.librarySearch=el.value;librarySearchFilter();return}if(el.id==='admin-filter'){const q=el.value.toLocaleLowerCase('pt-BR');$('#admin-rows').innerHTML=adminRows(S.adminSheets.filter(x=>[x.nome,x.usuario,clanOf(x.clanId).name].some(z=>String(z||'').toLocaleLowerCase('pt-BR').includes(q))));return}if(el.dataset.cvArray){canvaUpdateArray(el,true);return}if(el.dataset.cvSkill){updateCanvaSkill(el,true);return}if(!el.dataset.bind||el.tagName==='SELECT')return;const current=active(),path=el.dataset.bind,old=getAt(current,path.startsWith('@')?path.slice(1):path);if(!updateValue(path,el.value)){el.value=old??''}else refreshGuideFeedback()});
+  document.addEventListener('change',ev=>{const el=ev.target;if(el.matches('[data-board-observation]')){void PublicBoard.saveObservation();return}if(el.matches('[data-board-zoom]'))return;if(el.matches('[data-diary-field],[data-diary-completed]')){if(S.diaryDirty)void persistDiary();return}if(el.matches('[data-vitality-input]')){commitVitalityInput(el);return}if(el.matches('[data-library-power]')){S.libraryPowerId=el.value;render();return}if(el.matches('[data-library-scope]')){S.libraryScope=el.value;render();return}if(el.matches('[data-portrait-file]')){const file=el.files?.[0];el.value='';void handlePortraitSelected(file,S.portraitUploadSlot);return}if(el.dataset.cvArray){canvaUpdateArray(el);return}if(el.dataset.cvSkill){updateCanvaSkill(el);return}if(!el.dataset.bind||el.tagName!=='SELECT')return;updateValue(el.dataset.bind,el.value)});
   async function startFirebase(){try{const base=`https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}`;const [{initializeApp},{getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,reauthenticateWithCredential,EmailAuthProvider},{getFirestore,doc,getDoc,setDoc,deleteDoc,collection,getDocs,query,where,onSnapshot}]=await Promise.all([import(base+'/firebase-app.js'),import(base+'/firebase-auth.js'),import(base+'/firebase-firestore.js')]);const app=initializeApp(FIREBASE_CONFIG),auth=getAuth(app),db=getFirestore(app);fb={auth,db,doc,getDoc,setDoc,deleteDoc,collection,getDocs,query,where,onSnapshot,reauthenticateWithCredential,EmailAuthProvider,signOut,createUserWithEmailAndPassword,signInWithEmailAndPassword};onAuthStateChanged(auth,async(user)=>{clearTimeout(S.saveTimer);if(!user){clearTimeout(S.diarySaveTimer);S.diarySaveTimer=null;S.diary=null;S.diaryOwnerUid=null;S.diaryStorage=null;S.diaryHostId=null;S.diaryNoHost=false;S.diaryFromAdmin=false;S.diaryDirty=false;S.diaryRequest++;stopAdminLive();S.adminUnlocked=false;S.adminAuthBusy=false;S.adminLoginBusy=false;S.adminSheets=[];S.user=null;S.isAdmin=false;S.sheet=null;S.sheetId=null;S.sheets=[];S.adminViewing=false;S.loading=false;S.view='login';render();return}const fallback=user.email?.split('@')[0]||'Shinobi';S.user={uid:user.uid,displayName:fallback};try{const [profile,admin,found]=await Promise.all([getDoc(doc(db,'users',user.uid)),getDoc(doc(db,'admins',user.uid)),getDocs(query(collection(db,'fichas'),where('ownerUid','==',user.uid)))]);if(profile.exists())S.user.displayName=profile.data().username||fallback;S.isAdmin=admin.exists()||user.email===MASTER_EMAIL;if(user.email===MASTER_EMAIL)S.adminUnlocked=true;const personalDiary=found.docs.find(d=>d.data().tipo==='diario'&&d.data().ownerUid===user.uid);
 S.diary=personalDiary?normalizeDiary(personalDiary.data(),user.uid,S.user.displayName):null;
 S.diaryStorage=personalDiary?'legacy':null;S.diaryHostId=null;S.diaryNoHost=false;
