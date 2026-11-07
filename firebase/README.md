@@ -1,10 +1,15 @@
 ## Guia de criação de personagem no site
 
-Depois de escolher um clã e clicar em **Criar personagem**, o Shinobi Chronicles abre automaticamente a aba **Guia de criação**, com **11 etapas** baseadas no *Naruto Shinobi no Sho 4.1b* e no Resumo/Manual de Criação enviado ao projeto. A ficha continua sendo salva no Firestore.
+Ao selecionar um clã e criar personagem, o jogador entra no **Manual de Recrutas**, um guia editável dividido em 11 etapas. O novo menu é inspirado na estética tradicional japonesa de papel washi, pinceladas sumi-e, selos dos clãs e pigmentos em aquarela.
 
-O guia acompanha **NC, pontos de atributos, perícias, poderes, sociais e aptidões** do personagem em tempo real. Cada etapa possui o botão **Abrir esta parte da ficha**, que encaminha à página correspondente do modelo original do Canva ou ao editor detalhado, quando necessário. O jogador pode voltar ao guia pelo menu lateral ou pelo botão na ficha.
+**O guia agora preenche a ficha de verdade:** campos de identidade (nome, idade, gênero, origem, vila, graduação, tendência e retrato), NC, pontos dos sete atributos, redistribuição de combate, perícias, Carisma/Manipulação, aptidões, poderes, jutsus, Vitalidade/Chakra atuais, Ryos, equipamentos, biografia e diário.
 
-O padrão de criação é **Genin NC 4**: 12 pontos de atributos, 8 de perícias, 4 de poderes, 2 sociais e três aptidões gratuitas. Valores dos outros NCs acompanham a tabela já implementada no projeto. As progressões intermediárias do site são adaptações e devem ser aprovadas pelo mestre. O guia explica o sistema, mas não valida automaticamente todos os pré-requisitos específicos de clãs, técnicas e aptidões do livro.
+Tudo utiliza o **mesmo objeto de personagem e o mesmo documento `fichas/{id}` no Firestore** das quatro páginas originais do Canva. Digitar em um campo `data-bind` atualiza a ficha local no mesmo instante e inicia o salvamento automático; os botões de atributos, perícias e sociais também utilizam o orçamento e os limites do NC. O menu acompanha o progresso sem recriar os campos enquanto o jogador digita.
+
+Ao voltar à ficha original, os valores preenchidos no guia já aparecem nos lugares correspondentes. A primeira página do Canva recebeu também uma seção suplementar de **Atributos Sociais**, com dois controles de Carisma e Manipulação ligados diretamente a `sociais.Carisma` e `sociais.Manipulacao`. Os campos numéricos já existentes na imagem original foram mantidos.
+
+O padrão inicial é **Genin NC 4**: 12 pontos de atributos, 8 de perícias, 4 de poderes, 2 sociais e três aptidões gratuitas. As técnicas específicas de clã, aptidões e pré-requisitos continuam sujeitos ao livro *Naruto Shinobi no Sho 4.1b* e à validação do mestre; os NCs intermediários do site são uma adaptação.
+
 
 ---
 
