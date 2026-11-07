@@ -5,7 +5,7 @@
 - **Subida de Vigor/NC:** se a vida estava cheia, ela acompanha o novo máximo; se havia dano, o valor atual é preservado (ou limitado ao novo máximo em caso de redução).
 - **Ferimentos:** quando a vida cruza para 50% ou menos, toca `assets/audio/injury-wounded.ogg` e o retrato muda para Ferido. Em 25% ou menos, toca `assets/audio/injury-critical.ogg` e muda para Gravemente ferido. Os efeitos só são disparados na **mudança de estado**, não a cada ponto perdido.
 - **Cura:** quando a vida cruza para um estado mais saudável, o retrato recebe uma animação curta de brilho verde e leve tremida. A animação respeita a configuração `prefers-reduced-motion`.
-- **Menu:** ao navegar até **Os Clãs/Criar Fichas** ou **Minhas Fichas**, toca `assets/audio/menu-transition.ogg`, inclusive quando o jogador sai da ficha por um desses atalhos. O áudio antigo de criar personagem em `assets/audio/create-sheet.mp3` foi preservado.
+- **Saída da ficha:** `assets/audio/menu-transition.ogg` toca **somente** ao clicar no botão **← Minhas fichas** da barra dentro da ficha, ao lado de **Guia de criação**. Outros acessos a Minhas fichas, Os Clãs e menus ficam silenciosos. O áudio antigo de criar personagem em `assets/audio/create-sheet.mp3` foi preservado.
 
 Os três novos arquivos são versões leves em Ogg/Opus dos WAV enviados pelo usuário, hospedadas como arquivos estáticos no GitHub Pages. O navegador pode exigir interação do jogador antes da primeira reprodução de áudio; caso o formato não seja suportado, a ação continua funcionando silenciosamente.
 
