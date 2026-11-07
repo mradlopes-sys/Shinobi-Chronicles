@@ -2342,7 +2342,7 @@
   const LIBRARY_SOURCES={title:'Naruto: Shinobi no Sho — 4ª edição (4.1b)',notes:'Poderes compram níveis; jutsus e efeitos dependem dos poderes e demais pré-requisitos.'};
   const TABS=[['identidade','Identidade'],['atributos','Atributos'],['pericias','Perícias'],['combate','Combate'],['tecnicas','Poderes e jutsus'],['inventario','Inventário'],['historia','História']];
 
-  const S={view:'home',tab:'identidade',authPane:'login',user:null,isAdmin:false,sheet:null,sheetId:null,adminSheets:[],activeClan:null,demo:!CONFIGURED,sheets:[],adminViewing:false,pendingDeleteId:null,pendingWrite:null,canvaPage:1,canvaMode:'original',loading:CONFIGURED,modal:null,saveTimer:null,saveState:'Pronto',authWorking:false,adminUnlocked:false,adminAuthBusy:false,adminLoginBusy:false,adminUnsubscribe:null,adminLive:false,adminLiveReady:false,adminLiveError:false,adminEvents:[],pendingRemote:null,locallyDirty:false,isSaving:false,lastSavedWrite:null,creating:false,portraitBusy:false,portraitPreview:null,portraitUploadSlot:'casual',guideStep:0,libraryKind:'all',libraryScope:'mine',librarySearch:'',libraryPowerId:'',inlineKind:'power',inlineSearch:'',combatMode:false,combatTransitioning:false,diary:null,diaryOwnerUid:null,diaryFromAdmin:false,diaryLoading:false,diaryDirty:false,diaryVersion:0,diarySaveTimer:null,diaryPendingWrite:null,diaryStatus:'',diaryPanel:'',diaryExpandedId:'',diaryEnterAnimate:false,diaryRequest:0,adminDiaries:[]};
+  const S={view:'home',tab:'identidade',authPane:'login',user:null,isAdmin:false,sheet:null,sheetId:null,adminSheets:[],activeClan:null,demo:!CONFIGURED,sheets:[],adminViewing:false,pendingDeleteId:null,pendingWrite:null,canvaPage:1,canvaMode:'original',loading:CONFIGURED,modal:null,saveTimer:null,saveState:'Pronto',authWorking:false,adminUnlocked:false,adminAuthBusy:false,adminLoginBusy:false,adminUnsubscribe:null,adminLive:false,adminLiveReady:false,adminLiveError:false,adminEvents:[],pendingRemote:null,locallyDirty:false,isSaving:false,lastSavedWrite:null,creating:false,portraitBusy:false,portraitPreview:null,portraitUploadSlot:'casual',guideStep:0,libraryKind:'all',libraryScope:'mine',librarySearch:'',libraryPowerId:'',inlineKind:'power',inlineSearch:'',combatMode:false,combatTransitioning:false,diary:null,diaryOwnerUid:null,diaryStorage:null,diaryHostId:null,diaryFromAdmin:false,diaryLoading:false,diaryDirty:false,diaryVersion:0,diarySaveTimer:null,diaryPendingWrite:null,diaryStatus:'',diaryPanel:'',diaryExpandedId:'',diaryEnterAnimate:false,diaryRequest:0,adminDiaries:[]};
   let fb=null;
   const $=sel=>document.querySelector(sel);
   const E=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -3145,7 +3145,9 @@ function startAdminLive(){
      }
    }
    if(S.view==='diario'&&S.diaryFromAdmin&&S.diary&&!S.diaryDirty){
-     const freshDiary=S.adminDiaries.find(x=>x.ownerUid===S.diaryOwnerUid);
+     const freshDiary=S.diaryStorage==='sheet'?
+       S.adminSheets.find(x=>x.__id===S.diaryHostId)?.diarioPessoal:
+       S.adminDiaries.find(x=>x.ownerUid===S.diaryOwnerUid);
      if(freshDiary&&n(freshDiary.atualizadoEm)>n(S.diary.atualizadoEm)
        &&!document.activeElement?.matches?.('[data-diary-field],[data-diary-completed]')){
        S.diary=normalizeDiary(freshDiary,S.diaryOwnerUid,freshDiary.usuario);
@@ -4095,6 +4097,25 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
         descricao:value(item?.descricao,4800),objetivos:value(item?.objetivos,3800),concluidaEm:n(item?.concluidaEm)||Date.now()})),
       anotacoes:value(raw.anotacoes,13000)};
   }
+
+  // Reutiliza a permissão já existente nas fichas do titular.
+  // Para contas com várias fichas, um único documento hospeda o diário pessoal.
+  function diarySheetHost(ownerUid){
+    const isOwner=ownerUid===uid();
+    const sheets=isOwner?S.sheets.map(x=>({id:x.id,data:x.data})):
+      S.adminSheets.filter(x=>x.ownerUid===ownerUid&&x.tipo!=='diario').map(x=>({id:x.__id,data:x}));
+    const valid=sheets.filter(x=>x.id&&x.data?.ownerUid===ownerUid&&x.data.tipo!=='diario');
+    valid.sort((a,b)=>{
+      const hasA=!!a.data.diarioPessoal,hasB=!!b.data.diarioPessoal;
+      if(hasA!==hasB)return hasA?-1:1;
+      return (n(a.data.criadoEm)||0)-(n(b.data.criadoEm)||0)||String(a.id).localeCompare(String(b.id));
+    });
+    return valid[0]||null;
+  }
+  function diaryLegacyFor(ownerUid){
+    if(ownerUid===uid()&&S.diaryStorage==='legacy'&&S.diary?.ownerUid===ownerUid)return S.diary;
+    return S.adminDiaries.find(x=>x.ownerUid===ownerUid&&x.tipo==='diario')||null;
+  }
   function diaryAuthorized(){
     if(!S.user||!S.diary||!S.diaryOwnerUid)return false;
     if(S.diary.ownerUid!==S.diaryOwnerUid)return false;
@@ -4112,17 +4133,39 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
     clearTimeout(S.diarySaveTimer);
     S.diarySaveTimer=setTimeout(()=>void persistDiary(),650);
   }
+
   async function persistDiary(){
     clearTimeout(S.diarySaveTimer);S.diarySaveTimer=null;
     if(!diaryAuthorized()||!S.diaryDirty)return false;
     if(!CONFIGURED||!fb||!S.user){diarySetStatus('Entre na conta para salvar');return false}
-    const docId=diaryDocId(S.diaryOwnerUid),ownerUid=S.diaryOwnerUid,version=S.diaryVersion;
+    const ownerUid=S.diaryOwnerUid,storage=S.diaryStorage,hostId=S.diaryHostId,
+      version=S.diaryVersion;
     const data=JSON.parse(JSON.stringify(S.diary));
-    data.tipo='diario';data.ownerUid=ownerUid;data.atualizadoEm=Date.now();
+    data.ownerUid=ownerUid;data.tipo='diario';data.atualizadoEm=Date.now();
+    if(storage!=='legacy'&&storage!=='sheet')return false;
+    if(storage==='sheet'){
+      const host=diarySheetHost(ownerUid);
+      if(!host||host.id!==hostId){
+        diarySetStatus('A ficha que guarda o diário não foi encontrada');
+        return false;
+      }
+    }
+    const docId=storage==='sheet'?hostId:diaryDocId(ownerUid);
     try{
       diarySetStatus('Salvando diário...');
-      S.diaryPendingWrite=(S.diaryPendingWrite||Promise.resolve()).catch(()=>{}).then(()=>fb.setDoc(fb.doc(fb.db,'fichas',docId),data));
+      const payload=storage==='sheet'?{diarioPessoal:data}:data;
+      S.diaryPendingWrite=(S.diaryPendingWrite||Promise.resolve()).catch(()=>{}).then(()=>
+        storage==='sheet'?fb.setDoc(fb.doc(fb.db,'fichas',docId),payload,{merge:true}):
+          fb.setDoc(fb.doc(fb.db,'fichas',docId),payload));
       await S.diaryPendingWrite;
+      // Atualiza apenas a cópia em memória; não altera outras propriedades da ficha.
+      if(storage==='sheet'){
+        const own=S.sheets.find(x=>x.id===hostId);
+        if(own)own.data.diarioPessoal=data;
+        const admin=S.adminSheets.find(x=>x.__id===hostId);
+        if(admin)admin.diarioPessoal=data;
+        if(S.sheetId===hostId&&S.sheet)S.sheet.diarioPessoal=data;
+      }
       if(S.diaryOwnerUid===ownerUid&&S.diaryVersion===version&&S.diary){
         S.diaryDirty=false;S.diary.atualizadoEm=data.atualizadoEm;
         diarySetStatus('Diário salvo ✓');
@@ -4131,39 +4174,35 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
     }catch(error){
       console.error('Falha ao salvar diário:',error.code||error);
       if(S.diaryOwnerUid===ownerUid)diarySetStatus('Falha ao salvar');
-      showToast('Não foi possível salvar o diário. Verifique as permissões do Firebase.',true);
+      showToast('Não foi possível salvar o diário. Confira a conexão e as permissões.',true);
       return false;
     }
   }
   async function openDiaryFor(ownerUid,username='',fromAdmin=false){
     if(!S.user||!CONFIGURED||!fb)return showToast('Entre na sua conta para abrir o diário.',true);
-    const authorized=ownerUid===uid()||fromAdmin&&canAdmin()&&S.adminUnlocked;
+    const authorized=ownerUid===uid()||(fromAdmin&&canAdmin()&&S.adminUnlocked);
     if(!authorized)return showToast('Acesso ao diário não permitido.',true);
     if(fromAdmin&&ownerUid!==uid()){
-      const playerExists=S.adminSheets.some(x=>x.ownerUid===ownerUid)||S.adminDiaries.some(x=>x.ownerUid===ownerUid);
-      if(!playerExists)return showToast('Jogador não encontrado no painel do mestre.',true);
+      const exists=S.adminSheets.some(x=>x.ownerUid===ownerUid)||S.adminDiaries.some(x=>x.ownerUid===ownerUid);
+      if(!exists)return showToast('Jogador não encontrado no painel do mestre.',true);
     }
-    if(S.diaryDirty)void persistDiary();
-    const request=++S.diaryRequest,Saved=S.diaryOwnerUid===ownerUid?S.diary:null;
-    S.diaryFromAdmin=fromAdmin&&ownerUid!==uid();S.diaryOwnerUid=ownerUid;
-    S.diary=null;S.diaryDirty=false;S.diaryLoading=true;S.diaryVersion=0;S.diaryStatus='Carregando...';
-    S.diaryPanel='';S.diaryExpandedId='';S.view='diario';S.combatMode=false;S.modal=null;
+    if(S.diaryDirty){const saved=await persistDiary();if(!saved)return showToast('Salve as alterações do diário antes de mudar de jogador.',true)}
+    const legacy=diaryLegacyFor(ownerUid),host=diarySheetHost(ownerUid);
+    if(!legacy&&!host){
+      S.diaryLoading=false;S.diary=null;S.diaryOwnerUid=null;S.diaryHostId=null;S.diaryStorage=null;
+      S.view='diario';render();
+      return showToast('Para ativar o diário, crie primeiro uma ficha de personagem.',true);
+    }
+    S.diaryRequest++;
+    S.diaryFromAdmin=fromAdmin&&ownerUid!==uid();
+    S.diaryOwnerUid=ownerUid;
+    S.diaryStorage=legacy?'legacy':'sheet';
+    S.diaryHostId=legacy?null:host.id;
+    S.diary=normalizeDiary(legacy||(host?.data?.diarioPessoal)||{},ownerUid,username||legacy?.usuario||host?.data?.usuario||'Jogador');
+    S.diaryDirty=false;S.diaryLoading=false;S.diaryVersion=0;S.diaryStatus='Diário carregado';
+    S.diaryPanel='';S.diaryExpandedId='';
+    S.diaryEnterAnimate=true;S.view='diario';S.combatMode=false;S.modal=null;
     render();window.scrollTo({top:0});
-    try{
-      const snap=await fb.getDoc(fb.doc(fb.db,'fichas',diaryDocId(ownerUid)));
-      if(request!==S.diaryRequest||S.view!=='diario')return;
-      const raw=snap.exists()?snap.data():null;
-      if(raw&&raw.tipo!=='diario'||raw&&raw.ownerUid!==ownerUid)throw Error('Documento de diário inválido');
-      S.diary=normalizeDiary(raw||Saved||{},ownerUid,username||raw?.usuario);
-      S.diaryLoading=false;S.diaryStatus='Diário carregado';S.diaryEnterAnimate=true;
-      render();window.scrollTo({top:0});
-      if(!snap.exists()){S.diaryDirty=true;void persistDiary()}
-    }catch(error){
-      if(request!==S.diaryRequest)return;
-      S.diary=null;S.diaryLoading=false;S.diaryStatus='Sem acesso';
-      console.error('Não foi possível acessar o diário:',error.code||error);
-      render();showToast('O diário não pôde ser carregado. Confira as permissões do Firebase.',true);
-    }
   }
   function diaryUpdateField(element){
     if(!diaryAuthorized())return;
@@ -4314,14 +4353,16 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
  if(!S.user){showToast('Entre na conta para salvar.',true);return false}
  const target=S.sheetId;
  const original=S.adminViewing?S.adminSheets.find(x=>x.__id===target):null;
- const data=JSON.parse(JSON.stringify(active()));S.isSaving=true;
+ const data=JSON.parse(JSON.stringify(active()));
+ // O diário tem salvamento independente; evitar apagar um registro mais novo ao salvar a ficha.
+ delete data.diarioPessoal;S.isSaving=true;
  data.ownerUid=S.adminViewing?original?.ownerUid:uid();
  if(!data.ownerUid){S.isSaving=false;return false}
  data.atualizadoEm=Date.now();S.lastSavedWrite={id:target,stamp:data.atualizadoEm};
  const own=S.sheets.find(x=>x.id===target);
  try{
    setStatus('Salvando...');
-   S.pendingWrite=(S.pendingWrite||Promise.resolve()).catch(()=>{}).then(()=>fb.setDoc(fb.doc(fb.db,'fichas',target),data));
+   S.pendingWrite=(S.pendingWrite||Promise.resolve()).catch(()=>{}).then(()=>fb.setDoc(fb.doc(fb.db,'fichas',target),data,{merge:true}));
    await S.pendingWrite;
    if(own)own.data.atualizadoEm=data.atualizadoEm;
    if(original)Object.assign(original,data);
@@ -4500,14 +4541,15 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
    if(action==='diary-completed-toggle'){S.diaryExpandedId=S.diaryExpandedId===el.dataset.id?'':el.dataset.id;render();return}
    if(action==='diary-remove')return diaryRemoveCompleted(el.dataset.id);
    if(action==='diary-restore')return diaryRestoreMission(el.dataset.id);
-   if(action==='evolution-close')return evolutionDismiss();if(action==='combat-enter')return combatEnter();if(action==='combat-exit')return combatExit();if(action==='combat-chakra-step')return combatStepChakra(n(el.dataset.delta));if(action==='combat-portrait-next')return combatNextPortrait();if(action==='combat-to-techniques')return combatToTechniques();if(action==='integrated-use')return integratedUse(n(el.dataset.index));if(action==='integrated-kind'){S.inlineKind=el.dataset.kind||'power';S.inlineSearch='';render();return}if(action==='library-learn')return catalogLearn(el.dataset.id);if(action==='library-forget-effect')return forgetCatalogEffect(n(el.dataset.powerIndex),n(el.dataset.index));if(action==='library-kind'){S.libraryKind=el.dataset.kind||'all';render();return}if(action==='guide-step'){S.inlineSearch='';S.inlineKind='power';S.guideStep=bound(el.dataset.step,0,GUIDE_STEPS.length-1);S.view='guia';render();window.scrollTo({top:0,behavior:'smooth'});return}if(action==='guide-open'){if(!active())return nav('clans');S.canvaPage=bound(el.dataset.page||1,1,4);S.canvaMode=el.dataset.advanced==='true'?'advanced':'original';S.tab=el.dataset.tab||'identidade';S.view='sheet';render();window.scrollTo({top:0,behavior:'smooth'});return}if(action==='cv-page'){S.inlineSearch='';S.canvaPage=Number(el.dataset.page)||1;render();return}if(action==='cv-mode'){S.canvaMode=S.canvaMode==='advanced'?'original':'advanced';render();return}if(action==='open-sheet')return openSheet(el.dataset.id);if(action==='ask-delete')return askDelete(el.dataset.id);if(action==='confirm-delete')return deleteSheet();if(action==='lock-admin')return lockAdmin();if(action==='apply-remote')return applyRemoteSheet();if(action==='exit-sheet-to-list'){if(S.view==='sheet'&&!S.adminViewing&&active()){playSfx('menu');return nav('fichas')}return}if(action==='nav')return nav(el.dataset.view);if(action==='tab'){S.tab=el.dataset.tab;render();return}if(action==='clan'){S.activeClan=el.dataset.clan;S.modal='clan';render();return}if(action==='close-modal'){S.modal=null;render();return}if(action==='create-sheet')return createSheetAnimated();if(action==='auth-pane'){S.authPane=el.dataset.pane==='admin'?'admin':'login';render();return}if(action==='auth-switch'){S.authPane=S.authPane==='register'?'login':'register';render();return}if(action==='logout'){S.adminUnlocked=false;stopAdminLive();S.adminSheets=[];if(fb){void (async()=>{if(S.diaryDirty)await persistDiary();await fb.signOut(fb.auth)})()}else{S.user=null;S.sheet=null;S.sheetId=null;S.sheets=[];S.diary=null;S.diaryOwnerUid=null;S.diaryDirty=false;S.view='home';render()}return}if(action==='portrait-upload')return uploadPortrait(el.dataset.slot);if(action==='portrait-switch')return switchPortrait(el.dataset.slot);if(action==='portrait-remove')return removePortrait(el.dataset.slot);if(action==='save')return persist();if(action==='print')return window.print();if(action==='export')return exportSheet();if(action==='vitality-step')return adjustVitality(n(el.dataset.delta));if(action==='social')return adjustSocial(el.dataset.key,n(el.dataset.delta));if(action==='attr')return adjustAttr(el.dataset.key,n(el.dataset.delta));if(action==='skill')return adjustSkill(el.dataset.key,n(el.dataset.delta));if(action==='shift')return shiftCombat();if(action==='reset-shift'){if(!canEditCurrent())return;p.combateAjustes={CC:0,CD:0,ESQ:0,LM:0};render();scheduleSave();return}if(action==='add-item')return modifyItem(el.dataset.array);if(action==='remove-item')return modifyItem(el.dataset.array,n(el.dataset.index),true);if(action==='roll-skill'){const k=el.dataset.key;if(!trained(p,k))return showToast('Esta perícia exige treinamento.',true);return roll(2,skillTotal(p,k),k)}if(action==='roll-combat'){const key=el.dataset.key;return roll(2,combat(p,key),key==='CD'?'Combate à distância':'Combate corporal')}if(action==='roll-initiative')return roll(1,n(p.atributos.AGI)+skillTotal(p,'Prontidão'),'Iniciativa');if(action==='refresh-admin')return refreshAdmin();if(action==='open-admin'){if(!canAdmin()||!S.adminUnlocked)return showToast('Confirme a senha para acessar as fichas.',true);const x=S.adminSheets.find(a=>a.__id===el.dataset.id);if(x){const {__id,...safeData}=x;S.sheet=normalize(safeData);S.sheetId=__id;S.adminViewing=true;S.canvaMode='original';S.view='sheet';S.tab='identidade';render();}return}}
+   if(action==='evolution-close')return evolutionDismiss();if(action==='combat-enter')return combatEnter();if(action==='combat-exit')return combatExit();if(action==='combat-chakra-step')return combatStepChakra(n(el.dataset.delta));if(action==='combat-portrait-next')return combatNextPortrait();if(action==='combat-to-techniques')return combatToTechniques();if(action==='integrated-use')return integratedUse(n(el.dataset.index));if(action==='integrated-kind'){S.inlineKind=el.dataset.kind||'power';S.inlineSearch='';render();return}if(action==='library-learn')return catalogLearn(el.dataset.id);if(action==='library-forget-effect')return forgetCatalogEffect(n(el.dataset.powerIndex),n(el.dataset.index));if(action==='library-kind'){S.libraryKind=el.dataset.kind||'all';render();return}if(action==='guide-step'){S.inlineSearch='';S.inlineKind='power';S.guideStep=bound(el.dataset.step,0,GUIDE_STEPS.length-1);S.view='guia';render();window.scrollTo({top:0,behavior:'smooth'});return}if(action==='guide-open'){if(!active())return nav('clans');S.canvaPage=bound(el.dataset.page||1,1,4);S.canvaMode=el.dataset.advanced==='true'?'advanced':'original';S.tab=el.dataset.tab||'identidade';S.view='sheet';render();window.scrollTo({top:0,behavior:'smooth'});return}if(action==='cv-page'){S.inlineSearch='';S.canvaPage=Number(el.dataset.page)||1;render();return}if(action==='cv-mode'){S.canvaMode=S.canvaMode==='advanced'?'original':'advanced';render();return}if(action==='open-sheet')return openSheet(el.dataset.id);if(action==='ask-delete')return askDelete(el.dataset.id);if(action==='confirm-delete')return deleteSheet();if(action==='lock-admin')return lockAdmin();if(action==='apply-remote')return applyRemoteSheet();if(action==='exit-sheet-to-list'){if(S.view==='sheet'&&!S.adminViewing&&active()){playSfx('menu');return nav('fichas')}return}if(action==='nav')return nav(el.dataset.view);if(action==='tab'){S.tab=el.dataset.tab;render();return}if(action==='clan'){S.activeClan=el.dataset.clan;S.modal='clan';render();return}if(action==='close-modal'){S.modal=null;render();return}if(action==='create-sheet')return createSheetAnimated();if(action==='auth-pane'){S.authPane=el.dataset.pane==='admin'?'admin':'login';render();return}if(action==='auth-switch'){S.authPane=S.authPane==='register'?'login':'register';render();return}if(action==='logout'){S.adminUnlocked=false;stopAdminLive();S.adminSheets=[];if(fb){void (async()=>{if(S.diaryDirty)await persistDiary();await fb.signOut(fb.auth)})()}else{S.user=null;S.sheet=null;S.sheetId=null;S.sheets=[];S.diary=null;S.diaryOwnerUid=null;S.diaryStorage=null;S.diaryHostId=null;S.diaryDirty=false;S.view='home';render()}return}if(action==='portrait-upload')return uploadPortrait(el.dataset.slot);if(action==='portrait-switch')return switchPortrait(el.dataset.slot);if(action==='portrait-remove')return removePortrait(el.dataset.slot);if(action==='save')return persist();if(action==='print')return window.print();if(action==='export')return exportSheet();if(action==='vitality-step')return adjustVitality(n(el.dataset.delta));if(action==='social')return adjustSocial(el.dataset.key,n(el.dataset.delta));if(action==='attr')return adjustAttr(el.dataset.key,n(el.dataset.delta));if(action==='skill')return adjustSkill(el.dataset.key,n(el.dataset.delta));if(action==='shift')return shiftCombat();if(action==='reset-shift'){if(!canEditCurrent())return;p.combateAjustes={CC:0,CD:0,ESQ:0,LM:0};render();scheduleSave();return}if(action==='add-item')return modifyItem(el.dataset.array);if(action==='remove-item')return modifyItem(el.dataset.array,n(el.dataset.index),true);if(action==='roll-skill'){const k=el.dataset.key;if(!trained(p,k))return showToast('Esta perícia exige treinamento.',true);return roll(2,skillTotal(p,k),k)}if(action==='roll-combat'){const key=el.dataset.key;return roll(2,combat(p,key),key==='CD'?'Combate à distância':'Combate corporal')}if(action==='roll-initiative')return roll(1,n(p.atributos.AGI)+skillTotal(p,'Prontidão'),'Iniciativa');if(action==='refresh-admin')return refreshAdmin();if(action==='open-admin'){if(!canAdmin()||!S.adminUnlocked)return showToast('Confirme a senha para acessar as fichas.',true);const x=S.adminSheets.find(a=>a.__id===el.dataset.id);if(x){const {__id,...safeData}=x;S.sheet=normalize(safeData);S.sheetId=__id;S.adminViewing=true;S.canvaMode='original';S.view='sheet';S.tab='identidade';render();}return}}
   document.addEventListener('click',ev=>{const el=ev.target.closest('[data-action]');if(!el)return;if(el.classList.contains('modalshade')&&ev.target!==el)return;clickAction(el)});
   document.addEventListener('keydown',ev=>{if(ev.target.matches?.('[data-vitality-input]')){if(ev.key==='Enter'){ev.preventDefault();ev.target.blur();return}if(ev.key==='Escape'){ev.preventDefault();ev.stopPropagation();ev.target.value=String(vitalityValue(active()));ev.target.blur();return}}if(ev.key==='Escape'&&document.querySelector('.evo-rise-layer')){ev.preventDefault();evolutionDismiss();return}if(ev.key==='Escape'&&S.view==='sheet'&&S.combatMode){ev.preventDefault();combatExit()}});
   document.addEventListener('submit',ev=>{if(ev.target.id==='auth-form'){ev.preventDefault();submitAuth(ev.target)}else if(ev.target.id==='admin-auth-form'){ev.preventDefault();unlockAdmin(ev.target)}});
   document.addEventListener('input',ev=>{const el=ev.target;if(el.matches('[data-diary-field],[data-diary-completed]')){diaryUpdateField(el);return}if(el.matches('[data-vitality-input]'))return;if(el.matches('[data-int-search]')){S.inlineSearch=el.value;integratedFilter();return}if(el.matches('[data-library-search]')){S.librarySearch=el.value;librarySearchFilter();return}if(el.id==='admin-filter'){const q=el.value.toLocaleLowerCase('pt-BR');$('#admin-rows').innerHTML=adminRows(S.adminSheets.filter(x=>[x.nome,x.usuario,clanOf(x.clanId).name].some(z=>String(z||'').toLocaleLowerCase('pt-BR').includes(q))));return}if(el.dataset.cvArray){canvaUpdateArray(el,true);return}if(el.dataset.cvSkill){updateCanvaSkill(el,true);return}if(!el.dataset.bind||el.tagName==='SELECT')return;const current=active(),path=el.dataset.bind,old=getAt(current,path.startsWith('@')?path.slice(1):path);if(!updateValue(path,el.value)){el.value=old??''}else refreshGuideFeedback()});
   document.addEventListener('change',ev=>{const el=ev.target;if(el.matches('[data-diary-field],[data-diary-completed]')){if(S.diaryDirty)void persistDiary();return}if(el.matches('[data-vitality-input]')){commitVitalityInput(el);return}if(el.matches('[data-library-power]')){S.libraryPowerId=el.value;render();return}if(el.matches('[data-library-scope]')){S.libraryScope=el.value;render();return}if(el.matches('[data-portrait-file]')){const file=el.files?.[0];el.value='';void handlePortraitSelected(file,S.portraitUploadSlot);return}if(el.dataset.cvArray){canvaUpdateArray(el);return}if(el.dataset.cvSkill){updateCanvaSkill(el);return}if(!el.dataset.bind||el.tagName!=='SELECT')return;updateValue(el.dataset.bind,el.value)});
-  async function startFirebase(){try{const base=`https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}`;const [{initializeApp},{getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,reauthenticateWithCredential,EmailAuthProvider},{getFirestore,doc,getDoc,setDoc,deleteDoc,collection,getDocs,query,where,onSnapshot}]=await Promise.all([import(base+'/firebase-app.js'),import(base+'/firebase-auth.js'),import(base+'/firebase-firestore.js')]);const app=initializeApp(FIREBASE_CONFIG),auth=getAuth(app),db=getFirestore(app);fb={auth,db,doc,getDoc,setDoc,deleteDoc,collection,getDocs,query,where,onSnapshot,reauthenticateWithCredential,EmailAuthProvider,signOut,createUserWithEmailAndPassword,signInWithEmailAndPassword};onAuthStateChanged(auth,async(user)=>{clearTimeout(S.saveTimer);if(!user){clearTimeout(S.diarySaveTimer);S.diarySaveTimer=null;S.diary=null;S.diaryOwnerUid=null;S.diaryFromAdmin=false;S.diaryDirty=false;S.diaryRequest++;stopAdminLive();S.adminUnlocked=false;S.adminAuthBusy=false;S.adminLoginBusy=false;S.adminSheets=[];S.user=null;S.isAdmin=false;S.sheet=null;S.sheetId=null;S.sheets=[];S.adminViewing=false;S.loading=false;S.view='login';render();return}const fallback=user.email?.split('@')[0]||'Shinobi';S.user={uid:user.uid,displayName:fallback};try{const [profile,admin,found]=await Promise.all([getDoc(doc(db,'users',user.uid)),getDoc(doc(db,'admins',user.uid)),getDocs(query(collection(db,'fichas'),where('ownerUid','==',user.uid)))]);if(profile.exists())S.user.displayName=profile.data().username||fallback;S.isAdmin=admin.exists()||user.email===MASTER_EMAIL;if(user.email===MASTER_EMAIL)S.adminUnlocked=true;const personalDiary=found.docs.find(d=>d.data().tipo==='diario'&&d.data().ownerUid===user.uid);
+  async function startFirebase(){try{const base=`https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}`;const [{initializeApp},{getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,reauthenticateWithCredential,EmailAuthProvider},{getFirestore,doc,getDoc,setDoc,deleteDoc,collection,getDocs,query,where,onSnapshot}]=await Promise.all([import(base+'/firebase-app.js'),import(base+'/firebase-auth.js'),import(base+'/firebase-firestore.js')]);const app=initializeApp(FIREBASE_CONFIG),auth=getAuth(app),db=getFirestore(app);fb={auth,db,doc,getDoc,setDoc,deleteDoc,collection,getDocs,query,where,onSnapshot,reauthenticateWithCredential,EmailAuthProvider,signOut,createUserWithEmailAndPassword,signInWithEmailAndPassword};onAuthStateChanged(auth,async(user)=>{clearTimeout(S.saveTimer);if(!user){clearTimeout(S.diarySaveTimer);S.diarySaveTimer=null;S.diary=null;S.diaryOwnerUid=null;S.diaryStorage=null;S.diaryHostId=null;S.diaryFromAdmin=false;S.diaryDirty=false;S.diaryRequest++;stopAdminLive();S.adminUnlocked=false;S.adminAuthBusy=false;S.adminLoginBusy=false;S.adminSheets=[];S.user=null;S.isAdmin=false;S.sheet=null;S.sheetId=null;S.sheets=[];S.adminViewing=false;S.loading=false;S.view='login';render();return}const fallback=user.email?.split('@')[0]||'Shinobi';S.user={uid:user.uid,displayName:fallback};try{const [profile,admin,found]=await Promise.all([getDoc(doc(db,'users',user.uid)),getDoc(doc(db,'admins',user.uid)),getDocs(query(collection(db,'fichas'),where('ownerUid','==',user.uid)))]);if(profile.exists())S.user.displayName=profile.data().username||fallback;S.isAdmin=admin.exists()||user.email===MASTER_EMAIL;if(user.email===MASTER_EMAIL)S.adminUnlocked=true;const personalDiary=found.docs.find(d=>d.data().tipo==='diario'&&d.data().ownerUid===user.uid);
 S.diary=personalDiary?normalizeDiary(personalDiary.data(),user.uid,S.user.displayName):null;
+S.diaryStorage=personalDiary?'legacy':null;S.diaryHostId=null;
 S.diaryOwnerUid=user.uid;S.diaryFromAdmin=false;S.diaryDirty=false;S.diaryLoading=false;S.diaryStatus='';
 S.sheets=found.docs.filter(d=>d.data().tipo!=='diario').map(d=>({id:d.id,data:normalize(d.data())}));const first=ownSheets()[0];S.sheet=first?.data||null;S.sheetId=first?.id||null;S.adminViewing=false;S.loading=false;if(S.adminUnlocked&&S.isAdmin)startAdminLive();S.view=S.adminUnlocked&&S.isAdmin?'admin':S.authPane==='admin'?'login':'home';render()}catch(e){console.error(e);S.loading=false;S.view='home';render();showToast('Conta conectada, mas houve um erro ao carregar os dados. Confira as regras do Firestore.',true)}})}catch(e){console.error(e);S.loading=false;S.view='login';render();showToast('Falha ao inicializar Firebase. Confira as chaves e o domínio autorizado.',true)}}
   if(CONFIGURED)startFirebase();else{S.loading=false;render()}
