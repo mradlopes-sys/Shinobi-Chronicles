@@ -3517,6 +3517,7 @@ function canvaTechniqueAppendix(p,clan){
       if(started?.catch)started.catch(error=>console.warn('Som de evolução indisponível:',error));
     }catch(error){console.warn('Falha ao reproduzir a evolução:',error)}
   }
+
   function evolutionCelebrate(p,before,after){
     const delta=evolutionDiff(before,after);
     if(!delta)return;
@@ -3526,26 +3527,33 @@ function canvaTechniqueAppendix(p,clan){
     panel.className='evo-rise-layer';
     panel.setAttribute('role','dialog');
     panel.setAttribute('aria-modal','true');
-    panel.setAttribute('aria-label','Evolução para NC '+after);
-    panel.innerHTML=`<div class="evo-rise-scroll" style="--evo-color:${E(clan.color)};--evo-wash:${E(clan.wash)}">
-      <div class="evo-rise-ink"></div><div class="evo-rise-brush"></div>
-      <div class="evo-rise-fireflies" aria-hidden="true">
-       <i style="--x:0%;--y:12%;--delay:.27s"></i><i style="--x:65%;--y:3%;--delay:.46s"></i>
-       <i style="--x:20%;--y:67%;--delay:.67s"></i><i style="--x:74%;--y:57%;--delay:.55s"></i>
-       <i style="--x:41%;--y:82%;--delay:.77s"></i><i style="--x:50%;--y:39%;--delay:.31s"></i>
-      </div>
-      <button type="button" class="evo-rise-close" data-action="evolution-close" aria-label="Fechar evolução">×</button>
-      <div class="evo-rise-seal" aria-hidden="true">${E(clan.kanji)}</div>
-      <div class="evo-rise-copy"><div class="eyebrow">SHINOBI CHRONICLES · EVOLUÇÃO</div>
-       <h2>Um novo estágio</h2><p>${E(p.nome||'Seu shinobi')} alcançou uma nova classificação de campanha.</p></div>
-      <div class="evo-rise-numbers"><span class="old">NC ${before}</span><span class="evo-rise-arrow">→</span><span class="next">NC ${after}</span></div>
-      <div class="evo-rise-rank"><span>${E(old.label)}</span><span>→</span><b>${E(current.label)}</b></div>
-      <div class="evo-rise-rewards">
-       ${[['Atributos',delta.attrs],['Perícias',delta.skills],['Poderes',delta.powers],['Sociais',delta.social]].map(([label,value])=>`<div class="evo-rise-reward"><strong>${value>=0?'+':''}${value}</strong><small>${label}</small></div>`).join('')}
-      </div>
-      <p class="evo-rise-note">Bônus de Vitalidade máxima: +${delta.vit}. Os pontos ficam disponíveis na ficha; nenhuma habilidade é comprada automaticamente.</p>
-      <div class="evo-rise-actions"><button type="button" data-action="evolution-close" autofocus>Continuar minha jornada</button></div>
-     </div>`;
+    panel.setAttribute('aria-label','Pergaminho de evolução para NC '+after);
+    panel.innerHTML=`<div class="evo-scroll-stage" style="--evo-color:${E(clan.color)};--evo-wash:${E(clan.wash)}">
+      <div class="evo-scroll-rod top" aria-hidden="true"></div>
+      <div class="evo-scroll-paper"><div class="evo-ink-body">
+        <div class="evo-ink-header">SHINOBI CHRONICLES · REGISTRO DE EVOLUÇÃO</div>
+        <h2 class="evo-calligraphy">Um novo estágio</h2>
+        <div class="evo-ink-subtitle">Seu caminho shinobi continua.</div>
+        <svg class="evo-ink-divider" viewBox="0 0 450 22" role="presentation" aria-hidden="true">
+          <path d="M12 12 Q90 5 176 12 T340 12 Q395 10 434 12"/>
+        </svg>
+        <div class="evo-new-level">
+          <small>NC ${before}</small><span class="evo-level-arrow" aria-hidden="true">→</span><strong>NC ${after}</strong>
+        </div>
+        <div class="evo-ink-rank">${E(old.label)} → ${E(current.label)}</div>
+        <div class="evo-ink-name">${E(p.nome||'Seu shinobi')} · ${E(clan.name)}</div>
+        <div class="evo-ink-rewards">
+          ${[['Atributos',delta.attrs],['Perícias',delta.skills],['Poderes',delta.powers],['Sociais',delta.social]]
+             .map(([label,gain])=>`<div class="evo-ink-reward"><span>${label}</span><strong>${gain>=0?'+':''}${gain}</strong></div>`).join('')}
+        </div>
+        <div class="evo-ink-vitality">Vitalidade máxima: +${delta.vit}</div>
+        <div class="evo-ink-stamp" aria-hidden="true">${E(clan.kanji)}</div>
+        <p class="evo-ink-note">Os pontos de evolução ficam disponíveis na ficha, conforme as regras do mestre.</p>
+        <div class="evo-ink-footer"><button type="button" data-action="evolution-close">Continuar</button></div>
+       </div></div>
+       <div class="evo-scroll-rod bottom" aria-hidden="true"></div>
+       <button type="button" class="evo-rise-close" data-action="evolution-close" aria-label="Fechar pergaminho">×</button>
+      </div>`;
     document.body.appendChild(panel);
     evolutionSound();
     panel.querySelector('[data-action="evolution-close"]')?.focus({preventScroll:true});
