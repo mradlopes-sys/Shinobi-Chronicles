@@ -1730,6 +1730,45 @@
 @media(prefers-reduced-motion:reduce){.evo-rise-layer,.evo-rise-layer *, .evo-tracker *{animation:none!important;transition:none!important}}
 @media print{.evo-rise-layer,.evo-tracker{display:none!important}}
 
+
+/* EVOLUÇÃO SHINOBI: pergaminho desenrolando, escrita em tinta */
+.evo-rise-layer{background:radial-gradient(circle,#1a2e23e9,#101915f9 80%);padding:14px;overflow:auto}
+.evo-scroll-stage{position:relative;z-index:1;--paper:#f5e8cd;--ink:#253c30;--tone:var(--evo-color,#516c50);width:min(100%,590px);max-height:calc(100dvh - 26px);display:grid;grid-template-rows:31px minmax(0,1fr) 31px;filter:drop-shadow(0 18px 30px #0008);animation:evo-stage-in .4s both}
+.evo-scroll-paper{position:relative;isolation:isolate;z-index:1;transform-origin:center;min-height:440px;height:min(610px,calc(100dvh - 88px));overflow:auto;overscroll-behavior:contain;border-inline:7px solid #a17f52;background:repeating-linear-gradient(0deg,#fff1 0px,#fffd 2px,#9470440a 4px),radial-gradient(ellipse at 9% 16%,#bca97c55,transparent 55%),radial-gradient(ellipse at 93% 91%,#be9c6955,transparent 57%),linear-gradient(90deg,#b79a6a,#f5e7c7 9%,#fcf1d8 51%,#f0e0b9 92%,#a48452);box-shadow:inset 0 0 40px #89673c7e,0 8px 25px #0006;animation:evo-unroll 1.1s cubic-bezier(.22,.75,.24,1) .1s both}
+.evo-scroll-paper:before{content:"";position:absolute;inset:13px 19px;border:1px solid #79654355;pointer-events:none;z-index:1}
+.evo-scroll-rod{z-index:3;height:31px;display:flex;justify-content:space-between;align-items:center;border-radius:7px;background:linear-gradient(#392c20,#af8651 25%,#dfc18c 49%,#856039 77%,#33251a);box-shadow:0 5px 9px #0008}
+.evo-scroll-rod:before,.evo-scroll-rod:after{content:"";height:40px;width:20px;border-radius:5px;background:linear-gradient(90deg,#2e2118,#c29657 49%,#4e3825);border:1px solid #6c492b}
+.evo-scroll-rod.top{animation:evo-rod-top 1.1s ease-out .1s both}.evo-scroll-rod.bottom{animation:evo-rod-bottom 1.1s ease-out .1s both}
+.evo-ink-body{position:relative;z-index:2;padding:35px clamp(19px,5vw,48px) 25px;min-height:100%;text-align:center;color:var(--ink)}
+.evo-ink-header{font:700 9px/1.5 var(--sans);letter-spacing:.22em;color:#776344;animation:evo-ink-reveal .6s 1s both}
+.evo-calligraphy{font:600 clamp(28px,5vw,40px)/1.18 var(--serif);color:#243c31;letter-spacing:.04em;display:table;margin:9px auto;clip-path:inset(0 100% 0 0);animation:evo-write 1s steps(27,end) 1.07s forwards}
+.evo-ink-subtitle{font:400 12px/1.5 var(--serif);color:#6c614c;animation:evo-ink-reveal .5s 1.8s both}
+.evo-ink-divider{display:block;width:88%;height:22px;margin:8px auto}.evo-ink-divider path{fill:none;stroke:#405b44;stroke-width:2.5;stroke-linecap:round;stroke-dasharray:450;stroke-dashoffset:450;animation:evo-brushline .85s 1.92s ease-out forwards}
+.evo-new-level{display:flex;align-items:baseline;justify-content:center;gap:18px;margin:8px 0;font:600 clamp(36px,6vw,49px)/1.2 var(--serif);color:#254330;animation:evo-ink-reveal .6s 2.16s both}
+.evo-new-level small{font-size:22px;color:#918270;text-decoration:line-through}.evo-level-arrow{font-size:24px;color:#9c7c52}
+.evo-ink-rank{font:600 12px/1.6 var(--serif);color:#536b52;animation:evo-ink-reveal .5s 2.32s both}
+.evo-ink-name{font:400 11px/1.5 var(--serif);color:#726149;margin:6px auto;animation:evo-ink-reveal .5s 2.45s both}
+.evo-ink-rewards{max-width:420px;margin:15px auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 12px;text-align:left}
+.evo-ink-reward{display:flex;align-items:baseline;justify-content:space-between;gap:7px;border-bottom:1px solid #79613c55;padding:7px 6px;animation:evo-ink-line .5s both}
+.evo-ink-reward:nth-child(1){animation-delay:2.7s}.evo-ink-reward:nth-child(2){animation-delay:2.9s}.evo-ink-reward:nth-child(3){animation-delay:3.1s}.evo-ink-reward:nth-child(4){animation-delay:3.3s}
+.evo-ink-reward span{font:500 12px/1.3 var(--serif);color:#6e6049}.evo-ink-reward strong{font:600 22px/1.2 var(--serif);color:#2d5038}
+.evo-ink-vitality{font:500 11px/1.6 var(--serif);color:#675a43;margin-top:8px;animation:evo-ink-reveal .5s 3.5s both}
+.evo-ink-stamp{width:52px;height:52px;display:grid;place-items:center;border:4px double var(--tone);color:var(--tone);font:600 29px var(--serif);margin:9px auto;opacity:0;animation:evo-stamp-new .6s 3.52s both}
+.evo-ink-note{font:400 10px/1.55 var(--serif);color:#77694e;margin:6px auto;max-width:390px;animation:evo-ink-reveal .5s 3.7s both}
+.evo-ink-footer{margin-top:13px;animation:evo-ink-reveal .5s 3.86s both}.evo-ink-footer button{border:1px solid #324b38;background:#36513a;color:#f8efdb;font-size:12px;padding:10px 20px;font-weight:800;cursor:pointer}.evo-ink-footer button:hover{background:#4b6e50}
+.evo-scroll-stage .evo-rise-close{position:absolute;top:3px;right:6px;z-index:5;background:#e9d6b0;color:#4c3b26;border:1px solid #bd9e6b;width:28px;height:28px}
+@keyframes evo-stage-in{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+@keyframes evo-unroll{0%{opacity:.6;transform:scaleY(.02)}19%{opacity:1;transform:scaleY(.12)}75%{transform:scaleY(1.02)}100%{opacity:1;transform:scaleY(1)}}
+@keyframes evo-rod-top{0%{transform:translateY(200px)}100%{transform:none}}
+@keyframes evo-rod-bottom{0%{transform:translateY(-200px)}100%{transform:none}}
+@keyframes evo-write{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes evo-ink-reveal{0%{opacity:0;filter:blur(3px);transform:translateY(7px)}100%{opacity:1;filter:none;transform:none}}
+@keyframes evo-brushline{to{stroke-dashoffset:0}}
+@keyframes evo-ink-line{from{opacity:0;clip-path:inset(0 100% 0 0);transform:translateX(-10px)}to{opacity:1;clip-path:inset(0 0 0 0);transform:none}}
+@keyframes evo-stamp-new{0%{opacity:0;transform:rotate(-19deg) scale(1.6)}70%{opacity:.9;transform:rotate(-11deg) scale(.92)}100%{opacity:.9;transform:rotate(-11deg) scale(1)}}
+@media(max-width:580px){.evo-scroll-stage{grid-template-rows:26px minmax(0,1fr) 26px}.evo-scroll-rod{height:26px}.evo-scroll-rod:before,.evo-scroll-rod:after{height:32px;width:15px}.evo-scroll-paper{height:min(660px,calc(100dvh - 70px));min-height:300px}.evo-ink-body{padding:23px 17px}.evo-ink-rewards{gap:4px 7px}.evo-ink-reward{padding:5px 4px}}
+@media(prefers-reduced-motion:reduce){.evo-scroll-stage,.evo-scroll-paper,.evo-scroll-rod,.evo-ink-body *,.evo-ink-divider path{animation:none!important;opacity:1!important;transform:none!important;filter:none!important;clip-path:none!important;stroke-dashoffset:0!important}}
+
 </style>
 </head>
 <body>
