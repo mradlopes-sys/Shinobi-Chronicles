@@ -1,3 +1,22 @@
+## Biblioteca de Poderes e Jutsus — Shinobi Chronicles
+
+A biblioteca está disponível pelo menu **Biblioteca de técnicas**, pela etapa **Poderes e jutsus** do **Guia de criação**, pelo **Editor detalhado → Poderes e jutsus** e pela **página 3** da ficha original do Canva.
+
+**Primeira edição:** 61 registros baseados no *Naruto: Shinobi no Sho — Livro Básico 4.1b*. O catálogo reúne poderes comuns e de clãs, aptidões selecionadas, modelos de efeitos e técnicas básicas, elementais e de clã. Há busca em tempo real, categorias (Poderes, Jutsus, Efeitos, Aptidões), filtros por clã e por disponibilidade, avisos de pré-requisitos e referência à página do manual em cada cartão.
+
+**Regras aplicadas:**
+- Cada nível de **Poder** comprado custa **1 ponto de poder**; a compra respeita o orçamento do NC e o limite de nível (`floor(NC/2)`). Poderes restritos dependem do clã e dos demais pré-requisitos conhecidos.
+- Poderes baseados em **Efeitos** permitem selecionar um efeito para cada nível adquirido, na sequência dos níveis. Os efeitos selecionados ficam em `poderes[].efeitos` e no texto de descrição do poder, compatível com a ficha original Canva. Remova o último efeito antes de reduzir um nível de poder. Existem restrições de efeitos elementais.
+- **Jutsus** não custam pontos de poder individualmente: o jogador pode registrá-los quando o poder, efeito, aptidão ou clã correspondentes os liberar. Os jutsus básicos listados são gratuitos.
+- O catálogo também oferece algumas **aptidões**: três são gratuitas na criação, e as extras custam 2 pontos de poder, seguindo o orçamento já implementado no site.
+- Há verificação de clã, orçamento, alguns atributos/perícias, aptidões, níveis mínimos e afinidade elemental. Exemplos: Rasengan (ESP 8), Fuuinjutsu (INT 6), Iryou Ninjutsu (ESP 6 e Ninja Médico), Juuken (ESP 1, Byakugan e Acuidade), acesso à Grande Bola de Fogo pelo elemento Katon ou pela aptidão Uchiha apropriada.
+
+**Compatibilidade:** Tudo usa `poderes`, `aptidoes` e `jutsus` do **mesmo documento de personagem** (`fichas/{id}`), com o salvamento automático existente. Fichas antigas e registros criados manualmente continuam presentes, e o editor manual não foi removido. Não é necessário criar coleção nova, alterar regras do Firebase ou contratar Storage.
+
+**Limitação importante:** Este é um **catálogo inicial**, não uma transcrição de todos os poderes/efeitos/jutsus do manual. Os textos resumem as referências e os pré-requisitos implementados cobrem os casos cadastrados; exceções e detalhes de alcance, ação, dano, custo e afinidade continuam sujeitos à verificação do Livro Básico e à decisão do mestre. O catálogo não substitui o livro.
+
+---
+
 ## Vitalidade atual, animações de cura e sons de navegação
 
 - **Vida cheia na criação:** novos personagens NC 4 começam com **30 pontos de Vitalidade atual** quando VIG=0, exatamente sua Vitalidade máxima, calculada por `10 + 3 × VIG + 5 × NC`. Fichas antigas com Vitalidade nula/ausente passam a exibir o máximo; uma ficha com Vitalidade 0 ou dano registrado **mantém esse valor**.
