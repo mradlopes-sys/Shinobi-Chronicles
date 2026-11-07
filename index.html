@@ -1237,6 +1237,28 @@
  .shell .cv-page .cv-portrait.portrait-hit-grave::after{display:none!important}
 }
 
+
+/* Shinobi Chronicles: controle acessível de Vitalidade */
+.vital-stepper{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr) minmax(0,1fr);
+  width:100%;height:100%;min-height:34px;box-sizing:border-box;align-items:stretch;
+  background:#f7f1e7;border:1px solid #b8bdb1;border-radius:3px;overflow:hidden;
+  color:var(--theme-deep,#485b4d)}
+.vital-stepper button{border:0!important;background:transparent!important;color:inherit!important;
+  font-weight:900!important;display:grid;place-items:center;padding:0!important;margin:0!important;
+  min-width:0!important;cursor:pointer;font-size:15px!important}
+.vital-stepper button:hover:not(:disabled){background:rgba(var(--theme-rgb,93,123,105),.15)!important}
+.vital-stepper button:disabled{opacity:.25;cursor:default}
+.vital-stepper strong{font-size:15px;display:flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,.3);color:#344735}
+.shell .cv-page .cv-spot.cv-vitality-spot{z-index:7!important;overflow:visible!important;
+  background:#fff!important;box-shadow:0 0 0 2px #fff!important}
+.shell .cv-page .cv-spot.cv-vitality-spot .vital-stepper{min-height:0!important;height:100%!important;width:100%!important;
+  border:0!important;border-radius:0!important;background:#fff!important}
+.shell .cv-page .cv-vitality-spot .vital-stepper strong{font-size:clamp(9px,.95vw,12px)!important;
+  background:#fff!important}
+.shell .cv-page .cv-vitality-spot .vital-stepper button{font-size:clamp(10px,.95vw,12px)!important}
+.vital-guide{min-height:42px}
+
 </style>
 </head>
 <body>
@@ -1471,8 +1493,49 @@
   const chakraMax=p=>10+3*n(p.atributos.ESP);
   const totals=p=>({attrs:ATTRS.reduce((s,[k])=>s+n(p.atributos[k]),0),skills:SKILLS.reduce((s,[k])=>s+n(p.pericias[k]),0),powers:p.poderes.reduce((s,x)=>s+n(x?.nivel),0)+Math.max(0,p.aptidoes.filter(x=>x?.nome?.trim()).length-3)*2,social:n(p.sociais.Carisma)+n(p.sociais.Manipulacao)});
   const trained=(p,key)=>{const a=skillInfo(key);return a&&!a[2]||n(p.pericias[key])>0};
-  function fresh(clanId){const attrs=Object.fromEntries(ATTRS.map(([k])=>[k,0]));const skills=Object.fromEntries(SKILLS.map(([k])=>[k,0]));return{ownerUid:uid(),usuario:S.user?.displayName||'Visitante',clanId,nome:'',idade:'',vila:'Konohagakure',graduacao:'Genin',descricao:'',nc:4,atributos:attrs,sociais:{Carisma:0,Manipulacao:0},pericias:skills,combateAjustes:{CC:0,CD:0,ESQ:0,LM:0},poderes:[],aptidoes:[],jutsus:[],inventario:[],ryos:100,recursos:{vit:null,chakra:null},historico:'',historia:'',foto:'',retratos:{casual:'',ninja:'',ferido:'',grave:''},retratoBase:'casual',criadoEm:Date.now(),atualizadoEm:Date.now(),versao:1}}
-  function normalize(raw){const p={...fresh(raw.clanId||'semcla'),...raw};p.atributos={...fresh(p.clanId).atributos,...(raw.atributos||{})};p.pericias={...fresh(p.clanId).pericias,...(raw.pericias||{})};p.sociais={Carisma:0,Manipulacao:0,...(raw.sociais||{})};p.combateAjustes={CC:0,CD:0,ESQ:0,LM:0,...(raw.combateAjustes||{})};p.recursos={vit:null,chakra:null,...(raw.recursos||{})};p.retratos={casual:'',ninja:'',ferido:'',grave:'',...(raw.retratos||{})};p.retratoBase=raw.retratoBase==='ninja'?'ninja':'casual';for(const k of ['poderes','aptidoes','jutsus','inventario'])if(!Array.isArray(p[k]))p[k]=[];if(!NC_TABLE[p.nc])p.nc=4;return p}
+  function fresh(clanId){const attrs=Object.fromEntries(ATTRS.map(([k])=>[k,0]));const skills=Object.fromEntries(SKILLS.map(([k])=>[k,0]));return{ownerUid:uid(),usuario:S.user?.displayName||'Visitante',clanId,nome:'',idade:'',vila:'Konohagakure',graduacao:'Genin',descricao:'',nc:4,atributos:attrs,sociais:{Carisma:0,Manipulacao:0},pericias:skills,combateAjustes:{CC:0,CD:0,ESQ:0,LM:0},poderes:[],aptidoes:[],jutsus:[],inventario:[],ryos:100,recursos:{vit:30,chakra:null},historico:'',historia:'',foto:'',retratos:{casual:'',ninja:'',ferido:'',grave:''},retratoBase:'casual',criadoEm:Date.now(),atualizadoEm:Date.now(),versao:1}}
+
+  function vitalityValue(p){const v=p?.recursos?.vit;return v===null||v===undefined||v===''?vitMax(p):Math.max(0,Math.min(vitMax(p),Math.round(n(v))))}
+  function vitalStepper(p,mode='guide'){
+    const hp=vitalityValue(p),max=vitMax(p);
+    return `<div class="vital-stepper ${mode==='canva'?'vital-canva':'vital-guide'}" data-vitality-control aria-label="Vitalidade atual, ${hp} de ${max}">
+      <button type="button" data-action="vitality-step" data-delta="-1" aria-label="Diminuir Vitalidade" ${hp<=0?'disabled':''}>−</button>
+      <strong data-vitality-display aria-live="polite">${hp}</strong>
+      <button type="button" data-action="vitality-step" data-delta="1" aria-label="Aumentar Vitalidade" ${hp>=max?'disabled':''}>+</button>
+    </div>`;
+  }
+  function syncVitalityControls(p){
+    const hp=vitalityValue(p),max=vitMax(p);
+    document.querySelectorAll('[data-vitality-control]').forEach(box=>{
+      const value=box.querySelector('[data-vitality-display]');
+      if(value)value.textContent=hp;
+      box.setAttribute('aria-label',`Vitalidade atual, ${hp} de ${max}`);
+      box.querySelectorAll('[data-action="vitality-step"]').forEach(btn=>{
+        btn.disabled=Number(btn.dataset.delta)<0?hp<=0:hp>=max;
+      });
+    });
+  }
+  function adjustVitality(delta){
+    if(!canEditCurrent()||!active())return;
+    const p=active(),oldValue=vitalityValue(p),next=Math.min(vitMax(p),Math.max(0,oldValue+Math.trunc(n(delta))));
+    if(oldValue===next)return;
+    const previous=portraitAutomatic(p);
+    p.recursos.vit=next;
+    S.portraitPreview=null;
+    syncVitalityControls(p);
+    refreshPortraitUI(previous);
+    scheduleSave();
+  }
+  function adjustMaxVitality(p,oldMax){
+    const current=p.recursos?.vit;
+    if(current===null||current===undefined||current===''||Number(current)>=oldMax){
+      p.recursos.vit=vitMax(p);
+    }else{
+      p.recursos.vit=Math.max(0,Math.min(vitMax(p),Math.round(n(current))));
+    }
+  }
+
+  function normalize(raw){const p={...fresh(raw.clanId||'semcla'),...raw};p.atributos={...fresh(p.clanId).atributos,...(raw.atributos||{})};p.pericias={...fresh(p.clanId).pericias,...(raw.pericias||{})};p.sociais={Carisma:0,Manipulacao:0,...(raw.sociais||{})};p.combateAjustes={CC:0,CD:0,ESQ:0,LM:0,...(raw.combateAjustes||{})};p.recursos={vit:null,chakra:null,...(raw.recursos||{})};p.retratos={casual:'',ninja:'',ferido:'',grave:'',...(raw.retratos||{})};p.retratoBase=raw.retratoBase==='ninja'?'ninja':'casual';for(const k of ['poderes','aptidoes','jutsus','inventario'])if(!Array.isArray(p[k]))p[k]=[];if(!NC_TABLE[p.nc])p.nc=4;const v=p.recursos.vit;p.recursos.vit=v===null||v===undefined||v===''?vitMax(p):Math.max(0,Math.min(vitMax(p),Math.round(n(v))));return p}
 
   const PORTRAIT_SOURCE_MAX=12*1024*1024;
   const PORTRAIT_DATA_MAX=122000;
@@ -2088,7 +2151,7 @@ function guideInputs(p,index,r,t){
   +guideListEditor(p,'jutsus','Jutsu',[['Nome','nome'],['Nível utilizado','nivel','number'],['Ação','acao'],['Duração','duracao'],['Alvo / área','alvo'],['Alcance','alcance'],['Efeito','efeito','area']],'Registre técnicas autorizadas pelo poder e seus pré-requisitos.'));
  if(index===8)return section('Vitalidade e Chakra','Os valores máximos são calculados pela ficha. Preencha também os recursos atuais, se necessário.',
   `<div class="guide-combat-grid"><div><b>Vitalidade máxima</b><strong>${vitMax(p)}</strong><small>NC e Vigor</small></div><div><b>Chakra máximo</b><strong>${chakraMax(p)}</strong><small>Espírito</small></div></div><div class="guide-fields">
-  ${guideField('Vitalidade atual','recursos.vit',p.recursos?.vit,{type:'number'})}
+  <div class="guide-field"><span>Vitalidade atual</span>${vitalStepper(p,'guide')}<small>Use − e + para registrar dano ou cura.</small></div>
   ${guideField('Chakra atual','recursos.chakra',p.recursos?.chakra,{type:'number'})}</div>`);
  if(index===9)return section('Equipamentos e história','Registre seus Ryos e o passado do personagem. É tudo vinculado à quarta página do Canva.',
   `<div class="guide-fields">
@@ -2173,7 +2236,7 @@ function canvaPageBody(p,page){
    a+=cvWrap(`<select class="cv-in" data-bind="nc" aria-label="Nível da campanha">${Object.entries(NC_TABLE).map(([k])=>`<option value="${k}" ${n(k)===n(p.nc)?'selected':''}>NC ${k}</option>`).join('')}</select>`,4.16,3.67,.64,.26);
    a+=f('tendencia',3.63,4.52,1.17,.25);
    for(let i=0;i<ATTRS.length;i++){const key=ATTRS[i][0];a+=cvAttr(p,key,.65+i*1.054,6.31,.72,.25);}
-   a+=f('recursos.vit',3.20,7.36,.64,.25,{num:true,label:'Vitalidade atual'});
+   a+=cvWrap(vitalStepper(p,'canva'),3.20,7.36,.64,.25,'cv-vitality-spot');
    a+=d(vitMax(p),3.20,7.71,.64,.26);
    a+=f('recursos.chakra',6.98,7.36,.64,.25,{num:true,label:'Chakra atual'});
    a+=d(chakraMax(p),6.98,7.71,.64,.26);
@@ -2363,8 +2426,8 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
  }
 }
   function scheduleSave(){if(!active()||!canEditCurrent())return;S.locallyDirty=true;setStatus(CONFIGURED?'Alterações pendentes':'Prévia local');clearTimeout(S.saveTimer);S.saveTimer=setTimeout(()=>void persist(),280)}
-  function updateValue(path,val){const p=active();if(!p||!canEditCurrent())return;const isArray=path.startsWith('@');if(isArray){const bits=path.slice(1).split('.');const [a,index,...rest]=bits;const obj=p[a]?.[Number(index)];if(!obj)return;const key=rest.join('.');let next=val;const numFields=['nivel','quantidade'];if(a==='aptidoes'&&key==='nome'&&String(next).trim()&&!String(obj[key]||'').trim()&&p.aptidoes.filter(x=>x?.nome?.trim()).length>=3&&totals(p).powers+2>currentNC().powers){showToast('Faltam pontos de poder para outra aptidão.',true);return false}if(numFields.includes(key)){next=bound(val,0,key==='nivel'?limit():9999);if(key==='nivel'&&a==='poderes'){const diff=next-n(obj[key]);if(diff>0&&totals(p).powers+diff>currentNC().powers){showToast('Pontos de poder insuficientes.',true);return false}}}obj[key]=next}else{let next=val;if(path==='nc'){const newNC=n(val);if(!NC_TABLE[newNC])return false;p.nc=newNC;render();scheduleSave();return true}if(['ryos','sociais.Carisma','sociais.Manipulacao','recursos.vit','recursos.chakra'].includes(path)){next=bound(val,path.startsWith('recursos')?-99:0,99999);if(path.startsWith('recursos')&&String(val).trim()==='')next=null;if(path.startsWith('sociais')){next=bound(val,0,limit());const before=n(getAt(p,path));if(totals(p).social-before+next>currentNC().social){showToast('Pontos sociais insuficientes.',true);return false}}}const oldPortraitState=path==='recursos.vit'?portraitAutomatic(p):null;setAt(p,path,next);if(path==='recursos.vit'){S.portraitPreview=null;refreshPortraitUI(oldPortraitState)}}scheduleSave();return true}
-  function adjustAttr(key,delta){if(!canEditCurrent())return;const p=active(),t=totals(p),cur=n(p.atributos[key]),next=cur+delta;if(next<0||next>p.nc)return showToast(`Atributos vão de 0 até NC ${p.nc}.`,true);if(delta>0&&t.attrs>=currentNC().attrs)return showToast('Todos os pontos de atributo disponíveis foram usados.',true);p.atributos[key]=next;render();scheduleSave()}
+  function updateValue(path,val){const p=active();if(!p||!canEditCurrent())return;const isArray=path.startsWith('@');if(isArray){const bits=path.slice(1).split('.');const [a,index,...rest]=bits;const obj=p[a]?.[Number(index)];if(!obj)return;const key=rest.join('.');let next=val;const numFields=['nivel','quantidade'];if(a==='aptidoes'&&key==='nome'&&String(next).trim()&&!String(obj[key]||'').trim()&&p.aptidoes.filter(x=>x?.nome?.trim()).length>=3&&totals(p).powers+2>currentNC().powers){showToast('Faltam pontos de poder para outra aptidão.',true);return false}if(numFields.includes(key)){next=bound(val,0,key==='nivel'?limit():9999);if(key==='nivel'&&a==='poderes'){const diff=next-n(obj[key]);if(diff>0&&totals(p).powers+diff>currentNC().powers){showToast('Pontos de poder insuficientes.',true);return false}}}obj[key]=next}else{let next=val;if(path==='nc'){const newNC=n(val);if(!NC_TABLE[newNC])return false;const oldMax=vitMax(p);p.nc=newNC;adjustMaxVitality(p,oldMax);S.portraitPreview=null;render();scheduleSave();return true}if(['ryos','sociais.Carisma','sociais.Manipulacao','recursos.vit','recursos.chakra'].includes(path)){next=bound(val,path.startsWith('recursos')?-99:0,99999);if(path==='recursos.vit')next=String(val).trim()===''?vitMax(p):bound(val,0,vitMax(p));else if(path.startsWith('recursos')&&String(val).trim()==='')next=null;if(path.startsWith('sociais')){next=bound(val,0,limit());const before=n(getAt(p,path));if(totals(p).social-before+next>currentNC().social){showToast('Pontos sociais insuficientes.',true);return false}}}const oldPortraitState=path==='recursos.vit'?portraitAutomatic(p):null;setAt(p,path,next);if(path==='recursos.vit'){S.portraitPreview=null;syncVitalityControls(p);refreshPortraitUI(oldPortraitState)}}scheduleSave();return true}
+  function adjustAttr(key,delta){if(!canEditCurrent())return;const p=active(),t=totals(p),cur=n(p.atributos[key]),next=cur+delta;if(next<0||next>p.nc)return showToast(`Atributos vão de 0 até NC ${p.nc}.`,true);if(delta>0&&t.attrs>=currentNC().attrs)return showToast('Todos os pontos de atributo disponíveis foram usados.',true);const oldMax=vitMax(p);p.atributos[key]=next;if(key==='VIG')adjustMaxVitality(p,oldMax);render();scheduleSave()}
   function adjustSkill(key,delta){if(!canEditCurrent())return;const p=active(),t=totals(p),cur=n(p.pericias[key]),next=cur+delta;if(next<0||next>limit())return showToast(`Máximo de ${limit()} pontos nesta perícia.`,true);if(delta>0&&t.skills>=currentNC().skills)return showToast('Pontos de perícia insuficientes.',true);if(key==='Venefício'&&p.nc<8&&delta>0)return showToast('Venefício não pode ser comprada no NC 4.',true);p.pericias[key]=next;render();scheduleSave()}
   function shiftCombat(){if(!canEditCurrent())return;const p=active(),from=$('#shift-from')?.value,to=$('#shift-to')?.value;if(!from||!to||from===to)return showToast('Escolha habilidades diferentes.',true);const m=p.combateAjustes;let positive=Object.values(m).reduce((s,x)=>s+Math.max(0,n(x)),0);if(positive>=2&&n(m[from])<=0&&n(m[to])>=0)return showToast('Limite de duas transferências.',true);const copy={...m,[from]:n(m[from])-1,[to]:n(m[to])+1};if(Object.values(copy).reduce((s,x)=>s+Math.max(0,n(x)),0)>2||Object.values(copy).some(x=>3+n(x)<0))return showToast('As bases não podem transferir mais de 2 pontos.',true);p.combateAjustes=copy;render();scheduleSave()}
   function modifyItem(array,index,remove=false){if(!canEditCurrent())return;const p=active();if(!p||!['poderes','aptidoes','jutsus','inventario'].includes(array))return;if(remove){p[array].splice(index,1);render();scheduleSave();return}if(p[array].length>=MAX_ITEMS)return showToast('Limite de registros atingido.',true);if(array==='aptidoes'&&p.aptidoes.filter(x=>x?.nome?.trim()).length>=3&&totals(p).powers+2>currentNC().powers)return showToast('Faltam 2 pontos de poder para comprar outra aptidão.',true);const patterns={poderes:{nome:'',nivel:1,descricao:''},aptidoes:{nome:'',tipo:''},jutsus:{nome:'',nivel:1,acao:'',duracao:'',alvo:'',alcance:'',efeito:''},inventario:{nome:'',quantidade:1,obs:''}};if(array==='poderes'&&totals(p).powers+1>currentNC().powers)return showToast('Sem pontos de poder disponíveis.',true);p[array].push({id:randomId(),...patterns[array]});render();scheduleSave()}
@@ -2477,7 +2540,7 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
   if(button?.isConnected)button.disabled=false;
  }
 }
-  function clickAction(el){const action=el.dataset.action;if(!action)return;const p=active();if(action==='guide-step'){S.guideStep=bound(el.dataset.step,0,GUIDE_STEPS.length-1);S.view='guia';render();window.scrollTo({top:0,behavior:'smooth'});return}if(action==='guide-open'){if(!active())return nav('clans');S.canvaPage=bound(el.dataset.page||1,1,4);S.canvaMode=el.dataset.advanced==='true'?'advanced':'original';S.tab=el.dataset.tab||'identidade';S.view='sheet';render();window.scrollTo({top:0,behavior:'smooth'});return}if(action==='cv-page'){S.canvaPage=Number(el.dataset.page)||1;render();return}if(action==='cv-mode'){S.canvaMode=S.canvaMode==='advanced'?'original':'advanced';render();return}if(action==='open-sheet')return openSheet(el.dataset.id);if(action==='ask-delete')return askDelete(el.dataset.id);if(action==='confirm-delete')return deleteSheet();if(action==='lock-admin')return lockAdmin();if(action==='apply-remote')return applyRemoteSheet();if(action==='nav')return nav(el.dataset.view);if(action==='tab'){S.tab=el.dataset.tab;render();return}if(action==='clan'){S.activeClan=el.dataset.clan;S.modal='clan';render();return}if(action==='close-modal'){S.modal=null;render();return}if(action==='create-sheet')return createSheetAnimated();if(action==='auth-pane'){S.authPane=el.dataset.pane==='admin'?'admin':'login';render();return}if(action==='auth-switch'){S.authPane=S.authPane==='register'?'login':'register';render();return}if(action==='logout'){S.adminUnlocked=false;stopAdminLive();S.adminSheets=[];if(fb)fb.signOut(fb.auth);else{S.user=null;S.sheet=null;S.sheetId=null;S.sheets=[];S.view='home';render()}return}if(action==='portrait-upload')return uploadPortrait(el.dataset.slot);if(action==='portrait-switch')return switchPortrait(el.dataset.slot);if(action==='portrait-remove')return removePortrait(el.dataset.slot);if(action==='save')return persist();if(action==='print')return window.print();if(action==='export')return exportSheet();if(action==='social')return adjustSocial(el.dataset.key,n(el.dataset.delta));if(action==='attr')return adjustAttr(el.dataset.key,n(el.dataset.delta));if(action==='skill')return adjustSkill(el.dataset.key,n(el.dataset.delta));if(action==='shift')return shiftCombat();if(action==='reset-shift'){if(!canEditCurrent())return;p.combateAjustes={CC:0,CD:0,ESQ:0,LM:0};render();scheduleSave();return}if(action==='add-item')return modifyItem(el.dataset.array);if(action==='remove-item')return modifyItem(el.dataset.array,n(el.dataset.index),true);if(action==='roll-skill'){const k=el.dataset.key;if(!trained(p,k))return showToast('Esta perícia exige treinamento.',true);return roll(2,skillTotal(p,k),k)}if(action==='roll-combat')return roll(2,combat(p,el.dataset.key),'Combate corporal');if(action==='roll-initiative')return roll(1,n(p.atributos.AGI)+skillTotal(p,'Prontidão'),'Iniciativa');if(action==='refresh-admin')return refreshAdmin();if(action==='open-admin'){if(!canAdmin()||!S.adminUnlocked)return showToast('Confirme a senha para acessar as fichas.',true);const x=S.adminSheets.find(a=>a.__id===el.dataset.id);if(x){const {__id,...safeData}=x;S.sheet=normalize(safeData);S.sheetId=__id;S.adminViewing=true;S.canvaMode='original';S.view='sheet';S.tab='identidade';render();}return}}
+  function clickAction(el){const action=el.dataset.action;if(!action)return;const p=active();if(action==='guide-step'){S.guideStep=bound(el.dataset.step,0,GUIDE_STEPS.length-1);S.view='guia';render();window.scrollTo({top:0,behavior:'smooth'});return}if(action==='guide-open'){if(!active())return nav('clans');S.canvaPage=bound(el.dataset.page||1,1,4);S.canvaMode=el.dataset.advanced==='true'?'advanced':'original';S.tab=el.dataset.tab||'identidade';S.view='sheet';render();window.scrollTo({top:0,behavior:'smooth'});return}if(action==='cv-page'){S.canvaPage=Number(el.dataset.page)||1;render();return}if(action==='cv-mode'){S.canvaMode=S.canvaMode==='advanced'?'original':'advanced';render();return}if(action==='open-sheet')return openSheet(el.dataset.id);if(action==='ask-delete')return askDelete(el.dataset.id);if(action==='confirm-delete')return deleteSheet();if(action==='lock-admin')return lockAdmin();if(action==='apply-remote')return applyRemoteSheet();if(action==='nav')return nav(el.dataset.view);if(action==='tab'){S.tab=el.dataset.tab;render();return}if(action==='clan'){S.activeClan=el.dataset.clan;S.modal='clan';render();return}if(action==='close-modal'){S.modal=null;render();return}if(action==='create-sheet')return createSheetAnimated();if(action==='auth-pane'){S.authPane=el.dataset.pane==='admin'?'admin':'login';render();return}if(action==='auth-switch'){S.authPane=S.authPane==='register'?'login':'register';render();return}if(action==='logout'){S.adminUnlocked=false;stopAdminLive();S.adminSheets=[];if(fb)fb.signOut(fb.auth);else{S.user=null;S.sheet=null;S.sheetId=null;S.sheets=[];S.view='home';render()}return}if(action==='portrait-upload')return uploadPortrait(el.dataset.slot);if(action==='portrait-switch')return switchPortrait(el.dataset.slot);if(action==='portrait-remove')return removePortrait(el.dataset.slot);if(action==='save')return persist();if(action==='print')return window.print();if(action==='export')return exportSheet();if(action==='vitality-step')return adjustVitality(n(el.dataset.delta));if(action==='social')return adjustSocial(el.dataset.key,n(el.dataset.delta));if(action==='attr')return adjustAttr(el.dataset.key,n(el.dataset.delta));if(action==='skill')return adjustSkill(el.dataset.key,n(el.dataset.delta));if(action==='shift')return shiftCombat();if(action==='reset-shift'){if(!canEditCurrent())return;p.combateAjustes={CC:0,CD:0,ESQ:0,LM:0};render();scheduleSave();return}if(action==='add-item')return modifyItem(el.dataset.array);if(action==='remove-item')return modifyItem(el.dataset.array,n(el.dataset.index),true);if(action==='roll-skill'){const k=el.dataset.key;if(!trained(p,k))return showToast('Esta perícia exige treinamento.',true);return roll(2,skillTotal(p,k),k)}if(action==='roll-combat')return roll(2,combat(p,el.dataset.key),'Combate corporal');if(action==='roll-initiative')return roll(1,n(p.atributos.AGI)+skillTotal(p,'Prontidão'),'Iniciativa');if(action==='refresh-admin')return refreshAdmin();if(action==='open-admin'){if(!canAdmin()||!S.adminUnlocked)return showToast('Confirme a senha para acessar as fichas.',true);const x=S.adminSheets.find(a=>a.__id===el.dataset.id);if(x){const {__id,...safeData}=x;S.sheet=normalize(safeData);S.sheetId=__id;S.adminViewing=true;S.canvaMode='original';S.view='sheet';S.tab='identidade';render();}return}}
   document.addEventListener('click',ev=>{const el=ev.target.closest('[data-action]');if(!el)return;if(el.classList.contains('modalshade')&&ev.target!==el)return;clickAction(el)});
   document.addEventListener('submit',ev=>{if(ev.target.id==='auth-form'){ev.preventDefault();submitAuth(ev.target)}else if(ev.target.id==='admin-auth-form'){ev.preventDefault();unlockAdmin(ev.target)}});
   document.addEventListener('input',ev=>{const el=ev.target;if(el.id==='admin-filter'){const q=el.value.toLocaleLowerCase('pt-BR');$('#admin-rows').innerHTML=adminRows(S.adminSheets.filter(x=>[x.nome,x.usuario,clanOf(x.clanId).name].some(z=>String(z||'').toLocaleLowerCase('pt-BR').includes(q))));return}if(el.dataset.cvArray){canvaUpdateArray(el,true);return}if(el.dataset.cvSkill){updateCanvaSkill(el,true);return}if(!el.dataset.bind||el.tagName==='SELECT')return;const current=active(),path=el.dataset.bind,old=getAt(current,path.startsWith('@')?path.slice(1):path);if(!updateValue(path,el.value)){el.value=old??''}else refreshGuideFeedback()});
