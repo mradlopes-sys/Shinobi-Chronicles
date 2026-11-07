@@ -1940,6 +1940,84 @@
  .evo-ink-rewards{gap:6px 9px}
 }
 
+
+/* COMBATE SIMPLIFICADO · efeitos de retrato, chakra, jutsus e dados */
+.cb-portrait-shell{isolation:isolate}
+.cb-portrait-shell.portrait-hit-wounded .cb-portrait-image,
+.cb-portrait-shell.cb-react-hit .cb-portrait-image{
+ animation:shinobi-portrait-wounded .52s cubic-bezier(.24,.72,.31,1) both!important;
+ transform-origin:50% 75%;
+}
+.cb-portrait-shell.portrait-hit-grave .cb-portrait-image{
+ animation:shinobi-portrait-critical .75s cubic-bezier(.27,.12,.3,1) both!important;
+ transform-origin:50% 70%;
+}
+.cb-portrait-shell.portrait-healing .cb-portrait-image,
+.cb-portrait-shell.cb-react-healing .cb-portrait-image{
+ animation:shinobi-portrait-healing .82s cubic-bezier(.24,.61,.25,1) both!important;
+ transform-origin:50% 76%;
+}
+.cb-portrait-shell.portrait-hit-wounded:after,
+.cb-portrait-shell.portrait-hit-grave:after,
+.cb-portrait-shell.cb-react-hit:after{
+ content:"";position:absolute;inset:10px;z-index:4;pointer-events:none;
+ background:radial-gradient(ellipse at 50% 50%,transparent 47%,#a4414163 100%);
+ animation:cb-hit-veil .75s ease-out both;
+}
+.cb-portrait-shell.portrait-hit-grave:after{background:radial-gradient(ellipse at 50% 50%,transparent 35%,#8d24268c 100%)}
+.cb-portrait-shell.portrait-healing:after,
+.cb-portrait-shell.cb-react-healing:after{
+ content:"";position:absolute;inset:10px;z-index:4;pointer-events:none;
+ background:radial-gradient(ellipse at 50% 44%,#d7ffdd32,transparent 58%,#8fc7a21c 100%);
+ animation:cb-heal-veil .85s ease-out both;
+}
+@keyframes cb-hit-veil{0%{opacity:0}24%{opacity:1}100%{opacity:0}}
+@keyframes cb-heal-veil{0%{opacity:0;transform:scale(.9)}35%{opacity:1}100%{opacity:0;transform:scale(1.08)}}
+.cb-feedback-effect{position:absolute;z-index:8;inset:0;display:flex;flex-direction:column;gap:7px;justify-content:center;align-items:center;pointer-events:none;overflow:hidden;
+ animation:cb-feedback-leave 1.02s ease-out both}
+.cb-feedback-effect:before{
+ content:"";width:225px;height:225px;max-width:72%;max-height:60%;border:2px solid currentColor;border-radius:50%;
+ position:absolute;top:39%;left:50%;transform:translate(-50%,-50%) scale(.52);
+ opacity:.55;box-shadow:0 0 30px currentColor;
+ animation:cb-feedback-ring .85s cubic-bezier(.19,.65,.3,1) both;
+}
+.cb-feedback-effect:after{
+ content:"";position:absolute;inset:19% 3% 30%;pointer-events:none;
+ background:repeating-conic-gradient(from -10deg at 50% 46%, transparent 0deg 24deg,currentColor 25deg 26deg,transparent 27deg 51deg);
+ mask-image:radial-gradient(circle at 50% 46%,transparent 0 24%,black 47%,transparent 69%);
+ opacity:.24;animation:cb-feedback-spin .95s ease-out both;
+}
+.cb-feedback-effect.is-hit{color:#c76357}.cb-feedback-effect.is-healing{color:#9cdcb1}
+.cb-feedback-effect.is-chakra{color:#8ccbdd}.cb-feedback-effect.is-jutsu{color:#b5cee3}
+.cb-feedback-effect.is-roll{color:#edd7a2}
+.cb-feedback-rune{font:600 clamp(38px,6vw,68px)/1 var(--serif);position:relative;z-index:2;color:currentColor;
+ text-shadow:0 2px 4px #1b2218,0 0 18px currentColor;opacity:.92;
+ animation:cb-rune-pop .75s ease-out both}
+.cb-feedback-caption{position:relative;z-index:2;max-width:86%;padding:9px 14px;background:#18251bd9;color:#fffdf3;
+ border:1px solid #f8f1dc55;border-radius:3px;font:700 12px/1.4 var(--sans);
+ text-align:center;overflow-wrap:anywhere;box-shadow:0 6px 18px #10191270}
+.cb-portrait-shell.cb-react-jutsu .cb-portrait-image{animation:cb-jutsu-stance .77s ease-out both!important}
+.cb-portrait-shell.cb-react-chakra .cb-portrait-image{animation:cb-chakra-breath .75s ease-out both!important}
+.cb-portrait-shell.cb-react-roll .cb-portrait-image{animation:cb-roll-lunge .56s ease-out both!important}
+@keyframes cb-feedback-ring{0%{opacity:0;transform:translate(-50%,-50%) scale(.28)}35%{opacity:.8}100%{opacity:0;transform:translate(-50%,-50%) scale(1.4)}}
+@keyframes cb-feedback-spin{from{transform:rotate(-25deg);opacity:.35}to{transform:rotate(33deg);opacity:0}}
+@keyframes cb-rune-pop{0%{opacity:0;transform:scale(.65) rotate(-12deg)}35%{opacity:1;transform:scale(1.09)}100%{opacity:.65;transform:scale(1)}}
+@keyframes cb-feedback-leave{0%{opacity:0}13%{opacity:1}75%{opacity:1}100%{opacity:0}}
+@keyframes cb-jutsu-stance{0%,100%{transform:scale(1)}32%{transform:scale(1.045);filter:drop-shadow(0 9px 16px #99d2e166)}}
+@keyframes cb-chakra-breath{0%,100%{transform:scale(1)}45%{transform:scale(1.025);filter:drop-shadow(0 8px 15px #8dbddb77)}}
+@keyframes cb-roll-lunge{0%,100%{transform:translateX(0)}28%{transform:translateX(6px)}53%{transform:translateX(-3px)}}
+.cb-resource .cb-meter span{transition:width .32s cubic-bezier(.22,.72,.25,1)}
+@media(prefers-reduced-motion:reduce){
+ .cb-portrait-shell.portrait-hit-wounded .cb-portrait-image,
+ .cb-portrait-shell.portrait-hit-grave .cb-portrait-image,
+ .cb-portrait-shell.portrait-healing .cb-portrait-image,
+ .cb-portrait-shell[class*="cb-react-"] .cb-portrait-image,
+ .cb-feedback-effect,.cb-feedback-effect:before,.cb-feedback-effect:after,
+ .cb-feedback-rune,.cb-portrait-shell:after{animation:none!important;transition:none!important}
+ .cb-feedback-effect{opacity:1!important}
+}
+@media print{.cb-feedback-effect{display:none!important}}
+
 </style>
 </head>
 <body>
@@ -2211,6 +2289,10 @@
     syncVitalityControls(p);
     refreshPortraitUI(previous,{skipHealingAudio:true});
     combatSyncResources();
+    if(S.combatMode&&S.view==='sheet'){
+      const changed=portraitSeverity(previous)!==portraitSeverity(latest);
+      combatFeedback(next>oldValue?'healing':'hit',(next>oldValue?'+':'')+(next-oldValue)+' Vitalidade',!changed);
+    }
     scheduleSave();
   }
   function adjustMaxVitality(p,oldMax){
@@ -2318,7 +2400,7 @@ function refreshPortraitUI(previousAutomatic=null,options={}){
   const effect=healing?'portrait-healing':after===2?'portrait-hit-grave':after===1?'portrait-hit-wounded':null;
   if(healing&&!options.skipHealingAudio)playSfx('healing');
   else if(after>before)playSfx(after===2?'critical':'wounded');
-  document.querySelectorAll('.cv-portrait,.portrait-editor-preview').forEach(surface=>{
+  document.querySelectorAll('.cv-portrait,.portrait-editor-preview,.cb-portrait-shell').forEach(surface=>{
    surface.classList.remove('portrait-hit-wounded','portrait-hit-grave','portrait-healing');
    if(!effect)return;
    void surface.offsetWidth;
@@ -2680,7 +2762,10 @@ function themeStyle(){
     const chakra=p.recursos?.chakra===null||p.recursos?.chakra===undefined||p.recursos?.chakra===''?chakraMax(p):n(p.recursos.chakra);
     if(chakra<cost)return showToast('Chakra insuficiente: '+chakra+' disponível.',true);
     p.recursos={...p.recursos,chakra:chakra-cost};
-    scheduleSave();render();showToast(j.nome+': −'+cost+' Chakra.');
+    const inCombat=S.combatMode&&S.view==='sheet';
+    scheduleSave();render();
+    if(inCombat)combatFeedback('jutsu',j.nome+' · −'+cost+' Chakra');
+    showToast(j.nome+': −'+cost+' Chakra.');
   }
   function integratedKnown(p){
     const list=(p.jutsus||[]).filter(x=>String(x.nome||'').trim());
@@ -3441,6 +3526,62 @@ function canvaTechniqueAppendix(p,clan){
     const v=vitalityValue(p),max=vitMax(p),ratio=max?v/max:1;
     return ratio<=.25?'Gravemente ferido':ratio<=.5?'Ferido':'Em combate';
   }
+
+  // Volume geral único para os efeitos de todo o site, sem alterar arquivos de áudio.
+  const SHINOBI_AUDIO_GAIN=.34;
+  const normalizedSoundVolume=volume=>Math.max(0,Math.min(1,n(volume)*SHINOBI_AUDIO_GAIN));
+  let combatCueContext=null;
+  function combatCue(kind){
+    if(!S.combatMode||S.view!=='sheet')return;
+    try{
+      const Engine=window.AudioContext||window.webkitAudioContext;
+      if(!Engine)return;
+      const ctx=combatCueContext||(combatCueContext=new Engine());
+      if(ctx.state==='suspended')void ctx.resume().catch(()=>{});
+      const melodies={
+        roll:[[340,0,.07],[460,.075,.075]],
+        chakra:[[230,0,.09],[340,.06,.13]],
+        jutsu:[[300,0,.09],[500,.07,.16]],
+        healing:[[510,0,.09],[660,.07,.14]],
+        hit:[[165,0,.09]]
+      };
+      const tones=melodies[kind]||melodies.chakra;
+      for(const [hz,delay,duration] of tones){
+        const oscillator=ctx.createOscillator(),gain=ctx.createGain(),time=ctx.currentTime+delay;
+        oscillator.type=kind==='hit'?'triangle':'sine';
+        oscillator.frequency.setValueAtTime(hz,time);
+        oscillator.frequency.exponentialRampToValueAtTime(Math.max(60,hz*(kind==='hit'?.74:1.04)),time+duration);
+        gain.gain.setValueAtTime(.0001,time);
+        gain.gain.exponentialRampToValueAtTime(normalizedSoundVolume(.14),time+.012);
+        gain.gain.exponentialRampToValueAtTime(.0001,time+duration);
+        oscillator.connect(gain);gain.connect(ctx.destination);
+        oscillator.start(time);oscillator.stop(time+duration+.02);
+      }
+    }catch(error){console.warn('Efeito suave de combate indisponível:',error)}
+  }
+  function combatFeedback(kind,label,withCue=true){
+    if(!S.combatMode||S.view!=='sheet')return;
+    const shell=document.querySelector('.cb-portrait-shell');
+    if(!shell)return;
+    shell.querySelectorAll('.cb-feedback-effect').forEach(el=>el.remove());
+    const previous=['cb-react-hit','cb-react-healing','cb-react-chakra','cb-react-roll','cb-react-jutsu'];
+    shell.classList.remove(...previous);
+    const type=['hit','healing','chakra','roll','jutsu'].includes(kind)?kind:'chakra';
+    void shell.offsetWidth;
+    shell.classList.add('cb-react-'+type);
+    const symbols={hit:'斬',healing:'癒',chakra:'気',roll:'八',jutsu:'忍'};
+    const el=document.createElement('div');
+    el.className='cb-feedback-effect is-'+type;
+    el.setAttribute('aria-hidden','true');
+    el.innerHTML='<span class="cb-feedback-rune">'+symbols[type]+'</span><span class="cb-feedback-caption">'+E(label)+'</span>';
+    shell.appendChild(el);
+    if(withCue)combatCue(type);
+    window.setTimeout(()=>{
+      el.remove();
+      if(shell.isConnected)shell.classList.remove('cb-react-'+type);
+    },1050);
+  }
+
   function combatSyncResources(){
     if(!S.combatMode||S.view!=='sheet')return;
     const p=active();if(!p)return;
@@ -3459,7 +3600,9 @@ function canvaTechniqueAppendix(p,clan){
     const p=active(),old=combatChakraValue(p),next=Math.max(0,Math.min(chakraMax(p),old+Math.trunc(n(delta))));
     if(next===old)return;
     p.recursos={...(p.recursos||{}),chakra:next};
-    combatSyncResources();scheduleSave();
+    combatSyncResources();
+    combatFeedback('chakra',(next>old?'+':'')+(next-old)+' Chakra');
+    scheduleSave();
   }
   function combatModeView(){
     const p=active();if(!p)return mySheets();
@@ -3539,7 +3682,7 @@ function canvaTechniqueAppendix(p,clan){
     const fallback=()=>{
       try{
         const sound=new Audio('data:audio/mpeg;base64,'+COMBAT_IMPACT_B64);
-        sound.volume=.73;
+        sound.volume=normalizedSoundVolume(.73);
         window.setTimeout(()=>{const playing=sound.play();if(playing?.catch)playing.catch(()=>{});},Math.max(0,delayMs));
       }catch(error){console.warn('Efeito de combate indisponível.',error)}
     };
@@ -3564,7 +3707,7 @@ function canvaTechniqueAppendix(p,clan){
         const source=ctx.createBufferSource();
         const gain=ctx.createGain();
         source.buffer=buffer;
-        gain.gain.value=.74;
+        gain.gain.value=normalizedSoundVolume(.74);
         source.connect(gain);
         gain.connect(ctx.destination);
         const remaining=Math.max(0,(delayMs-(performance.now()-started))/1000);
@@ -3685,7 +3828,7 @@ function canvaTechniqueAppendix(p,clan){
     if(!EVOLUTION_SOUND_URL)return;
     try{
       const clip=new Audio(EVOLUTION_SOUND_URL);
-      clip.volume=.14; // volume suave para a evolução (antes: 0.82)
+      clip.volume=normalizedSoundVolume(.40); // volume de evolução alinhado aos demais efeitos
       const started=clip.play();
       if(started?.catch)started.catch(error=>console.warn('Som de evolução indisponível:',error));
     }catch(error){console.warn('Falha ao reproduzir a evolução:',error)}
@@ -3819,7 +3962,7 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
   function adjustSkill(key,delta){if(!canEditCurrent())return;const p=active(),t=totals(p),cur=n(p.pericias[key]),next=cur+delta;if(next<0||next>limit())return showToast(`Máximo de ${limit()} pontos nesta perícia.`,true);if(delta>0&&t.skills>=currentNC().skills)return showToast('Pontos de perícia insuficientes.',true);if(key==='Venefício'&&p.nc<8&&delta>0)return showToast('Venefício não pode ser comprada no NC 4.',true);p.pericias[key]=next;render();scheduleSave()}
   function shiftCombat(){if(!canEditCurrent())return;const p=active(),from=$('#shift-from')?.value,to=$('#shift-to')?.value;if(!from||!to||from===to)return showToast('Escolha habilidades diferentes.',true);const m=p.combateAjustes;let positive=Object.values(m).reduce((s,x)=>s+Math.max(0,n(x)),0);if(positive>=2&&n(m[from])<=0&&n(m[to])>=0)return showToast('Limite de duas transferências.',true);const copy={...m,[from]:n(m[from])-1,[to]:n(m[to])+1};if(Object.values(copy).reduce((s,x)=>s+Math.max(0,n(x)),0)>2||Object.values(copy).some(x=>3+n(x)<0))return showToast('As bases não podem transferir mais de 2 pontos.',true);p.combateAjustes=copy;render();scheduleSave()}
   function modifyItem(array,index,remove=false){if(!canEditCurrent())return;const p=active();if(!p||!['poderes','aptidoes','jutsus','inventario'].includes(array))return;if(remove){p[array].splice(index,1);render();scheduleSave();return}if(p[array].length>=MAX_ITEMS)return showToast('Limite de registros atingido.',true);if(array==='aptidoes'&&p.aptidoes.filter(x=>x?.nome?.trim()).length>=3&&totals(p).powers+2>currentNC().powers)return showToast('Faltam 2 pontos de poder para comprar outra aptidão.',true);const patterns={poderes:{nome:'',nivel:1,descricao:''},aptidoes:{nome:'',tipo:''},jutsus:{nome:'',nivel:1,acao:'',duracao:'',alvo:'',alcance:'',efeito:''},inventario:{nome:'',quantidade:1,obs:''}};if(array==='poderes'&&totals(p).powers+1>currentNC().powers)return showToast('Sem pontos de poder disponíveis.',true);p[array].push({id:randomId(),...patterns[array]});render();scheduleSave()}
-  function roll(diceCount,bonus,label){const rolls=Array.from({length:diceCount},()=>1+Math.floor(Math.random()*8)),sum=rolls.reduce((a,b)=>a+b,0);let critical=diceCount===2&&(sum>=15?' · SUCESSO CRÍTICO':sum<=3?' · FALHA CRÍTICA':'');showToast(`${label}: ${rolls.join(' + ')} + ${bonus} = ${sum+bonus}${critical}`)}
+  function roll(diceCount,bonus,label){const rolls=Array.from({length:diceCount},()=>1+Math.floor(Math.random()*8)),sum=rolls.reduce((a,b)=>a+b,0);let critical=diceCount===2&&(sum>=15?' · SUCESSO CRÍTICO':sum<=3?' · FALHA CRÍTICA':'');showToast(`${label}: ${rolls.join(' + ')} + ${bonus} = ${sum+bonus}${critical}`);if(S.combatMode&&S.view==='sheet')combatFeedback('roll',`${label} · ${sum+bonus}${critical}`)}
   function exportSheet(){if(!active())return;const data=JSON.stringify(active(),null,2);const url=URL.createObjectURL(new Blob([data],{type:'application/json;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download=`shinobi-${active().nome.toLowerCase().replace(/[^a-z0-9]/g,'-')||'personagem'}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1200)}
 
   
@@ -3841,7 +3984,7 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
           const sound=new Audio(url);
           sound.preload='auto';
           sound.muted=false;
-          sound.volume=spec.volume;
+          sound.volume=normalizedSoundVolume(spec.volume);
           const started=sound.play();
           if(started?.catch)started.catch(error=>{
             console.warn('Áudio de cura não iniciou:',url,error);
@@ -3856,7 +3999,8 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
     }
     try{
       let sound=soundTracks.get(kind);
-      if(!sound){sound=new Audio(spec.url);sound.preload='auto';sound.volume=spec.volume;soundTracks.set(kind,sound)}
+      if(!sound){sound=new Audio(spec.url);sound.preload='auto';soundTracks.set(kind,sound)}
+      sound.volume=normalizedSoundVolume(spec.volume);
       sound.pause();sound.currentTime=0;
       const started=sound.play();
       if(started?.catch)started.catch(error=>console.warn('Áudio não iniciou:',kind,error));
@@ -3870,7 +4014,7 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
       if(!createSheetAudio){
         createSheetAudio=new Audio('assets/audio/create-sheet.mp3');
         createSheetAudio.preload='auto';
-        createSheetAudio.volume=.68;
+        createSheetAudio.volume=normalizedSoundVolume(.68);
       }
       createSheetAudio.pause();
       createSheetAudio.currentTime=0;
