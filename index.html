@@ -1565,6 +1565,16 @@ function guideInputs(p,index,r,t){
  return section('Sua ficha está conectada ao guia','Tudo que você preencheu já foi integrado à mesma ficha do personagem.',
  `<div class="guide-finish-actions"><button type="button" class="button" data-action="guide-open" data-page="1" data-tab="identidade" data-advanced="false">Visualizar ficha Canva</button><button type="button" class="button secondary" data-action="save">Salvar agora</button></div>`);
 }
+function guideMenu(p,index,t,r,clan,done){
+ const groups={0:'PRIMEIROS PASSOS',2:'TREINAMENTO',6:'CAMINHO NINJA',9:'HISTÓRIA E REVISÃO'};
+ return `<nav class="guide-nav" aria-label="Etapas do guia">
+  <div class="guide-nav-cover"><span class="guide-nav-emblem" aria-hidden="true">${E(clan.kanji)}</span><div><span class="guide-nav-kicker">SHINOBI CHRONICLES</span><strong>Manual de Recrutas</strong><small>Clã ${E(clan.name)}</small></div></div>
+  <div class="guide-nav-progress"><div><span>SUA JORNADA</span><strong>${done} / ${GUIDE_STEPS.length}</strong></div><div class="guide-nav-progress-track"><i style="width:${Math.round(100*done/GUIDE_STEPS.length)}%"></i></div></div>
+  ${GUIDE_STEPS.map((g,i)=>`${groups[i]?`<div class="guide-nav-chapter"><span>${groups[i]}</span></div>`:''}<button type="button" data-action="guide-step" data-step="${i}" class="${index===i?'active':''} ${guideStepDone(i,p,t,r)?'done':''}" ${index===i?'aria-current="step"':''}>
+  <span class="guide-index">${guideStepDone(i,p,t,r)?'✓':String(i+1).padStart(2,'0')}</span><span class="guide-step-label"><b>${E(g.title)}</b><small>${E(g.subtitle)}</small></span><span class="guide-step-chevron" aria-hidden="true">›</span></button>`).join('')}
+  <div class="guide-nav-bottom"><span aria-hidden="true">葉</span> Seus registros acompanham sua jornada.</div>
+ </nav>`;
+}
 function guideView(){
  if(!active())return layout(`<div class="empty"><h3>Escolha um clã primeiro</h3><p>Crie um personagem para seguir o guia de montagem de ficha.</p><button class="button" data-action="nav" data-view="clans">Escolher clã</button></div>`);
  const p=active(),clan=clanOf(p.clanId),r=currentNC(),t=totals(p);
@@ -1572,12 +1582,12 @@ function guideView(){
  const done=GUIDE_STEPS.filter((_,i)=>guideStepDone(i,p,t,r)).length;
  const meter=[['Atributos',t.attrs,r.attrs],['Perícias',t.skills,r.skills],['Poderes',t.powers,r.powers],['Sociais',t.social,r.social]];
  const showStat=([label,used,max])=>`<div class="guide-meter-item ${used===max?'complete':''}"><span>${label}</span><strong>${used} <small>/ ${max}</small></strong><div class="guide-meter-bar"><i style="width:${Math.max(0,Math.min(100,Math.round(100*used/Math.max(1,max))))}%"></i></div></div>`;
- return layout(`${portraitFileInput()}<div class="guide-head"><div class="guide-head-copy"><div class="eyebrow">SHINOBI CHRONICLES / MANUAL DE RECRUTAS</div><h1>Do primeiro passo à sua ficha.</h1><p>Um guia interativo para criar seu personagem após escolher o clã. Acompanhe os pontos utilizados e volte à ficha sempre que precisar.</p><div class="guide-head-actions"><span class="guide-mark">Clã ${E(clan.name)} · NC ${p.nc}</span><span class="guide-count">${done} de ${GUIDE_STEPS.length} verificações atendidas</span></div></div><div class="guide-head-illustration" style="--wash:${clan.wash}">${imageTag(clan)}<span>${E(clan.kanji)}</span></div></div>
+ return layout(`${portraitFileInput()}<div class="guide-head"><div class="guide-head-copy"><div class="eyebrow">SHINOBI CHRONICLES / MANUAL DE RECRUTAS</div><h1>Do primeiro passo à sua ficha.</h1><p>Um guia interativo para criar seu personagem após escolher o clã. Preencha todos os seus dados aqui mesmo; cada alteração já aparece na ficha original do Canva.</p><div class="guide-head-actions"><span class="guide-mark">Clã ${E(clan.name)} · NC ${p.nc}</span><span class="guide-count">${done} de ${GUIDE_STEPS.length} verificações atendidas</span></div></div><div class="guide-head-illustration" style="--wash:${clan.wash}">${imageTag(clan)}<span>${E(clan.kanji)}</span></div></div>
  <div class="guide-meter">${meter.map(showStat).join('')}</div>
  <div class="guide-layout">
-  <nav class="guide-nav" aria-label="Etapas do guia"><div class="guide-nav-title">PASSO A PASSO</div>${GUIDE_STEPS.map((g,i)=>`<button type="button" data-action="guide-step" data-step="${i}" class="${index===i?'active':''} ${guideStepDone(i,p,t,r)?'done':''}" ${index===i?'aria-current="step"':''}><span class="guide-index">${guideStepDone(i,p,t,r)?'✓':String(i+1).padStart(2,'0')}</span><span><b>${E(g.title)}</b><small>${E(g.subtitle)}</small></span></button>`).join('')}</nav>
+  ${guideMenu(p,index,t,r,clan,done)}
   <article class="guide-article"><div class="guide-article-kicker">ETAPA ${String(index+1).padStart(2,'0')} / ${GUIDE_STEPS.length}</div><h2>${E(step.title)}</h2><div class="guide-subtitle">${E(step.subtitle)}</div><div class="guide-rule">${guideBody(p,index,r,t,clan)}</div>${guideInputs(p,index,r,t)}
-   <div class="guide-article-footer"><div class="guide-where"><span>PREENCHA NA FICHA</span><b>${step.advanced?'Editor detalhado':`Página ${step.page} do Canva`}</b></div><button type="button" class="button" data-action="guide-open" data-page="${step.page}" data-tab="${E(step.tab)}" data-advanced="${step.advanced?'true':'false'}">Abrir esta parte da ficha ↗</button></div>
+   <div class="guide-article-footer"><div class="guide-where"><span>CONFERIR NA FICHA ORIGINAL</span><b>${step.advanced?'Editor detalhado':`Página ${step.page} do Canva`}</b></div><button type="button" class="button" data-action="guide-open" data-page="${step.page}" data-tab="${E(step.tab)}" data-advanced="${step.advanced?'true':'false'}">${step.advanced?'Abrir o editor detalhado ↗':'Ver na ficha Canva ↗'}</button></div>
    <div class="guide-pager"><button class="button secondary small" ${index===0?'disabled':''} data-action="guide-step" data-step="${index-1}">← Anterior</button><span>${index+1} / ${GUIDE_STEPS.length}</span><button class="button secondary small" data-action="${index===GUIDE_STEPS.length-1?'guide-open':'guide-step'}" ${index===GUIDE_STEPS.length-1?`data-page="1" data-tab="identidade" data-advanced="false"`:`data-step="${index+1}"`}>${index===GUIDE_STEPS.length-1?'Voltar à ficha':'Próximo passo →'}</button></div>
   </article>
  </div><p class="guide-source">Base: Naruto Shinobi no Sho, 4ª edição (4.1b) — resumo e manual de criação. O guia explica as regras gerais, mas não substitui os pré-requisitos específicos do livro nem as decisões do mestre. NCs intermediários foram adaptados para o site.</p>`);
