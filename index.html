@@ -1339,14 +1339,13 @@ function isImageDataUrl(value){
       });
       if(!bitmap.naturalWidth||!bitmap.naturalHeight)throw Error('A imagem selecionada não é válida.');
       const canvas=document.createElement('canvas');
-      const ctx=canvas.getContext('2d',{alpha:false});
+      const ctx=canvas.getContext('2d',{alpha:true});
       if(!ctx)throw Error('Seu navegador não conseguiu preparar a imagem.');
       for(const maxSide of [900,720,560,440,320]){
         const ratio=Math.min(1,maxSide/Math.max(bitmap.naturalWidth,bitmap.naturalHeight));
         canvas.width=Math.max(1,Math.round(bitmap.naturalWidth*ratio));
         canvas.height=Math.max(1,Math.round(bitmap.naturalHeight*ratio));
-        ctx.fillStyle='#f7f0e4';
-        ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.clearRect(0,0,canvas.width,canvas.height);
         ctx.imageSmoothingEnabled=true;
         ctx.imageSmoothingQuality='high';
         ctx.drawImage(bitmap,0,0,canvas.width,canvas.height);
@@ -1359,48 +1358,55 @@ function isImageDataUrl(value){
       throw Error('Não foi possível comprimir essa imagem. Tente outra foto.');
     }finally{URL.revokeObjectURL(url)}
   }
-  async function handlePortraitSelected(file){
-    if(!file)return;
-    if(!canEditCurrent())return showToast('Esta ficha não pode ser editada por você.',true);
-    if(S.portraitBusy)return;
-    const sheetId=S.sheetId, sheet=active();
-    if(!sheetId||!sheet)return;
-    S.portraitBusy=true;
-    showToast('Preparando retrato...');
-    try{
-      const data=await compressPortrait(file);
-      if(S.sheetId!==sheetId||active()!==sheet||!canEditCurrent())return showToast('Abra novamente a ficha para enviar o retrato.',true);
-      if(S.saveTimer){clearTimeout(S.saveTimer);S.saveTimer=null}
-      const previous=sheet.foto;
-      sheet.foto=data;
-      render();
-      const saved=await persist();
-      if(saved)showToast('Retrato salvo na ficha!');
-      else{
-        sheet.foto=previous;
-        render();
-        showToast('Não foi possível salvar o retrato. Tente novamente.',true);
-      }
-    }catch(error){
-      console.error('Erro ao processar retrato:',error.message||error);
-      showToast(error.message||'Não foi possível enviar a imagem.',true);
-    }finally{S.portraitBusy=false}
+  async function handlePortraitSelected(file,key){
+ if(!file)return;
+ if(!canEditCurrent())return showToast('Você não pode editar esta ficha.',true);
+ if(S.portraitBusy)return;
+ const slot=portraitVariant(key||S.portraitUploadSlot).key;
+ const sheet=active(),sheetId=S.sheetId;if(!sheet||!sheetId)return;
+ S.portraitBusy=true;showToast('Preparando retrato '+portraitVariant(slot).label.toLowerCase()+'...');
+ try{
+  const data=await compressPortrait(file);
+  if(S.sheetId!==sheetId||active()!==sheet||!canEditCurrent())return showToast('Abra novamente a ficha para enviar o retrato.',true);
+  const prev={foto:sheet.foto,retratos:{...sheet.retratos},base:sheet.retratoBase};
+  const gallery={casual:'',ninja:'',ferido:'',grave:'',...sheet.retratos};
+  if(sheet.foto&&!gallery.casual)gallery.casual=sheet.foto;
+  gallery[slot]=data;sheet.retratos=gallery;sheet.foto='';
+  if(slot==='casual'||slot==='ninja')sheet.retratoBase=slot;
+  if(new TextEncoder().encode(JSON.stringify(sheet)).length>PORTRAIT_DOCUMENT_MAX){
+   sheet.foto=prev.foto;sheet.retratos=prev.retratos;sheet.retratoBase=prev.base;
+   return showToast('A ficha ficou grande demais para salvar no Firebase. Tente uma foto menor ou remova outro retrato.',true);
   }
-  async function removePortrait(){
-    if(!canEditCurrent()||S.portraitBusy)return;
-    const sheet=active(),id=S.sheetId;
-    if(!sheet||!sheet.foto)return;
-    if(S.saveTimer){clearTimeout(S.saveTimer);S.saveTimer=null}
-    const previous=sheet.foto;
-    sheet.foto='';
-    render();
-    if(S.sheetId!==id||active()!==sheet)return;
-    const saved=await persist();
-    if(saved)showToast('Retrato removido.');
-    else{sheet.foto=previous;render();showToast('Não foi possível remover o retrato.',true)}
+  if(S.saveTimer){clearTimeout(S.saveTimer);S.saveTimer=null}
+  S.portraitPreview={sheetId,key:slot};
+  render();
+  const saved=await persist();
+  if(saved)showToast('Retrato '+portraitVariant(slot).label.toLowerCase()+' salvo!');
+  else{
+   sheet.foto=prev.foto;sheet.retratos=prev.retratos;sheet.retratoBase=prev.base;
+   S.portraitPreview=null;render();showToast('Não foi possível salvar o retrato.',true);
   }
+ }catch(error){console.error('Upload retrato:',error);showToast(error.message||'Falha ao enviar retrato.',true)}
+ finally{S.portraitBusy=false}
+}
 
-  function imageTag(c){return `<img src="${c.id}.jpg" alt="Arte do clã ${E(c.name)}" loading="lazy" onerror="this.style.display='none';this.parentElement.classList.add('missing-banner')">`}
+async function removePortrait(key){
+ if(!canEditCurrent()||S.portraitBusy)return;
+ const slot=portraitVariant(key||portraitShowing(active())).key,sheet=active(),id=S.sheetId;
+ if(!sheet||!portraitOwn(sheet,slot))return;
+ if(S.saveTimer){clearTimeout(S.saveTimer);S.saveTimer=null}
+ const previous={foto:sheet.foto,retratos:{...sheet.retratos}};
+ sheet.retratos={casual:'',ninja:'',ferido:'',grave:'',...sheet.retratos,[slot]:''};
+ if(slot==='casual')sheet.foto='';
+ if(S.portraitPreview?.sheetId===id&&S.portraitPreview.key===slot)S.portraitPreview=null;
+ render();
+ if(S.sheetId!==id||active()!==sheet)return;
+ const success=await persist();
+ if(success)showToast('Retrato '+portraitVariant(slot).label.toLowerCase()+' removido.');
+ else{sheet.foto=previous.foto;sheet.retratos=previous.retratos;render();showToast('Não foi possível remover o retrato.',true)}
+}
+
+function imageTag(c){return `<img src="${c.id}.jpg" alt="Arte do clã ${E(c.name)}" loading="lazy" onerror="this.style.display='none';this.parentElement.classList.add('missing-banner')">`}
   const clanCard=c=>`<button class="clan-card" data-action="clan" data-clan="${c.id}" aria-label="Ver clã ${E(c.name)}"><div class="clan-art" style="--wash:${c.wash}">${imageTag(c)}<span class="kanji">${c.kanji}</span></div><div class="clan-card-bottom"><div><h3>${E(c.name)}</h3><p>${E(c.desc)}</p></div><span class="arrow">↗</span></div></button>`;
 
 function ownSheets(){return S.sheets.slice().sort((a,b)=>n(b.data?.atualizadoEm)-n(a.data?.atualizadoEm))}
@@ -2089,7 +2095,7 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
  }
 }
   function scheduleSave(){if(!active()||!canEditCurrent())return;S.locallyDirty=true;setStatus(CONFIGURED?'Alterações pendentes':'Prévia local');clearTimeout(S.saveTimer);S.saveTimer=setTimeout(()=>void persist(),280)}
-  function updateValue(path,val){const p=active();if(!p||!canEditCurrent())return;const isArray=path.startsWith('@');if(isArray){const bits=path.slice(1).split('.');const [a,index,...rest]=bits;const obj=p[a]?.[Number(index)];if(!obj)return;const key=rest.join('.');let next=val;const numFields=['nivel','quantidade'];if(a==='aptidoes'&&key==='nome'&&String(next).trim()&&!String(obj[key]||'').trim()&&p.aptidoes.filter(x=>x?.nome?.trim()).length>=3&&totals(p).powers+2>currentNC().powers){showToast('Faltam pontos de poder para outra aptidão.',true);return false}if(numFields.includes(key)){next=bound(val,0,key==='nivel'?limit():9999);if(key==='nivel'&&a==='poderes'){const diff=next-n(obj[key]);if(diff>0&&totals(p).powers+diff>currentNC().powers){showToast('Pontos de poder insuficientes.',true);return false}}}obj[key]=next}else{let next=val;if(path==='nc'){const newNC=n(val);if(!NC_TABLE[newNC])return false;p.nc=newNC;render();scheduleSave();return true}if(['ryos','sociais.Carisma','sociais.Manipulacao','recursos.vit','recursos.chakra'].includes(path)){next=bound(val,path.startsWith('recursos')?-99:0,99999);if(path.startsWith('sociais')){next=bound(val,0,limit());const before=n(getAt(p,path));if(totals(p).social-before+next>currentNC().social){showToast('Pontos sociais insuficientes.',true);return false}}}setAt(p,path,next)}scheduleSave();return true}
+  function updateValue(path,val){const p=active();if(!p||!canEditCurrent())return;const isArray=path.startsWith('@');if(isArray){const bits=path.slice(1).split('.');const [a,index,...rest]=bits;const obj=p[a]?.[Number(index)];if(!obj)return;const key=rest.join('.');let next=val;const numFields=['nivel','quantidade'];if(a==='aptidoes'&&key==='nome'&&String(next).trim()&&!String(obj[key]||'').trim()&&p.aptidoes.filter(x=>x?.nome?.trim()).length>=3&&totals(p).powers+2>currentNC().powers){showToast('Faltam pontos de poder para outra aptidão.',true);return false}if(numFields.includes(key)){next=bound(val,0,key==='nivel'?limit():9999);if(key==='nivel'&&a==='poderes'){const diff=next-n(obj[key]);if(diff>0&&totals(p).powers+diff>currentNC().powers){showToast('Pontos de poder insuficientes.',true);return false}}}obj[key]=next}else{let next=val;if(path==='nc'){const newNC=n(val);if(!NC_TABLE[newNC])return false;p.nc=newNC;render();scheduleSave();return true}if(['ryos','sociais.Carisma','sociais.Manipulacao','recursos.vit','recursos.chakra'].includes(path)){next=bound(val,path.startsWith('recursos')?-99:0,99999);if(path.startsWith('recursos')&&String(val).trim()==='')next=null;if(path.startsWith('sociais')){next=bound(val,0,limit());const before=n(getAt(p,path));if(totals(p).social-before+next>currentNC().social){showToast('Pontos sociais insuficientes.',true);return false}}}setAt(p,path,next);if(path==='recursos.vit'){S.portraitPreview=null;refreshPortraitUI()}}scheduleSave();return true}
   function adjustAttr(key,delta){if(!canEditCurrent())return;const p=active(),t=totals(p),cur=n(p.atributos[key]),next=cur+delta;if(next<0||next>p.nc)return showToast(`Atributos vão de 0 até NC ${p.nc}.`,true);if(delta>0&&t.attrs>=currentNC().attrs)return showToast('Todos os pontos de atributo disponíveis foram usados.',true);p.atributos[key]=next;render();scheduleSave()}
   function adjustSkill(key,delta){if(!canEditCurrent())return;const p=active(),t=totals(p),cur=n(p.pericias[key]),next=cur+delta;if(next<0||next>limit())return showToast(`Máximo de ${limit()} pontos nesta perícia.`,true);if(delta>0&&t.skills>=currentNC().skills)return showToast('Pontos de perícia insuficientes.',true);if(key==='Venefício'&&p.nc<8&&delta>0)return showToast('Venefício não pode ser comprada no NC 4.',true);p.pericias[key]=next;render();scheduleSave()}
   function shiftCombat(){if(!canEditCurrent())return;const p=active(),from=$('#shift-from')?.value,to=$('#shift-to')?.value;if(!from||!to||from===to)return showToast('Escolha habilidades diferentes.',true);const m=p.combateAjustes;let positive=Object.values(m).reduce((s,x)=>s+Math.max(0,n(x)),0);if(positive>=2&&n(m[from])<=0&&n(m[to])>=0)return showToast('Limite de duas transferências.',true);const copy={...m,[from]:n(m[from])-1,[to]:n(m[to])+1};if(Object.values(copy).reduce((s,x)=>s+Math.max(0,n(x)),0)>2||Object.values(copy).some(x=>3+n(x)<0))return showToast('As bases não podem transferir mais de 2 pontos.',true);p.combateAjustes=copy;render();scheduleSave()}
@@ -2203,11 +2209,11 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
   if(button?.isConnected)button.disabled=false;
  }
 }
-  function clickAction(el){const action=el.dataset.action;if(!action)return;const p=active();if(action==='guide-step'){S.guideStep=bound(el.dataset.step,0,GUIDE_STEPS.length-1);S.view='guia';render();window.scrollTo({top:0,behavior:'smooth'});return}if(action==='guide-open'){if(!active())return nav('clans');S.canvaPage=bound(el.dataset.page||1,1,4);S.canvaMode=el.dataset.advanced==='true'?'advanced':'original';S.tab=el.dataset.tab||'identidade';S.view='sheet';render();window.scrollTo({top:0,behavior:'smooth'});return}if(action==='cv-page'){S.canvaPage=Number(el.dataset.page)||1;render();return}if(action==='cv-mode'){S.canvaMode=S.canvaMode==='advanced'?'original':'advanced';render();return}if(action==='open-sheet')return openSheet(el.dataset.id);if(action==='ask-delete')return askDelete(el.dataset.id);if(action==='confirm-delete')return deleteSheet();if(action==='lock-admin')return lockAdmin();if(action==='apply-remote')return applyRemoteSheet();if(action==='nav')return nav(el.dataset.view);if(action==='tab'){S.tab=el.dataset.tab;render();return}if(action==='clan'){S.activeClan=el.dataset.clan;S.modal='clan';render();return}if(action==='close-modal'){S.modal=null;render();return}if(action==='create-sheet')return createSheetAnimated();if(action==='auth-pane'){S.authPane=el.dataset.pane==='admin'?'admin':'login';render();return}if(action==='auth-switch'){S.authPane=S.authPane==='register'?'login':'register';render();return}if(action==='logout'){S.adminUnlocked=false;stopAdminLive();S.adminSheets=[];if(fb)fb.signOut(fb.auth);else{S.user=null;S.sheet=null;S.sheetId=null;S.sheets=[];S.view='home';render()}return}if(action==='portrait-upload'){if(!canEditCurrent())return showToast('Sem permissão para editar esta ficha.',true);$('#portrait-file')?.click();return}if(action==='portrait-remove')return removePortrait();if(action==='save')return persist();if(action==='print')return window.print();if(action==='export')return exportSheet();if(action==='social')return adjustSocial(el.dataset.key,n(el.dataset.delta));if(action==='attr')return adjustAttr(el.dataset.key,n(el.dataset.delta));if(action==='skill')return adjustSkill(el.dataset.key,n(el.dataset.delta));if(action==='shift')return shiftCombat();if(action==='reset-shift'){if(!canEditCurrent())return;p.combateAjustes={CC:0,CD:0,ESQ:0,LM:0};render();scheduleSave();return}if(action==='add-item')return modifyItem(el.dataset.array);if(action==='remove-item')return modifyItem(el.dataset.array,n(el.dataset.index),true);if(action==='roll-skill'){const k=el.dataset.key;if(!trained(p,k))return showToast('Esta perícia exige treinamento.',true);return roll(2,skillTotal(p,k),k)}if(action==='roll-combat')return roll(2,combat(p,el.dataset.key),'Combate corporal');if(action==='roll-initiative')return roll(1,n(p.atributos.AGI)+skillTotal(p,'Prontidão'),'Iniciativa');if(action==='refresh-admin')return refreshAdmin();if(action==='open-admin'){if(!canAdmin()||!S.adminUnlocked)return showToast('Confirme a senha para acessar as fichas.',true);const x=S.adminSheets.find(a=>a.__id===el.dataset.id);if(x){const {__id,...safeData}=x;S.sheet=normalize(safeData);S.sheetId=__id;S.adminViewing=true;S.canvaMode='original';S.view='sheet';S.tab='identidade';render();}return}}
+  function clickAction(el){const action=el.dataset.action;if(!action)return;const p=active();if(action==='guide-step'){S.guideStep=bound(el.dataset.step,0,GUIDE_STEPS.length-1);S.view='guia';render();window.scrollTo({top:0,behavior:'smooth'});return}if(action==='guide-open'){if(!active())return nav('clans');S.canvaPage=bound(el.dataset.page||1,1,4);S.canvaMode=el.dataset.advanced==='true'?'advanced':'original';S.tab=el.dataset.tab||'identidade';S.view='sheet';render();window.scrollTo({top:0,behavior:'smooth'});return}if(action==='cv-page'){S.canvaPage=Number(el.dataset.page)||1;render();return}if(action==='cv-mode'){S.canvaMode=S.canvaMode==='advanced'?'original':'advanced';render();return}if(action==='open-sheet')return openSheet(el.dataset.id);if(action==='ask-delete')return askDelete(el.dataset.id);if(action==='confirm-delete')return deleteSheet();if(action==='lock-admin')return lockAdmin();if(action==='apply-remote')return applyRemoteSheet();if(action==='nav')return nav(el.dataset.view);if(action==='tab'){S.tab=el.dataset.tab;render();return}if(action==='clan'){S.activeClan=el.dataset.clan;S.modal='clan';render();return}if(action==='close-modal'){S.modal=null;render();return}if(action==='create-sheet')return createSheetAnimated();if(action==='auth-pane'){S.authPane=el.dataset.pane==='admin'?'admin':'login';render();return}if(action==='auth-switch'){S.authPane=S.authPane==='register'?'login':'register';render();return}if(action==='logout'){S.adminUnlocked=false;stopAdminLive();S.adminSheets=[];if(fb)fb.signOut(fb.auth);else{S.user=null;S.sheet=null;S.sheetId=null;S.sheets=[];S.view='home';render()}return}if(action==='portrait-upload')return uploadPortrait(el.dataset.slot);if(action==='portrait-switch')return switchPortrait(el.dataset.slot);if(action==='portrait-remove')return removePortrait(el.dataset.slot);if(action==='save')return persist();if(action==='print')return window.print();if(action==='export')return exportSheet();if(action==='social')return adjustSocial(el.dataset.key,n(el.dataset.delta));if(action==='attr')return adjustAttr(el.dataset.key,n(el.dataset.delta));if(action==='skill')return adjustSkill(el.dataset.key,n(el.dataset.delta));if(action==='shift')return shiftCombat();if(action==='reset-shift'){if(!canEditCurrent())return;p.combateAjustes={CC:0,CD:0,ESQ:0,LM:0};render();scheduleSave();return}if(action==='add-item')return modifyItem(el.dataset.array);if(action==='remove-item')return modifyItem(el.dataset.array,n(el.dataset.index),true);if(action==='roll-skill'){const k=el.dataset.key;if(!trained(p,k))return showToast('Esta perícia exige treinamento.',true);return roll(2,skillTotal(p,k),k)}if(action==='roll-combat')return roll(2,combat(p,el.dataset.key),'Combate corporal');if(action==='roll-initiative')return roll(1,n(p.atributos.AGI)+skillTotal(p,'Prontidão'),'Iniciativa');if(action==='refresh-admin')return refreshAdmin();if(action==='open-admin'){if(!canAdmin()||!S.adminUnlocked)return showToast('Confirme a senha para acessar as fichas.',true);const x=S.adminSheets.find(a=>a.__id===el.dataset.id);if(x){const {__id,...safeData}=x;S.sheet=normalize(safeData);S.sheetId=__id;S.adminViewing=true;S.canvaMode='original';S.view='sheet';S.tab='identidade';render();}return}}
   document.addEventListener('click',ev=>{const el=ev.target.closest('[data-action]');if(!el)return;if(el.classList.contains('modalshade')&&ev.target!==el)return;clickAction(el)});
   document.addEventListener('submit',ev=>{if(ev.target.id==='auth-form'){ev.preventDefault();submitAuth(ev.target)}else if(ev.target.id==='admin-auth-form'){ev.preventDefault();unlockAdmin(ev.target)}});
   document.addEventListener('input',ev=>{const el=ev.target;if(el.id==='admin-filter'){const q=el.value.toLocaleLowerCase('pt-BR');$('#admin-rows').innerHTML=adminRows(S.adminSheets.filter(x=>[x.nome,x.usuario,clanOf(x.clanId).name].some(z=>String(z||'').toLocaleLowerCase('pt-BR').includes(q))));return}if(el.dataset.cvArray){canvaUpdateArray(el,true);return}if(el.dataset.cvSkill){updateCanvaSkill(el,true);return}if(!el.dataset.bind||el.tagName==='SELECT')return;const current=active(),path=el.dataset.bind,old=getAt(current,path.startsWith('@')?path.slice(1):path);if(!updateValue(path,el.value)){el.value=old??''}else refreshGuideFeedback()});
-  document.addEventListener('change',ev=>{const el=ev.target;if(el.matches('[data-portrait-file]')){const file=el.files?.[0];el.value='';void handlePortraitSelected(file);return}if(el.dataset.cvArray){canvaUpdateArray(el);return}if(el.dataset.cvSkill){updateCanvaSkill(el);return}if(!el.dataset.bind||el.tagName!=='SELECT')return;updateValue(el.dataset.bind,el.value)});
+  document.addEventListener('change',ev=>{const el=ev.target;if(el.matches('[data-portrait-file]')){const file=el.files?.[0];el.value='';void handlePortraitSelected(file,S.portraitUploadSlot);return}if(el.dataset.cvArray){canvaUpdateArray(el);return}if(el.dataset.cvSkill){updateCanvaSkill(el);return}if(!el.dataset.bind||el.tagName!=='SELECT')return;updateValue(el.dataset.bind,el.value)});
   async function startFirebase(){try{const base=`https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}`;const [{initializeApp},{getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,reauthenticateWithCredential,EmailAuthProvider},{getFirestore,doc,getDoc,setDoc,deleteDoc,collection,getDocs,query,where,onSnapshot}]=await Promise.all([import(base+'/firebase-app.js'),import(base+'/firebase-auth.js'),import(base+'/firebase-firestore.js')]);const app=initializeApp(FIREBASE_CONFIG),auth=getAuth(app),db=getFirestore(app);fb={auth,db,doc,getDoc,setDoc,deleteDoc,collection,getDocs,query,where,onSnapshot,reauthenticateWithCredential,EmailAuthProvider,signOut,createUserWithEmailAndPassword,signInWithEmailAndPassword};onAuthStateChanged(auth,async(user)=>{clearTimeout(S.saveTimer);if(!user){stopAdminLive();S.adminUnlocked=false;S.adminAuthBusy=false;S.adminLoginBusy=false;S.adminSheets=[];S.user=null;S.isAdmin=false;S.sheet=null;S.sheetId=null;S.sheets=[];S.adminViewing=false;S.loading=false;S.view='login';render();return}const fallback=user.email?.split('@')[0]||'Shinobi';S.user={uid:user.uid,displayName:fallback};try{const [profile,admin,found]=await Promise.all([getDoc(doc(db,'users',user.uid)),getDoc(doc(db,'admins',user.uid)),getDocs(query(collection(db,'fichas'),where('ownerUid','==',user.uid)))]);if(profile.exists())S.user.displayName=profile.data().username||fallback;S.isAdmin=admin.exists()||user.email===MASTER_EMAIL;if(user.email===MASTER_EMAIL)S.adminUnlocked=true;S.sheets=found.docs.map(d=>({id:d.id,data:normalize(d.data())}));const first=ownSheets()[0];S.sheet=first?.data||null;S.sheetId=first?.id||null;S.adminViewing=false;S.loading=false;if(S.adminUnlocked&&S.isAdmin)startAdminLive();S.view=S.adminUnlocked&&S.isAdmin?'admin':S.authPane==='admin'?'login':'home';render()}catch(e){console.error(e);S.loading=false;S.view='home';render();showToast('Conta conectada, mas houve um erro ao carregar os dados. Confira as regras do Firestore.',true)}})}catch(e){console.error(e);S.loading=false;S.view='login';render();showToast('Falha ao inicializar Firebase. Confira as chaves e o domínio autorizado.',true)}}
   if(CONFIGURED)startFirebase();else{S.loading=false;render()}
 </script>
