@@ -275,6 +275,28 @@
   .shell .cv-page{box-shadow:none!important}
 }
 
+
+/* Campos sobre as folhas originais: efeito de tinta delicado, sem blocos brancos ofuscantes */
+.shell .cv-in{
+  background:rgba(240,237,225,.70)!important;
+  border:1px solid rgba(63,77,67,.16)!important;
+  color:#232b25!important;
+  box-shadow:0 0 0 1px rgba(245,239,230,.13)!important;
+}
+.shell .cv-spot:hover .cv-in{
+  background:rgba(247,243,234,.9)!important;
+  border-color:rgba(61,80,68,.42)!important;
+}
+.shell .cv-in:focus{
+  background:rgba(251,248,238,.98)!important;
+  border-color:var(--theme-deep)!important;
+  outline:1px solid var(--theme-deep)!important;
+}
+.shell .cv-readonly{background:rgba(240,235,222,.76);color:var(--theme-deep)}
+.shell .cv-stepper{background:rgba(239,235,224,.86);color:var(--theme-deep)}
+.shell .cv-stepper button{color:var(--theme-deep)}
+.shell .cv-stepper button:hover{background:rgb(var(--theme-rgb) / .2)}
+
 </style>
 </head>
 <body>
@@ -936,7 +958,7 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
   document.addEventListener('submit',ev=>{if(ev.target.id==='auth-form'){ev.preventDefault();submitAuth(ev.target)}else if(ev.target.id==='admin-auth-form'){ev.preventDefault();unlockAdmin(ev.target)}});
   document.addEventListener('input',ev=>{const el=ev.target;if(el.id==='admin-filter'){const q=el.value.toLocaleLowerCase('pt-BR');$('#admin-rows').innerHTML=adminRows(S.adminSheets.filter(x=>[x.nome,x.usuario,clanOf(x.clanId).name].some(z=>String(z||'').toLocaleLowerCase('pt-BR').includes(q))));return}if(!el.dataset.bind||el.tagName==='SELECT')return;const old=getAt(active(),el.dataset.bind);if(!updateValue(el.dataset.bind,el.value)){el.value=old??''}});
   document.addEventListener('change',ev=>{const el=ev.target;if(el.dataset.cvArray){canvaUpdateArray(el);return}if(el.dataset.cvSkill){const p=active(),k=el.dataset.cvSkill;if(!p||!canEditCurrent())return;const old=n(p.pericias[k]),next=bound(el.value,0,limit()),delta=next-old;if(delta>0&&totals(p).skills+delta>currentNC().skills){el.value=old;showToast('Pontos de perícia insuficientes.',true);return}p.pericias[k]=next;render();scheduleSave();return}if(!el.dataset.bind||el.tagName!=='SELECT')return;updateValue(el.dataset.bind,el.value)});
-  async function startFirebase(){try{const base=`https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}`;const [{initializeApp},{getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,reauthenticateWithCredential,EmailAuthProvider},{getFirestore,doc,getDoc,setDoc,deleteDoc,collection,getDocs,query,where}]=await Promise.all([import(base+'/firebase-app.js'),import(base+'/firebase-auth.js'),import(base+'/firebase-firestore.js')]);const app=initializeApp(FIREBASE_CONFIG),auth=getAuth(app),db=getFirestore(app);fb={auth,db,doc,getDoc,setDoc,deleteDoc,collection,getDocs,query,where,reauthenticateWithCredential,EmailAuthProvider,signOut,createUserWithEmailAndPassword,signInWithEmailAndPassword};onAuthStateChanged(auth,async(user)=>{clearTimeout(S.saveTimer);if(!user){S.adminUnlocked=false;S.adminAuthBusy=false;S.adminLoginBusy=false;S.adminSheets=[];S.user=null;S.isAdmin=false;S.sheet=null;S.sheetId=null;S.sheets=[];S.adminViewing=false;S.loading=false;S.view='login';render();return}const fallback=user.email?.split('@')[0]||'Shinobi';S.user={uid:user.uid,displayName:fallback};try{const [profile,admin,found]=await Promise.all([getDoc(doc(db,'users',user.uid)),getDoc(doc(db,'admins',user.uid)),getDocs(query(collection(db,'fichas'),where('ownerUid','==',user.uid)))]);if(profile.exists())S.user.displayName=profile.data().username||fallback;S.isAdmin=admin.exists()||user.email===MASTER_EMAIL;S.sheets=found.docs.map(d=>({id:d.id,data:normalize(d.data())}));const first=ownSheets()[0];S.sheet=first?.data||null;S.sheetId=first?.id||null;S.adminViewing=false;S.loading=false;S.view=S.adminLoginBusy&&S.isAdmin&&S.adminUnlocked?'admin':S.authPane==='admin'?'login':'home';render()}catch(e){console.error(e);S.loading=false;S.view='home';render();showToast('Conta conectada, mas houve um erro ao carregar os dados. Confira as regras do Firestore.',true)}})}catch(e){console.error(e);S.loading=false;S.view='login';render();showToast('Falha ao inicializar Firebase. Confira as chaves e o domínio autorizado.',true)}}
+  async function startFirebase(){try{const base=`https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}`;const [{initializeApp},{getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,reauthenticateWithCredential,EmailAuthProvider},{getFirestore,doc,getDoc,setDoc,deleteDoc,collection,getDocs,query,where}]=await Promise.all([import(base+'/firebase-app.js'),import(base+'/firebase-auth.js'),import(base+'/firebase-firestore.js')]);const app=initializeApp(FIREBASE_CONFIG),auth=getAuth(app),db=getFirestore(app);fb={auth,db,doc,getDoc,setDoc,deleteDoc,collection,getDocs,query,where,reauthenticateWithCredential,EmailAuthProvider,signOut,createUserWithEmailAndPassword,signInWithEmailAndPassword};onAuthStateChanged(auth,async(user)=>{clearTimeout(S.saveTimer);if(!user){S.adminUnlocked=false;S.adminAuthBusy=false;S.adminLoginBusy=false;S.adminSheets=[];S.user=null;S.isAdmin=false;S.sheet=null;S.sheetId=null;S.sheets=[];S.adminViewing=false;S.loading=false;S.view='login';render();return}const fallback=user.email?.split('@')[0]||'Shinobi';S.user={uid:user.uid,displayName:fallback};try{const [profile,admin,found]=await Promise.all([getDoc(doc(db,'users',user.uid)),getDoc(doc(db,'admins',user.uid)),getDocs(query(collection(db,'fichas'),where('ownerUid','==',user.uid)))]);if(profile.exists())S.user.displayName=profile.data().username||fallback;S.isAdmin=admin.exists()||user.email===MASTER_EMAIL;S.sheets=found.docs.map(d=>({id:d.id,data:normalize(d.data())}));const first=ownSheets()[0];S.sheet=first?.data||null;S.sheetId=first?.id||null;S.adminViewing=false;S.loading=false;S.view=S.adminUnlocked&&S.isAdmin?'admin':S.authPane==='admin'?'login':'home';render()}catch(e){console.error(e);S.loading=false;S.view='home';render();showToast('Conta conectada, mas houve um erro ao carregar os dados. Confira as regras do Firestore.',true)}})}catch(e){console.error(e);S.loading=false;S.view='login';render();showToast('Falha ao inicializar Firebase. Confira as chaves e o domínio autorizado.',true)}}
   if(CONFIGURED)startFirebase();else{S.loading=false;render()}
 </script>
 </body>
