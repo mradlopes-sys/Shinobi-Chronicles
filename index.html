@@ -2318,6 +2318,13 @@
   .shell .cv-page{width:210mm!important;max-width:none!important}
   .shell .cv-page .cv-bg{filter:none!important}
 }
+
+/* Fichas redesenhadas com geometria e tipografia vetoriais — nao depende do JPG borrado. */
+.shell .cv-page .cv-vector-art{width:100%;height:100%;position:absolute;inset:0;display:block;z-index:0;overflow:hidden;pointer-events:none}
+.shell .cv-page:has(.cv-vector-art){background:#f2eade!important}
+.shell .cv-page:has(.cv-vector-art) .cv-spot{z-index:3}
+.shell .cv-page:has(.cv-vector-art) .cv-in{background:transparent!important;color:#29251f!important;font-family:Arial,sans-serif!important;font-weight:700!important;font-size:clamp(10px,1vw,13px)!important}
+@media print{.shell .cv-page .cv-vector-art{print-color-adjust:exact!important;-webkit-print-color-adjust:exact!important}}
 </style>
 </head>
 <body>
@@ -4252,13 +4259,212 @@ function canvaTechniqueAppendix(p,clan){
     panel.querySelector('[data-action="evolution-close"]')?.focus({preventScroll:true});
   }
 
+function canvaVectorPage(page, clan) {
+  const cw=1034,ch=1462, accent=clan.color||'#a47c4e';
+  const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const rect=(x,y,w,h,fill='#fbfaf7',stroke='none',radius=0,more='')=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${fill}" stroke="${stroke}" rx="${radius}" ${more}/>`;
+  const line=(x,y,ex,ey,color='#c9b9a5',sw=1)=>`<line x1="${x}" y1="${y}" x2="${ex}" y2="${ey}" stroke="${color}" stroke-width="${sw}"/>`;
+  const text=(x,y,t,size=13,weight=650,color='#52473c',more='')=>`<text x="${x}" y="${y}" fill="${color}" font-family="'Arial','Noto Sans',sans-serif" font-size="${size}" font-weight="${weight}" ${more}>${esc(t)}</text>`;
+  const card=(x,y,w,h,fill='#fffdf9')=>rect(x,y,w,h,fill,'#ccc2b4',2,'filter="url(#cvCardShadow)"');
+  const mark=(x,y)=>line(x,y,x+12,y+12,accent,1)+line(x+12,y,x,y+12,accent,1);
+  const bar=(y,label, size=15)=>rect(50,y,934,36,accent,'none',2,'filter="url(#cvCardShadow)"')+text(68,y+23,label,size,750,'#fffefa');
+  const form=(x,y,w=148,h=35)=>card(x,y,w,h,'#fdfcf9');
+  const smallText=(x,y,t)=>text(x,y,t,12,650,'#665b4b');
+  let svg='';
+  const title=['IDENTIDADE','PERÍCIAS','PODERES E TÉCNICAS','REGISTRO SHINOBI'][page-1]||'FICHA';
+  svg+=`<svg class="cv-vector-art" viewBox="0 0 ${cw} ${ch}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ficha vetorial nítida do clã ${esc(clan.name)}, página ${page}">`;
+  svg+=`<defs>
+  <linearGradient id="cvPaper" x1="0" y1="0" x2=".9" y2="1"><stop offset="0%" stop-color="#f5f0e7"/><stop offset="70%" stop-color="#e9dfcf"/><stop offset="100%" stop-color="#eee4d6"/></linearGradient>
+  <radialGradient id="cvWash"><stop offset="0%" stop-color="${accent}" stop-opacity=".21"/><stop offset="100%" stop-color="${accent}" stop-opacity="0"/></radialGradient>
+  <filter id="cvCardShadow" x="-5%" y="-12%" width="110%" height="145%"><feDropShadow dx="1" dy="2" stdDeviation="2" flood-color="#463b30" flood-opacity=".24"/></filter>
+  <filter id="cvSoftWash" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="32"/></filter>
+  <filter id="cvGrain"><feTurbulence type="fractalNoise" baseFrequency=".025" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter>
+  <clipPath id="cvSceneClip"><rect x="398" y="0" width="636" height="${page===1?180:118}"/></clipPath>
+  </defs>`;
+  svg+=rect(0,0,cw,ch,'url(#cvPaper)');
+  svg+=`<g opacity=".35" filter="url(#cvSoftWash)"><ellipse cx="88" cy="388" rx="205" ry="260" fill="url(#cvWash)"/><ellipse cx="938" cy="1210" rx="225" ry="240" fill="url(#cvWash)"/><ellipse cx="740" cy="785" rx="155" ry="230" fill="url(#cvWash)"/></g>`;
+  svg+=rect(0,0,cw,ch,'#fff','none',0,'opacity=".055" filter="url(#cvGrain)"');
+  svg+=rect(0,0,1034,page===1?180:119,'#f7f3eb');
+  svg+=`<image href="${esc(clan.id)}-${page}.jpg" x="0" y="0" width="1034" height="1462" preserveAspectRatio="none" clip-path="url(#cvSceneClip)"/>`;
+  svg+=rect(53,22,7,134,accent);
+  svg+=text(72,42,'SHINOBI CHRONICLES',14,800,accent);
+  svg+=text(72,83,'FICHA DE PERSONAGEM',31,800,'#292b27');
+  svg+=text(72,125,`${clan.name.toUpperCase()} / ${title}`,14,750,accent);
+  svg+=line(53,1401,980,1401,accent,1.5);
+  svg+=text(53,1426,'SNS 4.1b · Diego “Fesant” Silva · CC BY-NC-SA 2.5 BR',10,500,'#7a7062');
+  svg+=text(979,1426,`${clan.name.toUpperCase()} · ${page}/4`,11,700,accent,'text-anchor="end"');
+
+  if(page===1){
+    svg+=bar(193,'IDENTIFICAÇÃO');
+    const fields=[
+      ['NOME DO PERSONAGEM',70,260,455,246,148,34],
+      ['IDADE',70,312,238,298,84,35],
+      ['GÊNERO',339,312,518,298,86,35],
+      ['VILA DE ORIGEM',70,364,455,350,148,35],
+      ['VILA ATUANTE',70,414,455,402,148,35],
+      ['NÍVEL SHINOBI',70,467,238,456,84,35],
+      ['NÍVEL DE CAMPANHA (NC)',338,467,518,456,86,35],
+      ['CLÃ / HIJUTSU',70,519,455,506,148,35],
+      ['TENDÊNCIA',70,571,455,561,148,35]
+    ];
+    fields.forEach(([caption,tx,ty,x,y,w,h])=>{svg+=smallText(tx,ty,caption)+form(x,y,w,h)});
+    svg+=card(648,241,317,370,'#fdfbf7');
+    svg+=line(657,250,657,284,accent,2)+line(657,250,684,250,accent,2);
+    svg+=line(955,250,955,284,accent,2)+line(928,250,955,250,accent,2);
+    svg+=line(657,600,657,566,accent,2)+line(657,600,684,600,accent,2);
+    svg+=line(955,600,955,566,accent,2)+line(928,600,955,600,accent,2);
+    svg+=card(58,618,914,47);
+    svg+=text(78,646,'TRADIÇÃO DE CLÃ',13,800,accent);
+    svg+=text(250,646,clan.desc,13,500,'#49433a');
+    svg+=bar(685,'ATRIBUTOS · 7 CARACTERÍSTICAS');
+    const attrs=['FORÇA','DESTREZA','AGILIDADE','PERCEPÇÃO','INTELIGÊNCIA','VIGOR','ESPÍRITO'];
+    attrs.forEach((a,i)=>{
+      const x=58+i*131;
+      svg+=card(x,729,126,111)+text(x+63,763,a,12,700,'#514638','text-anchor="middle"');
+      svg+=line(x+17,782,x+109,782,accent,1);
+    });
+    svg+=bar(860,'ENERGIAS E RECURSOS');
+    svg+=card(59,905,451,107)+card(524,905,453,107);
+    svg+=text(79,931,'VITALIDADE',14,800,accent)+text(79,955,'10 + (3 × VIGOR) + (5 × NC)',12,500,'#786b5e');
+    svg+=text(296,935,'ATUAL',12,600,'#60554b')+text(296,977,'TOTAL',12,600,'#60554b');
+    svg+=form(400,919,80,32)+form(400,962,80,32);
+    svg+=text(541,931,'CHAKRA',14,800,accent)+text(541,955,'10 + (3 × ESPÍRITO)',12,500,'#786b5e');
+    svg+=text(764,935,'ATUAL',12,600,'#60554b')+text(764,977,'TOTAL',12,600,'#60554b');
+    svg+=form(873,919,80,32)+form(873,962,80,32);
+    svg+=bar(1024,'HABILIDADES DE COMBATE · VALOR BASE INICIAL 3');
+    [
+      [62,1068,'CC · COMBATE CORPORAL','BASE + FORÇA + OUTRO'],
+      [526,1068,'CD · COMBATE À DISTÂNCIA','BASE + DESTREZA + OUTRO'],
+      [62,1136,'ESQ · ESQUIVA','BASE + AGILIDADE + OUTRO'],
+      [526,1136,'LM · LER MOVIMENTO','BASE + PERCEPÇÃO + OUTRO']
+    ].forEach(([x,y,a,b])=>{
+      svg+=card(x,y,452,60)+text(x+15,y+24,a,13,720,'#493e34');
+      svg+=text(x+15,y+43,b,11,500,'#7c746b')+form(x+365,y+13,70,35);
+    });
+    svg+=bar(1216,'ESTATÍSTICAS RÁPIDAS');
+    [
+      [61,'INICIATIVA','1d8 + AGI + PRONTIDÃO'],
+      [367,'REAÇÃO DE ESQUIVA','9 + ESQ'],
+      [681,'DESLOCAMENTO','10 m + AGI/2']
+    ].forEach(([x,t,desc])=>{
+      svg+=card(x,1262,292,66)+text(x+12,1286,t,13,720,accent)+text(x+12,1308,desc,11,500,'#7f7468');
+    });
+    svg+=text(65,1358,'SOCIAIS',13,800,accent)+text(161,1358,'CARISMA',13,600,'#655a4e')+form(390,1337,81,31);
+    svg+=text(532,1358,'MANIPULAÇÃO',13,600,'#655a4e')+form(769,1337,80,31);
+  } else if(page===2){
+    svg+=bar(132,'PERÍCIAS · CONTROLE DE PRECISÃO');
+    svg+=text(64,190,'TOTAL = METADE DO ATRIBUTO (ARREDONDADA PARA CIMA) + PONTOS + OUTROS',13,650,'#665749');
+    const columns=[{x:60,off:0},{x:527,off:470}];
+    columns.forEach(({x,off})=>{
+      svg+=card(x,226,450,753);
+      svg+=rect(x+1,227,448,47,'#e9e9e4','#d2ceca');
+      svg+=text(x+10,247,'PERÍCIA',12,750,'#4b4b42');
+      [['ATR',235],['TOTAL',276],['PTS',330],['½ ATR',375],['OUTRO',419]].forEach(([t,o])=>svg+=text(x+o,247,t,11,750,'#4c4b46'));
+      for(let j=0;j<9;j++){
+        const y=274+j*78.3;
+        svg+=rect(x+1,y,448,78.3,j%2?'#fbfaf7':'#f2f0eb','#d9d4cc',0,'stroke-width=".7"');
+        [202,252,304,354].forEach((o,k)=>svg+=form(x+o,y+18,k===0?42:34,31));
+        const sk=SKILLS[j+(off?9:0)]||['—',''];
+        svg+=text(x+10,y+37,sk[0],12.5,600,'#3b3b38');
+        svg+=text(x+227,y+37,(sk[1]||'').substring(0,3),11,700,accent,'text-anchor="middle"');
+      }
+    });
+    svg+=bar(1007,'DISTRIBUIÇÃO DE PONTOS · REGRAS DE CRIAÇÃO',14);
+    [['ATRIBUTOS',60],['PERÍCIAS',290],['PODERES',524],['APTIDÕES GRÁTIS',759]].forEach(([t,x])=>{
+      svg+=card(x,1050,215,79)+text(x+13,1074,t,12,800,accent);
+    });
+    svg+=card(61,1140,910,83)+text(81,1172,'LIMITES NO NC',12,800,accent);
+    svg+=text(264,1172,'Atributo máximo NC · Poder até NC/2 · Perícia até metade do NC',12,550,'#544b42');
+    svg+=bar(1245,'ACOMPANHAMENTO DE CAMPANHA');
+    svg+=text(67,1305,'NC ATUAL',12,700,'#514539')+text(529,1305,'XP ACUMULADA',12,700,'#514539');
+    svg+=form(409,1289,91,34)+form(866,1289,92,34);
+    svg+=text(67,1352,'PONTOS DE ATRIBUTO RESTANTES',12,700,'#514539')+text(526,1352,'PERÍCIAS RESTANTES',12,700,'#514539');
+    svg+=form(409,1336,91,34)+form(866,1336,92,34);
+  } else if(page===3){
+    svg+=bar(132,'PODERES · NÍVEIS E EFEITOS');
+    svg+=card(55,178,920,262);
+    svg+=rect(56,179,918,39,'#ededeb');
+    ['PODER','NÍVEL','PTS.','EFEITOS / RESTRIÇÕES'].forEach((s,i)=>{
+      const x=[70,311,410,476][i];
+      svg+=text(x,203,s,12,750,accent);
+    });
+    for(let i=0;i<5;i++){
+      const y=218+i*43.9;
+      svg+=rect(56,y,918,43.9,i%2?'#f8f7f3':'#eeece7','#d4cec5',0,'stroke-width=".6"');
+      svg+=form(69,y+5,210,32)+form(315,y+5,65,32)+form(404,y+5,51,32)+form(475,y+5,479,32);
+    }
+    svg+=text(61,478,'PONTOS DE PODER DISPONÍVEIS',12,750,'#695a4d')+form(265,459,82,35);
+    svg+=text(390,478,'GASTOS',12,750,'#695a4d')+form(573,459,82,35);
+    svg+=text(681,478,'RESTANTES',12,750,'#695a4d')+form(879,459,85,35);
+    svg+=bar(518,'APTIDÕES · 3 GRATUITAS / EXTRAS CUSTAM 2 PONTOS');
+    for(let i=0;i<6;i++){
+      const col=i<3?0:1, row=i%3, x=61+col*467,y=562+row*44;
+      svg+=card(x,y,444,37);
+      svg+=text(x+14,y+23,row===0?'GRATUITA':i<3?'EXTRA':'EXTRA',11,700,accent);
+      svg+=line(x+113,y+28,x+422,y+28,'#9c8f7b',.6);
+    }
+    svg+=bar(717,'TÉCNICAS REGISTRADAS · FICHAS DE JUTSU');
+    for(let i=0;i<2;i++){
+      const x=59+i*469;
+      svg+=card(x,765,449,391);
+      svg+=rect(x,765,449,37,accent);
+      svg+=text(x+18,789,'JUTSU '+String(i+1).padStart(2,'0'),14,750,'#fffefa');
+      svg+=text(x+16,832,'NOME',12,750,'#63584a')+form(x+255,817,176,33);
+      svg+=text(x+16,884,'NÍVEL',12,700,'#63584a')+form(x+142,866,80,33);
+      svg+=text(x+254,884,'AÇÃO',12,700,'#63584a')+form(x+320,866,97,33);
+      svg+=text(x+16,929,'CUSTO DE CHAKRA',12,700,'#63584a')+form(x+172,910,74,34);
+      svg+=text(x+254,929,'DURAÇÃO',12,700,'#63584a')+form(x+328,910,89,34);
+      svg+=text(x+16,976,'ALVO / ÁREA',12,700,'#63584a')+form(x+171,959,75,34);
+      svg+=text(x+254,976,'ALCANCE',12,700,'#63584a')+form(x+327,959,89,34);
+      svg+=text(x+17,1028,'EFEITOS E DESCRIÇÃO',12,750,accent);
+      for(let j=0;j<3;j++)svg+=line(x+18,1053+j*27,x+430,1053+j*27,'#cbbfb0',1);
+    }
+    svg+=card(58,1181,917,191);
+    svg+=text(77,1211,'CONSULTA RÁPIDA · TÉCNICAS E DANO',14,800,accent);
+    ['Teste: 2d8 + Precisão   |   Custo padrão: nível do poder usado',
+     'Dano armado: Força/2 + arma (corporal) ou Destreza/2 + arma (distância).',
+     'Ninpou/elementos: Espírito/2 + nível usado do poder (salvo regra própria).',
+     'Grau de dano: 2–3 falha · 4–8 ×1 · 9–11 ×2 · 12–14 ×3 · 15–16 ×4']
+       .forEach((s,i)=>svg+=text(77,1254+i*29,s,12,530,'#5d5046'));
+  } else if(page===4){
+    svg+=bar(132,'INVENTÁRIO, RECURSOS E EQUIPAMENTOS');
+    svg+=card(57,178,918,337);
+    svg+=rect(58,179,916,38,'#e7e6e1');
+    [['ITEM',75],['QTDE',369],['COMP.',458],['PESO / NOTAS',549]].forEach(([t,x])=>svg+=text(x,204,t,12,750,accent));
+    for(let i=0;i<7;i++){
+      const y=218+i*42.3;
+      svg+=rect(58,y,916,42.3,i%2?'#faf9f6':'#f0efeb','#d6d3cc',0,'stroke-width=".6"');
+      svg+=form(68,y+6,214,31)+form(381,y+6,62,31)+form(471,y+6,61,31)+form(555,y+6,401,31);
+    }
+    [['RYOS',63,547,412],['COMPARTIMENTOS USADOS',525,547,878],['DUREZA',63,595,412],['ABSORÇÃO',525,595,878]]
+      .forEach(([s,x,y,field])=>{svg+=text(x,y,s,12,750,'#62594c')+form(field,y-18,91,35)});
+    svg+=bar(648,'HISTÓRIA E PERSONALIDADE');
+    svg+=card(59,693,915,164);
+    svg+=text(78,718,'HISTÓRIA DO PERSONAGEM',13,750,accent);
+    for(let i=0;i<4;i++)svg+=line(80,755+i*25,952,755+i*25,'#cfc9c0',1);
+    svg+=card(59,876,444,141)+card(525,876,450,141);
+    svg+=text(77,900,'PERSONALIDADE',13,750,accent)+text(543,900,'FAMÍLIA',13,750,accent);
+    for(let i=0;i<3;i++){svg+=line(79,931+i*24,482,931+i*24,'#cfc9c0',1)+line(545,931+i*24,952,931+i*24,'#cfc9c0',1)}
+    [['ALIADOS',59],['INIMIGOS',375],['OBJETIVOS',691]].forEach(([s,x])=>{
+      svg+=card(x,1036,287,93)+text(x+17,1062,s,13,750,accent);
+      for(let j=0;j<2;j++)svg+=line(x+17,1082+j*23,x+268,1082+j*23,'#cfc9c0',1);
+    });
+    svg+=bar(1153,'ANOTAÇÕES DE CAMPANHA');
+    for(let j=0;j<6;j++)svg+=line(63,1221+j*27,966,1221+j*27,'#cabdae',1);
+  }
+  // Fine geometric accents remain vector-sharp even on zoom and print.
+  svg+=`<g fill="${accent}" opacity=".17"><circle cx="32" cy="575" r="7"/><circle cx="46" cy="1390" r="10"/><circle cx="1002" cy="1133" r="12"/><circle cx="984" cy="697" r="4"/></g>`;
+  svg+=`</svg>`;
+  return svg;
+}
+
 function canvaSheetView(){
  if(!active())return mySheets();
  if(S.combatMode)return combatModeView();
  if(S.canvaMode==='advanced')return sheetView().replace('<div class="sheet-banner"', '<div class="cv-toolbar"><div><h2>Editor detalhado</h2><p>Campos adicionais do mesmo personagem.</p></div><div class="flex wrap"><button class="button cb-launch small" data-action="combat-enter"><span class="cb-weapon-icon">⚔</span> Modo de Combate</button><button class="button secondary" data-action="cv-mode">← Voltar à ficha do Canva</button></div></div><div class="sheet-banner"');
  const p=active(),clan=clanOf(p.clanId),page=S.canvaPage||1;
  const buttons=['Identificação','Perícias','Poderes e técnicas','Registro shinobi'];
- return layout(`${portraitFileInput()}${sheetSwitcher()}<div class="cv-toolbar"><div><div class="eyebrow">FICHA ORIGINAL DO CANVA / ${E(clan.name.toUpperCase())}</div><h2>${E(p.nome||'Meu personagem')}</h2><p>Modelo original de quatro páginas · SNS 4.1b · alterações salvas automaticamente</p></div><div class="flex wrap"><button class="button cb-launch small" data-action="combat-enter"><span class="cb-weapon-icon">⚔</span> Modo de Combate</button><button class="button secondary small" data-action="cv-mode">Editor detalhado</button><button class="button secondary small" data-action="print">Imprimir</button><button class="button small" data-action="save">Salvar ficha</button></div></div><nav class="cv-pages" aria-label="Páginas da ficha">${buttons.map((label,i)=>`<button class="${page===i+1?'active':''}" data-action="cv-page" data-page="${i+1}" aria-current="${page===i+1?'page':'false'}">${i+1} / ${E(label)}</button>`).join('')}</nav><div class="cv-wrap"><div class="cv-page" aria-label="Ficha original ${E(clan.name)}, página ${page}"><div class="cv-missing">Ficha original do Canva · ${E(clan.name)} · ${page}/4</div><img class="cv-bg" src="assets/fichas-hd/${E(clan.id)}-${page}.jpg" alt="Modelo de ficha em alta definição, página ${page}" onerror="if(!this.dataset.fallback){this.dataset.fallback='1';this.src='${E(clan.id)}-${page}.jpg';return}this.style.display='none';document.querySelector('[data-action=cv-mode]')?.click()">${canvaPageBody(p,page)}</div></div>${page===1?evolutionStatus(p):''}${page===3?`${canvaTechniqueAppendix(p,clan)}<div class="cv-known-after">${integratedKnown(p)}</div><div class="cv-learning-after">${integratedLibrary(p,'canva')}</div>`:''}<p class="cv-status">Os campos digitais ficam sobre o layout original do Canva. Pontos de atributo, pontos de perícia, Vitalidade, Chakra e combate são calculados conforme SNS 4.1b. Poderes específicos e pré-requisitos de clã continuam sujeitos à validação do mestre.</p><div class="statusbar"><span id="save-footer">${CONFIGURED?E(S.saveState):'Prévia demonstrativa sem salvamento na nuvem'}</span><button class="button secondary small" data-action="export">Exportar dados (JSON)</button></div>`);
+ return layout(`${portraitFileInput()}${sheetSwitcher()}<div class="cv-toolbar"><div><div class="eyebrow">FICHA ORIGINAL DO CANVA / ${E(clan.name.toUpperCase())}</div><h2>${E(p.nome||'Meu personagem')}</h2><p>Modelo original de quatro páginas · SNS 4.1b · alterações salvas automaticamente</p></div><div class="flex wrap"><button class="button cb-launch small" data-action="combat-enter"><span class="cb-weapon-icon">⚔</span> Modo de Combate</button><button class="button secondary small" data-action="cv-clarity" title="Alternar entre a ficha redesenhada em vetores nítidos e a aquarela original">${S.canvaVisual==='classic'?'✦ Modo nítido':'◈ Arte original'}</button><button class="button secondary small" data-action="cv-mode">Editor detalhado</button><button class="button secondary small" data-action="print">Imprimir</button><button class="button small" data-action="save">Salvar ficha</button></div></div><nav class="cv-pages" aria-label="Páginas da ficha">${buttons.map((label,i)=>`<button class="${page===i+1?'active':''}" data-action="cv-page" data-page="${i+1}" aria-current="${page===i+1?'page':'false'}">${i+1} / ${E(label)}</button>`).join('')}</nav><div class="cv-wrap"><div class="cv-page" aria-label="Ficha original ${E(clan.name)}, página ${page}"><div class="cv-missing">Ficha original do Canva · ${E(clan.name)} · ${page}/4</div>${S.canvaVisual==='classic'?'<img class="cv-bg" src="assets/fichas-hd/'+E(clan.id)+'-'+page+'.jpg" alt="Arte original da ficha" onerror="if(!this.dataset.fallback){this.dataset.fallback=1;this.src=\''+E(clan.id)+'-'+page+'.jpg\';return}this.style.display=\'none\'">':canvaVectorPage(page,clan)}${canvaPageBody(p,page)}</div></div>${page===1?evolutionStatus(p):''}${page===3?`${canvaTechniqueAppendix(p,clan)}<div class="cv-known-after">${integratedKnown(p)}</div><div class="cv-learning-after">${integratedLibrary(p,'canva')}</div>`:''}<p class="cv-status">Os campos digitais ficam sobre o layout original do Canva. Pontos de atributo, pontos de perícia, Vitalidade, Chakra e combate são calculados conforme SNS 4.1b. Poderes específicos e pré-requisitos de clã continuam sujeitos à validação do mestre.</p><div class="statusbar"><span id="save-footer">${CONFIGURED?E(S.saveState):'Prévia demonstrativa sem salvamento na nuvem'}</span><button class="button secondary small" data-action="export">Exportar dados (JSON)</button></div>`);
 }
 function updateCanvaSkill(el,preserveFocus=false){
  const p=active(),k=el.dataset.cvSkill;
@@ -4291,6 +4497,7 @@ function canvaUpdateArray(el,preserveFocus=false){
   const PublicBoard=(()=>{
     const W=1580,H=1160;
     const CHANGELOG=[
+      {date:'07/11/2026',title:'Fichas redesenhadas com texto vetorial nítido',body:'Reconstruímos as quatro páginas de cada modelo com títulos, tabelas, caixas e rótulos desenhados em vetores pelo navegador. Os dados e os campos editáveis continuam nas mesmas posições; a aquarela decorativa dos clãs foi preservada no cabeçalho. Adicionamos um botão Arte original para comparar com a imagem JPG anterior. O modo nítido é o padrão, sem depender de ampliar a imagem comprimida.'},
       {date:'07/11/2026',title:'48 páginas de ficha aprimoradas em alta resolução',body:'Substituímos as cópias comprimidas dos 12 modelos por versões 2068 × 2924 geradas com super-resolução FSRCNN 2×, preservando cores, aquarela e alinhamento dos campos editáveis. Como o Canva não liberou o download dos originais, estas versões foram reconstruídas a partir dos JPEGs existentes, sem prometer recuperação exata de detalhes perdidos.'},
       {date:'07/11/2026',title:'Arquivos HD das fichas no site',body:'As páginas do Canva passaram a preferir arquivos de alta definição publicados no repositório, com retorno automático às cópias antigas caso alguma página ainda não tenha sido processada. Mantivemos todas as coordenadas e campos preenchíveis intactos.'},
       {date:'07/11/2026',title:'Tratamento de nitidez das fichas',body:'Melhoramos a visualização dos modelos JPEG do Canva com tratamento leve de contraste e nitidez em alta densidade de pixels, diretamente no navegador, sem alterar campos editáveis, proporções ou valores salvos.'},
@@ -5209,7 +5416,7 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
    if(action==='diary-completed-toggle'){S.diaryExpandedId=S.diaryExpandedId===el.dataset.id?'':el.dataset.id;render();return}
    if(action==='diary-remove')return diaryRemoveCompleted(el.dataset.id);
    if(action==='diary-restore')return diaryRestoreMission(el.dataset.id);
-   if(action==='evolution-close')return evolutionDismiss();if(action==='combat-enter')return combatEnter();if(action==='combat-exit')return combatExit();if(action==='combat-chakra-step')return combatStepChakra(n(el.dataset.delta));if(action==='combat-portrait-next')return combatNextPortrait();if(action==='combat-to-techniques')return combatToTechniques();if(action==='integrated-use')return integratedUse(n(el.dataset.index));if(action==='integrated-kind'){S.inlineKind=el.dataset.kind||'power';S.inlineSearch='';render();return}if(action==='library-learn')return catalogLearn(el.dataset.id);if(action==='library-forget-effect')return forgetCatalogEffect(n(el.dataset.powerIndex),n(el.dataset.index));if(action==='library-kind'){S.libraryKind=el.dataset.kind||'all';render();return}if(action==='guide-step'){S.inlineSearch='';S.inlineKind='power';S.guideStep=bound(el.dataset.step,0,GUIDE_STEPS.length-1);S.view='guia';render();window.scrollTo({top:0,behavior:'smooth'});return}if(action==='guide-open'){if(!active())return nav('clans');S.canvaPage=bound(el.dataset.page||1,1,4);S.canvaMode=el.dataset.advanced==='true'?'advanced':'original';S.tab=el.dataset.tab||'identidade';S.view='sheet';render();window.scrollTo({top:0,behavior:'smooth'});return}if(action==='cv-page'){S.inlineSearch='';S.canvaPage=Number(el.dataset.page)||1;render();return}if(action==='cv-mode'){S.canvaMode=S.canvaMode==='advanced'?'original':'advanced';render();return}if(action==='open-sheet')return openSheet(el.dataset.id);if(action==='ask-delete')return askDelete(el.dataset.id);if(action==='confirm-delete')return deleteSheet();if(action==='lock-admin')return lockAdmin();if(action==='apply-remote')return applyRemoteSheet();if(action==='exit-sheet-to-list'){if(S.view==='sheet'&&!S.adminViewing&&active()){playSfx('menu');return nav('fichas')}return}if(action==='nav')return nav(el.dataset.view);if(action==='tab'){S.tab=el.dataset.tab;render();return}if(action==='clan'){S.activeClan=el.dataset.clan;S.modal='clan';render();return}if(action==='close-modal'){S.modal=null;render();return}if(action==='create-sheet')return createSheetAnimated();if(action==='auth-pane'){S.authPane=el.dataset.pane==='admin'?'admin':'login';render();return}if(action==='auth-switch'){S.authPane=S.authPane==='register'?'login':'register';render();return}if(action==='logout'){S.adminUnlocked=false;stopAdminLive();S.adminSheets=[];if(fb){void (async()=>{if(S.diaryDirty)await persistDiary();await fb.signOut(fb.auth)})()}else{S.user=null;S.sheet=null;S.sheetId=null;S.sheets=[];S.diary=null;S.diaryOwnerUid=null;S.diaryStorage=null;S.diaryHostId=null;S.diaryDirty=false;S.view='home';render()}return}if(action==='portrait-upload')return uploadPortrait(el.dataset.slot);if(action==='portrait-switch')return switchPortrait(el.dataset.slot);if(action==='portrait-remove')return removePortrait(el.dataset.slot);if(action==='save')return persist();if(action==='print')return window.print();if(action==='export')return exportSheet();if(action==='vitality-step')return adjustVitality(n(el.dataset.delta));if(action==='social')return adjustSocial(el.dataset.key,n(el.dataset.delta));if(action==='attr')return adjustAttr(el.dataset.key,n(el.dataset.delta));if(action==='skill')return adjustSkill(el.dataset.key,n(el.dataset.delta));if(action==='shift')return shiftCombat();if(action==='reset-shift'){if(!canEditCurrent())return;p.combateAjustes={CC:0,CD:0,ESQ:0,LM:0};render();scheduleSave();return}if(action==='add-item')return modifyItem(el.dataset.array);if(action==='remove-item')return modifyItem(el.dataset.array,n(el.dataset.index),true);if(action==='roll-skill'){const k=el.dataset.key;if(!trained(p,k))return showToast('Esta perícia exige treinamento.',true);return roll(2,skillTotal(p,k),k)}if(action==='roll-combat'){const key=el.dataset.key;return roll(2,combat(p,key),key==='CD'?'Combate à distância':'Combate corporal')}if(action==='roll-initiative')return roll(1,n(p.atributos.AGI)+skillTotal(p,'Prontidão'),'Iniciativa');if(action==='refresh-admin')return refreshAdmin();if(action==='open-admin'){if(!canAdmin()||!S.adminUnlocked)return showToast('Confirme a senha para acessar as fichas.',true);const x=S.adminSheets.find(a=>a.__id===el.dataset.id);if(x){const {__id,...safeData}=x;S.sheet=normalize(safeData);S.sheetId=__id;S.adminViewing=true;S.canvaMode='original';S.view='sheet';S.tab='identidade';render();}return}}
+   if(action==='evolution-close')return evolutionDismiss();if(action==='combat-enter')return combatEnter();if(action==='combat-exit')return combatExit();if(action==='combat-chakra-step')return combatStepChakra(n(el.dataset.delta));if(action==='combat-portrait-next')return combatNextPortrait();if(action==='combat-to-techniques')return combatToTechniques();if(action==='integrated-use')return integratedUse(n(el.dataset.index));if(action==='integrated-kind'){S.inlineKind=el.dataset.kind||'power';S.inlineSearch='';render();return}if(action==='library-learn')return catalogLearn(el.dataset.id);if(action==='library-forget-effect')return forgetCatalogEffect(n(el.dataset.powerIndex),n(el.dataset.index));if(action==='library-kind'){S.libraryKind=el.dataset.kind||'all';render();return}if(action==='guide-step'){S.inlineSearch='';S.inlineKind='power';S.guideStep=bound(el.dataset.step,0,GUIDE_STEPS.length-1);S.view='guia';render();window.scrollTo({top:0,behavior:'smooth'});return}if(action==='guide-open'){if(!active())return nav('clans');S.canvaPage=bound(el.dataset.page||1,1,4);S.canvaMode=el.dataset.advanced==='true'?'advanced':'original';S.tab=el.dataset.tab||'identidade';S.view='sheet';render();window.scrollTo({top:0,behavior:'smooth'});return}if(action==='cv-page'){S.inlineSearch='';S.canvaPage=Number(el.dataset.page)||1;render();return}if(action==='cv-clarity'){S.canvaVisual=S.canvaVisual==='classic'?'sharp':'classic';render();return}if(action==='cv-mode'){S.canvaMode=S.canvaMode==='advanced'?'original':'advanced';render();return}if(action==='open-sheet')return openSheet(el.dataset.id);if(action==='ask-delete')return askDelete(el.dataset.id);if(action==='confirm-delete')return deleteSheet();if(action==='lock-admin')return lockAdmin();if(action==='apply-remote')return applyRemoteSheet();if(action==='exit-sheet-to-list'){if(S.view==='sheet'&&!S.adminViewing&&active()){playSfx('menu');return nav('fichas')}return}if(action==='nav')return nav(el.dataset.view);if(action==='tab'){S.tab=el.dataset.tab;render();return}if(action==='clan'){S.activeClan=el.dataset.clan;S.modal='clan';render();return}if(action==='close-modal'){S.modal=null;render();return}if(action==='create-sheet')return createSheetAnimated();if(action==='auth-pane'){S.authPane=el.dataset.pane==='admin'?'admin':'login';render();return}if(action==='auth-switch'){S.authPane=S.authPane==='register'?'login':'register';render();return}if(action==='logout'){S.adminUnlocked=false;stopAdminLive();S.adminSheets=[];if(fb){void (async()=>{if(S.diaryDirty)await persistDiary();await fb.signOut(fb.auth)})()}else{S.user=null;S.sheet=null;S.sheetId=null;S.sheets=[];S.diary=null;S.diaryOwnerUid=null;S.diaryStorage=null;S.diaryHostId=null;S.diaryDirty=false;S.view='home';render()}return}if(action==='portrait-upload')return uploadPortrait(el.dataset.slot);if(action==='portrait-switch')return switchPortrait(el.dataset.slot);if(action==='portrait-remove')return removePortrait(el.dataset.slot);if(action==='save')return persist();if(action==='print')return window.print();if(action==='export')return exportSheet();if(action==='vitality-step')return adjustVitality(n(el.dataset.delta));if(action==='social')return adjustSocial(el.dataset.key,n(el.dataset.delta));if(action==='attr')return adjustAttr(el.dataset.key,n(el.dataset.delta));if(action==='skill')return adjustSkill(el.dataset.key,n(el.dataset.delta));if(action==='shift')return shiftCombat();if(action==='reset-shift'){if(!canEditCurrent())return;p.combateAjustes={CC:0,CD:0,ESQ:0,LM:0};render();scheduleSave();return}if(action==='add-item')return modifyItem(el.dataset.array);if(action==='remove-item')return modifyItem(el.dataset.array,n(el.dataset.index),true);if(action==='roll-skill'){const k=el.dataset.key;if(!trained(p,k))return showToast('Esta perícia exige treinamento.',true);return roll(2,skillTotal(p,k),k)}if(action==='roll-combat'){const key=el.dataset.key;return roll(2,combat(p,key),key==='CD'?'Combate à distância':'Combate corporal')}if(action==='roll-initiative')return roll(1,n(p.atributos.AGI)+skillTotal(p,'Prontidão'),'Iniciativa');if(action==='refresh-admin')return refreshAdmin();if(action==='open-admin'){if(!canAdmin()||!S.adminUnlocked)return showToast('Confirme a senha para acessar as fichas.',true);const x=S.adminSheets.find(a=>a.__id===el.dataset.id);if(x){const {__id,...safeData}=x;S.sheet=normalize(safeData);S.sheetId=__id;S.adminViewing=true;S.canvaMode='original';S.view='sheet';S.tab='identidade';render();}return}}
   document.addEventListener('click',ev=>{const el=ev.target.closest('[data-action]');if(!el)return;if(el.classList.contains('modalshade')&&ev.target!==el)return;clickAction(el)});
   document.addEventListener('keydown',ev=>{if(ev.target.matches?.('[data-vitality-input]')){if(ev.key==='Enter'){ev.preventDefault();ev.target.blur();return}if(ev.key==='Escape'){ev.preventDefault();ev.stopPropagation();ev.target.value=String(vitalityValue(active()));ev.target.blur();return}}if(ev.key==='Escape'&&document.querySelector('.evo-rise-layer')){ev.preventDefault();evolutionDismiss();return}if(ev.key==='Escape'&&S.view==='sheet'&&S.combatMode){ev.preventDefault();combatExit()}});
   document.addEventListener('submit',ev=>{if(ev.target.id==='auth-form'){ev.preventDefault();submitAuth(ev.target)}else if(ev.target.id==='admin-auth-form'){ev.preventDefault();unlockAdmin(ev.target)}});
