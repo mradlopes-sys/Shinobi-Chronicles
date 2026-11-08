@@ -1,4 +1,0 @@
-aburame-1 | Canva failed: HTTP Error 403: Forbidden
-aburame-1 | OriginalFallback: 375x531; 69464 bytes
-aburame-1 | high-resolution source unavailable
-SUCCESSFUL 0/1
