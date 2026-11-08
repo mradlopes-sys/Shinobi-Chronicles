@@ -5015,6 +5015,11 @@ function canvaUpdateArray(el,preserveFocus=false){
         }
         if(result.length>100000)throw Error('Não foi possível comprimir a foto');
         const name=clip(file.name.replace(/\.[^.]+$/,'').replace(/[_-]+/g,' '),55)||'Minha memória';
+        // A primeira memória abre espaço nas laterais para não cobrir os bilhetes de origem.
+        if(!draft.notes.some(n=>n.kind==='extent')&&draft.notes.length<=MAX_ELEMENTS-2){
+          draft.notes.push(sanitizeNote({id:'board-size',kind:'extent',w:2050,h:1510}));
+          boardSize();
+        }
         const pos=placement(315,320);
         const memory=sanitizeNote({id:randomId(),kind:'photo',title:name,image:result,...pos,w:315,h:320,rotation:2*(countKind('photo')%3-1)});
         const projected=JSON.stringify({...draft,notes:[...draft.notes,memory]});
@@ -5132,7 +5137,7 @@ function canvaUpdateArray(el,preserveFocus=false){
         for(const note of draft.notes)output+=noteHTML(note,isOwner);
         output+='<section class="pub-note obs" style="left:1230px;top:680px;width:278px;height:325px;--tilt:-2deg"><i class="pub-pin" aria-hidden="true"></i><h3>✎ Minhas observações</h3><textarea maxlength="5000" data-board-observation placeholder="Anote aqui o que você sabe, descobriu ou pensa sobre este personagem. Só você poderá ler suas observações.">'+esc(observation)+'</textarea></section>';
         output+='</div></div></div>';
-        output+='<p class="pub-note-help">Use a roda do mouse para aproximar ou afastar. Clique e arraste o quadro para passear com a mãozinha. '+(isOwner?'O símbolo ⠿ move um bilhete; o canto inferior direito o redimensiona. Para trocar o retrato, use o botão dentro da fotografia.':'Suas observações sobre este personagem são particulares.')+'</p>';
+        output+='<p class="pub-note-help">Use a roda do mouse para aproximar ou afastar. Clique e arraste o quadro para passear com a mãozinha. '+(isOwner?'O símbolo ⠿ move cada bilhete, foto ou carimbo. O canto inferior direito redimensiona. Até 6 fotografias de memória por personagem; o espaço cresce ao colar a primeira foto e pode ser ampliado novamente pelo botão.':'As fotografias, carimbos e fios fazem parte do perfil público. Suas observações pessoais continuam particulares.')+'</p>';
       }
       output+='</div>'+updatesHTML();
       return layout(output);
