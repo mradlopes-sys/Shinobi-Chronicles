@@ -1,0 +1,54 @@
+name: Recuperar arte Canva de teste em alta definicao
+on:
+  push:
+    paths:
+      - '.github/workflows/canva-hd-test.yml'
+permissions:
+  contents: write
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Recuperar arquivo em resolucao original
+        env:
+          CANVA_IMAGE_B64: aHR0cHM6Ly9tZWRpYS5jYW52YS5jb20vdjIvZG9jdW1lbnQtaW1hZ2UvaGFzaDotMTM3MDk3NDIyMC9oZWlnaHQ6MzE3OS9pZDpEQUhhTVRsbTN4WS90eXBlOkIvd2lkdGg6MjI0Nj9icmFuZD1CQURIeUJ3UWVnMCZjc2lnPUFBQUFBQUFBQUFBQUFBQUFBQUFBQU5uSUdOc1RxcEhpWVlMVmRGSHVuR3BsYzQweE9vSWNDUElYOEIzbUZTTVgmZXhwPTE3OTQxMDMzNzAmZmFsbGJhY2s9aHR0cHMlM0ElMkYlMkZzMy5hbWF6b25hd3MuY29tJTJGZG9jdW1lbnQtZXhwb3J0LmNhbnZhLmNvbSUyRmxtM3hZJTJGREFIYU1UbG0zeFklMkYxJTJGdGh1bWJuYWlsJTJGMDAwMS5wbmclM0ZYLUFtei1BbGdvcml0aG0lM0RBV1M0LUhNQUMtU0hBMjU2JTI2WC1BbXotQ3JlZGVudGlhbCUzREFLSUFRWUNHS01VSFcyN1JLNUlLJTI1MkYyMDI2MTEwNyUyNTJGdXMtZWFzdC0xJTI1MkZzMyUyNTJGYXdzNF9yZXF1ZXN0JTI2WC1BbXotRGF0ZSUzRDIwMjYxMTA3VDEzMzIyM1olMjZYLUFtei1FeHBpcmVzJTNENDUwNTglMjZYLUFtei1TaWduYXR1cmUlM0QyYWE0NTRiZDNiYzMwYjAyNjAyMWZiYWJjNjg3NThmZjExZTE2YjU3Nzc5Yjc5OWE2ZjRiMThlOWVhZDU1MGUwJTI2WC1BbXotU2lnbmVkSGVhZGVycyUzRGhvc3QlMjZyZXNwb25zZS1leHBpcmVzJTNEU3VuJTI1MkMlMjUyMDA4JTI1MjBOb3YlMjUyMDIwMjYlMjUyMDAyJTI1M0EwMyUyNTNBMjElMjUyMEdNVCZvc2lnPUFBQUFBQUFBQUFBQUFBQUFBQUFBQUdoSHpmS2lOcFNiUUVJWkZVNFkxZVpPWmswTjVBV2Nla2l2WmJ5S1VQM18mcGFnZT0xJnNpZ25lZD1icmFuZCUyQ2ZhbGxiYWNrJTJDcGFnZSUyQ3ZlcnNpb24mc2lnbmVyPWRvY3VtZW50LXJwYyZ2ZXJzaW9uPTE=
+        run: |
+          python3 - <<'PY'
+          import os,base64,urllib.request,struct
+          url=base64.b64decode(os.environ['CANVA_IMAGE_B64']).decode()
+          try:
+              data=urllib.request.urlopen(urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0'}),timeout=30).read()
+          except Exception as e:
+              print('FAILED_CANVA_REQUEST:',repr(e))
+              raise
+          print('Bytes:',len(data),'prefix:',data[:20])
+          if data.startswith(b'\x89PNG\r\n\x1a\n'):
+              w,h=struct.unpack('>II',data[16:24]); ext='png'
+          elif data.startswith(b'\xff\xd8'):
+              w=h=0;ext='jpg'
+              j=2
+              while j<len(data):
+                  if data[j]!=255: j+=1;continue
+                  marker=data[j+1]
+                  if marker in (0xc0,0xc1,0xc2,0xc3,0xc5,0xc6,0xc7,0xc9,0xca):
+                      h,w=struct.unpack('>HH',data[j+5:j+9]);break
+                  size=struct.unpack('>H',data[j+2:j+4])[0]
+                  j+=size+2
+          else:
+              raise Exception('Unexpected format')
+          print('Image:',w,h,ext)
+          if w < 1900 or h < 2600:
+              raise Exception(f'Canva returned only low-res image {w}x{h}')
+          import pathlib
+          p=pathlib.Path('assets/fichas-hd')
+          p.mkdir(parents=True,exist_ok=True)
+          (p/('aburame-1.'+ext)).write_bytes(data)
+          PY
+      - name: Publicar arte HD no repositorio
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/fichas-hd/
+          git commit -m "assets: recupera ficha Aburame em resolucao original do Canva"
+          git push
