@@ -2279,23 +2279,37 @@
 @media(max-width:780px){.pub-intro{padding:21px}.pub-viewport{min-height:570px;max-height:72vh}.pub-chip{min-width:155px}.pub-board-toolbar{gap:6px}.pub-zoom{width:85px}}
 
 
-/* Cenário contínuo de Konoha: uma única ilustração, com aquarela bege
-   aplicada uniformemente em toda a área ao redor da moldura de madeira.
-   Ao tornar a cena interna transparente, ela deixa de criar o retângulo
-   de imagem com cores diferentes quando o usuário altera o zoom. */
+/* As duas laterais utilizam a mesma metade da pintura, uma delas espelhada.
+   O filtro bege é idêntico nos dois lados, sem emendas ou retângulos sem filtro. */
 .pub-viewport{
   display:flex;
   align-items:flex-start;
   justify-content:flex-start;
-  background-color:#d6bfa1;
+  position:relative;
+  isolation:isolate;
+  background:#d6bfa1;
+}
+.pub-viewport::before,
+.pub-viewport::after{
+  content:"";
+  position:absolute;
+  top:0;
+  bottom:0;
+  width:50%;
+  z-index:0;
+  pointer-events:none;
   background-image:
     linear-gradient(rgba(220,196,164,.72),rgba(220,196,164,.72)),
     url("hero-konoha-novo.jpg");
-  background-position:center center,center center;
-  background-size:cover,cover;
+  background-position:center center,right center;
+  background-size:100% 100%,200% auto;
   background-repeat:no-repeat,no-repeat;
 }
+.pub-viewport::before{left:0;transform:scaleX(-1)}
+.pub-viewport::after{right:0}
 .pub-zoomframe{
+  position:relative;
+  z-index:1;
   flex:0 0 auto;
   margin-left:auto;
   margin-right:auto;
@@ -2304,6 +2318,164 @@
 .pub-scene{
   background:transparent;
   background-image:none;
+}
+
+/* Diretório dos shinobi: cartões de registro discretos, inspirados nos arquivos da vila. */
+.pub-directory{
+  position:relative;
+  margin:15px 0 19px;
+  padding:16px 17px 8px;
+  background:linear-gradient(142deg,#f8efdd,#ecddc5);
+  border:1px solid #c4a784;
+  border-radius:12px;
+  box-shadow:inset 0 1px 0 #fff8e8,0 5px 17px #593a2113;
+}
+.pub-directory-head{
+  display:flex;
+  align-items:end;
+  justify-content:space-between;
+  gap:10px;
+  border-bottom:1px solid #bba18065;
+  padding-bottom:11px;
+}
+.pub-directory-kicker{
+  display:block;
+  font:700 10px 'DM Sans',sans-serif;
+  color:#987452;
+  text-transform:uppercase;
+  letter-spacing:.14em;
+}
+.pub-directory-head h2{
+  margin:3px 0 0;
+  font:600 21px 'Yuji Boku',Georgia,serif;
+  color:#533a2e;
+}
+.pub-directory-count{
+  flex:0 0 auto;
+  font:600 11px 'DM Sans',sans-serif;
+  color:#967a5d;
+  padding-bottom:3px;
+}
+.pub-directory .pub-choose{
+  margin:12px 0 1px;
+  padding:3px 2px 12px;
+  gap:12px;
+}
+.pub-directory .pub-chip{
+  position:relative;
+  display:flex;
+  align-items:center;
+  gap:11px;
+  min-width:235px;
+  max-width:270px;
+  min-height:100px;
+  flex:0 0 235px;
+  padding:12px;
+  border:1px solid #c4ad8c;
+  border-radius:8px;
+  background:linear-gradient(145deg,#fffaf0,#f0e1ca);
+  box-shadow:0 3px 9px #5c3f2817,inset 0 1px #fffaf3;
+  color:#493729;
+  transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease;
+}
+.pub-directory .pub-chip::before{
+  content:"";
+  position:absolute;
+  left:0;top:9px;bottom:9px;
+  width:3px;
+  border-radius:0 4px 4px 0;
+  background:var(--chip-accent,#aa8060);
+  opacity:.9;
+}
+.pub-directory .pub-chip:hover{
+  transform:translateY(-2px);
+  box-shadow:0 6px 12px #5c3f282a;
+  border-color:var(--chip-accent,#a47b5c);
+}
+.pub-directory .pub-chip.active{
+  background:linear-gradient(135deg,#fffbf3,#f3e5ca);
+  border-color:var(--chip-accent,#8f604b);
+  box-shadow:0 0 0 2px #ffffffb8,0 0 0 3px var(--chip-accent,#8f604b),0 6px 13px #4f342127;
+}
+.pub-chip-photo{
+  flex:0 0 63px;
+  width:63px;
+  height:70px;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  border:3px solid #fffaf0;
+  outline:1px solid #b9a485;
+  border-radius:3px;
+  background:linear-gradient(145deg,#e1d1b8,#f9f0e2);
+  box-shadow:0 2px 6px #49352224;
+}
+.pub-chip-photo img{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center 25%;
+}
+.pub-chip-kanji{
+  font:600 31px 'Yuji Boku',Georgia,serif;
+  color:var(--chip-accent,#8c6853);
+  opacity:.78;
+}
+.pub-chip-body{
+  display:block;
+  min-width:0;
+  flex:1;
+  overflow:hidden;
+}
+.pub-directory .pub-chip b{
+  font:600 16px 'Yuji Boku',Georgia,serif;
+  color:#493429;
+  display:block;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.pub-directory .pub-chip small{
+  display:block;
+  font:500 11px 'DM Sans',sans-serif;
+  color:#7b6150;
+  margin-top:3px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.pub-chip-meta{
+  margin-top:7px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:4px;
+}
+.pub-chip-meta em{
+  font:600 9px 'DM Sans',sans-serif;
+  font-style:normal;
+  color:#755b46;
+  background:#eadbc3bf;
+  border:1px solid #d2bea1;
+  border-radius:4px;
+  padding:3px 5px;
+  max-width:130px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.pub-chip-mark{
+  position:absolute;
+  right:8px;top:7px;
+  color:var(--chip-accent,#ac8066);
+  font:700 12px 'Yuji Boku',Georgia,serif;
+  opacity:.58;
+}
+.pub-chip.active .pub-chip-mark{opacity:1}
+@media(max-width:780px){
+  .pub-directory{padding:12px 12px 6px}
+  .pub-directory-head h2{font-size:18px}
+  .pub-directory .pub-chip{min-width:220px;flex-basis:220px}
 }
 
 </style>
@@ -4279,6 +4451,7 @@ function canvaUpdateArray(el,preserveFocus=false){
   const PublicBoard=(()=>{
     const W=1580,H=1160;
     const CHANGELOG=[
+      {date:'07/11/2026',title:'Paisagem espelhada e diretório de shinobi',body:'A ilustração aquarelada de Konoha aparece agora dos dois lados do quadro, com as laterais espelhadas e o mesmo filtro bege. A seleção de personagens ganhou cartões de arquivo com retrato ou símbolo do clã, nome, graduação, vila e um destaque discreto para o personagem selecionado.'},
       {date:'07/11/2026',title:'Fundo de Konoha com filtro bege uniforme',body:'Restauramos a ilustração de Konoha ao redor do quadro e aplicamos a mesma camada bege sobre toda a paisagem. A imagem atrás da moldura agora é contínua, sem faixas retangulares mais vivas ou diferenças de cor ao mudar o zoom. O quadro, a moldura e os bilhetes não foram alterados.'},
       {date:'07/11/2026',title:'Polimento do fundo do quadro de anotações',body:'Removemos a imagem externa que criava duas áreas de cor diferentes em volta do quadro. O entorno agora tem um tom de pergaminho uniforme e uma textura muito suave, sem quadrados visíveis. O quadro central, as notas, o zoom e o arraste continuam iguais.'},
       {date:'07/11/2026',title:'Retorno às fichas originais do Canva',body:'Restauramos nas 12 fichas as imagens JPG originais do Canva, com fontes, ornamentos, paleta e destaques gráficos próprios de cada clã. Removemos o modo vetorial, o botão de comparação e os filtros de nitidez adicionados posteriormente. Dados e campos editáveis foram mantidos.'},
@@ -4563,7 +4736,12 @@ function canvaUpdateArray(el,preserveFocus=false){
       if(publicReadDenied)output+='<span class="pub-readonly" title="As regras atuais restringem a lista pública. Você pode editar seus próprios quadros.">Visualização pública indisponível · seus quadros continuam editáveis</span>';
       if(own.length)output+='<select class="pub-select" id="pub-new-sheet" aria-label="Escolher personagem para publicar"><option value="">Selecione sua ficha para criar um quadro</option>'+own.map(s=>'<option value="'+esc(s.id)+'">'+esc(s.data.nome||'Personagem sem nome')+'</option>').join('')+'</select><button class="button small" data-action="board-create">+ Publicar meu personagem</button>';
       output+='<span class="pub-readonly" data-board-status>'+ (loading?'Buscando registros…':busy?'Salvando…':'Cada personagem tem seu próprio quadro.') +'</span></div>';
-      if(all.length)output+='<div class="pub-choose" aria-label="Quadros dos jogadores">'+all.map(p=>'<button class="pub-chip '+(p.id===id?'active':'')+'" data-action="board-open" data-id="'+esc(p.id)+'"><b>'+esc(p.nome)+'</b><small>'+esc(p.clan)+' · '+esc(p.graduacao)+(p.ownerUid===uid()?(sharedIds.has(p.id)?' · Seu quadro':' · Rascunho privado'):'')+'</small></button>').join('')+'</div>';
+      if(all.length)output+='<section class="pub-directory" aria-label="Diretório de personagens"><div class="pub-directory-head"><div><span class="pub-directory-kicker">木ノ葉 · REGISTROS DA VILA</span><h2>Shinobi registrados</h2></div><span class="pub-directory-count">'+all.length+' '+(all.length===1?'registro':'registros')+'</span></div><div class="pub-choose" aria-label="Escolha um personagem">'+all.map(p=>{
+        const clanMeta=CLANS.find(c=>c.name.toLocaleLowerCase('pt-BR')===p.clan.toLocaleLowerCase('pt-BR'));
+        const accent=clanMeta?.color||'#9a7758';
+        const stamp=p.ownerUid===uid()?(sharedIds.has(p.id)?'SEU':'RASC.'):'忍';
+        return '<button type="button" class="pub-chip '+(p.id===id?'active':'')+'" style="--chip-accent:'+esc(accent)+'" aria-pressed="'+(p.id===id?'true':'false')+'" data-action="board-open" data-id="'+esc(p.id)+'" title="Abrir quadro de '+esc(p.nome)+'"><span class="pub-chip-photo">'+(p.portrait?'<img loading="lazy" src="'+esc(p.portrait)+'" alt="">':'<span class="pub-chip-kanji" aria-hidden="true">'+esc(clanMeta?.kanji||'忍')+'</span>')+'</span><span class="pub-chip-body"><b>'+esc(p.nome)+'</b><small>'+esc(p.clan)+'</small><span class="pub-chip-meta"><em>'+esc(p.graduacao||'Shinobi')+'</em>'+(p.vila?'<em>'+esc(p.vila)+'</em>':'')+'</span></span><span class="pub-chip-mark" aria-hidden="true">'+stamp+'</span></button>';
+      }).join('')+'</div></section>';
       if(!draft)output+='<div class="pub-blank"><h3>Nenhum quadro selecionado</h3><p>Os perfis compartilhados aparecerão aqui. Publique um personagem seu usando o seletor acima.</p></div>';
       else {
         output+='<div class="pub-board-toolbar"><b>'+esc(draft.nome)+' · '+esc(draft.clan)+'</b><span class="pub-spacer"></span>';
