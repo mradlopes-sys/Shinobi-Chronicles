@@ -22,7 +22,7 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add assets/fichas-hd/ upscale-fichas-status.txt
+          git add assets/fichas-hd/ assets/fichas-hd-preview/ upscale-fichas-status.txt
           if ! git diff --staged --quiet; then
             git commit -m 'assets: gerar paginas de ficha HD a partir de super-resolucao'
             git push
