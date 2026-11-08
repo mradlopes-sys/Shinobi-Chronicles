@@ -2279,15 +2279,18 @@
 @media(max-width:780px){.pub-intro{padding:21px}.pub-viewport{min-height:570px;max-height:72vh}.pub-chip{min-width:155px}.pub-board-toolbar{gap:6px}.pub-zoom{width:85px}}
 
 
-/* Centralização do mural. Os arquivos originais das fichas Canva permanecem intactos. */
+/* Fundo externo do mural: cor contínua, sem a imagem partida que criava uma mancha retangular.
+   A arte e a textura do quadro interno continuam intactas. */
 .pub-viewport{
   display:flex;
   align-items:flex-start;
   justify-content:flex-start;
-  background:
-    linear-gradient(90deg,rgba(91,57,34,.67),rgba(91,57,34,.46)),
-    url("hero-konoha-novo.jpg") center center / cover,
-    #8c674b;
+  background-color:#ae8c71;
+  background-image:
+    radial-gradient(ellipse at 50% 40%,rgba(246,222,189,.18),transparent 79%),
+    repeating-linear-gradient(90deg,rgba(255,246,221,.015) 0 2px,transparent 2px 7px);
+  background-size:100% 100%,auto;
+  background-repeat:no-repeat,repeat;
 }
 .pub-zoomframe{
   flex:0 0 auto;
@@ -4268,6 +4271,7 @@ function canvaUpdateArray(el,preserveFocus=false){
   const PublicBoard=(()=>{
     const W=1580,H=1160;
     const CHANGELOG=[
+      {date:'07/11/2026',title:'Polimento do fundo do quadro de anotações',body:'Removemos a imagem externa que criava duas áreas de cor diferentes em volta do quadro. O entorno agora tem um tom de pergaminho uniforme e uma textura muito suave, sem quadrados visíveis. O quadro central, as notas, o zoom e o arraste continuam iguais.'},
       {date:'07/11/2026',title:'Retorno às fichas originais do Canva',body:'Restauramos nas 12 fichas as imagens JPG originais do Canva, com fontes, ornamentos, paleta e destaques gráficos próprios de cada clã. Removemos o modo vetorial, o botão de comparação e os filtros de nitidez adicionados posteriormente. Dados e campos editáveis foram mantidos.'},
       {date:'07/11/2026',title:'Fichas redesenhadas com texto vetorial nítido',body:'Reconstruímos as quatro páginas de cada modelo com títulos, tabelas, caixas e rótulos desenhados em vetores pelo navegador. Os dados e os campos editáveis continuam nas mesmas posições; a aquarela decorativa dos clãs foi preservada no cabeçalho. Adicionamos um botão Arte original para comparar com a imagem JPG anterior. O modo nítido é o padrão, sem depender de ampliar a imagem comprimida.'},
       {date:'07/11/2026',title:'48 páginas de ficha aprimoradas em alta resolução',body:'Substituímos as cópias comprimidas dos 12 modelos por versões 2068 × 2924 geradas com super-resolução FSRCNN 2×, preservando cores, aquarela e alinhamento dos campos editáveis. Como o Canva não liberou o download dos originais, estas versões foram reconstruídas a partir dos JPEGs existentes, sem prometer recuperação exata de detalhes perdidos.'},
