@@ -3142,6 +3142,632 @@ html[data-appearance="dark"] #app > .empty{
   html[data-appearance="dark"] .shell.themed-shell.home-ambient .main{background:#fff!important}
   .appearance-toggle{display:none!important}
 }
+
+/* ================================================================
+   SHINOBI CHRONICLES — SEGUNDA SKIN NOTURNA / 1.0
+   Regra de cor: fundo carvão esverdeado, superfícies foscas, tipografia
+   marfim suave, acentos do clã. Sem filtros globais e sem branco forte.
+   As !important locais corrigem regras claras legadas de alta prioridade.
+   ================================================================ */
+html[data-appearance="dark"]{
+  --paper:#111916;
+  --paper-2:#19241e;
+  --paper-3:#27372e;
+  --ink:#e1e8db;
+  --muted:#a9b8a8;
+  --line:#3d4e43;
+  --red:#d9a397;
+  --gold:#d1b586;
+  background:#111916;
+  scrollbar-color:#455c4b #142019;
+}
+html[data-appearance="dark"] body,
+html[data-appearance="dark"] #app{
+  background:#111916!important;color:#e2e7dc;
+}
+html[data-appearance="dark"] #app .shell{
+  --skin-bg:#111b16;
+  --skin-surface:#202d25;
+  --skin-raised:#29382d;
+  --skin-subtle:#1b2820;
+  --skin-input:#17231c;
+  --skin-line:#425647;
+  --skin-text:#e4e9de;
+  --skin-muted:#adbcad;
+  --skin-accent:color-mix(in srgb,var(--theme-accent,#7e9a82) 53%,#e4cfae);
+  color:var(--skin-text);
+}
+html[data-appearance="dark"] #app .shell .main,
+html[data-appearance="dark"] #app .shell.home-ambient .main,
+html[data-appearance="dark"] #app .shell.themed-shell .main,
+html[data-appearance="dark"] #app .shell.themed-shell.home-ambient .main{
+  background:
+    radial-gradient(ellipse 47% 33% at 5% 7%,rgba(var(--theme-rgb),.14),transparent 88%),
+    radial-gradient(ellipse 54% 31% at 99% 68%,rgba(var(--theme-rgb),.1),transparent 90%),
+    linear-gradient(140deg,#111a16,#18241d 50%,#101814)!important;
+  color:var(--skin-text)!important;
+}
+html[data-appearance="dark"] #app .shell .main::before{opacity:.07!important;mix-blend-mode:screen}
+html[data-appearance="dark"] #app .shell .main::after{opacity:.17!important}
+html[data-appearance="dark"] #app .shell .content{
+  color:var(--skin-text);
+  background:transparent!important;
+}
+html[data-appearance="dark"] #app .shell .topbar,
+html[data-appearance="dark"] #app .shell.themed-shell.home-ambient .topbar{
+  color:#e7eadf!important;
+  background:linear-gradient(105deg,#1c2b21ef,#15221be8 55%,#18281fcf)!important;
+  border-color:#415545!important;
+}
+html[data-appearance="dark"] #app .shell .top-title,
+html[data-appearance="dark"] #app .shell .section-head h2{
+  color:#e7eadf!important;
+}
+html[data-appearance="dark"] #app .shell .eyebrow,
+html[data-appearance="dark"] #app .shell.themed-shell .eyebrow,
+html[data-appearance="dark"] #app .shell .section-head .eyebrow{
+  color:var(--skin-accent)!important;
+}
+html[data-appearance="dark"] #app .shell .section-head{
+  border-left-color:var(--skin-accent)!important;
+}
+html[data-appearance="dark"] #app .shell .footer-note,
+html[data-appearance="dark"] #app .shell .statusbar{
+  color:#9faf9f!important;
+  background:#1b2a21a6!important;
+  border-color:#3e5444!important;
+}
+
+/* Originais cartões e módulos em pergaminho agora viram papel noturno. */
+html[data-appearance="dark"] #app .shell .paper-panel,
+html[data-appearance="dark"] #app .shell .my-sheet-card,
+html[data-appearance="dark"] #app .shell .clan-card,
+html[data-appearance="dark"] #app .shell .mini-stat,
+html[data-appearance="dark"] #app .shell .empty,
+html[data-appearance="dark"] #app .shell .content .empty,
+html[data-appearance="dark"] #app .shell .notice,
+html[data-appearance="dark"] #app .shell .home-ambient .paper-panel,
+html[data-appearance="dark"] #app .shell .home-ambient .empty{
+  color:var(--skin-text)!important;
+  background:
+    radial-gradient(ellipse 80% 90% at 100% 0%,rgba(var(--theme-rgb),.07),transparent 88%),
+    linear-gradient(140deg,#25332a,#1d2a22 78%)!important;
+  border-color:var(--skin-line)!important;
+  box-shadow:0 6px 22px #03090735,inset 0 1px 0 #c6d7bc0a!important;
+}
+html[data-appearance="dark"] #app .shell .notice.warn{
+  background:#3a3026!important;border-color:#84694c!important;color:#ead1a8!important;
+}
+html[data-appearance="dark"] #app .shell .notice.success{
+  background:#244130!important;border-color:#5d8063!important;color:#d1e5ca!important;
+}
+html[data-appearance="dark"] #app .shell .mini-stat span,
+html[data-appearance="dark"] #app .shell .section-head p,
+html[data-appearance="dark"] #app .shell .my-sheet-info small,
+html[data-appearance="dark"] #app .shell .clan-card p,
+html[data-appearance="dark"] #app .shell .panel-caption{
+  color:var(--skin-muted)!important;
+}
+html[data-appearance="dark"] #app .shell .mini-stat strong,
+html[data-appearance="dark"] #app .shell .my-sheet-card b,
+html[data-appearance="dark"] #app .shell .clan-card h3{
+  color:#eaf0e5!important;
+}
+html[data-appearance="dark"] #app .shell .clan-card-bottom{
+  background:#223027!important;color:#ebeee3;
+  border-top:1px solid #344a39;
+}
+html[data-appearance="dark"] #app .shell .clan-card .arrow{
+  color:#dfe7d9;border-color:#506453;
+}
+html[data-appearance="dark"] #app .shell .clan-art{
+  background:
+    radial-gradient(ellipse at 75% 60%,var(--wash,#60816d52),transparent 85%),
+    linear-gradient(125deg,#2a372f,#1c2a22)!important;
+}
+html[data-appearance="dark"] #app .shell .my-sheet-mini{
+  background:linear-gradient(135deg,#303f34,var(--wash,#445347))!important;
+}
+html[data-appearance="dark"] #app .shell .button.secondary{
+  color:#e0e8d9!important;background:#293c30!important;
+  border-color:#5b725e!important;
+}
+html[data-appearance="dark"] #app .shell .button.secondary:hover{
+  background:#395242!important;
+}
+html[data-appearance="dark"] #app .shell .button:not(.secondary):not(.red):not(.ghost):not(.white){
+  background:#496b52!important;
+  border-color:#6b8b71!important;
+  color:#faf6e9!important;
+}
+html[data-appearance="dark"] #app .shell .button:not(.secondary):not(.red):not(.ghost):not(.white):hover{
+  background:#5c8163!important;
+}
+html[data-appearance="dark"] #app .shell .hero.hero-inkwash{
+  background:
+    radial-gradient(ellipse 51% 70% at 84% 32%,rgba(var(--theme-rgb),.16),transparent 85%),
+    linear-gradient(116deg,#14231b,#253d2e 58%,#18281f)!important;
+  border-color:#536e57!important;
+}
+html[data-appearance="dark"] #app .shell .hero.hero-inkwash .hero-scene{
+  background:#243427!important;
+}
+html[data-appearance="dark"] #app .shell .hero.hero-inkwash .hero-illustration{
+  filter:brightness(.76) saturate(.82);
+}
+html[data-appearance="dark"] #app .shell .hero.hero-inkwash h1{color:#f1efe4!important}
+html[data-appearance="dark"] #app .shell .hero.hero-inkwash p{color:#cbd5c5!important}
+html[data-appearance="dark"] #app .shell .hero.hero-inkwash .button.secondary{
+  background:#24392dc9!important;color:#e8e9de!important;border-color:#879985!important;
+}
+html[data-appearance="dark"] #app .shell .hero.hero-inkwash .button:not(.secondary){
+  background:#8ba68e!important;color:#14241b!important;border-color:#91ad94!important;
+}
+
+/* Campos gerais e interface das fichas (sem mexer no texto sobre JPG Canva). */
+html[data-appearance="dark"] #app .shell .field input:not(.cv-in),
+html[data-appearance="dark"] #app .shell .field textarea:not(.cv-in),
+html[data-appearance="dark"] #app .shell .field select,
+html[data-appearance="dark"] #app .shell select.manual,
+html[data-appearance="dark"] #app .shell .pool input{
+  color:#e5eadf!important;
+  background:#17251ccf!important;
+  border-color:#506554!important;
+}
+html[data-appearance="dark"] #app .shell .field label,
+html[data-appearance="dark"] #app .shell .field-label{color:#bac9b6!important}
+html[data-appearance="dark"] #app .shell input::placeholder,
+html[data-appearance="dark"] #app .shell textarea::placeholder{color:#a1ae9f}
+html[data-appearance="dark"] #app .shell .attr-item,
+html[data-appearance="dark"] #app .shell .pool,
+html[data-appearance="dark"] #app .shell .collection-item,
+html[data-appearance="dark"] #app .shell .social-item{
+  background:#243328!important;color:#e7ebdf!important;border-color:#465d4b!important;
+}
+html[data-appearance="dark"] #app .shell .step,
+html[data-appearance="dark"] #app .shell .skill-table button,
+html[data-appearance="dark"] #app .shell .social-step{
+  background:#334738!important;color:#e4e9db!important;border-color:#647966!important;
+}
+html[data-appearance="dark"] #app .shell .skill-table th{
+  background:#293c30!important;color:#bfcdbd!important;
+}
+html[data-appearance="dark"] #app .shell .skill-table td,
+html[data-appearance="dark"] #app .shell .skill-table th{border-color:#425648!important}
+html[data-appearance="dark"] #app .shell .tab,
+html[data-appearance="dark"] #app .shell .cv-pages button{
+  color:#cbd8c6!important;background:#2b3f31!important;border-color:#526b56!important;
+}
+html[data-appearance="dark"] #app .shell .tab.active,
+html[data-appearance="dark"] #app .shell .cv-pages button.active{
+  color:#f5f5e9!important;background:#58745b!important;border-color:#8ba48d!important;
+}
+html[data-appearance="dark"] #app .shell .tabs,
+html[data-appearance="dark"] #app .shell .cv-pages{
+  background:#203027!important;border-color:#435945!important;
+}
+html[data-appearance="dark"] #app .shell .cv-toolbar{
+  background:#203027!important;border-left-color:var(--skin-accent)!important;
+}
+html[data-appearance="dark"] #app .shell .cv-toolbar h2{color:#ecede3!important}
+html[data-appearance="dark"] #app .shell .cv-wrap{
+  background:linear-gradient(135deg,#15221b,#27382b)!important;
+  border-color:#3c5845!important;
+}
+/* A arte original das 4 páginas e os campos claros posicionados sobre ela ficam intactos. */
+html[data-appearance="dark"] #app .shell .cv-page{
+  background:#f0eadc!important;
+  border-color:#788876!important;
+  box-shadow:0 12px 36px #030a07a8!important;
+}
+html[data-appearance="dark"] #app .shell .portrait-editor,
+html[data-appearance="dark"] #app .shell .portrait-editor-gallery{
+  background:linear-gradient(125deg,#263c2e,#192a20)!important;
+  border-color:#536a55!important;color:#ebeee4!important;
+}
+
+/* Guia de criação e seus subpainéis que permaneciam bege. */
+html[data-appearance="dark"] #app .shell .guide-head,
+html[data-appearance="dark"] #app .shell .guide-nav,
+html[data-appearance="dark"] #app .shell .guide-article,
+html[data-appearance="dark"] #app .shell .guide-workshop,
+html[data-appearance="dark"] #app .shell .guide-meter-item,
+html[data-appearance="dark"] #app .shell .guide-article-footer,
+html[data-appearance="dark"] #app .shell .guide-stat-row,
+html[data-appearance="dark"] #app .shell .guide-combat-grid>div,
+html[data-appearance="dark"] #app .shell .guide-skill-row,
+html[data-appearance="dark"] #app .shell .guide-list-editor,
+html[data-appearance="dark"] #app .shell .guide-entry,
+html[data-appearance="dark"] #app .shell .guide-inline-step,
+html[data-appearance="dark"] #app .shell .guide-checklist>div,
+html[data-appearance="dark"] #app .shell .guide-table>div,
+html[data-appearance="dark"] #app .shell .guide-table>div:nth-child(odd),
+html[data-appearance="dark"] #app .shell .guide-attr-grid span{
+  background:#243429!important;color:#e4e9dd!important;border-color:#4d6552!important;
+}
+html[data-appearance="dark"] #app .shell .guide-head h1,
+html[data-appearance="dark"] #app .shell .guide-article h2,
+html[data-appearance="dark"] #app .shell .guide-article .guide-rule b,
+html[data-appearance="dark"] #app .shell .guide-article .guide-rule strong,
+html[data-appearance="dark"] #app .shell .guide-meter-item strong{
+  color:#edf0e6!important;
+}
+html[data-appearance="dark"] #app .shell .guide-head p,
+html[data-appearance="dark"] #app .shell .guide-rule,
+html[data-appearance="dark"] #app .shell .guide-subtitle,
+html[data-appearance="dark"] #app .shell .guide-nav small,
+html[data-appearance="dark"] #app .shell .guide-article p{
+  color:#c0cebd!important;
+}
+html[data-appearance="dark"] #app .shell .guide-nav button{color:#dce6d6!important}
+html[data-appearance="dark"] #app .shell .guide-nav button:not(.active):hover{background:#395040!important}
+html[data-appearance="dark"] #app .shell .guide-nav button.active{background:#4b7256!important;color:#fff8ee!important}
+html[data-appearance="dark"] #app .shell .guide-mark,
+html[data-appearance="dark"] #app .shell .guide-count{background:#314535!important;color:#e8eada!important;border-color:#637a63!important}
+html[data-appearance="dark"] #app .shell .guide-example,
+html[data-appearance="dark"] #app .shell .guide-formula{
+  color:#d3dfce!important;background:#2d4233!important;border-color:#5a745c!important;
+}
+html[data-appearance="dark"] #app .shell .guide-field input,
+html[data-appearance="dark"] #app .shell .guide-field textarea,
+html[data-appearance="dark"] #app .shell .guide-field select,
+html[data-appearance="dark"] #app .shell .guide-redirect select{
+  background:#16241bcf!important;color:#edf0e6!important;border-color:#506b55!important;
+}
+
+/* Biblioteca externa e biblioteca integrada ao editor. */
+html[data-appearance="dark"] #app .shell .lib-hero,
+html[data-appearance="dark"] #app .shell .lib-how,
+html[data-appearance="dark"] #app .shell .lib-nav,
+html[data-appearance="dark"] #app .shell .lib-effect-select,
+html[data-appearance="dark"] #app .shell .lib-card,
+html[data-appearance="dark"] #app .shell .lib-block-reason,
+html[data-appearance="dark"] #app .shell .lib-empty,
+html[data-appearance="dark"] #app .shell .lib-guide-cta,
+html[data-appearance="dark"] #app .shell .lib-canvas-open,
+html[data-appearance="dark"] #app .shell .lib-chosen-effects,
+html[data-appearance="dark"] #app .shell .lib-mini-notice,
+html[data-appearance="dark"] #app .shell .int-library,
+html[data-appearance="dark"] #app .shell .int-balance,
+html[data-appearance="dark"] #app .shell .int-card,
+html[data-appearance="dark"] #app .shell .int-nav button,
+html[data-appearance="dark"] #app .shell .int-known,
+html[data-appearance="dark"] #app .shell .lib-chosen-chip{
+  background:#24342a!important;
+  border-color:#455f4a!important;
+  color:#e5e9dd!important;
+}
+html[data-appearance="dark"] #app .shell .lib-card h3,
+html[data-appearance="dark"] #app .shell .int-header h3,
+html[data-appearance="dark"] #app .shell .lib-how strong{
+  color:#edf0e5!important;
+}
+html[data-appearance="dark"] #app .shell .lib-hero p,
+html[data-appearance="dark"] #app .shell .lib-card p,
+html[data-appearance="dark"] #app .shell .int-card p,
+html[data-appearance="dark"] #app .shell .lib-card-footer>span,
+html[data-appearance="dark"] #app .shell .int-hint{
+  color:#bdcbbd!important;
+}
+html[data-appearance="dark"] #app .shell .lib-tags span,
+html[data-appearance="dark"] #app .shell .int-tags span{
+  background:#314437!important;color:#d1dfcc!important;border-color:#536f57!important;
+}
+html[data-appearance="dark"] #app .shell .lib-nav button{
+  background:#2d4033!important;color:#d3dfcf!important;border-color:#55715a!important;
+}
+html[data-appearance="dark"] #app .shell .lib-nav button.active,
+html[data-appearance="dark"] #app .shell .int-nav button.on{
+  background:#4c6a54!important;color:#f6f3e8!important;border-color:#84a188!important;
+}
+html[data-appearance="dark"] #app .shell .lib-search input,
+html[data-appearance="dark"] #app .shell .lib-scope select,
+html[data-appearance="dark"] #app .shell .lib-effect-select select,
+html[data-appearance="dark"] #app .shell .int-filters input,
+html[data-appearance="dark"] #app .shell .int-filters select{
+  background:#17261dcf!important;color:#e3ede0!important;border:1px solid #56715c!important;
+}
+html[data-appearance="dark"] #app .shell .lib-card-footer,
+html[data-appearance="dark"] #app .shell .int-row{border-color:#4d6050!important}
+
+/* Combate e progresso: o antigo painel branco era intenso demais. */
+html[data-appearance="dark"] #app .shell .cb-top,
+html[data-appearance="dark"] #app .shell .cb-panel,
+html[data-appearance="dark"] #app .shell .cb-initiative,
+html[data-appearance="dark"] #app .shell .cb-portrait-shell,
+html[data-appearance="dark"] #app .shell .cb-center-foot,
+html[data-appearance="dark"] #app .shell .cb-help-card,
+html[data-appearance="dark"] #app .shell .evo-tracker,
+html[data-appearance="dark"] #app .shell .evo-budget-item,
+html[data-appearance="dark"] #app .shell .evo-history-entry,
+html[data-appearance="dark"] #app .shell .evo-level-seal{
+  background:linear-gradient(130deg,#27382c,#1b2a21)!important;
+  border-color:#4d6251!important;
+  color:#e7ece1!important;
+}
+html[data-appearance="dark"] #app .shell .cb-panel h2,
+html[data-appearance="dark"] #app .shell .cb-top h1,
+html[data-appearance="dark"] #app .shell .cb-stat b,
+html[data-appearance="dark"] #app .shell .cb-stat strong,
+html[data-appearance="dark"] #app .shell .cb-center-foot strong,
+html[data-appearance="dark"] #app .shell .evo-tracker h3{
+  color:#f0f0e8!important;
+}
+html[data-appearance="dark"] #app .shell .cb-top p,
+html[data-appearance="dark"] #app .shell .cb-stat small,
+html[data-appearance="dark"] #app .shell .cb-rule,
+html[data-appearance="dark"] #app .shell .cb-help-card p,
+html[data-appearance="dark"] #app .shell .evo-tracker p{
+  color:#bfcbbb!important;
+}
+html[data-appearance="dark"] #app .shell .cb-roll,
+html[data-appearance="dark"] #app .shell .cb-portrait-actions button,
+html[data-appearance="dark"] #app .shell .cb-chakra-buttons button{
+  color:#e6eee1!important;background:#304836!important;border-color:#5c775f!important;
+}
+html[data-appearance="dark"] #app .shell .cb-meter{
+  background:#3e5444!important;
+}
+html[data-appearance="dark"] #app .shell .cb-stat,
+html[data-appearance="dark"] #app .shell .cb-panel-header{
+  border-color:#4c6050!important;
+}
+html[data-appearance="dark"] #app .shell .evo-history-entry small{color:#b9c8b9!important}
+html[data-appearance="dark"] #app .shell .evo-history-entry time{color:#d4c19e!important}
+
+/* Diário / pergaminho: uma versão sépia escura, ainda com textura de papel. */
+html[data-appearance="dark"] #app .shell .journal-scroll-paper{
+  --journal-green:#d8e6d5;
+  color:#e6e3d6!important;
+  background:
+    radial-gradient(ellipse 23% 29% at 0 4%,#a08b5a13,transparent 90%),
+    repeating-linear-gradient(0deg,transparent 0,transparent 17px,#b6a97708 18px,transparent 20px),
+    linear-gradient(90deg,#292c26 0%,#34392f 5%,#343c32 52%,#32372d 95%,#272b25)!important;
+  border-color:#56624c!important;
+  box-shadow:0 16px 45px #030805a8!important;
+}
+html[data-appearance="dark"] #app .shell .journal-scroll-title{
+  border-color:#68705c!important;
+}
+html[data-appearance="dark"] #app .shell .journal-scroll-title h2,
+html[data-appearance="dark"] #app .shell .journal-section-toggle b,
+html[data-appearance="dark"] #app .shell .journal-entry-header button{
+  color:#e8e8da!important;
+}
+html[data-appearance="dark"] #app .shell .journal-scroll-title p,
+html[data-appearance="dark"] #app .shell .journal-section-toggle small,
+html[data-appearance="dark"] #app .shell .journal-hint,
+html[data-appearance="dark"] #app .shell .journal-footnote{
+  color:#b9c6b3!important;
+}
+html[data-appearance="dark"] #app .shell .journal-scroll-title .eyebrow,
+html[data-appearance="dark"] #app .shell .journal-head .eyebrow{
+  color:#d9c39d!important;
+}
+html[data-appearance="dark"] #app .shell .journal-section,
+html[data-appearance="dark"] #app .shell .journal-entry,
+html[data-appearance="dark"] #app .shell .journal-entry-fields,
+html[data-appearance="dark"] #app .shell .journal-empty{
+  background:#27352bdb!important;border-color:#51654e!important;
+  color:#e5e8dc!important;
+}
+html[data-appearance="dark"] #app .shell .journal-section-toggle,
+html[data-appearance="dark"] #app .shell .journal-section-toggle[aria-expanded=true]{
+  background:#2d3d31!important;color:#e6ebdd!important;
+}
+html[data-appearance="dark"] #app .shell .journal-section-toggle:hover{
+  background:#384d3a!important;
+}
+html[data-appearance="dark"] #app .shell .journal-section-content{
+  border-color:#536a52!important;
+}
+html[data-appearance="dark"] #app .shell .journal-field span{
+  color:#d4dfcf!important;
+}
+html[data-appearance="dark"] #app .shell .journal-field input,
+html[data-appearance="dark"] #app .shell .journal-field textarea{
+  background:#192a20!important;color:#e7ebdd!important;border-color:#5b735e!important;
+}
+html[data-appearance="dark"] #app .shell .journal-field input:disabled,
+html[data-appearance="dark"] #app .shell .journal-field textarea:disabled{
+  background:#29362b!important;color:#9cae9d!important;
+}
+html[data-appearance="dark"] #app .shell .journal-field input::placeholder,
+html[data-appearance="dark"] #app .shell .journal-field textarea::placeholder{
+  color:#9cae9d!important;
+}
+html[data-appearance="dark"] #app .shell .journal-btn.secondary{
+  background:#334a37!important;color:#e2eadb!important;border-color:#70836b!important;
+}
+html[data-appearance="dark"] #app .shell .journal-btn:not(.secondary){
+  background:#4d6a4d!important;color:#fff7e8!important;
+}
+html[data-appearance="dark"] #app .shell .journal-entry-header time{
+  color:#d9c8a6!important;
+}
+html[data-appearance="dark"] #app .shell .journal-admin-player{
+  background:#26382c!important;border-color:#536d54!important;
+}
+html[data-appearance="dark"] #app .shell .journal-admin-player b{
+  color:#eff1e6!important;
+}
+html[data-appearance="dark"] #app .shell .journal-admin-player small{
+  color:#b1c1b1!important;
+}
+
+/* Mural: mesma textura de cortiça, porém sob luz noturna suave. */
+html[data-appearance="dark"] #app .shell .pub-board-toolbar{
+  color:#e6e9dc!important;
+  background:#25362bd9!important;border-color:#536b55!important;
+}
+html[data-appearance="dark"] #app .shell .pub-intro{
+  background:linear-gradient(90deg,#19271fef,#1d2d24d9 60%,#25392dd1),url("hero-konoha-novo.jpg") center 46%/cover!important;
+  border-color:#536a56!important;
+}
+html[data-appearance="dark"] #app .shell .pub-viewport{
+  background:#302d26!important;
+  border-color:#52614d!important;
+  box-shadow:0 12px 40px #0009!important;
+}
+html[data-appearance="dark"] #app .shell .pub-viewport::before,
+html[data-appearance="dark"] #app .shell .pub-viewport::after{
+  filter:brightness(.51) saturate(.65)!important;
+}
+html[data-appearance="dark"] #app .shell .pub-zoomframe{
+  box-shadow:0 10px 40px #0008!important;
+}
+html[data-appearance="dark"] #app .shell .pub-scene{
+  background:#524533!important;
+  color:#e2dfcf;
+}
+html[data-appearance="dark"] #app .shell .pub-scene:before{
+  opacity:.23!important;
+}
+html[data-appearance="dark"] #app .shell .pub-topcloth,
+html[data-appearance="dark"] #app .shell .pub-cork-head{
+  color:#e6d7b8!important;text-shadow:0 1px 3px #18120caa!important;
+}
+/* Todas as cores das notas são dessaturadas em vez de serem invertidas. */
+html[data-appearance="dark"] #app .shell .pub-scene .pub-note:not(.pub-stamp){
+  background-color:#514b3c!important;
+  border-color:#81735b!important;
+  color:#ede2cb!important;
+  background-image:repeating-linear-gradient(180deg,transparent 0 30px,#e0cfaa0d 31px 32px)!important;
+}
+html[data-appearance="dark"] #app .shell .pub-scene .pub-note[data-color="sage"]{background-color:#3e5142!important}
+html[data-appearance="dark"] #app .shell .pub-scene .pub-note[data-color="pink"]{background-color:#60483f!important}
+html[data-appearance="dark"] #app .shell .pub-scene .pub-note[data-color="blue"]{background-color:#3d5358!important}
+html[data-appearance="dark"] #app .shell .pub-scene .pub-note[data-color="lavender"]{background-color:#514556!important}
+html[data-appearance="dark"] #app .shell .pub-scene .pub-note.obs{background-color:#5b5036!important}
+html[data-appearance="dark"] #app .shell .pub-scene .pub-note.pub-memory{background-color:#4a4336!important;background-image:none!important}
+html[data-appearance="dark"] #app .shell .pub-scene .pub-note h3,
+html[data-appearance="dark"] #app .shell .pub-scene .pub-note h3 input,
+html[data-appearance="dark"] #app .shell .pub-scene .pub-note .pub-note-body,
+html[data-appearance="dark"] #app .shell .pub-scene .pub-note textarea,
+html[data-appearance="dark"] #app .shell .pub-scene .pub-note input,
+html[data-appearance="dark"] #app .shell .pub-memory-caption{
+  color:#f2e6d0!important;
+  background:transparent!important;
+}
+html[data-appearance="dark"] #app .shell .pub-scene .pub-note textarea::placeholder{
+  color:#c1b196!important;
+}
+html[data-appearance="dark"] #app .shell .pub-scene .pub-note button.pub-tool:not(.pub-delete){
+  color:#f1e5d0!important;background:#dac7a22b!important;
+}
+html[data-appearance="dark"] #app .shell .pub-scene .pub-note button.pub-delete{
+  color:#ffe0d5!important;background:#733d36!important;border-color:#b16b60!important;
+}
+html[data-appearance="dark"] #app .shell .pub-portrait-picture,
+html[data-appearance="dark"] #app .shell .pub-memory-frame{
+  background:#302e28!important;border-color:#665b49!important;
+}
+html[data-appearance="dark"] #app .shell .pub-stamp-controls{
+  background:#28382dd6!important;
+}
+html[data-appearance="dark"] #app .shell .pub-stamp-controls button{color:#dfebd7!important}
+html[data-appearance="dark"] #app .shell .pub-scene .pub-note.pub-stamp{
+  background:transparent!important;box-shadow:none!important;border:0!important;
+}
+html[data-appearance="dark"] #app .shell .pub-stamp-mark{
+  color:#d9aca3!important;--stamp-ink:#ca9587;
+}
+html[data-appearance="dark"] #app .shell .pub-toolpanel,
+html[data-appearance="dark"] #app .shell .pub-directory{
+  background:linear-gradient(140deg,#2b3d2e,#202e25)!important;
+  border-color:#576a56!important;color:#e8e7da!important;
+}
+html[data-appearance="dark"] #app .shell .pub-directory .pub-chip,
+html[data-appearance="dark"] #app .shell .pub-directory .pub-chip.active{
+  background:linear-gradient(135deg,#344a37,#27382c)!important;
+  border-color:#58735b!important;color:#e7eade!important;
+}
+html[data-appearance="dark"] #app .shell .pub-directory .pub-chip.active{
+  outline:2px solid #8aa88b!important;outline-offset:1px;
+}
+html[data-appearance="dark"] #app .shell .pub-chip-photo{
+  background:#384638!important;
+}
+html[data-appearance="dark"] #app .shell .pub-chip b,
+html[data-appearance="dark"] #app .shell .pub-chip small{
+  color:#e6e8de!important;
+}
+html[data-appearance="dark"] #app .shell .pub-chip-meta em{
+  background:#415a45!important;color:#dce7d6!important;border-color:#5c785f!important;
+}
+html[data-appearance="dark"] #app .shell .pub-toolpanel input,
+html[data-appearance="dark"] #app .shell .pub-toolpanel select,
+html[data-appearance="dark"] #app .shell .pub-select{
+  background:#16231b!important;color:#dfe8d7!important;border-color:#566d56!important;
+}
+html[data-appearance="dark"] #app .shell .pub-toolpanel small,
+html[data-appearance="dark"] #app .shell .pub-toolpanel label{
+  color:#c5d2be!important;
+}
+html[data-appearance="dark"] #app .shell .pub-note-help{
+  color:#bbcab9!important;
+}
+/* O histórico em pop-up e as fotos continuam fiéis às suas cores originais. */
+html[data-appearance="dark"] #app .shell .pub-updates{
+  background:#2b382d!important;color:#e7e9db!important;border-color:#66735f!important;
+}
+html[data-appearance="dark"] #app .shell .pub-updates article{
+  border-color:#556a55!important;
+}
+html[data-appearance="dark"] #app .shell .pub-updates article h3{
+  color:#edf0e4!important;
+}
+html[data-appearance="dark"] #app .shell .pub-updates article p{
+  color:#c5d1bf!important;
+}
+
+/* Administração e autenticação, incluindo painéis auxiliares. */
+html[data-appearance="dark"] #app .shell .auth-form-wrap,
+html[data-appearance="dark"] #app .shell .admin-gate-content,
+html[data-appearance="dark"] #app .shell .admin-row,
+html[data-appearance="dark"] #app .shell .admin-live-pill,
+html[data-appearance="dark"] #app .shell .admin-sync-note{
+  background:#223228!important;color:#e5ebde!important;border-color:#4c6350!important;
+}
+html[data-appearance="dark"] #app .shell .auth-form-wrap h1,
+html[data-appearance="dark"] #app .shell .admin-gate-content h1{color:#e9ede4!important}
+html[data-appearance="dark"] #app .shell .auth-role-tabs{
+  background:#1d2b22!important;border-color:#4b634f!important;
+}
+html[data-appearance="dark"] #app .shell .auth-role-tabs button:not(.active){
+  color:#cad8c8!important;background:transparent!important;
+}
+html[data-appearance="dark"] #app .shell .auth-role-tabs button.active{
+  color:#f2f2e7!important;background:#4c7257!important;
+}
+html[data-appearance="dark"] .modalbox,
+html[data-appearance="dark"] #app .shell .modalbox{
+  color:#e8eee3!important;
+  background:#25342a!important;border-color:#59705c!important;
+}
+html[data-appearance="dark"] .modalbox input,
+html[data-appearance="dark"] .modalbox textarea,
+html[data-appearance="dark"] .modalbox select{
+  color:#e8eee2!important;background:#18261e!important;border-color:#5b7059!important;
+}
+html[data-appearance="dark"] .toast{
+  color:#f0f1e6;background:#2a4432!important;border:1px solid #6b886e;
+}
+
+/* Área visual de avanço: pop-up especial preserva o pergaminho e o kanji. */
+html[data-appearance="dark"] #app .shell .evo-rise-scroll,
+html[data-appearance="dark"] #app .shell .evo-scroll-paper{
+  box-shadow:0 16px 54px #030907a8;
+}
+/* Modo claro e impressão não são afetados. */
+@media print{
+  html[data-appearance="dark"] #app .shell .main,
+  html[data-appearance="dark"] #app .shell.themed-shell .main,
+  html[data-appearance="dark"] #app .shell.themed-shell.home-ambient .main,
+  html[data-appearance="dark"] #app .shell .content{
+    background:#fff!important;color:#242824!important;
+  }
+}
 </style>
 </head>
 <body>
@@ -5144,6 +5770,7 @@ function canvaUpdateArray(el,preserveFocus=false){
     const RELATIONS=['Amizade','Rivalidade','Família','Equipe','Romance','Segredo'];
     let toolPanel='';
     const CHANGELOG=[
+      {date:'08/11/2026',title:'Segunda skin noturna completa',body:'Refizemos o modo escuro como uma paleta independente do tema claro: fundo geral carvão, menus e painéis verde-floresta, campos e cartões foscos, títulos em marfim, cores dos clãs discretamente destacadas e pergaminho do diário em sépia noturno. Fichas originais do Canva e fotografias conservam suas imagens, enquanto bilhetes do mural ganharam cores próprias para leitura noturna. O modo claro permanece inalterado, e o botão segue salvando a preferência no navegador.'},
       {date:'08/11/2026',title:'Modo escuro no Shinobi Chronicles',body:'Adicionamos um botão no cabeçalho para alternar entre Modo claro e Modo escuro. A preferência é salva no próprio navegador e se aplica às telas, menus, painéis, campos, biblioteca, guia de criação, gerenciamento de fichas, combate e área do mestre. O pergaminho do diário, a arte original das fichas e o quadro de Konoha conservam suas cores naturais, sem filtros sobre as ilustrações.'},
       {date:'07/11/2026',title:'Excluir somente elementos criados pelos jogadores',body:'Adicionamos um botão Excluir aos bilhetes extras, fotografias e carimbos colados pelos jogadores, com confirmação antes de apagar. Fios também podem ser removidos na ferramenta Ligar fios. Os oito registros originais — retrato, clã, graduação, vila, história, relacionamentos, curiosidades e acontecimentos — ficam protegidos contra exclusão e continuam editáveis, móveis e giratórios.'},
       {date:'07/11/2026',title:'Observações pessoais móveis e rotação 360°',body:'Minhas observações agora podem ser arrastadas, redimensionadas e giradas em qualquer quadro, inclusive no de outros jogadores. A posição é salva somente na observação privada de quem a escreveu. Bilhetes, retratos, fotos do álbum e carimbos também podem girar livremente em 360°, pelas setas ou informando um ângulo exato. Tudo sem modificar os registros de outros jogadores.'},
