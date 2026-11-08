@@ -2687,6 +2687,13 @@
 .pub-note.obs .pub-personal-tools .pub-drag{cursor:grab}
 .pub-note.obs .pub-personal-tools .pub-drag:active{cursor:grabbing}
 .pub-scene .pub-note .pub-rotate-exact{font:700 10px 'DM Sans',sans-serif;padding:4px 5px}
+/* Mantém o campo de título legível mesmo com os novos controles de giro. */
+.pub-scene .pub-note h3:has(input[data-board-note-field="title"]){flex-wrap:wrap;gap:3px 5px}
+.pub-scene .pub-note h3 input[data-board-note-field="title"]{min-width:0;flex:1 1 75px;width:0}
+.pub-scene .pub-note h3 .pub-note-tools{flex:0 0 auto;gap:2px;margin-left:auto}
+.pub-scene .pub-note h3 .pub-note-tools button.pub-tool{padding:3px 4px;font-size:12px}
+.pub-scene .pub-note:has(textarea[data-board-note-field="text"]) > textarea{height:calc(100% - 94px)}
+
 </style>
 </head>
 <body>
