@@ -2694,6 +2694,26 @@
 .pub-scene .pub-note h3 .pub-note-tools button.pub-tool{padding:3px 4px;font-size:12px}
 .pub-scene .pub-note:has(textarea[data-board-note-field="text"]) > textarea{height:calc(100% - 94px)}
 
+
+/* Excluir apenas notas, fotografias e carimbos adicionados pelo jogador. */
+.pub-scene .pub-note button.pub-delete{
+  color:#98463a;
+  background:#f9e9deee;
+  border:1px solid #c68d78;
+  border-radius:5px;
+  font:700 10px/1.15 'DM Sans',sans-serif;
+  padding:5px 6px;
+  white-space:nowrap;
+}
+.pub-scene .pub-note button.pub-delete:hover{
+  color:#fff7ef;
+  background:#9f4b41;
+  border-color:#833d36;
+}
+.pub-scene .pub-note button.pub-delete:focus-visible{
+  outline:2px solid #a34c40;
+  outline-offset:2px;
+}
 </style>
 </head>
 <body>
@@ -4668,6 +4688,8 @@ function canvaUpdateArray(el,preserveFocus=false){
     let W=1580,H=1160;
     const BOARD_MIN_W=1580,BOARD_MIN_H=1160,BOARD_MAX_W=2380,BOARD_MAX_H=1850;
     const MAX_ELEMENTS=22,MAX_MEMORIES=6,MAX_THREADS=8;
+    // Os oito registros originais da ficha nunca podem ser excluídos.
+    const FIXED_NOTE_IDS=new Set(['portrait','clan','rank','village','story','links','info','missions']);
     const STAMPS=[
       ['CONFIDENCIAL','pink'],['APROVADO','sage'],['MISSÃO CONCLUÍDA','sage'],
       ['GENIN','cream'],['CHŪNIN','blue'],['JŌNIN','blue'],
@@ -4676,6 +4698,7 @@ function canvaUpdateArray(el,preserveFocus=false){
     const RELATIONS=['Amizade','Rivalidade','Família','Equipe','Romance','Segredo'];
     let toolPanel='';
     const CHANGELOG=[
+      {date:'07/11/2026',title:'Excluir somente elementos criados pelos jogadores',body:'Adicionamos um botão Excluir aos bilhetes extras, fotografias e carimbos colados pelos jogadores, com confirmação antes de apagar. Fios também podem ser removidos na ferramenta Ligar fios. Os oito registros originais — retrato, clã, graduação, vila, história, relacionamentos, curiosidades e acontecimentos — ficam protegidos contra exclusão e continuam editáveis, móveis e giratórios.'},
       {date:'07/11/2026',title:'Observações pessoais móveis e rotação 360°',body:'Minhas observações agora podem ser arrastadas, redimensionadas e giradas em qualquer quadro, inclusive no de outros jogadores. A posição é salva somente na observação privada de quem a escreveu. Bilhetes, retratos, fotos do álbum e carimbos também podem girar livremente em 360°, pelas setas ou informando um ângulo exato. Tudo sem modificar os registros de outros jogadores.'},
       {date:'07/11/2026',title:'Álbum de memórias, carimbos e fios entre registros',body:'O Mural de Konoha agora permite colar fotografias adicionais com legenda manuscrita, aplicar carimbos shinobi e conectar bilhetes e fotos usando fios vermelhos de relacionamento. Os elementos podem ser movidos ou redimensionados, e os fios acompanham as alterações. Incluímos Ampliar quadro para abrir mais espaço sem perder os registros existentes. Tudo é salvo no perfil público do próprio personagem.'},
       {date:'07/11/2026',title:'Caligrafia manuscrita em todos os bilhetes',body:'Os títulos e os textos de Clã, Graduação, Vila, História e dos demais bilhetes agora usam a mesma fonte manuscrita Caveat Brush das observações pessoais, tanto na edição quanto na leitura. Os botões e o restante do site mantêm sua tipografia anterior.'},
@@ -5023,10 +5046,23 @@ function canvaUpdateArray(el,preserveFocus=false){
       draft.notes.push(sanitizeNote({id:randomId(),title:'Nova anotação',kind:'text',text:'',...pos,w:270,h:195,rotation:(draft.notes.length%3-1)*2,color:'cream'}));
       queueSave();repaint();
     }
+    function removableNote(note){
+      return Boolean(permitted()&&note&&!FIXED_NOTE_IDS.has(note.id)&&note.kind!=='portrait'&&note.kind!=='extent');
+    }
     function removeNote(key){
       if(!permitted())return;
-      draft.notes=draft.notes.filter(x=>x.id!==key&& !(x.kind==='thread'&&(x.from===key||x.to===key)));
+      const target=draft.notes.find(x=>x.id===key);
+      if(!removableNote(target)){
+        showToast('Os registros originais do mural não podem ser excluídos.',true);
+        return;
+      }
+      const linked=draft.notes.filter(x=>x.kind==='thread'&&(x.from===key||x.to===key));
+      const label=target.kind==='thread'?'este fio':target.kind==='photo'?'esta fotografia':target.kind==='stamp'?'este carimbo':'este bilhete';
+      const extra=linked.length?' Os '+linked.length+' fios ligados a ele também serão removidos.':'';
+      if(!confirm('Deseja excluir '+label+' do quadro?'+extra))return;
+      draft.notes=draft.notes.filter(x=>x.id!==key&&!(x.kind==='thread'&&(x.from===key||x.to===key)));
       queueSave();repaint();
+      showToast('Elemento excluído do quadro.');
     }
     function addStamp(){
       if(!freeSlot())return;
@@ -5148,7 +5184,7 @@ function canvaUpdateArray(el,preserveFocus=false){
       if(note.kind==='thread'||note.kind==='extent')return '';
       const style='left:'+note.x+'px;top:'+note.y+'px;width:'+note.w+'px;height:'+note.h+'px;--tilt:'+note.rotation+'deg';
       const marker=canEdit?'<button type="button" class="pub-tool pub-drag" data-board-drag="'+esc(note.id)+'" title="Arrastar elemento" aria-label="Mover elemento">⠿</button>':'';
-      const removal=canEdit?'<button class="pub-tool" data-action="board-remove" data-id="'+esc(note.id)+'" title="Descolar elemento">×</button>':'';
+      const removal=canEdit&&removableNote(note)?'<button type="button" class="pub-tool pub-delete" data-action="board-remove" data-id="'+esc(note.id)+'" title="Excluir elemento criado por você" aria-label="Excluir '+esc(note.title||'elemento')+'">✕ Excluir</button>':'';
       const rotate=canEdit?'<button class="pub-tool" data-action="board-rotate" data-id="'+esc(note.id)+'" data-degrees="-15" title="Girar 15° para a esquerda">↶</button><button class="pub-tool pub-rotate-exact" data-action="board-angle" data-id="'+esc(note.id)+'" title="Escolher ângulo exato em 360 graus">360°</button><button class="pub-tool" data-action="board-rotate" data-id="'+esc(note.id)+'" data-degrees="15" title="Girar 15° para a direita">↷</button>':'';
       if(note.kind==='photo'){
         const caption=canEdit?'<input maxlength="80" data-board-note="'+esc(note.id)+'" data-board-note-field="title" aria-label="Legenda da fotografia" value="'+esc(note.title)+'" placeholder="Escreva uma lembrança...">':esc(note.title);
@@ -5176,7 +5212,7 @@ function canvaUpdateArray(el,preserveFocus=false){
         const options=possible.map(n=>'<option value="'+esc(n.id)+'">'+esc(n.title||'Fotografia')+'</option>').join('');
         const existing=draft.notes.filter(n=>n.kind==='thread');
         return '<div class="pub-toolpanel"><label for="pub-thread-from">De</label><select id="pub-thread-from"><option value="">Selecione...</option>'+options+'</select><label for="pub-thread-to">Até</label><select id="pub-thread-to"><option value="">Selecione...</option>'+options+'</select><label for="pub-thread-kind">Relação</label><select id="pub-thread-kind">'+RELATIONS.map(name=>'<option value="'+name+'">'+name+'</option>').join('')+'</select><input id="pub-thread-custom" maxlength="30" placeholder="Rótulo opcional..." aria-label="Rótulo opcional do fio"><button class="button small" data-action="board-thread-add">Conectar</button><button class="button secondary small" data-action="board-panel-close">Fechar</button>'+
-          (existing.length?'<div class="pub-thread-existing"><small>Fios conectados</small>'+existing.map(n=>'<button data-action="board-thread-remove" data-id="'+esc(n.id)+'" title="Remover ligação">'+esc(n.title)+' ×</button>').join('')+'</div>':'')+'</div>';
+          (existing.length?'<div class="pub-thread-existing"><small>Fios conectados</small>'+existing.map(n=>'<button data-action="board-thread-remove" data-id="'+esc(n.id)+'" title="Excluir fio de relacionamento">✕ Excluir fio: '+esc(n.title)+'</button>').join('')+'</div>':'')+'</div>';
       }
       return '';
     }
@@ -5231,7 +5267,7 @@ function canvaUpdateArray(el,preserveFocus=false){
       if(key==='board-stamp-add')return addStamp();
       if(key==='board-thread-add')return addThread();
       if(key==='board-expand')return expandBoard();
-      if(key==='board-thread-remove'){if(!permitted())return;draft.notes=draft.notes.filter(n=>n.id!==el.dataset.id);queueSave();repaint();return}
+      if(key==='board-thread-remove')return removeNote(el.dataset.id);
       if(key==='board-rotate'||key==='board-angle'){
         if(!permitted())return;
         const n=draft.notes.find(item=>item.id===el.dataset.id);
