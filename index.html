@@ -2478,6 +2478,49 @@
   .pub-directory .pub-chip{min-width:220px;flex-basis:220px}
 }
 
+
+/* Caligrafia do mural: a mesma letra manuscrita das observações para
+   títulos e textos publicados ou em edição, sem afetar botões do site. */
+.pub-scene .pub-note{
+  --note-hand:'Caveat Brush','Yuji Boku','Segoe Print',cursive;
+}
+.pub-scene .pub-note h3{
+  font-family:var(--note-hand)!important;
+  font-size:25px!important;
+  font-weight:400!important;
+  line-height:1.16!important;
+  letter-spacing:.015em;
+  color:#513327;
+  min-height:31px;
+  margin:3px 0 8px;
+}
+.pub-scene .pub-note h3 input[data-board-note-field="title"]{
+  flex:1 1 auto;
+  min-width:0;
+  height:33px;
+  font-family:var(--note-hand)!important;
+  font-size:25px!important;
+  font-weight:400!important;
+  line-height:1.16!important;
+  letter-spacing:.015em;
+  color:#513327!important;
+}
+.pub-scene .pub-note h3 .pub-note-tools{flex:0 0 auto}
+.pub-scene .pub-note textarea[data-board-note-field="text"],
+.pub-scene .pub-note .pub-note-body,
+.pub-scene .pub-note.obs textarea{
+  font-family:var(--note-hand)!important;
+  font-size:19px!important;
+  font-weight:400!important;
+  line-height:1.43!important;
+  letter-spacing:.005em;
+  color:#493629!important;
+}
+.pub-scene .pub-note textarea::placeholder{
+  font-family:var(--note-hand);
+  color:#876d55;
+  opacity:.8;
+}
 </style>
 </head>
 <body>
@@ -4451,6 +4494,7 @@ function canvaUpdateArray(el,preserveFocus=false){
   const PublicBoard=(()=>{
     const W=1580,H=1160;
     const CHANGELOG=[
+      {date:'07/11/2026',title:'Caligrafia manuscrita em todos os bilhetes',body:'Os títulos e os textos de Clã, Graduação, Vila, História e dos demais bilhetes agora usam a mesma fonte manuscrita Caveat Brush das observações pessoais, tanto na edição quanto na leitura. Os botões e o restante do site mantêm sua tipografia anterior.'},
       {date:'07/11/2026',title:'Paisagem espelhada e diretório de shinobi',body:'A ilustração aquarelada de Konoha aparece agora dos dois lados do quadro, com as laterais espelhadas e o mesmo filtro bege. A seleção de personagens ganhou cartões de arquivo com retrato ou símbolo do clã, nome, graduação, vila e um destaque discreto para o personagem selecionado.'},
       {date:'07/11/2026',title:'Fundo de Konoha com filtro bege uniforme',body:'Restauramos a ilustração de Konoha ao redor do quadro e aplicamos a mesma camada bege sobre toda a paisagem. A imagem atrás da moldura agora é contínua, sem faixas retangulares mais vivas ou diferenças de cor ao mudar o zoom. O quadro, a moldura e os bilhetes não foram alterados.'},
       {date:'07/11/2026',title:'Polimento do fundo do quadro de anotações',body:'Removemos a imagem externa que criava duas áreas de cor diferentes em volta do quadro. O entorno agora tem um tom de pergaminho uniforme e uma textura muito suave, sem quadrados visíveis. O quadro central, as notas, o zoom e o arraste continuam iguais.'},
