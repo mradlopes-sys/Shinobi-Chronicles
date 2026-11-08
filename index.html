@@ -3064,6 +3064,76 @@ html[data-appearance="dark"] .appearance-toggle:hover{background:#3c5745}
   .topbar .appearance-toggle .appearance-label{display:none}
   .topbar .top-actions{gap:6px;flex-wrap:wrap;justify-content:flex-end}
 }
+
+/* Refinamentos de contraste: biblioteca, guia, combate e pop-ups. */
+html[data-appearance="dark"] .shell .lib-card h3{color:#eef1e6}
+html[data-appearance="dark"] .shell .lib-card>p,
+html[data-appearance="dark"] .shell .lib-card-footer>span{color:#b6c9b7}
+html[data-appearance="dark"] .shell .lib-card-kicker>span{color:#e5bd9e}
+html[data-appearance="dark"] .shell .lib-card-kicker small,
+html[data-appearance="dark"] .shell .lib-own{color:#c5dfc0}
+html[data-appearance="dark"] .shell .lib-tags span{
+  background:#34483b;border-color:#56705b;color:#d5e2d0;
+}
+html[data-appearance="dark"] .shell .lib-card-footer{border-color:#506451}
+html[data-appearance="dark"] .shell .guide-nav .guide-index{border-color:#6e8772}
+html[data-appearance="dark"] .shell .guide-nav-title,
+html[data-appearance="dark"] .shell .guide-article-kicker{color:#e0b59b}
+html[data-appearance="dark"] .shell .guide-nav button.active{
+  background:#4a6b54;color:#fff8e8;border-color:#709378;
+}
+html[data-appearance="dark"] .shell .guide-checklist{border-color:#57705c}
+html[data-appearance="dark"] .shell .guide-checklist>div{
+  background:#2b3e32;border-color:#526c57;color:#e3ebda;
+}
+html[data-appearance="dark"] .shell .guide-pager span{color:#b7c4b8}
+html[data-appearance="dark"] .shell .cb-stat b,
+html[data-appearance="dark"] .shell .cb-stat strong,
+html[data-appearance="dark"] .shell .cb-panel-header h2{color:#edf0e5}
+html[data-appearance="dark"] .shell .cb-stat small{color:#b8c5b8}
+html[data-appearance="dark"] .shell .cb-roll{
+  background:#314939;color:#f3f4e9;border-color:#648066;
+}
+html[data-appearance="dark"] .shell .cb-roll:hover{background:#426049}
+html[data-appearance="dark"] .shell .cb-initiative strong{color:#f1f0e8}
+html[data-appearance="dark"] .shell .pub-select{
+  background:#1c2b22;color:#eaf0e3;border:1px solid #617361;
+}
+html[data-appearance="dark"] .shell .pub-readonly{color:#bec9b8}
+html[data-appearance="dark"] .shell .pub-board-toolbar b{color:#e8efdf}
+/* Papel do diário e bilhetes do quadro devem manter tinta escura. */
+html[data-appearance="dark"] .shell .journal-scroll-paper .eyebrow,
+html[data-appearance="dark"] .shell .journal-scroll-paper .journal-scroll-title .eyebrow{
+  color:#807155;
+}
+html[data-appearance="dark"] .shell .journal-scroll-paper .field label{color:#6b6657}
+html[data-appearance="dark"] .shell .journal-scroll-paper input,
+html[data-appearance="dark"] .shell .journal-scroll-paper textarea,
+html[data-appearance="dark"] .shell .journal-scroll-paper select{
+  color:#2f3e33;background:#fefaf0;border-color:#bfb299;
+}
+html[data-appearance="dark"] .shell .journal-scroll-paper input::placeholder,
+html[data-appearance="dark"] .shell .journal-scroll-paper textarea::placeholder{color:#857b68}
+html[data-appearance="dark"] .shell .pub-scene .pub-note textarea::placeholder,
+html[data-appearance="dark"] .shell .pub-scene .pub-note input::placeholder{color:#866b55}
+html[data-appearance="dark"] .shell .pub-scene .pub-note{color:#382d26}
+html[data-appearance="dark"] .shell .pub-scene .pub-note input,
+html[data-appearance="dark"] .shell .pub-scene .pub-note textarea{
+  color:#463a30;background:transparent;border-color:transparent;
+}
+/* Pop-ups são renderizados fora da shell pelo mecanismo de modais. */
+html[data-appearance="dark"] .modalbox{
+  background:#1d2d25;color:#e9ede3;border:1px solid #58715b;
+}
+html[data-appearance="dark"] .modalbox p{color:#c4d2c2}
+html[data-appearance="dark"] .modalbox input,
+html[data-appearance="dark"] .modalbox textarea,
+html[data-appearance="dark"] .modalbox select{
+  color:#eff1e6;background:#18261e;border:1px solid #5b715d;
+}
+html[data-appearance="dark"] #app > .empty{
+  background:#1d3026;color:#ebeee4;border-color:#526b56;
+}
 @media print {
   html[data-appearance="dark"]{color-scheme:light;--ink:#222723;--paper:#fff;--muted:#6c716b}
   html[data-appearance="dark"] body{background:#fff;color:#222723}
