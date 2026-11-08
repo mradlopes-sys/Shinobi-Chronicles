@@ -2304,7 +2304,7 @@
 .shell .cv-page .cv-bg{
   image-rendering:auto;
   object-fit:fill;
-  filter:contrast(1.055) saturate(1.045);
+  filter:none;
   -webkit-backface-visibility:hidden;
   backface-visibility:hidden;
 }
@@ -4291,6 +4291,7 @@ function canvaUpdateArray(el,preserveFocus=false){
   const PublicBoard=(()=>{
     const W=1580,H=1160;
     const CHANGELOG=[
+      {date:'07/11/2026',title:'Tratamento de nitidez das fichas',body:'Melhoramos a visualização dos modelos JPEG do Canva com tratamento leve de contraste e nitidez em alta densidade de pixels, diretamente no navegador, sem alterar campos editáveis, proporções ou valores salvos.'},
       {date:'07/11/2026',title:'Mural centralizado e fichas do Canva mais legíveis',body:'Centralizamos o quadro quando ele estiver menor que a área de visualização, mantendo o zoom e o arraste. O espaço ao redor recebeu um fundo aquarelado. Nas fichas do Canva, a arte agora é exibida próxima da resolução original em telas maiores, com contraste e nitidez percebida ajustados, sem alterar o alinhamento dos campos digitais.'},
       {date:'07/11/2026',title:'Edição de Clã / Hijutsu na ficha',body:'Corrigimos o campo Clã / Hijutsu na página de Identificação da ficha do Canva. Agora ele pode ser editado, aparece também no editor detalhado e é salvo automaticamente junto com os outros dados do personagem.'},
       {date:'07/11/2026',title:'Retrato diretamente no quadro e navegação com mouse',body:'Agora é possível enviar ou trocar a imagem do personagem diretamente no quadro. A roda do mouse controla o zoom sob o cursor; clicar e arrastar com a mãozinha movimenta a visualização sem mover os bilhetes. A nota de atualizações permanece no cabeçalho sem encobrir os botões. Se as novas coleções ainda não estiverem liberadas, o quadro e as observações serão salvos nos documentos privados das fichas já existentes; a publicação para outros jogadores continua dependendo das permissões de leitura.'},
@@ -4663,7 +4664,69 @@ function canvaUpdateArray(el,preserveFocus=false){
     return {view,enter,action,change,load,saveObservation,persist,uploadPortrait};
   })();
 
-function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="margin:15vh auto;max-width:500px"><h3>Carregando os arquivos shinobi...</h3><p>Conectando ao sistema de autenticação.</p></div>';return}if(CONFIGURED&&!S.user&&!['login'].includes(S.view))S.view='login';let screen={quadros:PublicBoard.view,home,clans,sheet:canvaSheetView,guia:guideView,biblioteca:libraryView,diario:diaryView,fichas:mySheets,admin:adminView,'admin-gate':adminGate,login}[S.view]||home;$('#app').innerHTML=screen();if(S.modal)$('#app').insertAdjacentHTML('beforeend',S.modal==='delete'?deleteModal():clanModal());if(S.view==='biblioteca')librarySearchFilter();integratedFilter();if(S.view==='diario'&&S.diaryEnterAnimate)S.diaryEnterAnimate=false}
+
+/* Aprimora os JPEGs legados das fichas sem mudar as dimensoes nem os campos editaveis.
+   Trabalha em canvas no navegador e guarda o resultado na sessao. */
+const canvaEnhancedCache=new Map();
+function enhanceCanvaArt(){
+  if(S.view!=='sheet'||S.canvaMode==='advanced')return;
+  const img=document.querySelector('.cv-page img.cv-bg');
+  if(!img)return;
+  const key=img.getAttribute('src');
+  if(!key||key.startsWith('data:'))return;
+  const already=canvaEnhancedCache.get(key);
+  if(already){img.src=already;return}
+  const work=()=>{
+    if(!img.naturalWidth||!img.isConnected||img.dataset.hdWorking)return;
+    img.dataset.hdWorking='1';
+    const task=()=>{
+      try{
+        const width=img.naturalWidth,height=img.naturalHeight;
+        if(width>3000||height>4400)return;
+        const original=document.createElement('canvas');
+        original.width=width;original.height=height;
+        const ctx=original.getContext('2d',{willReadFrequently:true});
+        if(!ctx)return;
+        ctx.drawImage(img,0,0,width,height);
+        const blurred=document.createElement('canvas');
+        blurred.width=width;blurred.height=height;
+        const blur=blurred.getContext('2d',{willReadFrequently:true});
+        if(!blur)return;
+        blur.filter='blur(0.85px)';
+        blur.drawImage(original,0,0);
+        const clear=ctx.getImageData(0,0,width,height);
+        const soft=blur.getImageData(0,0,width,height);
+        const raw=clear.data,low=soft.data;
+        for(let i=0;i<raw.length;i+=4){
+          for(let c=0;c<3;c++){
+            const v=raw[i+c];
+            const boosted=127.5+(v-127.5)*1.065+(v-low[i+c])*1.05;
+            raw[i+c]=Math.max(0,Math.min(255,boosted));
+          }
+        }
+        ctx.putImageData(clear,0,0);
+        const up=document.createElement('canvas');
+        up.width=width*2;up.height=height*2;
+        const upscale=up.getContext('2d');
+        if(!upscale)return;
+        upscale.imageSmoothingEnabled=true;
+        upscale.imageSmoothingQuality='high';
+        upscale.drawImage(original,0,0,up.width,up.height);
+        const enhanced=up.toDataURL('image/webp',0.95);
+        if(enhanced.length<3500000){
+          canvaEnhancedCache.set(key,enhanced);
+          if(canvaEnhancedCache.size>4)canvaEnhancedCache.delete(canvaEnhancedCache.keys().next().value);
+          if(img.isConnected&&img.getAttribute('src')===key)img.src=enhanced;
+        }
+      }catch(err){console.warn('Não foi possível aprimorar a ficha; mantendo original:',err)}
+    };
+    if('requestIdleCallback' in window)requestIdleCallback(task,{timeout:600});
+    else setTimeout(task,60);
+  };
+  if(img.complete&&img.naturalWidth)work();
+  else img.addEventListener('load',work,{once:true});
+}
+function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="margin:15vh auto;max-width:500px"><h3>Carregando os arquivos shinobi...</h3><p>Conectando ao sistema de autenticação.</p></div>';return}if(CONFIGURED&&!S.user&&!['login'].includes(S.view))S.view='login';let screen={quadros:PublicBoard.view,home,clans,sheet:canvaSheetView,guia:guideView,biblioteca:libraryView,diario:diaryView,fichas:mySheets,admin:adminView,'admin-gate':adminGate,login}[S.view]||home;$('#app').innerHTML=screen();if(S.modal)$('#app').insertAdjacentHTML('beforeend',S.modal==='delete'?deleteModal():clanModal());if(S.view==='biblioteca')librarySearchFilter();integratedFilter();if(S.view==='sheet'&&S.canvaMode!=='advanced')enhanceCanvaArt();if(S.view==='diario'&&S.diaryEnterAnimate)S.diaryEnterAnimate=false}
 
 
   /* Os três novos efeitos são entregues em assets/audio/journal-sounds.js,
