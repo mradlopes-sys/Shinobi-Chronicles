@@ -10,5 +10,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Conferir imagens
-        run: python3 -c 'print("Validação iniciada")'
+      - name: Conferir execução de ações
+        run: |
+          echo "workflow executado" > status-validacao-fichas.txt
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git config user.name 'github-actions[bot]'
+          git add status-validacao-fichas.txt
+          git commit -m 'ci: confirma workflow de fichas'
+          git push
