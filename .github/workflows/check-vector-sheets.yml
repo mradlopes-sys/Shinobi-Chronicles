@@ -1,0 +1,34 @@
+name: Validar fichas SVG nítidas
+on:
+  push:
+    paths:
+      - '.github/workflows/check-vector-sheets.yml'
+permissions:
+  contents: write
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Renderizar SVG de cada página
+        run: node scripts/check_vector_sheet.cjs
+      - name: Criar prévias de visualização
+        run: |
+          python3 -m pip install -q cairosvg Pillow
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          import cairosvg
+          for f in Path('assets/vector-check').glob('*.svg'):
+              png=f.with_suffix('.png')
+              cairosvg.svg2png(url=str(f),write_to=str(png),output_width=1034,output_height=1462)
+              im=Image.open(png).convert('RGB')
+              im.resize((740,1047),Image.Resampling.LANCZOS).save(f.with_suffix('.jpg'),quality=89,optimize=True)
+              png.unlink()
+          PY
+      - name: Salvar prévias
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/vector-check/
+          if ! git diff --staged --quiet; then git commit -m 'test: capturas das fichas vetoriais' && git push; fi
