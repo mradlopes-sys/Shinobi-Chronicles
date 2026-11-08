@@ -2678,6 +2678,15 @@
   .pub-toolpanel{align-items:flex-start}
   .pub-toolpanel select,.pub-toolpanel input{max-width:100%}
 }
+
+/* Ajustes pessoais do mural: mover/virar observações sem modificar o quadro alheio. */
+.pub-scene .pub-note.obs h3{display:flex;align-items:center;gap:5px;font-size:22px!important}
+.pub-note.obs .pub-personal-label{flex:1 1 auto;min-width:0;line-height:1.1}
+.pub-note.obs .pub-personal-tools{flex:0 0 auto;display:flex;align-items:center;gap:2px}
+.pub-note.obs .pub-personal-tools .pub-tool{font:700 11px 'DM Sans',sans-serif;padding:4px 5px}
+.pub-note.obs .pub-personal-tools .pub-drag{cursor:grab}
+.pub-note.obs .pub-personal-tools .pub-drag:active{cursor:grabbing}
+.pub-scene .pub-note .pub-rotate-exact{font:700 10px 'DM Sans',sans-serif;padding:4px 5px}
 </style>
 </head>
 <body>
@@ -4660,6 +4669,7 @@ function canvaUpdateArray(el,preserveFocus=false){
     const RELATIONS=['Amizade','Rivalidade','Família','Equipe','Romance','Segredo'];
     let toolPanel='';
     const CHANGELOG=[
+      {date:'07/11/2026',title:'Observações pessoais móveis e rotação 360°',body:'Minhas observações agora podem ser arrastadas, redimensionadas e giradas em qualquer quadro, inclusive no de outros jogadores. A posição é salva somente na observação privada de quem a escreveu. Bilhetes, retratos, fotos do álbum e carimbos também podem girar livremente em 360°, pelas setas ou informando um ângulo exato. Tudo sem modificar os registros de outros jogadores.'},
       {date:'07/11/2026',title:'Álbum de memórias, carimbos e fios entre registros',body:'O Mural de Konoha agora permite colar fotografias adicionais com legenda manuscrita, aplicar carimbos shinobi e conectar bilhetes e fotos usando fios vermelhos de relacionamento. Os elementos podem ser movidos ou redimensionados, e os fios acompanham as alterações. Incluímos Ampliar quadro para abrir mais espaço sem perder os registros existentes. Tudo é salvo no perfil público do próprio personagem.'},
       {date:'07/11/2026',title:'Caligrafia manuscrita em todos os bilhetes',body:'Os títulos e os textos de Clã, Graduação, Vila, História e dos demais bilhetes agora usam a mesma fonte manuscrita Caveat Brush das observações pessoais, tanto na edição quanto na leitura. Os botões e o restante do site mantêm sua tipografia anterior.'},
       {date:'07/11/2026',title:'Paisagem espelhada e diretório de shinobi',body:'A ilustração aquarelada de Konoha aparece agora dos dois lados do quadro, com as laterais espelhadas e o mesmo filtro bege. A seleção de personagens ganhou cartões de arquivo com retrato ou símbolo do clã, nome, graduação, vila e um destaque discreto para o personagem selecionado.'},
@@ -4676,7 +4686,7 @@ function canvaUpdateArray(el,preserveFocus=false){
       {date:'07/11/2026',title:'Quadros shinobi compartilháveis',body:'Cada personagem pode ganhar um grande quadro público com retrato, clã, graduação, vila, história e recados organizados livremente. Adicionamos movimentação, redimensionamento, zoom e salvamento na nuvem.'},
       {date:'07/11/2026',title:'Observações individuais e atualização permanente',body:'Cada jogador pode escrever observações particulares sobre o personagem que está consultando. A nota amarela no canto superior direito sempre abre o histórico de mudanças.'}
     ];
-    let all=[],id='',draft=null,observation='',zoom=0.88,busy=false,loading=false,updates=false;
+    let all=[],id='',draft=null,observation='',obsPose={x:1230,y:680,w:278,h:325,rotation:358},zoom=0.88,busy=false,loading=false,updates=false;
     let saveTimer=0,obsTimer=0,version=0,obsVersion=0,saveChain=Promise.resolve(),obsChain=Promise.resolve(),obsRequest=0,sharedIds=new Set(),publicReadDenied=false;
     const clip=(v,n=8000)=>String(v??'').slice(0,n);
     const esc=E;
@@ -4684,6 +4694,62 @@ function canvaUpdateArray(el,preserveFocus=false){
     const whereNote=(kind)=>draft?.notes?.find(x=>x.kind===kind);
     const permitted=()=>Boolean(S.user&&draft?.ownerUid===uid()&&id===draft?.id);
     const limitNumber=(v,min,max,def)=>Number.isFinite(+v)?Math.max(min,Math.min(max,+v)):def;
+    function normalizeAngle(value,fallback=0){
+      const num=Number(value);
+      return ((Math.round(Number.isFinite(num)?num:fallback)%360)+360)%360;
+    }
+    const freshObsPose=()=>({x:1230,y:680,w:278,h:325,rotation:358});
+    function cleanObsPose(p){
+      p=p||{};
+      return {
+        x:Math.round(limitNumber(p.x,35,BOARD_MAX_W-130,1230)),
+        y:Math.round(limitNumber(p.y,95,BOARD_MAX_H-130,680)),
+        w:Math.round(limitNumber(p.w,200,560,278)),
+        h:Math.round(limitNumber(p.h,215,640,325)),
+        rotation:normalizeAngle(p.rotation,358)
+      };
+    }
+    const OBS_SUFFIX=/\n\[\[SC_OBS_LAYOUT_V1:(\d+),(\d+),(\d+),(\d+),(\d+)\]\]$/;
+    function readPrivateObservation(raw){
+      const value=clip(raw,5000);
+      const match=value.match(OBS_SUFFIX);
+      if(!match)return {text:value,pose:freshObsPose()};
+      return {text:value.slice(0,match.index),pose:cleanObsPose({
+        x:+match[1],y:+match[2],w:+match[3],h:+match[4],rotation:+match[5]
+      })};
+    }
+    function packPrivateObservation(text,pose){
+      const p=cleanObsPose(pose);
+      const suffix='\n[[SC_OBS_LAYOUT_V1:'+p.x+','+p.y+','+p.w+','+p.h+','+p.rotation+']]';
+      // Armazena posição no mesmo campo privado já autorizado pelas regras do Firebase.
+      // Observações legadas de 5000 caracteres são mantidas sem truncamento.
+      return text.length+suffix.length<=5000?text+suffix:text;
+    }
+    function privateObservationEdited(){
+      obsVersion++;
+      status('Observação pendente');
+      clearTimeout(obsTimer);
+      obsTimer=setTimeout(()=>void saveObservation(),800);
+    }
+    function paintObservation(){
+      const node=document.querySelector('[data-private-observation]');
+      if(!node)return;
+      node.style.left=obsPose.x+'px';
+      node.style.top=obsPose.y+'px';
+      node.style.width=obsPose.w+'px';
+      node.style.height=obsPose.h+'px';
+      node.style.setProperty('--tilt',obsPose.rotation+'deg');
+    }
+    function askAngle(angle){
+      const answer=prompt('Ângulo de rotação de 0 a 359°:',String(angle));
+      if(answer===null)return null;
+      const num=Number(answer.trim().replace(',','.'));
+      if(!Number.isFinite(num)||answer.trim()===''){
+        showToast('Digite um ângulo válido de 0 a 359 graus.',true);
+        return null;
+      }
+      return normalizeAngle(num);
+    }
     function sanitizeNote(r){
       const kind=['portrait','text','photo','stamp','thread','extent'].includes(r.kind)?r.kind:'text';
       return {
@@ -4694,7 +4760,7 @@ function canvaUpdateArray(el,preserveFocus=false){
         y:limitNumber(r.y,0,BOARD_MAX_H-100,135),
         w:limitNumber(r.w,kind==='extent'?BOARD_MIN_W:125,kind==='extent'?BOARD_MAX_W:650,kind==='extent'?BOARD_MIN_W:310),
         h:limitNumber(r.h,kind==='extent'?BOARD_MIN_H:70,kind==='extent'?BOARD_MAX_H:680,kind==='extent'?BOARD_MIN_H:200),
-        rotation:limitNumber(r.rotation,-16,16,0),
+        rotation:normalizeAngle(r.rotation,0),
         color:['cream','sage','pink','blue','lavender'].includes(r.color)?r.color:'cream',
         image:kind==='photo'?safePhoto(r.image).slice(0,114000):'',
         from:kind==='thread'?clip(r.from,75):'',
@@ -4872,16 +4938,16 @@ function canvaUpdateArray(el,preserveFocus=false){
     }
     async function loadObservation(){
       const key=id,request=++obsRequest;
-      observation='';render();
+      observation='';obsPose=freshObsPose();render();
       if(!key||!S.user||!fb)return;
       try{
         const doc=await fb.getDoc(fb.doc(fb.db,'observacoesShinobi',uid()+'__'+key));
-        if(request===obsRequest&&key===id){const host=S.sheets.find(s=>s.data?.ownerUid===uid());observation=clip(doc.exists()?doc.data().texto:(host?.data?.observacoesDoMural?.[key]||''),5000);refreshObservation();}
+        if(request===obsRequest&&key===id){const host=S.sheets.find(s=>s.data?.ownerUid===uid());const saved=doc.exists()?doc.data().texto:(host?.data?.observacoesDoMural?.[key]||'');const restored=readPrivateObservation(saved);observation=restored.text;obsPose=restored.pose;refreshObservation();}
       }catch(error){
         // As fichas privadas já têm permissões próprias; reutilizar apenas as do visitante.
         const host=S.sheets.find(s=>s.data?.ownerUid===uid());
         if(request===obsRequest&&key===id){
-          observation=clip(host?.data?.observacoesDoMural?.[key]||'',5000);refreshObservation();
+          const restored=readPrivateObservation(host?.data?.observacoesDoMural?.[key]||'');observation=restored.text;obsPose=restored.pose;refreshObservation();
           if(!host)status('Anotações sem salvamento: crie uma ficha para ativá-las');
         }
       }
@@ -4889,6 +4955,7 @@ function canvaUpdateArray(el,preserveFocus=false){
     function refreshObservation(){
       const area=document.querySelector('[data-board-observation]');
       if(area&&document.activeElement!==area)area.value=observation;
+      paintObservation();
     }
     function queueSave(){if(!permitted())return;version++;status('Alterações pendentes');clearTimeout(saveTimer);saveTimer=setTimeout(()=>void persist(),800)}
     async function persist(){
@@ -5033,7 +5100,7 @@ function canvaUpdateArray(el,preserveFocus=false){
     }
     function input(target){
       if(target.matches('[data-board-observation]')){
-        observation=clip(target.value,5000);obsVersion++;status('Observação pendente');clearTimeout(obsTimer);obsTimer=setTimeout(()=>void saveObservation(),800);return true;
+        observation=clip(target.value,4900);privateObservationEdited();return true;
       }
       if(!permitted())return false;
       if(target.dataset.boardTitle!==undefined){draft.nome=clip(target.value,80);queueSave();return true}
@@ -5049,7 +5116,7 @@ function canvaUpdateArray(el,preserveFocus=false){
     async function saveObservation(){
       if(!S.user||!draft||!fb)return;
       clearTimeout(obsTimer);obsTimer=0;
-      const target=id,text=observation,v=obsVersion;
+      const target=id,text=packPrivateObservation(observation,obsPose),v=obsVersion;
       status('Salvando observação…');
       try{
         let privateFallback=false;
@@ -5075,7 +5142,7 @@ function canvaUpdateArray(el,preserveFocus=false){
       const style='left:'+note.x+'px;top:'+note.y+'px;width:'+note.w+'px;height:'+note.h+'px;--tilt:'+note.rotation+'deg';
       const marker=canEdit?'<button type="button" class="pub-tool pub-drag" data-board-drag="'+esc(note.id)+'" title="Arrastar elemento" aria-label="Mover elemento">⠿</button>':'';
       const removal=canEdit?'<button class="pub-tool" data-action="board-remove" data-id="'+esc(note.id)+'" title="Descolar elemento">×</button>':'';
-      const rotate=canEdit?'<button class="pub-tool" data-action="board-rotate" data-id="'+esc(note.id)+'" data-degrees="-5" title="Girar para esquerda">↶</button><button class="pub-tool" data-action="board-rotate" data-id="'+esc(note.id)+'" data-degrees="5" title="Girar para direita">↷</button>':'';
+      const rotate=canEdit?'<button class="pub-tool" data-action="board-rotate" data-id="'+esc(note.id)+'" data-degrees="-15" title="Girar 15° para a esquerda">↶</button><button class="pub-tool pub-rotate-exact" data-action="board-angle" data-id="'+esc(note.id)+'" title="Escolher ângulo exato em 360 graus">360°</button><button class="pub-tool" data-action="board-rotate" data-id="'+esc(note.id)+'" data-degrees="15" title="Girar 15° para a direita">↷</button>':'';
       if(note.kind==='photo'){
         const caption=canEdit?'<input maxlength="80" data-board-note="'+esc(note.id)+'" data-board-note-field="title" aria-label="Legenda da fotografia" value="'+esc(note.title)+'" placeholder="Escreva uma lembrança...">':esc(note.title);
         return '<section class="pub-note pub-memory" data-public-note="'+esc(note.id)+'" style="'+style+'" '+(!canEdit?'data-readonly="true"':'')+'><i class="pub-memory-tape" aria-hidden="true"></i><div class="pub-memory-tools">'+marker+rotate+removal+'</div><div class="pub-memory-frame"><img src="'+esc(note.image)+'" alt="'+esc(note.title||'Fotografia do personagem')+'"></div><div class="pub-memory-caption">'+caption+'</div></section>';
@@ -5084,7 +5151,7 @@ function canvaUpdateArray(el,preserveFocus=false){
         return '<section class="pub-note pub-stamp" data-public-note="'+esc(note.id)+'" data-color="'+esc(note.color)+'" style="'+style+'" '+(!canEdit?'data-readonly="true"':'')+'><div class="pub-stamp-controls">'+marker+rotate+removal+'</div><div class="pub-stamp-mark">'+esc(note.title)+'</div></section>';
       }
       const heading='<h3>'+(canEdit?marker+'<input maxlength="80" aria-label="Título da nota" data-board-note="'+esc(note.id)+'" data-board-note-field="title" value="'+esc(note.title)+'">':esc(note.title))+
-        (canEdit?'<span class="pub-note-tools"><button class="pub-tool" data-action="board-color" data-id="'+esc(note.id)+'" title="Alterar cor">◐</button>'+(note.kind==='portrait'?'':removal)+'</span>':'')+'</h3>';
+        (canEdit?'<span class="pub-note-tools">'+rotate+'<button class="pub-tool" data-action="board-color" data-id="'+esc(note.id)+'" title="Alterar cor">◐</button>'+(note.kind==='portrait'?'':removal)+'</span>':'')+'</h3>';
       const body=note.kind==='portrait'?
         '<div class="pub-portrait-picture">'+(draft?.portrait?'<img src="'+esc(draft.portrait)+'" alt="Retrato de '+esc(draft.nome)+'">':'<span class="pub-silhouette">忍</span>')+'</div>'+
         (canEdit?'<div class="pub-photo-controls"><button type="button" data-action="board-image-upload">📷 '+(draft?.portrait?'Trocar imagem':'Enviar retrato')+'</button>'+(draft?.portrait?'<button type="button" data-action="board-image-remove">Remover</button>':'')+'<input type="file" id="pub-portrait-file" data-board-image-file accept="image/png,image/jpeg,image/webp" hidden></div>':''):
@@ -5136,7 +5203,7 @@ function canvaUpdateArray(el,preserveFocus=false){
         output+='<div class="pub-topcloth"><span>木ノ葉 · '+esc(draft.nome)+'</span><div class="pub-cork-head">ARQUIVO DE PERSONAGEM · NOTÍCIAS E ANOTAÇÕES</div></div>';
         output+=threadsHTML();
         for(const note of draft.notes)output+=noteHTML(note,isOwner);
-        output+='<section class="pub-note obs" style="left:1230px;top:680px;width:278px;height:325px;--tilt:-2deg"><i class="pub-pin" aria-hidden="true"></i><h3>✎ Minhas observações</h3><textarea maxlength="5000" data-board-observation placeholder="Anote aqui o que você sabe, descobriu ou pensa sobre este personagem. Só você poderá ler suas observações.">'+esc(observation)+'</textarea></section>';
+        output+='<section class="pub-note obs" data-private-observation="true" style="left:'+obsPose.x+'px;top:'+obsPose.y+'px;width:'+obsPose.w+'px;height:'+obsPose.h+'px;--tilt:'+obsPose.rotation+'deg"><i class="pub-pin" aria-hidden="true"></i><h3><span class="pub-personal-label">✎ Minhas observações</span><span class="pub-personal-tools"><button type="button" class="pub-tool pub-drag" data-board-drag="__private_observation__" title="Mover minhas observações">⠿</button><button type="button" class="pub-tool" data-action="board-observation-rotate" data-degrees="-15" title="Girar 15° à esquerda">↶</button><button type="button" class="pub-tool pub-rotate-exact" data-action="board-observation-angle" title="Ângulo exato (0 a 359°)">360°</button><button type="button" class="pub-tool" data-action="board-observation-rotate" data-degrees="15" title="Girar 15° à direita">↷</button></span></h3><textarea maxlength="4900" data-board-observation placeholder="Anote aqui o que você sabe, descobriu ou pensa sobre este personagem. Só você poderá ler suas observações.">'+esc(observation)+'</textarea></section>';
         output+='</div></div></div>';
         output+='<p class="pub-note-help">Use a roda do mouse para aproximar ou afastar. Clique e arraste o quadro para passear com a mãozinha. '+(isOwner?'O símbolo ⠿ move cada bilhete, foto ou carimbo. O canto inferior direito redimensiona. Até 6 fotografias de memória por personagem; o espaço cresce ao colar a primeira foto e pode ser ampliado novamente pelo botão.':'As fotografias, carimbos e fios fazem parte do perfil público. Suas observações pessoais continuam particulares.')+'</p>';
       }
@@ -5158,7 +5225,23 @@ function canvaUpdateArray(el,preserveFocus=false){
       if(key==='board-thread-add')return addThread();
       if(key==='board-expand')return expandBoard();
       if(key==='board-thread-remove'){if(!permitted())return;draft.notes=draft.notes.filter(n=>n.id!==el.dataset.id);queueSave();repaint();return}
-      if(key==='board-rotate'){if(!permitted())return;const n=draft.notes.find(item=>item.id===el.dataset.id);if(!n)return;n.rotation=limitNumber(n.rotation+Number(el.dataset.degrees),-16,16,0);const card=el.closest('.pub-note');if(card)card.style.setProperty('--tilt',n.rotation+'deg');queueSave();return}
+      if(key==='board-rotate'||key==='board-angle'){
+        if(!permitted())return;
+        const n=draft.notes.find(item=>item.id===el.dataset.id);
+        if(!n)return;
+        const next=key==='board-angle'?askAngle(n.rotation):normalizeAngle(n.rotation+Number(el.dataset.degrees));
+        if(next===null)return;
+        n.rotation=next;
+        const card=el.closest('.pub-note');
+        if(card)card.style.setProperty('--tilt',n.rotation+'deg');
+        queueSave();return;
+      }
+      if(key==='board-observation-rotate'||key==='board-observation-angle'){
+        if(!S.user||!draft)return;
+        const next=key==='board-observation-angle'?askAngle(obsPose.rotation):normalizeAngle(obsPose.rotation+Number(el.dataset.degrees));
+        if(next===null)return;
+        obsPose.rotation=next;paintObservation();privateObservationEdited();return;
+      }
       if(key==='board-remove')return removeNote(el.dataset.id);
       if(key==='board-save')return void persist();
       if(key==='board-hide')return void hide();
@@ -5180,6 +5263,12 @@ function canvaUpdateArray(el,preserveFocus=false){
     document.addEventListener('pointerdown',ev=>{
       if(S.view!=='quadros'||ev.button!==0)return;
       const handle=ev.target.closest?.('[data-board-drag]');
+      if(handle&&handle.dataset.boardDrag==='__private_observation__'&&S.user&&draft){
+        const node=handle.closest('[data-private-observation]');
+        if(!node)return;
+        dragging={node,note:obsPose,private:true,pointerId:ev.pointerId,x:ev.clientX,y:ev.clientY,left:obsPose.x,top:obsPose.y};
+        node.style.zIndex='11';handle.setPointerCapture?.(ev.pointerId);ev.preventDefault();return;
+      }
       if(handle&&permitted()){
         const node=handle.closest('[data-public-note]');
         const note=draft.notes.find(x=>x.id===handle.dataset.boardDrag);
@@ -5217,7 +5306,13 @@ function canvaUpdateArray(el,preserveFocus=false){
         panning=null;return;
       }
       if(dragging&&ev.pointerId===dragging.pointerId){
-        const d=dragging;d.note.x=parseFloat(d.node.style.left)||d.note.x;d.note.y=parseFloat(d.node.style.top)||d.note.y;d.node.style.zIndex='5';dragging=null;queueSave();return;
+        const d=dragging;d.note.x=parseFloat(d.node.style.left)||d.note.x;d.note.y=parseFloat(d.node.style.top)||d.note.y;d.node.style.zIndex=d.private?'7':'5';dragging=null;if(d.private)privateObservationEdited();else queueSave();return;
+      }
+      const privateNode=ev.target.closest?.('[data-private-observation]');
+      if(privateNode&&S.view==='quadros'&&S.user&&draft){
+        const w=Math.round(privateNode.offsetWidth),height=Math.round(privateNode.offsetHeight);
+        if(Math.abs(obsPose.w-w)>2||Math.abs(obsPose.h-height)>2){obsPose.w=w;obsPose.h=height;privateObservationEdited()}
+        return;
       }
       const node=ev.target.closest?.('[data-public-note]');
       if(!node||S.view!=='quadros'||!permitted())return;
