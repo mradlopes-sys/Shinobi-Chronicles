@@ -1,3 +1,0 @@
-share ERROR <HTTPError 403: 'Forbidden'>
-view ERROR <HTTPError 403: 'Forbidden'>
-edit ERROR <HTTPError 403: 'Forbidden'>
