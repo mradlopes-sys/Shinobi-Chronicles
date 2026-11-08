@@ -44,6 +44,10 @@ for clan,page in modes:
     result=result.filter(ImageFilter.UnsharpMask(radius=1.05,percent=85,threshold=3))
     dest=output / f"{name}.jpg"
     result.save(dest,format="JPEG",quality=96,subsampling=0,optimize=True)
+    if name=="aburame-1":
+        preview=ROOT / "assets" / "fichas-hd-preview"
+        preview.mkdir(parents=True,exist_ok=True)
+        result.resize(img.size,Image.Resampling.LANCZOS).save(preview / "aburame-1.jpg",quality=84,optimize=True)
     saved.append(name)
     print(f"{name} {img.size} -> {result.size}: {dest.stat().st_size} bytes",flush=True)
 (ROOT / "upscale-fichas-status.txt").write_text(f"Model: {'FSRCNN 2x' if engine else 'Lanczos'}\nFiles: {len(saved)}\n"+ "\n".join(saved))
