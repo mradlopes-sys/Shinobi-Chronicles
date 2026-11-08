@@ -2323,7 +2323,8 @@
 .shell .cv-page .cv-vector-art{width:100%;height:100%;position:absolute;inset:0;display:block;z-index:0;overflow:hidden;pointer-events:none}
 .shell .cv-page:has(.cv-vector-art){background:#f2eade!important}
 .shell .cv-page:has(.cv-vector-art) .cv-spot{z-index:3}
-.shell .cv-page:has(.cv-vector-art) .cv-in{background:transparent!important;color:#29251f!important;font-family:Arial,sans-serif!important;font-weight:700!important;font-size:clamp(10px,1vw,13px)!important}
+.shell .cv-page:has(.cv-vector-art) .cv-missing{display:none}
+.shell .cv-page:has(.cv-vector-art) .cv-in{background:transparent!important;color:#29251f!important;font-family:Arial,sans-serif!important;font-weight:700!important;font-size:clamp(12px,1.12vw,14px)!important}
 @media print{.shell .cv-page .cv-vector-art{print-color-adjust:exact!important;-webkit-print-color-adjust:exact!important}}
 </style>
 </head>
@@ -4359,11 +4360,11 @@ function canvaVectorPage(page, clan) {
       svg+=card(x,226,450,753);
       svg+=rect(x+1,227,448,47,'#e9e9e4','#d2ceca');
       svg+=text(x+10,247,'PERÍCIA',12,750,'#4b4b42');
-      [['ATR',235],['TOTAL',276],['PTS',330],['½ ATR',375],['OUTRO',419]].forEach(([t,o])=>svg+=text(x+o,247,t,11,750,'#4c4b46'));
+      [['ATR',225],['TOTAL',256],['PTS',311],['½ ATR',365],['OUTRO',415]].forEach(([t,o])=>svg+=text(x+o,247,t,11,750,'#4c4b46'));
       for(let j=0;j<9;j++){
         const y=274+j*78.3;
         svg+=rect(x+1,y,448,78.3,j%2?'#fbfaf7':'#f2f0eb','#d9d4cc',0,'stroke-width=".7"');
-        [202,252,304,354].forEach((o,k)=>svg+=form(x+o,y+18,k===0?42:34,31));
+        [255,311,361,419].forEach((o,k)=>svg+=form(x+o,y+18,k===0?42:k===2?42:34,31));
         const sk=SKILLS[j+(off?9:0)]||['—',''];
         svg+=text(x+10,y+37,sk[0],12.5,600,'#3b3b38');
         svg+=text(x+227,y+37,(sk[1]||'').substring(0,3),11,700,accent,'text-anchor="middle"');
