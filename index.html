@@ -11,6 +11,16 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Yuji+Boku&display=swap" rel="stylesheet">
+  <script>
+    (function(){
+      try {
+        var saved=localStorage.getItem('shinobi-appearance');
+        document.documentElement.dataset.appearance=saved==='dark'?'dark':'light';
+      } catch(error) {
+        document.documentElement.dataset.appearance='light';
+      }
+    })();
+  </script>
   <style>
     :root{--paper:#f6f3ed;--paper-2:#eeeae1;--paper-3:#e4dfd4;--ink:#222723;--muted:#6c716b;--line:#d9d4c8;--red:#a24645;--gold:#ab895c;--radius:12px;--serif:'Noto Serif JP',Georgia,serif;--sans:'DM Sans',Arial,sans-serif}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:var(--sans);color:var(--ink);background:var(--paper);-webkit-font-smoothing:antialiased}
@@ -2714,6 +2724,354 @@
   outline:2px solid #a34c40;
   outline-offset:2px;
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   SHINOBI CHRONICLES · MODO NOTURNO
+   Alternância manual no cabeçalho, guardada apenas no dispositivo.
+   A arte das fichas Canva, o quadro de cortiça e o pergaminho do
+   diário conservam suas cores originais e não recebem filtros.
+   ══════════════════════════════════════════════════════════════════ */
+.appearance-toggle{
+  display:inline-flex;align-items:center;justify-content:center;
+  gap:9px;min-height:36px;padding:8px 11px;
+  background:#f2ece1;color:#35473c;border:1px solid #bcb8ab;
+  border-radius:8px;font:700 11px 'DM Sans',sans-serif;
+  letter-spacing:.015em;white-space:nowrap;
+  transition:background .18s,color .18s,border-color .18s,transform .18s;
+}
+.appearance-toggle:hover{background:#e9decf;transform:translateY(-1px)}
+.appearance-toggle:focus-visible{outline:2px solid var(--theme-accent,#bfa275);outline-offset:3px}
+.appearance-toggle .appearance-icon{font-size:17px;line-height:1}
+html[data-appearance="dark"]{
+  color-scheme:dark;
+  --paper:#101917;
+  --paper-2:#17231f;
+  --paper-3:#25342d;
+  --ink:#e6e9e0;
+  --muted:#afbaae;
+  --line:#3b4d44;
+  --red:#df9989;
+  --gold:#d0ae79;
+}
+html[data-appearance="dark"] body{background:#101917;color:var(--ink)}
+html[data-appearance="dark"] body:before{opacity:.18}
+html[data-appearance="dark"] .shell{
+  --wash-ink:#e6e9e0;
+  --night-text:#e7e8de;
+  --night-muted:#b3beb2;
+  --night-dim:#899e91;
+  --night-border:#405449;
+  --night-panel:#1b2a25;
+  --night-panel-alt:#23332c;
+  --night-accent:color-mix(in srgb,var(--theme-accent,#91ae96) 52%,#e3c8a8);
+  color:var(--night-text);
+}
+html[data-appearance="dark"] .shell .main,
+html[data-appearance="dark"] .shell.home-ambient .main,
+html[data-appearance="dark"] .shell.themed-shell .main,
+html[data-appearance="dark"] .shell.themed-shell.home-ambient .main{
+  background:
+    radial-gradient(ellipse 47% 32% at 5% 11%,rgba(var(--theme-rgb),.19),transparent 89%),
+    radial-gradient(ellipse 38% 31% at 95% 21%,rgba(var(--theme-rgb),.2),transparent 91%),
+    radial-gradient(ellipse 56% 34% at 73% 90%,rgba(var(--theme-rgb),.1),transparent 91%),
+    linear-gradient(143deg,#101a18 0%,#16221e 47%,#0e1715 100%);
+}
+html[data-appearance="dark"] .shell .main::before{opacity:.08;mix-blend-mode:screen}
+html[data-appearance="dark"] .shell .sidebar,
+html[data-appearance="dark"] .shell.themed-shell .sidebar{
+  background:
+    radial-gradient(ellipse 90% 32% at 30% 0%,rgba(var(--theme-rgb),.22),transparent 89%),
+    linear-gradient(160deg,#111b18,#14211c 68%,#0b1512);
+  border-color:var(--night-border);
+}
+html[data-appearance="dark"] .shell .nav-item{color:#c3cec0}
+html[data-appearance="dark"] .shell .nav-item:hover{background:#e1f5e30f;color:#fff}
+html[data-appearance="dark"] .shell .nav-item.active{background:rgba(var(--theme-rgb),.25);border-left-color:var(--night-accent);color:#f6f4e9}
+html[data-appearance="dark"] .shell .brand-name{color:#f3eadb}
+html[data-appearance="dark"] .shell .brand-sub,
+html[data-appearance="dark"] .shell .nav-category,
+html[data-appearance="dark"] .shell .tiny{color:#b1bcb0}
+html[data-appearance="dark"] .shell .topbar,
+html[data-appearance="dark"] .shell.themed-shell .topbar,
+html[data-appearance="dark"] .shell.themed-shell.home-ambient .topbar{
+  background:linear-gradient(95deg,rgba(var(--theme-rgb),.14),rgba(21,34,29,.93) 45%,rgba(15,26,22,.96));
+  border-color:var(--night-border);
+  backdrop-filter:blur(12px);
+}
+html[data-appearance="dark"] .shell .top-title{color:#f0f1e9}
+html[data-appearance="dark"] .shell .theme-chip{
+  background:rgba(var(--theme-rgb),.18);
+  color:#e8ece0;border-color:rgba(var(--theme-rgb),.45);
+}
+html[data-appearance="dark"] .shell .eyebrow,
+html[data-appearance="dark"] .shell .section-head .eyebrow,
+html[data-appearance="dark"] .shell.themed-shell .eyebrow,
+html[data-appearance="dark"] .shell.themed-shell .section-head .eyebrow{color:var(--night-accent)}
+html[data-appearance="dark"] .shell .section-head{border-left-color:var(--night-accent)}
+html[data-appearance="dark"] .shell .section-head h2{color:#f0f0e6}
+html[data-appearance="dark"] .shell .section-head p,
+html[data-appearance="dark"] .shell .panel-caption,
+html[data-appearance="dark"] .shell .muted{color:var(--night-muted)}
+html[data-appearance="dark"] .shell .footer-note,
+html[data-appearance="dark"] .shell .statusbar{
+  color:#adb9aa;background:#15221caa;border-color:var(--night-border);
+}
+html[data-appearance="dark"] .shell .paper-panel,
+html[data-appearance="dark"] .shell .my-sheet-card,
+html[data-appearance="dark"] .shell .empty,
+html[data-appearance="dark"] .shell .clan-card,
+html[data-appearance="dark"] .shell .mini-stat{
+  background:
+    radial-gradient(ellipse 84% 75% at 100% 0%,rgba(var(--theme-rgb),.11),transparent 85%),
+    linear-gradient(135deg,#213129,#1a2823 82%);
+  border-color:var(--night-border);
+  color:var(--night-text);
+  box-shadow:0 9px 25px #040b0966,inset 0 1px 0 #c5d9be0c;
+}
+html[data-appearance="dark"] .shell .clan-card-bottom{background:#18251fd9;color:var(--night-text)}
+html[data-appearance="dark"] .shell .clan-card h3,
+html[data-appearance="dark"] .shell .my-sheet-info h3,
+html[data-appearance="dark"] .shell .mini-stat strong{color:#ecefe5}
+html[data-appearance="dark"] .shell .clan-card p{color:#b1bfb0}
+html[data-appearance="dark"] .shell .clan-card .arrow{color:#dce5d8;border-color:#526356}
+html[data-appearance="dark"] .shell .clan-art{background:radial-gradient(ellipse 75% 90% at 90% 70%,var(--wash),transparent 82%),linear-gradient(125deg,#303e35,#26342d)}
+html[data-appearance="dark"] .shell .notice{
+  background:linear-gradient(125deg,#24362d,#192923);
+  border-color:#476253;color:#d4e0d1;
+}
+html[data-appearance="dark"] .shell .notice.warn{background:#392e24;border-color:#8c674b;color:#ebc7a0}
+html[data-appearance="dark"] .shell .notice.success{background:#1e3d30;border-color:#487c5b;color:#c6e5cb}
+html[data-appearance="dark"] .shell .pill,
+html[data-appearance="dark"] .shell .counter{
+  background:#293931;color:#e0e4d7;border:1px solid #526256;
+}
+html[data-appearance="dark"] .shell .counter.bad{background:#56362f;color:#f6c6af}
+html[data-appearance="dark"] .shell .counter.ok{background:#254b39;color:#c8e3cd}
+html[data-appearance="dark"] .shell .button.secondary{
+  background:#25372f;color:#e4e9dc;border-color:#587060;
+}
+html[data-appearance="dark"] .shell .button.secondary:hover{background:#354b3e}
+html[data-appearance="dark"] .shell .button.ghost{color:#cad3c6}
+html[data-appearance="dark"] .shell .button:not(.secondary):not(.button-danger):not(.red):not(.white):not(.ghost){
+  background:#405f4d;border-color:#729078;color:#fff9eb;
+}
+html[data-appearance="dark"] .shell .button:not(.secondary):not(.button-danger):not(.red):not(.white):not(.ghost):hover{
+  background:#527663;border-color:#a6bda7;
+}
+html[data-appearance="dark"] .shell .hero-inkwash .button.secondary{background:#f5edd810;color:#f2eada;border-color:#ddd3b27f}
+html[data-appearance="dark"] .shell .hero-inkwash .button:not(.secondary){background:#ddd0b6!important;color:#233329!important;border-color:#ddd0b6!important}
+html[data-appearance="dark"] .shell .field label,
+html[data-appearance="dark"] .shell .field-label{color:#bdc9bb}
+html[data-appearance="dark"] .shell .field input,
+html[data-appearance="dark"] .shell .field textarea,
+html[data-appearance="dark"] .shell .field select,
+html[data-appearance="dark"] .shell select.manual,
+html[data-appearance="dark"] .shell .pool input,
+html[data-appearance="dark"] .shell .auth-form input{
+  background:#121e19;border:1px solid #53675a;color:#f0f0e8;
+}
+html[data-appearance="dark"] .shell input::placeholder,
+html[data-appearance="dark"] .shell textarea::placeholder{color:#9aa99a;opacity:.85}
+html[data-appearance="dark"] .shell input:focus,
+html[data-appearance="dark"] .shell textarea:focus,
+html[data-appearance="dark"] .shell select:focus{border-color:var(--night-accent)!important}
+html[data-appearance="dark"] .shell input[type="checkbox"],
+html[data-appearance="dark"] .shell input[type="radio"]{accent-color:#a1bd98}
+html[data-appearance="dark"] .shell .attr-item,
+html[data-appearance="dark"] .shell .collection-item,
+html[data-appearance="dark"] .shell .pool{
+  background:#213129;border-color:var(--night-border);
+}
+html[data-appearance="dark"] .shell .attr-name,
+html[data-appearance="dark"] .shell .pool-max{color:var(--night-muted)}
+html[data-appearance="dark"] .shell .step,
+html[data-appearance="dark"] .shell .skill-table button{
+  color:#e8ede1;background:#293a31;border-color:#526457;
+}
+html[data-appearance="dark"] .shell .skill-table th{background:#2d4035;color:#d0d9cb}
+html[data-appearance="dark"] .shell .skill-table td,
+html[data-appearance="dark"] .shell .skill-table th{border-color:var(--night-border)}
+html[data-appearance="dark"] .shell .pool .progress{background:#405145}
+html[data-appearance="dark"] .shell .sheet-banner{
+  background:radial-gradient(ellipse at 80% 42%,var(--wash),transparent 65%),linear-gradient(103deg,#25352c,#1b2822);
+  border-color:var(--night-border);
+}
+html[data-appearance="dark"] .shell .sheet-banner h1{color:#f0efe4}
+html[data-appearance="dark"] .shell .sheet-banner .sub{color:#cad1c4}
+html[data-appearance="dark"] .shell .tabs,
+html[data-appearance="dark"] .shell .cv-pages{
+  background:#22332a;border-color:var(--night-border);
+}
+html[data-appearance="dark"] .shell .tab,
+html[data-appearance="dark"] .shell .cv-pages button{
+  background:#2b3c33;color:#d1dccd;border-color:#4f6555;
+}
+html[data-appearance="dark"] .shell .tab.active,
+html[data-appearance="dark"] .shell .cv-pages button.active{
+  background:#577765;color:#fff8ea;border-color:#8bad95;
+}
+html[data-appearance="dark"] .shell .cv-toolbar{
+  background:linear-gradient(110deg,#293c31,#202e26);
+  border-left-color:var(--night-accent);
+}
+html[data-appearance="dark"] .shell .cv-toolbar h2{color:#e5ebdf}
+html[data-appearance="dark"] .shell .cv-wrap{
+  background:
+    radial-gradient(ellipse 63% 36% at 3% 10%,rgba(var(--theme-rgb),.2),transparent 85%),
+    linear-gradient(125deg,#1a2621,#253429);
+  border-color:var(--night-border);
+}
+/* Preservamos as imagens JPG/SVG originais das fichas e seus campos em papel. */
+html[data-appearance="dark"] .shell .cv-page{
+  background:#eee7da;border-color:#8a8575;
+  box-shadow:0 14px 45px #0008;
+  color:#2d342b;
+}
+html[data-appearance="dark"] .shell .auth-form-wrap,
+html[data-appearance="dark"] .shell .admin-gate-content{
+  background:
+    radial-gradient(ellipse 65% 55% at 100% 5%,rgba(var(--theme-rgb),.17),transparent 85%),
+    linear-gradient(145deg,#1e2e27,#17241f);
+}
+html[data-appearance="dark"] .shell .auth-art{background:radial-gradient(ellipse at 78% 32%,rgba(var(--theme-rgb),.26),transparent 56%),linear-gradient(125deg,#23352c,#15251f)}
+html[data-appearance="dark"] .shell .auth-form-wrap h1,
+html[data-appearance="dark"] .shell .admin-gate-content h1{color:#f0efe6}
+html[data-appearance="dark"] .shell .auth-form-wrap p,
+html[data-appearance="dark"] .shell .admin-gate-content p{color:#bac8b9}
+html[data-appearance="dark"] .shell .auth-role-tabs{background:#203027;border-color:#456052}
+html[data-appearance="dark"] .shell .auth-role-tabs button{color:#bbcbba}
+html[data-appearance="dark"] .shell .auth-role-tabs button.active{background:#466855;color:#fff8ea;border-color:#799c83}
+html[data-appearance="dark"] .shell .auth-role-tabs button:not(.active):hover{background:#304739}
+html[data-appearance="dark"] .shell .guide-head,
+html[data-appearance="dark"] .shell .lib-hero,
+html[data-appearance="dark"] .shell .cb-top{
+  background:
+    radial-gradient(ellipse 70% 70% at 92% 12%,rgba(var(--theme-rgb),.18),transparent 92%),
+    linear-gradient(130deg,#2a3b30,#1a2923);
+  border-color:#536657;color:#e8eee3;
+}
+html[data-appearance="dark"] .shell .guide-head h1,
+html[data-appearance="dark"] .shell .lib-hero h1,
+html[data-appearance="dark"] .shell .cb-top h1{color:#f0f0e5}
+html[data-appearance="dark"] .shell .guide-head p,
+html[data-appearance="dark"] .shell .lib-hero p,
+html[data-appearance="dark"] .shell .cb-top p{color:#c0cabc}
+html[data-appearance="dark"] .shell .guide-mark,
+html[data-appearance="dark"] .shell .guide-count,
+html[data-appearance="dark"] .shell .lib-info span{background:#34483a;color:#e0e7dc;border-color:#677c69}
+html[data-appearance="dark"] .shell .lib-info strong{color:#e7c9a3}
+html[data-appearance="dark"] .shell .guide-nav,
+html[data-appearance="dark"] .shell .guide-article,
+html[data-appearance="dark"] .shell .guide-meter-item,
+html[data-appearance="dark"] .shell .lib-card,
+html[data-appearance="dark"] .shell .cb-panel{
+  background:
+    radial-gradient(ellipse at 97% 4%,rgba(var(--theme-rgb),.09),transparent 78%),
+    linear-gradient(145deg,#24342b,#1d2c25);
+  border-color:#465b4c;
+  color:#e5ecdf;
+}
+html[data-appearance="dark"] .shell .guide-article h2,
+html[data-appearance="dark"] .shell .guide-rule b,
+html[data-appearance="dark"] .shell .guide-rule strong,
+html[data-appearance="dark"] .shell .guide-meter-item>strong,
+html[data-appearance="dark"] .shell .cb-panel h2{color:#edf0e5}
+html[data-appearance="dark"] .shell .guide-rule,
+html[data-appearance="dark"] .shell .guide-subtitle,
+html[data-appearance="dark"] .shell .guide-meter-item>span{color:#c0cfc0}
+html[data-appearance="dark"] .shell .guide-nav button{color:#d4e0d0}
+html[data-appearance="dark"] .shell .guide-nav button:hover{background:#394f3e}
+html[data-appearance="dark"] .shell .guide-example,
+html[data-appearance="dark"] .shell .guide-formula{
+  background:#2e4035;color:#d9e6d5;border-color:#637661;
+}
+html[data-appearance="dark"] .shell .guide-meter-bar{background:#4a584b}
+html[data-appearance="dark"] .shell .lib-card p,
+html[data-appearance="dark"] .shell .lib-card small{color:#bacbb9}
+html[data-appearance="dark"] .shell .lib-card.can-learn{border-top-color:var(--night-accent)}
+html[data-appearance="dark"] .shell .cb-panel-header,
+html[data-appearance="dark"] .shell .cb-stat{border-color:#405647}
+html[data-appearance="dark"] .shell .cb-panel-header .cb-num{background:#334739;border-color:#58705b}
+html[data-appearance="dark"] .shell .cb-initiative{border-color:#58705b}
+html[data-appearance="dark"] .shell .journal-head h1{color:#f0f0e7}
+html[data-appearance="dark"] .shell .journal-head p{color:#b9c9ba}
+html[data-appearance="dark"] .shell .journal-save{
+  background:#263b2d;color:#d7e8d5;border-color:#58735e;
+}
+/* O diário é um pergaminho: deixamos o papel claro para conservar sua caligrafia. */
+html[data-appearance="dark"] .shell .journal-scroll-paper{
+  color:#283b2e;
+  box-shadow:0 17px 46px #0009;
+}
+html[data-appearance="dark"] .shell .pub-hub{color:#e5e9df}
+html[data-appearance="dark"] .shell .pub-intro{
+  background:linear-gradient(90deg,#15231ff5,#203328d9 64%,#213329c2),url("hero-konoha-novo.jpg") center 46%/cover;
+  border-color:#4d6655;
+  box-shadow:0 9px 27px #0007;
+}
+html[data-appearance="dark"] .shell .pub-intro h1{color:#f3eee0}
+html[data-appearance="dark"] .shell .pub-intro p{color:#c3d3c1}
+html[data-appearance="dark"] .shell .pub-directory,
+html[data-appearance="dark"] .shell .pub-toolpanel{
+  background:linear-gradient(145deg,#24372d,#1b2c24);
+  border-color:#566a59;
+  box-shadow:0 6px 22px #0005;
+}
+html[data-appearance="dark"] .shell .pub-directory-head{border-color:#465d4a}
+html[data-appearance="dark"] .shell .pub-directory-head h2{color:#e9ede0}
+html[data-appearance="dark"] .shell .pub-directory-kicker,
+html[data-appearance="dark"] .shell .pub-directory-count{color:#c5b49a}
+html[data-appearance="dark"] .shell .pub-directory .pub-chip{
+  background:linear-gradient(135deg,#344538,#28372f);
+  color:#e6e8dd;border-color:#5e715e;
+}
+html[data-appearance="dark"] .shell .pub-directory .pub-chip b{color:#f5eee3}
+html[data-appearance="dark"] .shell .pub-directory .pub-chip small{color:#bfcbba}
+html[data-appearance="dark"] .shell .pub-chip-meta em{background:#405447;color:#e4e9dc;border-color:#607865}
+html[data-appearance="dark"] .shell .pub-toolpanel label,
+html[data-appearance="dark"] .shell .pub-toolpanel small{color:#d1d9c5}
+html[data-appearance="dark"] .shell .pub-toolpanel select,
+html[data-appearance="dark"] .shell .pub-toolpanel input{background:#13211a;color:#eaf0e3;border-color:#677862}
+html[data-appearance="dark"] .shell .pub-blank{
+  color:#e2eade;background:#203128;border-color:#546a57;
+}
+html[data-appearance="dark"] .shell .pub-note-help{color:#b4c5b5}
+html[data-appearance="dark"] .shell .pub-zoom-level{color:#d1d9c8}
+/* Sem filtros nas fotografias, na cortiça, nos bilhetes, nos carimbos ou na tinta das fichas. */
+html[data-appearance="dark"] .shell .pub-viewport{
+  border-color:#5b4a37;
+  box-shadow:0 13px 40px #000a,inset 0 0 0 3px #ad7c52;
+}
+html[data-appearance="dark"] .shell .pub-update-overlay .pub-updates{
+  background:#f5e8cd;color:#452d23;
+}
+html[data-appearance="dark"] .shell .pub-update-overlay .button.secondary{
+  background:#f6ead8;border-color:#bda384;color:#543c2d;
+}
+html[data-appearance="dark"] .shell .modalbox{
+  background:#1f3027;color:#e7ecde;border-color:#576c59;
+}
+html[data-appearance="dark"] .shell .modalbox p{color:#c0ccbd}
+html[data-appearance="dark"] .shell .admin-row{border-color:#475a49}
+html[data-appearance="dark"] .shell .admin-gate{border-color:#526b57}
+html[data-appearance="dark"] .shell .admin-gate-content h1{color:#f1efe7}
+html[data-appearance="dark"] .appearance-toggle{
+  background:#2b3e32;color:#f1e6d0;border-color:#617a64;
+}
+html[data-appearance="dark"] .appearance-toggle:hover{background:#3c5745}
+@media(max-width:720px){
+  .topbar .appearance-toggle{width:39px;min-width:39px;padding:7px}
+  .topbar .appearance-toggle .appearance-label{display:none}
+  .topbar .top-actions{gap:6px;flex-wrap:wrap;justify-content:flex-end}
+}
+@media print {
+  html[data-appearance="dark"]{color-scheme:light;--ink:#222723;--paper:#fff;--muted:#6c716b}
+  html[data-appearance="dark"] body{background:#fff;color:#222723}
+  html[data-appearance="dark"] .shell .main,
+  html[data-appearance="dark"] .shell.themed-shell .main,
+  html[data-appearance="dark"] .shell.themed-shell.home-ambient .main{background:#fff!important}
+  .appearance-toggle{display:none!important}
+}
 </style>
 </head>
 <body>
@@ -2927,6 +3285,24 @@
   const LIBRARY_SOURCES={title:'Naruto: Shinobi no Sho — 4ª edição (4.1b)',notes:'Poderes compram níveis; jutsus e efeitos dependem dos poderes e demais pré-requisitos.'};
   const TABS=[['identidade','Identidade'],['atributos','Atributos'],['pericias','Perícias'],['combate','Combate'],['tecnicas','Poderes e jutsus'],['inventario','Inventário'],['historia','História']];
 
+  const APPEARANCE_KEY='shinobi-appearance';
+  const appearanceIsDark=()=>document.documentElement.dataset.appearance==='dark';
+  function toggleAppearance(){
+    const next=appearanceIsDark()?'light':'dark';
+    document.documentElement.dataset.appearance=next;
+    try{localStorage.setItem(APPEARANCE_KEY,next)}catch(error){console.warn('Preferência de aparência não pôde ser salva:',error)}
+    const label=next==='dark'?'Ativar modo claro':'Ativar modo escuro';
+    const button=document.querySelector('[data-action="toggle-appearance"]');
+    if(button){
+      button.setAttribute('aria-pressed',String(next==='dark'));
+      button.setAttribute('aria-label',label);
+      button.title=label;
+      const icon=button.querySelector('.appearance-icon');
+      const text=button.querySelector('.appearance-label');
+      if(icon)icon.textContent=next==='dark'?'☀':'☾';
+      if(text)text.textContent=next==='dark'?'Modo claro':'Modo escuro';
+    }
+  }
   const S={view:'home',tab:'identidade',authPane:'login',user:null,isAdmin:false,sheet:null,sheetId:null,adminSheets:[],activeClan:null,demo:!CONFIGURED,sheets:[],adminViewing:false,pendingDeleteId:null,pendingWrite:null,canvaPage:1,canvaMode:'original',loading:CONFIGURED,modal:null,saveTimer:null,saveState:'Pronto',authWorking:false,adminUnlocked:false,adminAuthBusy:false,adminLoginBusy:false,adminUnsubscribe:null,adminLive:false,adminLiveReady:false,adminLiveError:false,adminEvents:[],pendingRemote:null,locallyDirty:false,isSaving:false,lastSavedWrite:null,creating:false,portraitBusy:false,portraitPreview:null,portraitUploadSlot:'casual',guideStep:0,libraryKind:'all',libraryScope:'mine',librarySearch:'',libraryPowerId:'',inlineKind:'power',inlineSearch:'',combatMode:false,combatTransitioning:false,diary:null,diaryOwnerUid:null,diaryStorage:null,diaryHostId:null,diaryNoHost:false,diaryFromAdmin:false,diaryLoading:false,diaryDirty:false,diaryVersion:0,diarySaveTimer:null,diaryPendingWrite:null,diaryStatus:'',diaryPanel:'',diaryExpandedId:'',diaryEnterAnimate:false,diaryRequest:0,adminDiaries:[]};
   let fb=null;
   const $=sel=>document.querySelector(sel);
@@ -3310,7 +3686,7 @@ function themeStyle(){
  return `style="--theme-accent:${clan.color};--theme-rgb:${rgb.join(',')};--theme-deep:${deepHex};--theme-wash:${clan.wash}" data-theme="${clan.id}"`;
 }
   function side(){return `<aside class="sidebar"><div class="brand"><div class="brandmark">忍</div><div><div class="brand-name">Shinobi<br>Chronicles</div><div class="brand-sub">Arquivos Shinobi</div></div></div><nav aria-label="Menu principal"><div class="nav-category">NAVEGAÇÃO</div>${[['home','⌂','Início'],['clans','◈','Os Clãs'],['fichas','▤','Minhas Fichas'],...(S.user?[['quadros','▧','Mural de Konoha']]:[]),...(S.user?[['diario','巻','Diário de Missões']]:[]),['sheet','✎','Editar Ficha'],...(S.sheets.length?[['guia','☷','Guia de criação'],['biblioteca','巻','Biblioteca de técnicas']]:[]),...(canAdmin()?[['admin','♜','Administração']]:[])].map(([view,ic,label])=>`<button class="nav-item ${S.view===view?'active':''}" data-action="nav" data-view="${view}"><span class="nav-icon">${ic}</span>${label}</button>`).join('')}</nav><div class="sidebar-bottom"><div class="tiny">SHINOBI NO SHO · SISTEMA D8</div><div class="side-account">${E(S.user?.displayName|| (CONFIGURED?'Conta não conectada':'Modo demonstração'))}</div><div class="tiny">${CONFIGURED?'Dados privados no Firebase.':'Prévia local, sem salvamento na nuvem.'}</div>${S.user?'<button class="nav-item" data-action="logout"><span class="nav-icon">↪</span>Sair da conta</button>':''}</div></aside>`}
-  function top(){const currentTheme=themeClan();let titles={home:'Início',clans:'Guia dos clãs',sheet:'Registro do personagem',guia:'Guia de criação',biblioteca:'Biblioteca de técnicas',fichas:'Minhas fichas',quadros:'Mural de Konoha',diario:'Diário de Missões',admin:'Administração','admin-gate':'Entrada do mestre',login:'Acesso shinobi'};return `<header class="topbar"><div><div class="eyebrow">SHINOBI CHRONICLES / ARQUIVO</div><div class="top-title">${titles[S.view]||'Arquivo'}</div></div><div class="top-actions">${currentTheme?`<span class="theme-chip"><span class="theme-chip-dot"></span>${E(currentTheme.name)}</span>`:''}${S.user?`<span class="pill">${E(S.user.displayName)}</span>`:!CONFIGURED?'<span class="pill">Prévia demonstrativa</span>':'<button class="button small" data-action="nav" data-view="login">Entrar</button>'}${S.view==='sheet'?`<span id="save-status" class="pill">${E(S.saveState)}</span>`:''}</div></header>`}
+  function top(){const currentTheme=themeClan();let titles={home:'Início',clans:'Guia dos clãs',sheet:'Registro do personagem',guia:'Guia de criação',biblioteca:'Biblioteca de técnicas',fichas:'Minhas fichas',quadros:'Mural de Konoha',diario:'Diário de Missões',admin:'Administração','admin-gate':'Entrada do mestre',login:'Acesso shinobi'};return `<header class="topbar"><div><div class="eyebrow">SHINOBI CHRONICLES / ARQUIVO</div><div class="top-title">${titles[S.view]||'Arquivo'}</div></div><div class="top-actions">${currentTheme?`<span class="theme-chip"><span class="theme-chip-dot"></span>${E(currentTheme.name)}</span>`:''}<button type="button" class="appearance-toggle" data-action="toggle-appearance" aria-pressed="${appearanceIsDark()?'true':'false'}" aria-label="${appearanceIsDark()?'Ativar modo claro':'Ativar modo escuro'}" title="${appearanceIsDark()?'Ativar modo claro':'Ativar modo escuro'}"><span class="appearance-icon" aria-hidden="true">${appearanceIsDark()?'☀':'☾'}</span><span class="appearance-label">${appearanceIsDark()?'Modo claro':'Modo escuro'}</span></button>${S.user?`<span class="pill">${E(S.user.displayName)}</span>`:!CONFIGURED?'<span class="pill">Prévia demonstrativa</span>':'<button class="button small" data-action="nav" data-view="login">Entrar</button>'}${S.view==='sheet'?`<span id="save-status" class="pill">${E(S.saveState)}</span>`:''}</div></header>`}
   function layout(inner){return `<div class="shell ${S.view==='home'?'home-ambient':''} ${themeClan()?'themed-shell':''}" ${themeStyle()}>${side()}<main class="main">${top()}<div class="content">${inner}<footer class="footer-note">SHINOBI CHRONICLES · Sistema D8 / SNS 4.1b · Plataforma independente de fichas · Ilustrações dos clãs serão adicionadas pelo projeto.</footer></div></main></div>`}
   const heroArt=`<img class="hero-illustration" src="hero-konoha-novo.jpg" onerror="this.onerror=null;this.src='hero-konoha.svg'" alt="Ilustração em tinta mangá e aquarela da Vila Oculta da Folha, com arquitetura tradicional e cerejeiras" loading="eager" decoding="async">`;
   function home(){const c=active()?clanOf(active().clanId):null;return layout(`<section class="hero hero-inkwash"><div class="hero-copy"><div class="eyebrow">UM NOVO CICLO · SHINOBI CHRONICLES</div><h1>Seu caminho<br>começa aqui.</h1><p>Explore as famílias shinobi, registre seu personagem e acompanhe sua evolução com uma ficha automatizada pelo sistema D8.</p><div class="flex wrap mt24"><button class="button" data-action="nav" data-view="clans">Explorar os clãs <span>↗</span></button><button class="button secondary" data-action="nav" data-view="fichas">Minhas fichas</button></div></div><div class="hero-scene">${heroArt}</div></section>${!CONFIGURED?`<div class="notice warn mt16"><b>Modo de demonstração.</b> A interface e os cálculos já funcionam, mas os dados não serão salvos online até configurar o Firebase no arquivo <code>index.html</code>. É possível testar a ficha agora.</div>`:''}<div class="section-head"><div><div class="eyebrow">ARQUIVOS DE KONOHA</div><h2>Explore os clãs</h2></div><p>11 linhagens e um caminho independente</p></div><div class="clans-grid">${CLANS.slice(0,6).map(clanCard).join('')}</div><div class="section-head"><div><div class="eyebrow">O SEU REGISTRO</div><h2>Ficha de personagem</h2></div></div>${c?`<div class="paper-panel"><div class="flex between wrap"><div><div class="eyebrow">PERSONAGEM ATIVO</div><h3 style="margin:8px 0">${E(active().nome||'Personagem sem nome')} · ${E(c.name)}</h3><div class="panel-caption">Nível de Campanha ${active().nc} · ${E(active().graduacao)}</div></div><button class="button" data-action="nav" data-view="sheet">Continuar edição ↗</button></div></div>`:`<div class="empty"><h3>Sua história ainda não foi registrada</h3><p>Escolha um clã e crie sua ficha; os atributos e as perícias serão calculados automaticamente.</p><button class="button" data-action="nav" data-view="clans">Escolher clã</button></div>`}`)}
@@ -4698,6 +5074,7 @@ function canvaUpdateArray(el,preserveFocus=false){
     const RELATIONS=['Amizade','Rivalidade','Família','Equipe','Romance','Segredo'];
     let toolPanel='';
     const CHANGELOG=[
+      {date:'08/11/2026',title:'Modo escuro no Shinobi Chronicles',body:'Adicionamos um botão no cabeçalho para alternar entre Modo claro e Modo escuro. A preferência é salva no próprio navegador e se aplica às telas, menus, painéis, campos, biblioteca, guia de criação, gerenciamento de fichas, combate e área do mestre. O pergaminho do diário, a arte original das fichas e o quadro de Konoha conservam suas cores naturais, sem filtros sobre as ilustrações.'},
       {date:'07/11/2026',title:'Excluir somente elementos criados pelos jogadores',body:'Adicionamos um botão Excluir aos bilhetes extras, fotografias e carimbos colados pelos jogadores, com confirmação antes de apagar. Fios também podem ser removidos na ferramenta Ligar fios. Os oito registros originais — retrato, clã, graduação, vila, história, relacionamentos, curiosidades e acontecimentos — ficam protegidos contra exclusão e continuam editáveis, móveis e giratórios.'},
       {date:'07/11/2026',title:'Observações pessoais móveis e rotação 360°',body:'Minhas observações agora podem ser arrastadas, redimensionadas e giradas em qualquer quadro, inclusive no de outros jogadores. A posição é salva somente na observação privada de quem a escreveu. Bilhetes, retratos, fotos do álbum e carimbos também podem girar livremente em 360°, pelas setas ou informando um ângulo exato. Tudo sem modificar os registros de outros jogadores.'},
       {date:'07/11/2026',title:'Álbum de memórias, carimbos e fios entre registros',body:'O Mural de Konoha agora permite colar fotografias adicionais com legenda manuscrita, aplicar carimbos shinobi e conectar bilhetes e fotos usando fios vermelhos de relacionamento. Os elementos podem ser movidos ou redimensionados, e os fios acompanham as alterações. Incluímos Ampliar quadro para abrir mais espaço sem perder os registros existentes. Tudo é salvo no perfil público do próprio personagem.'},
@@ -5843,7 +6220,7 @@ function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="m
   if(button?.isConnected)button.disabled=false;
  }
 }
-  function clickAction(el){const action=el.dataset.action;if(!action)return;if(action.startsWith('board-'))return PublicBoard.action(action,el);const p=active();if(action==='open-admin-diary')return void openDiaryFor(el.dataset.uid,el.dataset.name,true);
+  function clickAction(el){const action=el.dataset.action;if(!action)return;if(action==='toggle-appearance')return toggleAppearance();if(action.startsWith('board-'))return PublicBoard.action(action,el);const p=active();if(action==='open-admin-diary')return void openDiaryFor(el.dataset.uid,el.dataset.name,true);
    if(action==='diary-save')return void persistDiary();
    if(action==='diary-section')return diarySection(el.dataset.section);
    if(action==='diary-complete-current')return diaryCompleteCurrent();
