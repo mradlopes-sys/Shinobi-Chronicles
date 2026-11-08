@@ -14,9 +14,9 @@ jobs:
       - uses: actions/checkout@v4
       - name: Instalar biblioteca neural e de imagens
         run: python -m pip install --disable-pip-version-check Pillow opencv-contrib-python-headless numpy
-      - name: Gerar ficha de teste usando super-resolucao
+      - name: Gerar as 48 páginas usando super-resolucao
         env:
-          SHINOBI_HD_TEST: '1'
+          SHINOBI_HD_TEST: '0'
         run: python scripts/upscale_fichas.py
       - name: Publicar imagens processadas
         run: |
