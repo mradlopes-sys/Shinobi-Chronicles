@@ -22,7 +22,7 @@ const theatre=createTheatre({stage,panel:$('theatre-panel'),onChange:async state
 function switchTab(name){for(const b of document.querySelectorAll('[data-tab]'))b.classList.toggle('active',b.dataset.tab===name);for(const p of document.querySelectorAll('.pane'))p.hidden=p.id!=='pane-'+name;}
 document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
 function applyRole(){for(const id of ['gm-scenes','next-turn','cast-effect','effect-kind'])$(id).hidden=!admin;$('auth-label').textContent=uid?(admin?'Mestre · permissões administrativas':'Jogador · acesso restrito'):'Faça login nos Arquivos Shinobi';theatre.refresh();renderSheets();}
-onAuthStateChanged(auth,async user=>{stopSubs();if(sheetsUnsub){sheetsUnsub();sheetsUnsub=null}uid=user?.uid||'';$('self-uid').value=uid;admin=false;sheets=[];applyRole();if(!uid){show('Faça login no Shinobi Chronicles antes de entrar na mesa.');return}try{admin=user.email==='mestre_shinobi@players.shinobi-chronicles.invalid'||(await getDoc(doc(db,'admins',uid))).exists();applyRole();loadSheets();void connectWorld()}catch(e){show('Falha na autenticação: '+e.message)}});
+onAuthStateChanged(auth,async user=>{stopSubs();if(sheetsUnsub){sheetsUnsub();sheetsUnsub=null}uid=user?.uid||'';admin=false;sheets=[];applyRole();if(!uid){show('Faça login no Shinobi Chronicles antes de entrar na mesa.');return}try{admin=user.email==='mestre_shinobi@players.shinobi-chronicles.invalid'||(await getDoc(doc(db,'admins',uid))).exists();applyRole();loadSheets();void connectWorld()}catch(e){show('Falha na autenticação: '+e.message)}});
 function loadSheets(){
   if(sheetsUnsub){sheetsUnsub();sheetsUnsub=null}
   const source=admin?collection(db,'fichas'):query(collection(db,'fichas'),where('ownerUid','==',uid));
