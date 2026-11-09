@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Shinobi Chronicles — Mesa Virtual (prévia)</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#151b19;color:#e9e4d9}
+*{box-sizing:border-box}body{margin:0}header{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:14px 22px;border-bottom:1px solid #465047}h1{font-size:18px;margin:0;font-weight:600}small{color:#aeb9ae}
+main{display:grid;grid-template-columns:1fr 270px;height:calc(100dvh - 65px)}#stage{position:relative;overflow:hidden;background:#27332d;touch-action:none;cursor:grab}#stage.dragging{cursor:grabbing}canvas{display:block;width:100%;height:100%}
+aside{padding:18px;border-left:1px solid #465047;background:#1b2420;overflow:auto}button,input{font:inherit}button{border:1px solid #687468;border-radius:7px;padding:9px 12px;background:#344438;color:#fff;cursor:pointer}button:hover{background:#475d4c}button:focus-visible{outline:2px solid #d9b783}input{width:100%;padding:8px;background:#121b17;color:#fff;border:1px solid #667467;border-radius:5px}label{display:block;font-size:12px;margin:16px 0 5px}p{font-size:13px;line-height:1.6;color:#c5cec5}.toolbar{display:flex;gap:7px;flex-wrap:wrap}.token-list{display:grid;gap:8px;margin-top:10px}.token-item{display:flex;align-items:center;justify-content:space-between;gap:8px}.active{border-color:#dfc28a;background:#655338}#status{color:#d6bc8d}@media(max-width:720px){main{grid-template-columns:1fr;grid-template-rows:minmax(50dvh,1fr) auto;height:calc(100dvh - 65px)}aside{border-left:0;border-top:1px solid #465047;max-height:38dvh}}
+</style>
+</head>
+<body>
+<header><div><h1>Mesa Virtual · Shinobi Chronicles</h1><small>Fundação local — sem conexão com partidas reais</small></div><a style="color:#d8c18d" href="./index.html">Voltar ao site</a></header>
+<main><div id="stage" aria-label="Mapa tático interativo"><canvas id="map"></canvas></div>
+<aside><strong>Ferramentas do mestre — prévia</strong><p>Arraste os tokens, mova o mapa pelo espaço vazio e use a roda do mouse para ampliar. Nesta etapa, os dados ficam somente neste navegador.</p>
+<div class="toolbar"><button id="add">+ Token</button><button id="reset">Centralizar</button><button id="grid">Grid: ligado</button></div>
+<label for="mapfile">Mapa de fundo (arquivo local)</label><input id="mapfile" type="file" accept="image/png,image/jpeg,image/webp">
+<label>Tokens</label><div id="tokens" class="token-list"></div><p id="status" role="status">Prévia não sincronizada</p></aside></main>
+<script>
+(()=>{
+'use strict';
+const stage=document.querySelector('#stage'),canvas=document.querySelector('#map'),ctx=canvas.getContext('2d');
+const state={tokens:[{id:1,name:'Shinobi 1',x:3,y:3,color:'#b86d61'},{id:2,name:'Shinobi 2',x:6,y:4,color:'#78a8b1'}],next:3,cell:64,scale:1,offsetX:80,offsetY:70,grid:true,map:null,drag:null};
+let pointer=null;
+const resize=()=>{const dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(stage.clientWidth*dpr);canvas.height=Math.round(stage.clientHeight*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);draw()};
+const toWorld=(x,y)=>({x:(x-state.offsetX)/state.scale,y:(y-state.offsetY)/state.scale});
+const pos=e=>{const r=canvas.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}};
+function draw(){const w=stage.clientWidth,h=stage.clientHeight;ctx.clearRect(0,0,w,h);ctx.save();ctx.translate(state.offsetX,state.offsetY);ctx.scale(state.scale,state.scale);
+const size=state.cell;
+if(state.map){ctx.drawImage(state.map,0,0,state.map.width,state.map.height)}
+else{ctx.fillStyle='#35473b';ctx.fillRect(-10000,-10000,20000,20000);ctx.fillStyle='#425547';for(let x=0;x<24;x++)for(let y=0;y<16;y++)if((x+y)%5===0)ctx.fillRect(x*size+10,y*size+10,22,22)}
+if(state.grid){const a=toWorld(0,0),b=toWorld(w,h);ctx.beginPath();ctx.strokeStyle='rgba(234,229,209,.22)';ctx.lineWidth=1/state.scale;for(let x=Math.floor(a.x/size)*size;x<=b.x;x+=size){ctx.moveTo(x,a.y);ctx.lineTo(x,b.y)}for(let y=Math.floor(a.y/size)*size;y<=b.y;y+=size){ctx.moveTo(a.x,y);ctx.lineTo(b.x,y)}ctx.stroke()}
+for(const t of state.tokens){const x=(t.x+.5)*size,y=(t.y+.5)*size;ctx.beginPath();ctx.arc(x,y,size*.35,0,Math.PI*2);ctx.fillStyle=t.color;ctx.fill();ctx.lineWidth=3;ctx.strokeStyle='#f2e7c8';ctx.stroke();ctx.fillStyle='#fff';ctx.textAlign='center';ctx.font='bold 13px system-ui';ctx.fillText(t.name.slice(0,11),x,y+size*.6)}
+ctx.restore()}
+function tokenAt(p){const q=toWorld(p.x,p.y);return [...state.tokens].reverse().find(t=>Math.hypot(q.x-(t.x+.5)*state.cell,q.y-(t.y+.5)*state.cell)<state.cell*.4)}
+canvas.addEventListener('pointerdown',e=>{if(e.button!==0)return;const p=pos(e),t=tokenAt(p);pointer={id:e.pointerId,start:p,originX:state.offsetX,originY:state.offsetY,token:t};canvas.setPointerCapture(e.pointerId);stage.classList.add('dragging')});
+canvas.addEventListener('pointermove',e=>{if(!pointer||pointer.id!==e.pointerId)return;const p=pos(e);if(pointer.token){const q=toWorld(p.x,p.y);pointer.token.x=Math.max(0,Math.floor(q.x/state.cell));pointer.token.y=Math.max(0,Math.floor(q.y/state.cell));renderTokens()}else{state.offsetX=pointer.originX+p.x-pointer.start.x;state.offsetY=pointer.originY+p.y-pointer.start.y}draw()});
+const stop=e=>{if(pointer?.id===e.pointerId){pointer=null;stage.classList.remove('dragging')}};
+canvas.addEventListener('pointerup',stop);canvas.addEventListener('pointercancel',stop);
+canvas.addEventListener('wheel',e=>{e.preventDefault();const p=pos(e),before=toWorld(p.x,p.y);state.scale=Math.max(.35,Math.min(3,state.scale*(e.deltaY<0?1.1:.9)));state.offsetX=p.x-before.x*state.scale;state.offsetY=p.y-before.y*state.scale;draw()},{passive:false});
+function renderTokens(){const list=document.querySelector('#tokens');list.replaceChildren();for(const t of state.tokens){const item=document.createElement('div');item.className='token-item';const name=document.createElement('span');name.textContent=t.name+' ('+t.x+', '+t.y+')';const del=document.createElement('button');del.textContent='Remover';del.setAttribute('aria-label','Remover '+t.name);del.onclick=()=>{state.tokens=state.tokens.filter(x=>x.id!==t.id);renderTokens();draw()};item.append(name,del);list.append(item)}}
+document.querySelector('#add').onclick=()=>{const id=state.next++;state.tokens.push({id,name:'Shinobi '+id,x:2+id,y:2,color:'#b7a36c'});renderTokens();draw()};
+document.querySelector('#reset').onclick=()=>{state.scale=1;state.offsetX=80;state.offsetY=70;draw()};
+document.querySelector('#grid').onclick=e=>{state.grid=!state.grid;e.target.textContent='Grid: '+(state.grid?'ligado':'desligado');draw()};
+document.querySelector('#mapfile').onchange=e=>{const f=e.target.files?.[0];if(!f)return;if(f.size>15*1024*1024){document.querySelector('#status').textContent='Imagem acima de 15 MB';return}const url=URL.createObjectURL(f),img=new Image();img.onload=()=>{state.map=img;URL.revokeObjectURL(url);draw()};img.onerror=()=>{URL.revokeObjectURL(url);document.querySelector('#status').textContent='Falha ao abrir mapa'};img.src=url};
+new ResizeObserver(resize).observe(stage);renderTokens();resize();
+})();
+</script>
+</body></html>
