@@ -9,7 +9,7 @@ const $=id=>document.getElementById(id);
 let uid='',admin=false,room='',roomData=null,tokens=[],sheets=[],scenes=[],subs=[],dragToken=null,selected=null,sceneKey='',lastRoll='',busy=false,editingSceneId='',tokenUnsub=null,tokenSceneSubscribed=null,sheetsUnsub=null,subscriptionEpoch=0,worldCollectionsReady=false;
 const stage=$('stage'),canvas=$('map'),ctx=canvas.getContext('2d');
 const view={cell:64,zoom:1,ox:110,oy:85,grid:false,image:null,scene:''};
-const tokenImages=new Map();function tokenImage(url){if(!safeImage(url)||url.length>85000)return null;if(!tokenImages.has(url)){const img=new Image();img.onload=draw;img.onerror=()=>tokenImages.set(url,null);img.src=url;tokenImages.set(url,img)}return tokenImages.get(url)}
+const tokenImages=new Map();function tokenImage(url){if(!safeImage(url)||(url.startsWith('data:')&&url.length>85000))return null;if(!tokenImages.has(url)){const img=new Image();img.onload=draw;img.onerror=()=>tokenImages.set(url,null);img.src=url;tokenImages.set(url,img)}return tokenImages.get(url)}
 const safeUrl=s=>typeof s==='string'&&/^https:\/\/[^\s"'<>]+$/i.test(s)&&s.length<=1500;
 const safeImage=s=>safeUrl(s)||(typeof s==='string'&&s.length<=1200000&&/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(s));
 const show=(msg)=>{const x=$('status');x.textContent=msg;x.hidden=false;clearTimeout(show.timer);show.timer=setTimeout(()=>x.hidden=true,5500)};
@@ -17,22 +17,53 @@ const canMove=t=>admin||t.ownerUid===uid;
 const visibleTokens=()=>tokens.filter(t=>t.sceneId===(roomData?.activeSceneId||'')||(!t.sceneId&&!roomData?.activeSceneId));
 const roomRef=()=>doc(db,'vttRooms',room);
 const tokenRef=id=>doc(db,'vttRooms',room,'tokens',id);
-const stopSubs=()=>{subscriptionEpoch++;worldCollectionsReady=false;if(tokenUnsub){tokenUnsub();tokenUnsub=null}tokenSceneSubscribed=null;subs.forEach(u=>u());subs=[];room='';roomData=null;tokens=[];scenes=[];selected=null;editingSceneId='';theatre.setState({});theatre.setTokens([]);$('room-heading').textContent='Mesa Permanente · Shinobi Chronicles';$('world-status').textContent='Aguardando conexão…';$('scene-empty').hidden=false;renderScenes();renderTokens();draw();};
-const theatre=createTheatre({stage,panel:$('theatre-panel'),onChange:async state=>{if(!admin||!room)return;try{await updateDoc(roomRef(),{theatre:state,updatedAt:serverTimestamp()})}catch(e){show(e.message)}},isAdmin:()=>admin});
-function switchTab(name){for(const b of document.querySelectorAll('[data-tab]'))b.classList.toggle('active',b.dataset.tab===name);for(const p of document.querySelectorAll('.pane'))p.hidden=p.id!=='pane-'+name;}
+const stopSubs=()=>{subscriptionEpoch++;worldCollectionsReady=false;theatre?.setActors?.([]);if(tokenUnsub){tokenUnsub();tokenUnsub=null}tokenSceneSubscribed=null;subs.forEach(u=>u());subs=[];room='';roomData=null;tokens=[];scenes=[];selected=null;editingSceneId='';theatre.setState({});theatre.setTokens([]);$('room-heading').textContent='Mesa Permanente · Shinobi Chronicles';$('world-status').textContent='Aguardando conexão…';$('scene-empty').hidden=false;renderScenes();renderTokens();draw();};
+const theatre=createTheatre({stage,panel:$('theatre-panel'),onChange:async state=>{if(!admin||!room)return;try{await updateDoc(roomRef(),{theatre:state,updatedAt:serverTimestamp()})}catch(e){show('Teatro: '+e.message)}},isAdmin:()=>admin,resolveActor:async id=>{if(!admin)return null;const f=sheets.find(x=>x.id===id);if(!f)return null;return {name:f.nome||f.name||'Shinobi',portrait:await tokenPortrait(f)}}});
+function switchTab(name){if(name==='biblioteca'&&!admin)return;for(const b of document.querySelectorAll('[data-tab]'))b.classList.toggle('active',b.dataset.tab===name);for(const p of document.querySelectorAll('.pane'))p.hidden=p.id!=='pane-'+name;}
 document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
-function applyRole(){for(const id of ['gm-scenes','next-turn','cast-effect','effect-kind'])$(id).hidden=!admin;$('auth-label').textContent=uid?(admin?'Mestre · permissões administrativas':'Jogador · acesso restrito'):'Faça login nos Arquivos Shinobi';theatre.refresh();renderSheets();}
+function applyRole(){for(const id of ['gm-scenes','next-turn','cast-effect','effect-kind'])$(id).hidden=!admin;for(const item of document.querySelectorAll('[data-gm-only]'))item.hidden=!admin;if(!admin&&!$('pane-biblioteca').hidden)switchTab('mapa');$('auth-label').textContent=uid?(admin?'Mestre · permissões administrativas':'Jogador · acesso restrito'):'Faça login nos Arquivos Shinobi';theatre.refresh();renderSheets();}
 onAuthStateChanged(auth,async user=>{stopSubs();if(sheetsUnsub){sheetsUnsub();sheetsUnsub=null}uid=user?.uid||'';admin=false;sheets=[];applyRole();if(!uid){show('Faça login no Shinobi Chronicles antes de entrar na mesa.');return}try{admin=user.email==='mestre_shinobi@players.shinobi-chronicles.invalid'||(await getDoc(doc(db,'admins',uid))).exists();applyRole();loadSheets();void connectWorld()}catch(e){show('Falha na autenticação: '+e.message)}});
 function loadSheets(){
   if(sheetsUnsub){sheetsUnsub();sheetsUnsub=null}
   const source=admin?collection(db,'fichas'):query(collection(db,'fichas'),where('ownerUid','==',uid));
   sheetsUnsub=onSnapshot(source,snap=>{
     sheets=snap.docs.filter(d=>d.data().tipo!=='diario').map(d=>({id:d.id,...d.data()}));
+    theatre.setActors(sheets.map(f=>({id:f.id,name:f.nome||f.name||'Shinobi'})));
     renderSheets();
   },e=>show('Não foi possível sincronizar as fichas: '+e.message));
 }
 function portrait(f){const variants=f.retratoBase==='casual'?[f.retratos?.casual,f.retratos?.ninja]:[f.retratos?.ninja,f.retratos?.casual];for(const x of [...variants,f.foto,f.portrait,f.retrato,f.imagem,f.avatar])if(safeImage(x))return x;return ''}
-async function tokenPortrait(f){const src=portrait(f);if(safeUrl(src))return src;if(!src)return '';return new Promise(resolve=>{const img=new Image();img.onload=()=>{try{const c=document.createElement('canvas');c.width=c.height=96;const g=c.getContext('2d');const side=Math.min(img.width,img.height);g.drawImage(img,(img.width-side)/2,(img.height-side)/2,side,side,0,0,96,96);const small=c.toDataURL('image/jpeg',.65);resolve(small.length<32000?small:'')}catch{resolve('')}};img.onerror=()=>resolve('');img.src=src})}
+async function tokenPortrait(f){
+  // Nunca cortar, enquadrar em círculo ou converter para JPEG: WebP mantém o canal alfa do PNG.
+  const source=portrait(f);
+  if(safeUrl(source))return source;
+  if(!source)return '';
+  return new Promise(resolve=>{
+    const img=new Image();
+    img.onload=()=>{
+      try{
+        const canvas=document.createElement('canvas'),ctx=canvas.getContext('2d',{alpha:true});
+        if(!ctx){resolve('');return}
+        const originalW=img.naturalWidth||img.width,originalH=img.naturalHeight||img.height;
+        for(const maxSide of [420,340,270,220,170,120,90]){
+          const ratio=Math.min(1,maxSide/Math.max(originalW,originalH));
+          canvas.width=Math.max(1,Math.round(originalW*ratio));
+          canvas.height=Math.max(1,Math.round(originalH*ratio));
+          ctx.clearRect(0,0,canvas.width,canvas.height);
+          ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+          ctx.drawImage(img,0,0,canvas.width,canvas.height);
+          const webp=canvas.toDataURL('image/webp',.78);
+          if(webp.startsWith('data:image/webp;')&&webp.length<=78000){resolve(webp);return}
+          const png=canvas.toDataURL('image/png');
+          if(png.startsWith('data:image/png;')&&png.length<=78000){resolve(png);return}
+        }
+      }catch(e){console.warn('Arte do token:',e)}
+      resolve('');
+    };
+    img.onerror=()=>resolve('');
+    img.src=source;
+  });
+}
 function renderSheets(){const list=$('actor-list');list.replaceChildren();const search=String($('actor-search')?.value||'').toLowerCase().trim();const filtered=sheets.filter(f=>!search||(f.nome||f.name||'').toLowerCase().includes(search)||String(f.clanId||f.clan||'').toLowerCase().includes(search));for(const f of filtered){const b=document.createElement('button');b.className='entry';b.draggable=admin&&!!room;b.title=admin?'Arraste para o mapa para criar o token':'Clique para abrir sua ficha';const pic=document.createElement('span');pic.className='thumb';if(portrait(f)){const img=document.createElement('img');img.src=portrait(f);img.alt='';pic.append(img)}else pic.textContent='忍';const meta=document.createElement('span');meta.className='meta';const strong=document.createElement('strong');strong.textContent=f.nome||f.name||'Personagem';const small=document.createElement('small');small.textContent=(f.clanId||f.clan||'Shinobi')+' · NC '+(f.nc||1);meta.append(strong,small);b.append(pic,meta);b.onclick=()=>openSheet(f.id,f.ownerUid);b.ondragstart=e=>{if(!admin||!room){e.preventDefault();return}e.dataTransfer.setData('text/shinobi-ficha',f.id);e.dataTransfer.effectAllowed='copy'};list.append(b);if(admin&&room){const add=document.createElement('button');add.className='btn small';add.textContent='+ Colocar token';add.onclick=()=>spawn(f,3,3);list.append(add)}}if(!filtered.length){const p=document.createElement('p');p.textContent=search?'Nenhum personagem corresponde à busca.':'Nenhuma ficha disponível nesta conta.';list.append(p)}}
 $('actor-search').oninput=renderSheets;
 function openSheet(id,owner){if(!id)return show('Token sem ficha vinculada.');if(!admin&&owner!==uid)return show('Esta ficha não pertence à sua conta.');const modal=$('sheet-modal');modal.classList.add('open');const frame=$('sheet-frame');frame.src='./index.html?vttSheet='+encodeURIComponent(id);$('sheet-close').focus()}
@@ -75,11 +106,11 @@ async function connectWorld(){
       $('scene-name').textContent=roomData.sceneName||'Mesa Shinobi';
       $('scene-caption').textContent=roomData.scene?'Cena compartilhada':'Aguardando o mestre ativar uma cena';
       $('turn-label').textContent='Turno '+(roomData.turn||0);
-      theatre.setState(roomData.theatre);
+      theatre.setState(roomData.theatre);$('current-scene-label').textContent=roomData.sceneName||'Nenhuma cena ativa';$('current-scene-subtitle').textContent=roomData.scene?'Imagem adaptada automaticamente ao espaço da mesa':'O mestre pode escolher uma imagem na Biblioteca de Mapas';
       view.cell=Math.max(32,Math.min(256,Number(roomData.grid)||64));
       $('scene-empty').hidden=!!roomData.scene;
       watchTokens(roomData.activeSceneId||'');
-      theatre.setTokens(visibleTokens());
+      
       renderTokens();renderScenes();loadMap(roomData.scene||'');draw();
       if(!worldCollectionsReady){
         worldCollectionsReady=true;
@@ -118,7 +149,7 @@ function watchTokens(sceneId){
   tokenUnsub=onSnapshot(source,snap=>{
     if(room!==watchingRoom)return;
     tokens=snap.docs.map(d=>({id:d.id,...d.data()}));
-    theatre.setTokens(visibleTokens());renderTokens();draw();
+    renderTokens();draw();
   },err=>show('Permissão dos tokens: '+err.message));
 }
 function resetSceneEditor(){
