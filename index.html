@@ -3820,6 +3820,15 @@ html[data-appearance="dark"] #app .shell .system-rules-source{color:#abbaa7!impo
   .system-rules-row{grid-template-columns:1fr;row-gap:3px}
 }
 </style>
+<script>if(new URLSearchParams(location.search).has('vttSheet'))document.documentElement.classList.add('vtt-sheet-context');</script>
+<style>
+html.vtt-sheet-context .shell{display:block!important;min-height:100%}
+html.vtt-sheet-context .sidebar,html.vtt-sheet-context .topbar,html.vtt-sheet-context .footer-note{display:none!important}
+html.vtt-sheet-context .main{width:100%;min-width:0}
+html.vtt-sheet-context .content{padding:18px 20px 30px!important;max-width:100%!important;margin:0!important}
+html.vtt-sheet-context body{min-height:100%;background:#f4f1e9}
+html.vtt-sheet-context .cv-toolbar{margin-top:0}
+</style>
 </head>
 <body>
 <div id="app"><p style="text-align:center;padding:50px;font-family:Georgia">Carregando os arquivos shinobi...</p></div>
