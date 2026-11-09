@@ -154,7 +154,7 @@ function watchTokens(sceneId){
 }
 function resetSceneEditor(){
   editingSceneId='';
-  $('scene-title-input').value='';$('scene-url').value='';$('scene-grid').value='64';
+  $('scene-title-input').value='';$('scene-url').value='';
   $('scene-add').textContent='Salvar cena na biblioteca';
   $('scene-cancel-edit').hidden=true;
 }
@@ -162,9 +162,9 @@ $('scene-cancel-edit').onclick=resetSceneEditor;
 $('scene-add').onclick=async()=>{
   if(!admin||!room)return show('Somente o mestre pode preparar cenas.');
   const name=$('scene-title-input').value.trim(),url=$('scene-url').value.trim();
-  const grid=Number($('scene-grid').value);
-  if(!name||name.length>80||!safeUrl(url)||!Number.isInteger(grid)||grid<32||grid>256)
-    return show('Informe nome, imagem HTTPS e grade entre 32 e 256 px.');
+  const grid=64; // Unidade interna: dimensões visuais se adaptam automaticamente à imagem.
+  if(!name||name.length>80||!safeUrl(url))
+    return show('Informe o nome do mapa e uma URL HTTPS válida.');
   try{
     if(editingSceneId){
       await updateDoc(doc(db,'vttRooms',room,'scenes',editingSceneId),{name,url,grid,updatedAt:serverTimestamp()});
@@ -189,7 +189,7 @@ function renderScenes(){
     const img=document.createElement('img');img.className='scene-preview';img.src=scene.url;img.alt='Prévia de '+scene.name;img.loading='lazy';
     const info=document.createElement('div');info.className='scene-info';
     const title=document.createElement('strong');title.textContent=scene.name||'Cena sem nome';
-    const detail=document.createElement('small');detail.textContent=(current?'● Em exibição · ':'Privada · ')+(scene.grid||64)+' px por célula';
+    const detail=document.createElement('small');detail.textContent=(current?'● Em exibição · ':'Privada · ')+'enquadramento automático';
     const actions=document.createElement('div');actions.className='scene-actions';
     const activate=document.createElement('button');activate.className='btn small'+(!current?' primary':'');
     activate.textContent=current?'Ocultar dos jogadores':'Ativar para jogadores';
@@ -206,7 +206,6 @@ function renderScenes(){
       editingSceneId=scene.id;
       $('scene-title-input').value=scene.name||'';
       $('scene-url').value=scene.url||'';
-      $('scene-grid').value=String(scene.grid||64);
       $('scene-add').textContent='Salvar alterações';
       $('scene-cancel-edit').hidden=false;
       $('scene-title-input').focus();
@@ -251,8 +250,8 @@ $('roll-d20').onclick=async()=>{if(!room)return show('Entre numa sala');const re
 $('cast-effect').onclick=async()=>{if(!room)return;try{await addDoc(collection(db,'vttRooms',room,'events'),{type:'effect',uid,at:serverTimestamp(),payload:{kind:$('effect-kind').value}})}catch(e){show(e.message)}};
 function flash(kind){const colors={katon:'#ff622f66',raiton:'#72b5ff66',chakra:'#68d2c866'};const div=document.createElement('div');div.style.cssText='position:absolute;inset:0;z-index:5;pointer-events:none;background:radial-gradient(circle,'+(colors[kind]||colors.chakra)+',transparent 70%);animation:fadefx .8s forwards';stage.append(div);setTimeout(()=>div.remove(),850)}
 const css=document.createElement('style');css.textContent='@keyframes fadefx{from{opacity:1}to{opacity:0}}';document.head.append(css);
-function loadMap(url){if(sceneKey===url)return;sceneKey=url;view.image=null;if(!safeUrl(url)){draw();return}const img=new Image();img.onload=()=>{if(sceneKey!==url)return;view.image=img;center();draw()};img.onerror=()=>{$('scene-empty').hidden=false;show('Não foi possível carregar a imagem da cena. Confira a URL HTTPS.')};img.src=url;draw()}
-function center(){view.zoom=1;const w=stage.clientWidth,h=stage.clientHeight;if(view.image){const scale=Math.min((w-70)/view.image.width,(h-70)/view.image.height,1);view.zoom=Math.max(.08,scale);view.ox=(w-view.image.width*view.zoom)/2;view.oy=(h-view.image.height*view.zoom)/2}else{view.ox=w/2-8*view.cell;view.oy=h/2-5*view.cell}draw()}
+function loadMap(url){if(sceneKey===url)return;sceneKey=url;view.image=null;if(!safeUrl(url)){view.cell=64;center();return}const img=new Image();img.onload=()=>{if(sceneKey!==url)return;view.image=img;view.cell=Math.max(32,Math.min(192,Math.round(Math.min(img.naturalWidth,img.naturalHeight)/18)));center()};img.onerror=()=>{$('scene-empty').hidden=false;show('Não foi possível carregar a imagem da cena. Confira a URL HTTPS.')};img.src=url;draw()}
+function center(){view.zoom=1;const w=stage.clientWidth,h=stage.clientHeight;if(view.image){const scale=Math.min((w-28)/view.image.width,(h-28)/view.image.height);view.zoom=Math.max(.012,Math.min(4,scale));view.ox=(w-view.image.width*view.zoom)/2;view.oy=(h-view.image.height*view.zoom)/2}else{view.ox=w/2-8*view.cell;view.oy=h/2-5*view.cell}draw()}
 const world=(x,y)=>({x:(x-view.ox)/view.zoom,y:(y-view.oy)/view.zoom});
 function draw(){const w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;ctx.clearRect(0,0,w,h);ctx.save();ctx.translate(view.ox,view.oy);ctx.scale(view.zoom,view.zoom);
 if(view.image)ctx.drawImage(view.image,0,0);else{ctx.fillStyle='#1b2b29';ctx.fillRect(-5000,-5000,10000,10000)}
