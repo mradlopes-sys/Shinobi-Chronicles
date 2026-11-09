@@ -48,7 +48,7 @@ service cloud.firestore {
         && (resource.data.ownerUid == request.auth.uid || isAdmin());
 
       allow delete: if signedIn()
-        && resource.data.ownerUid == request.auth.uid;
+        && (resource.data.ownerUid == request.auth.uid || isAdmin());
     }
 
     // Nunca permita ao navegador conceder ou remover privilégios.
@@ -75,7 +75,7 @@ service cloud.firestore {
       allow get: if vttAccess(roomId);
       allow list: if isAdmin();
       allow create, update: if isAdmin()
-        && request.resource.data.keys().hasOnly(['name','scene','sceneName','activeSceneId','grid','createdAt','updatedAt','turn','theatre'])
+        && request.resource.data.keys().hasOnly(['name','masterUid','scene','sceneName','activeSceneId','grid','createdAt','updatedAt','turn','theatre'])
         && request.resource.data.name is string
         && request.resource.data.name.size() <= 80;
       allow delete: if isAdmin();
@@ -83,6 +83,24 @@ service cloud.firestore {
       match /scenes/{sceneId} {
         allow read, create, update, delete: if isAdmin();
       }
+
+      // Cada retrato no palco é publicado pelo ADM em documento separado:
+      // mantém resolução sem fazer o mapa/estado da sala ultrapassar 1 MiB.
+      // Jogadores leem somente retratos cujos IDs já conhecem pelo palco.
+      match /theatrePortraits/{fichaId} {
+        allow get: if vttAccess(roomId);
+        allow list: if false;
+        allow create, update: if isAdmin()
+          && request.resource.data.keys().hasOnly(['image','variant','name','ownerUid','updatedAt'])
+          && request.resource.data.image is string
+          && request.resource.data.image.size() <= 160000
+          && request.resource.data.name is string
+          && request.resource.data.name.size() <= 70
+          && request.resource.data.ownerUid is string
+          && request.resource.data.variant in ['casual','ninja','ferido','grave'];
+        allow delete: if isAdmin();
+      }
+
       match /members/{uid} {
         allow get: if isAdmin() || (signedIn() && request.auth.uid == uid);
         allow list: if isAdmin();
