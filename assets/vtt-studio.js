@@ -1,4 +1,5 @@
 import {createTheatre} from './vtt-theatre.js';
+import {createVisualEffects,EFFECTS} from './vtt-effects.js';
 import {initializeApp,getApps} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
 import {getAuth,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
 import {getFirestore,doc,getDoc,addDoc,setDoc,collection,onSnapshot,serverTimestamp,updateDoc,query,where,getDocs,deleteDoc,limit,orderBy} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
@@ -6,7 +7,7 @@ const cfg={apiKey:'AIzaSyCdTZejzKXYyyAnYgak7ADEsDhfsdFgvVo',authDomain:'shinobi-
 const app=getApps()[0]||initializeApp(cfg),auth=getAuth(app),db=getFirestore(app);
 const WORLD_ID='shinobi-chronicles';
 const $=id=>document.getElementById(id);
-let uid='',admin=false,room='',roomData=null,tokens=[],sheets=[],scenes=[],subs=[],dragToken=null,selected=null,sceneKey='',lastRoll='',busy=false,editingSceneId='',tokenUnsub=null,tokenSceneSubscribed=null,sheetsUnsub=null,subscriptionEpoch=0,worldCollectionsReady=false;
+let uid='',admin=false,room='',roomData=null,tokens=[],sheets=[],scenes=[],subs=[],dragToken=null,selected=null,sceneKey='',lastRoll='',busy=false,editingSceneId='',tokenUnsub=null,tokenSceneSubscribed=null,sheetsUnsub=null,subscriptionEpoch=0,worldCollectionsReady=false,portraitSubs=new Map(),masterUid='';
 const stage=$('stage'),canvas=$('map'),ctx=canvas.getContext('2d');
 const view={cell:64,zoom:1,ox:110,oy:85,grid:false,image:null,scene:''};
 const tokenImages=new Map();function tokenImage(url){if(!safeImage(url)||(url.startsWith('data:')&&url.length>85000))return null;if(!tokenImages.has(url)){const img=new Image();img.onload=draw;img.onerror=()=>tokenImages.set(url,null);img.src=url;tokenImages.set(url,img)}return tokenImages.get(url)}
@@ -17,8 +18,27 @@ const canMove=t=>admin||t.ownerUid===uid;
 const visibleTokens=()=>tokens.filter(t=>t.sceneId===(roomData?.activeSceneId||'')||(!t.sceneId&&!roomData?.activeSceneId));
 const roomRef=()=>doc(db,'vttRooms',room);
 const tokenRef=id=>doc(db,'vttRooms',room,'tokens',id);
-const stopSubs=()=>{subscriptionEpoch++;worldCollectionsReady=false;if(tokenUnsub){tokenUnsub();tokenUnsub=null}tokenSceneSubscribed=null;subs.forEach(u=>u());subs=[];room='';roomData=null;tokens=[];scenes=[];selected=null;editingSceneId='';theatre.setState({});$('room-heading').textContent='Mesa Permanente · Shinobi Chronicles';$('world-status').textContent='Aguardando conexão…';$('scene-empty').hidden=false;renderScenes();renderTokens();draw();};
-const theatre=createTheatre({stage,panel:$('theatre-panel'),onChange:async state=>{if(!admin||!room)return;try{await updateDoc(roomRef(),{theatre:state,updatedAt:serverTimestamp()})}catch(e){show('Teatro: '+e.message)}},isAdmin:()=>admin,resolveActor:async id=>{if(!admin)return null;const f=sheets.find(x=>x.id===id);if(!f)return null;return {name:f.nome||f.name||'Shinobi',portrait:await tokenPortrait(f)}}});
+const stopSubs=()=>{subscriptionEpoch++;worldCollectionsReady=false;for(const stop of portraitSubs.values())stop();portraitSubs.clear();masterUid='';if(tokenUnsub){tokenUnsub();tokenUnsub=null}tokenSceneSubscribed=null;subs.forEach(u=>u());subs=[];room='';roomData=null;tokens=[];scenes=[];selected=null;editingSceneId='';theatre.setState({});$('room-heading').textContent='Mesa Permanente · Shinobi Chronicles';$('world-status').textContent='Aguardando conexão…';$('scene-empty').hidden=false;renderScenes();renderTokens();draw();};
+const theatre=createTheatre({
+  stage,panel:$('theatre-panel'),
+  onChange:async state=>{
+    if(!admin||!room)throw Error('Apenas o mestre altera o Teatro.');
+    await updateDoc(roomRef(),{theatre:state,updatedAt:serverTimestamp()});
+  },
+  isAdmin:()=>admin,
+  publishPortrait:async(id,variant)=>{
+    if(!admin||!room)throw Error('Somente o mestre pode publicar retratos.');
+    const f=sheets.find(x=>x.id===id);
+    if(!f)throw Error('Ficha indisponível.');
+    const source=variant==='casual'?(f.retratos?.casual||f.foto):f.retratos?.[variant];
+    if(!safeImage(source)||source.length>160000)throw Error('Essa variante não foi enviada ou excede o limite do Firebase.');
+    const name=String(f.nome||f.name||'Shinobi').slice(0,70);
+    await setDoc(doc(db,'vttRooms',room,'theatrePortraits',id),{
+      image:source,variant,name,ownerUid:f.ownerUid,updatedAt:serverTimestamp()
+    });
+    theatre.setPortrait(id,source,variant);
+  }
+});
 function switchTab(name){if(name==='biblioteca'&&!admin)return;for(const b of document.querySelectorAll('[data-tab]'))b.classList.toggle('active',b.dataset.tab===name);for(const p of document.querySelectorAll('.pane'))p.hidden=p.id!=='pane-'+name;}
 document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
 function applyRole(){for(const id of ['gm-scenes','next-turn','cast-effect','effect-kind'])$(id).hidden=!admin;for(const item of document.querySelectorAll('[data-gm-only]'))item.hidden=!admin;if(!admin&&!$('pane-biblioteca').hidden)switchTab('mapa');$('auth-label').textContent=uid?(admin?'Mestre · permissões administrativas':'Jogador · acesso restrito'):'Faça login nos Arquivos Shinobi';theatre.refresh();renderSheets();}
@@ -28,9 +48,33 @@ function loadSheets(){
   const source=admin?collection(db,'fichas'):query(collection(db,'fichas'),where('ownerUid','==',uid));
   sheetsUnsub=onSnapshot(source,snap=>{
     sheets=snap.docs.filter(d=>d.data().tipo!=='diario').map(d=>({id:d.id,...d.data()}));
-    theatre.setActors(sheets.map(f=>({id:f.id,name:f.nome||f.name||'Shinobi'})));
+    updateTheatreDirectory();
     renderSheets();
   },e=>show('Não foi possível sincronizar as fichas: '+e.message));
+}
+function updateTheatreDirectory(){
+  const master=roomData?.masterUid||masterUid||(auth.currentUser?.email==='mestre_shinobi@players.shinobi-chronicles.invalid'?uid:'');
+  theatre.setActors(sheets.map(f=>({
+    id:f.id,name:f.nome||f.name||'Shinobi',
+    category:master&&f.ownerUid===master?'npc':'player',
+    variants:['casual','ninja','ferido','grave'].filter(key=>safeImage(key==='casual'?(f.retratos?.casual||f.foto):f.retratos?.[key]))
+  })));
+}
+function syncTheatrePortraits(cast){
+  const ids=new Set((Array.isArray(cast)?cast:[]).filter(c=>c&&typeof c.id==='string').map(c=>c.id));
+  for(const [id,unsubscribe] of portraitSubs){
+    if(ids.has(id))continue;
+    unsubscribe();portraitSubs.delete(id);theatre.setPortrait(id,'','');
+  }
+  if(!room)return;
+  for(const id of ids){
+    if(portraitSubs.has(id))continue;
+    const unsub=onSnapshot(doc(db,'vttRooms',room,'theatrePortraits',id),snap=>{
+      const data=snap.data();
+      theatre.setPortrait(id,data?.image||'',data?.variant||'');
+    },e=>show('Retrato no Teatro: '+e.message));
+    portraitSubs.set(id,unsub);
+  }
 }
 function portrait(f){const variants=f.retratoBase==='casual'?[f.retratos?.casual,f.retratos?.ninja]:[f.retratos?.ninja,f.retratos?.casual];for(const x of [...variants,f.foto,f.portrait,f.retrato,f.imagem,f.avatar])if(safeImage(x))return x;return ''}
 async function tokenPortrait(f){
@@ -83,9 +127,13 @@ async function connectWorld(){
   try{
     const existing=await getDoc(world);
     if(epoch!==subscriptionEpoch||uid!==expectedUid)return;
+    if(existing.exists()&&auth.currentUser?.email==='mestre_shinobi@players.shinobi-chronicles.invalid'&&existing.data()?.masterUid!==uid){
+      try{await updateDoc(world,{masterUid:uid,updatedAt:serverTimestamp()})}
+      catch(e){show('Mestre: publique as novas regras do Firebase para habilitar a distinção de NPCs.')}
+    }
     if(!existing.exists()&&admin){
       await setDoc(world,{
-        name:'Shinobi Chronicles',scene:'',sceneName:'Sem cena ativa',activeSceneId:'',
+        name:'Shinobi Chronicles',masterUid:auth.currentUser?.email==='mestre_shinobi@players.shinobi-chronicles.invalid'?uid:'',scene:'',sceneName:'Sem cena ativa',activeSceneId:'',
         grid:64,createdAt:serverTimestamp(),updatedAt:serverTimestamp(),turn:0,
         theatre:{enabled:false,cast:[],speaker:'',dialogue:''}
       });
@@ -101,7 +149,8 @@ async function connectWorld(){
         $('scene-empty').hidden=false;
         return;
       }
-      roomData=snap.data();
+      roomData=snap.data();masterUid=roomData?.masterUid||masterUid;
+      updateTheatreDirectory();syncTheatrePortraits(roomData?.theatre?.cast);
       $('world-status').textContent='Conectado · campanha compartilhada';
       $('room-heading').textContent='Mesa Permanente · '+(roomData.name||'Shinobi Chronicles');
       $('scene-name').textContent=roomData.sceneName||'Mesa Shinobi';
