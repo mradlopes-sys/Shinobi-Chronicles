@@ -107,7 +107,7 @@ async function connectWorld(){
       $('scene-caption').textContent=roomData.scene?'Cena compartilhada':'Aguardando o mestre ativar uma cena';
       $('turn-label').textContent='Turno '+(roomData.turn||0);
       theatre.setState(roomData.theatre);$('current-scene-label').textContent=roomData.sceneName||'Nenhuma cena ativa';$('current-scene-subtitle').textContent=roomData.scene?'Imagem adaptada automaticamente ao espaço da mesa':'O mestre pode escolher uma imagem na Biblioteca de Mapas';
-      view.cell=Math.max(32,Math.min(256,Number(roomData.grid)||64));
+      view.cell=view.image&&sceneKey===roomData.scene?automaticMapCell(view.image):64;
       $('scene-empty').hidden=!!roomData.scene;
       watchTokens(roomData.activeSceneId||'');
       
@@ -257,7 +257,8 @@ $('roll-d20').onclick=async()=>{if(!room)return show('Entre numa sala');const re
 $('cast-effect').onclick=async()=>{if(!room)return;try{await addDoc(collection(db,'vttRooms',room,'events'),{type:'effect',uid,at:serverTimestamp(),payload:{kind:$('effect-kind').value}})}catch(e){show(e.message)}};
 function flash(kind){const colors={katon:'#ff622f66',raiton:'#72b5ff66',chakra:'#68d2c866'};const div=document.createElement('div');div.style.cssText='position:absolute;inset:0;z-index:5;pointer-events:none;background:radial-gradient(circle,'+(colors[kind]||colors.chakra)+',transparent 70%);animation:fadefx .8s forwards';stage.append(div);setTimeout(()=>div.remove(),850)}
 const css=document.createElement('style');css.textContent='@keyframes fadefx{from{opacity:1}to{opacity:0}}';document.head.append(css);
-function loadMap(url){if(sceneKey===url)return;sceneKey=url;view.image=null;if(!safeUrl(url)){view.cell=64;center();return}const img=new Image();img.onload=()=>{if(sceneKey!==url)return;view.image=img;view.cell=Math.max(32,Math.min(192,Math.round(Math.min(img.naturalWidth,img.naturalHeight)/18)));center()};img.onerror=()=>{$('scene-empty').hidden=false;show('Não foi possível carregar a imagem da cena. Confira a URL HTTPS.')};img.src=url;draw()}
+function automaticMapCell(img){return Math.max(32,Math.min(192,Math.round(Math.min(img.naturalWidth||img.width,img.naturalHeight||img.height)/18)))}
+function loadMap(url){if(sceneKey===url)return;sceneKey=url;view.image=null;if(!safeUrl(url)){view.cell=64;center();return}const img=new Image();img.onload=()=>{if(sceneKey!==url)return;view.image=img;view.cell=automaticMapCell(img);center()};img.onerror=()=>{$('scene-empty').hidden=false;show('Não foi possível carregar a imagem da cena. Confira a URL HTTPS.')};img.src=url;draw()}
 function center(){view.zoom=1;const w=stage.clientWidth,h=stage.clientHeight;if(view.image){const scale=Math.min((w-28)/view.image.width,(h-28)/view.image.height);view.zoom=Math.max(.012,Math.min(4,scale));view.ox=(w-view.image.width*view.zoom)/2;view.oy=(h-view.image.height*view.zoom)/2}else{view.ox=w/2-8*view.cell;view.oy=h/2-5*view.cell}draw()}
 const world=(x,y)=>({x:(x-view.ox)/view.zoom,y:(y-view.oy)/view.zoom});
 function spriteBounds(t){
