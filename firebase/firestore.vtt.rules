@@ -71,10 +71,14 @@ service cloud.firestore {
       allow get: if vttAccess(roomId);
       allow list: if isAdmin();
       allow create, update: if isAdmin()
-        && request.resource.data.keys().hasOnly(['name','scene','grid','createdAt','updatedAt','turn','theatre'])
+        && request.resource.data.keys().hasOnly(['name','scene','sceneName','grid','createdAt','updatedAt','turn','theatre'])
         && request.resource.data.name is string
         && request.resource.data.name.size() <= 80;
       allow delete: if isAdmin();
+      // Biblioteca privada do mestre: jogadores recebem apenas a cena ativa no documento da sala.
+      match /scenes/{sceneId} {
+        allow read, create, update, delete: if isAdmin();
+      }
       match /members/{uid} {
         allow get: if isAdmin() || (signedIn() && request.auth.uid == uid);
         allow list: if isAdmin();
