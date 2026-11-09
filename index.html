@@ -7058,6 +7058,7 @@ S.sheets=found.docs.filter(d=>d.data().tipo!=='diario').map(d=>({id:d.id,data:no
     const frame=$('#vtt-host iframe');
     if(!frame||event.source!==frame.contentWindow)return;
     if(event.data?.scVtt==='exit')nav('home');
+    if(event.data?.scVtt==='admin')nav('admin');
   });
   if(CONFIGURED)startFirebase();else{S.loading=false;render()}
 </script>
