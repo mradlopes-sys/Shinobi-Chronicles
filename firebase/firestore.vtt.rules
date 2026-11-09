@@ -70,10 +70,11 @@ service cloud.firestore {
     match /vttRooms/{roomId} {
       allow get: if vttAccess(roomId);
       allow list: if isAdmin();
-      allow create, update, delete: if isAdmin()
+      allow create, update: if isAdmin()
         && request.resource.data.keys().hasOnly(['name','scene','grid','createdAt','updatedAt','turn'])
         && request.resource.data.name is string
         && request.resource.data.name.size() <= 80;
+      allow delete: if isAdmin();
       match /members/{uid} {
         allow get: if isAdmin() || (signedIn() && request.auth.uid == uid);
         allow list: if isAdmin();
