@@ -11,12 +11,12 @@ aside{padding:18px;border-left:1px solid #465047;background:#1b2420;overflow:aut
 </style>
 </head>
 <body>
-<header><div><h1>Mesa Virtual · Shinobi Chronicles</h1><small>Fundação local — sem conexão com partidas reais</small></div><a style="color:#d8c18d" href="./index.html">Voltar ao site</a></header>
+<header><div><h1>Mesa Virtual · Shinobi Chronicles</h1><small>Mesa online experimental · conecte-se pelo painel</small></div><a style="color:#d8c18d" href="./index.html">Voltar ao site</a></header>
 <main><div id="stage" aria-label="Mapa tático interativo"><canvas id="map"></canvas></div>
-<aside><strong>Ferramentas do mestre — prévia</strong><p>Arraste os tokens, mova o mapa pelo espaço vazio e use a roda do mouse para ampliar. Nesta etapa, os dados ficam somente neste navegador.</p>
+<aside><strong>Ferramentas do mapa</strong><p>Arraste os tokens, mova o mapa pelo espaço vazio e use a roda do mouse para ampliar. O modo local funciona sem conexão; entre em uma sala para sincronizar os tokens.</p>
 <div class="toolbar"><button id="add">+ Token</button><button id="reset">Centralizar</button><button id="grid">Grid: ligado</button></div>
 <label for="mapfile">Mapa de fundo (arquivo local)</label><input id="mapfile" type="file" accept="image/png,image/jpeg,image/webp">
-<label>Tokens</label><div id="tokens" class="token-list"></div><p id="status" role="status">Prévia não sincronizada</p></aside></main>
+<label>Tokens</label><div id="tokens" class="token-list"></div><p id="status" role="status">Modo local · conecte-se a uma sala para sincronizar</p></aside></main>
 <script>
 (()=>{
 'use strict';
