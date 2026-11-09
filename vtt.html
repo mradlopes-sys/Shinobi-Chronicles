@@ -1,43 +1,149 @@
 <!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101718"><title>Mesa Virtual · Shinobi Chronicles</title>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#121b1a">
+<title>Mesa Virtual | Shinobi Chronicles</title>
 <style>
-:root{font-family:Inter,system-ui,-apple-system,sans-serif;color:#e9e9e3;background:#101718;color-scheme:dark}*{box-sizing:border-box}body{margin:0}button,input,select,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity:.35;cursor:not-allowed}
-.workspace{height:100dvh;display:grid;grid-template-columns:64px minmax(0,1fr) 322px;grid-template-rows:56px minmax(0,1fr);background:#101718}
-.top{grid-column:1/-1;display:flex;align-items:center;gap:18px;padding:0 18px;background:#192223;border-bottom:1px solid #35403e;min-width:0}
-.brand{font:700 16px Georgia,serif;letter-spacing:.02em;color:#f4e5c8;white-space:nowrap}.brand span{font:500 10px system-ui;letter-spacing:.2em;color:#a8afa9;display:block}
-.top .room-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#c4c9c1;font-size:13px}.top a{color:#d8c8a7;text-decoration:none;font-size:12px}
-.rail{background:#172021;border-right:1px solid #35403e;display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 6px}
-.rail button{height:46px;width:48px;border:1px solid transparent;border-radius:9px;background:transparent;color:#b9c6c0;font-size:22px}.rail button.active,.rail button:hover{background:#31413e;border-color:#63776a;color:#fff}
-.stage-wrap{position:relative;min-width:0;overflow:hidden;background:radial-gradient(ellipse at 55% 45%,#2c3c37,#121c1c 75%);touch-action:none}
-#map{width:100%;height:100%;display:block;cursor:grab}#map.dragging{cursor:grabbing}
-.scene-title{position:absolute;top:18px;left:18px;background:#162021dd;border:1px solid #5a685d;border-radius:9px;padding:12px 16px;pointer-events:none;max-width:65%}.scene-title b{font:600 16px Georgia,serif}.scene-title small{display:block;color:#aebbb2;margin-top:3px}
-.stage-bottom{position:absolute;bottom:18px;left:18px;display:flex;gap:7px}.stage-bottom button{border:1px solid #6a776d;background:#192522e8;color:#f0f1e8;border-radius:8px;padding:9px 12px}
-.sidebar{min-width:0;overflow-y:auto;background:#1b2424;border-left:1px solid #35403e}
-.side-header{padding:17px 17px 12px;border-bottom:1px solid #384440}.side-header b{font:600 18px Georgia,serif}.side-header p{font-size:12px;color:#9caea4;margin:6px 0 0}
-.tabs{display:flex;padding:10px;gap:5px;border-bottom:1px solid #384440}.tabs button{flex:1;background:transparent;color:#aeb9b1;border:1px solid transparent;padding:9px 4px;border-radius:6px;font-size:12px}.tabs button.active{background:#34433d;color:#f5e8d0}
-.pane{padding:14px 16px 26px}.pane[hidden]{display:none}h3{font:600 15px Georgia,serif;margin:14px 0 8px;color:#e8ddc5}p,.hint{font-size:12px;line-height:1.5;color:#a8b7ae}label{display:block;color:#b9c6bc;font-size:11px;margin:13px 0 5px;letter-spacing:.04em}input,select,textarea{width:100%;padding:10px 11px;background:#101a1a;border:1px solid #45574e;border-radius:7px;color:#f1eee3}textarea{resize:vertical;min-height:72px}.btn{background:#35473f;color:#f2eadb;border:1px solid #617566;border-radius:7px;padding:10px 12px;margin:6px 5px 0 0}.btn.primary{background:#83654b;border-color:#b5956b}.btn:hover{filter:brightness(1.16)}.btn.small{font-size:12px;padding:7px 9px}
-.row{display:flex;gap:7px;align-items:center}.row>*{min-width:0}.row input{flex:1}.row .btn{flex:none}
-.entry{display:flex;align-items:center;gap:9px;border:1px solid #405149;background:#25312e;padding:10px;border-radius:9px;margin:7px 0;cursor:pointer;text-align:left;width:100%;color:#e9e9e3}.entry:hover,.entry.active{border-color:#ba9970;background:#35413a}.entry .thumb{width:38px;height:38px;border-radius:6px;background:#44574e;display:grid;place-items:center;overflow:hidden;flex:none}.entry .thumb img{width:100%;height:100%;object-fit:cover}.entry strong{display:block;font-size:12px}.entry small{font-size:11px;color:#9faea3}.entry .meta{flex:1;min-width:0}.entry .meta strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.status{position:absolute;top:16px;right:18px;background:#1c2929ed;color:#d3ddcf;border:1px solid #4e6559;border-radius:8px;padding:10px;max-width:320px;font-size:12px;z-index:6;pointer-events:none}.status[hidden]{display:none}
-.top-fullscreen{font-size:12px;color:#d8c8a7;background:#26332d;border:1px solid #58695d;border-radius:7px;padding:8px 10px}
-.scene-empty{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;max-width:min(340px,75vw);pointer-events:none;opacity:.8}
-.scene-empty[hidden]{display:none}.scene-emblem{font:500 64px Georgia,serif;color:#9f8366;opacity:.6}.scene-empty strong{font:600 23px Georgia,serif;color:#e8dcc7}.scene-empty small{font-size:12px;color:#b8c7bd}
-.scene-library{display:grid;gap:12px;margin:14px 0}.scene-card{border:1px solid #42594d;background:#26342f;border-radius:11px;overflow:hidden}.scene-card.current{border-color:#cfac78;box-shadow:0 0 0 1px #94745180}.scene-preview{width:100%;aspect-ratio:16/9;object-fit:cover;background:#141c1a}.scene-card .scene-info{padding:10px 12px}.scene-card .scene-info strong{display:block;color:#eee1cc;font-size:13px}.scene-card .scene-info small{display:block;color:#aabaae;font-size:11px;margin-top:5px}.scene-card .scene-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
-#actor-list>.btn{margin-bottom:10px}.actor-divider{border:0;border-top:1px solid #42544b;margin:12px 0}
-.token-card{display:flex;align-items:center;gap:7px;flex-wrap:wrap;border-bottom:1px solid #37473f;padding:8px 0}.token-card>span{flex:1;font-size:12px;min-width:0}.token-card.selected{background:#3b4234}
-#sheet-modal{position:fixed;inset:0;z-index:30;background:#000b;display:none;align-items:center;justify-content:center;padding:22px}#sheet-modal.open{display:flex}#sheet-modal .window{height:min(94dvh,960px);width:min(96vw,1250px);background:#1b2424;border:1px solid #7d806e;border-radius:12px;overflow:hidden;display:flex;flex-direction:column}#sheet-modal .window-head{padding:10px 15px;display:flex;justify-content:space-between;align-items:center;background:#182221}#sheet-modal iframe{flex:1;border:0;width:100%;background:#f7f5ee}
-@media(max-width:950px){.workspace{grid-template-columns:50px minmax(0,1fr) 260px}.rail button{width:40px}.brand{font-size:13px}}@media(max-width:700px){.workspace{grid-template-columns:45px 1fr;grid-template-rows:52px minmax(50dvh,1fr) minmax(200px,35dvh)}.sidebar{grid-column:2;grid-row:3;border-left:0;border-top:1px solid #35403e}.rail{grid-row:2/4}.top .room-title{font-size:11px}.scene-title{top:8px;left:8px}}
-.permanent-world{display:flex;align-items:center;gap:12px;padding:15px 14px;border-radius:12px;border:1px solid #726a4a;background:linear-gradient(135deg,#353d2d,#202e29);margin-bottom:12px}.permanent-world .world-mark{height:46px;width:46px;flex:none;border:1px solid #bda67b80;border-radius:10px;display:grid;place-items:center;font:600 27px Georgia,serif;color:#ecd5a8}.permanent-world strong{font:600 17px Georgia,serif;color:#f1e3c3}.permanent-world p{margin:5px 0 0;color:#b5c7b8;font-size:12px;line-height:1.35}
-</style></head><body>
-<div class="workspace"><header class="top"><div class="brand">忍 SHINOBI CHRONICLES<span>MESA VIRTUAL</span></div><div class="room-title" id="room-heading">Mesa Permanente · Shinobi Chronicles</div><button class="top-fullscreen" id="vtt-fullscreen" type="button" title="Ampliar mesa">⛶ Tela cheia</button><a href="./index.html" id="return-link" target="_top">← Arquivos Shinobi</a></header>
-<nav class="rail" aria-label="Ferramentas da mesa"><button class="active" data-tab="scenes" title="Cenas">▧</button><button data-tab="actors" title="Personagens">♟</button><button data-tab="combat" title="Combate">⚔</button><button data-tab="theatre" title="Teatro">▤</button></nav>
-<main class="stage-wrap" id="stage"><canvas id="map" aria-label="Mapa tático: arraste os tokens para mover, duplo clique para abrir ficha"></canvas><div class="scene-empty" id="scene-empty"><span class="scene-emblem">忍</span><strong>Nenhuma cena ativa</strong><small>O mestre pode preparar um mapa na biblioteca de cenas.</small></div><div class="scene-title"><b id="scene-name">Mesa de Konoha</b><small id="scene-caption">Aguardando uma cena do mestre</small></div><div class="stage-bottom"><button id="zoom-out" title="Diminuir zoom">−</button><button id="reset" title="Centralizar">⌖</button><button id="zoom-in" title="Aumentar zoom">+</button><button id="grid" title="Alternar grade">▦</button></div><div id="status" class="status" role="status" hidden></div></main>
-<aside class="sidebar"><div class="side-header"><b>Central da Mesa</b><p id="auth-label">Conectando ao Firebase…</p></div>
-<div class="tabs"><button class="active" data-tab="scenes">Cenas</button><button data-tab="actors">Atores</button><button data-tab="combat">Combate</button><button data-tab="theatre">Teatro</button></div>
-<section class="pane" id="pane-scenes"><div class="permanent-world"><div class="world-mark" aria-hidden="true">忍</div><div><strong>Mesa Permanente</strong><p id="world-status" role="status">Verificando o acesso à campanha…</p></div></div><p class="hint">Todos os shinobi conectados acessam a mesma campanha automaticamente. Somente o mestre prepara e ativa os mapas.</p><div id="gm-scenes" hidden><h3>Biblioteca de cenas</h3><p class="hint">Prepare mapas uma vez e ative a cena desejada durante a sessão.</p><label for="scene-title-input">Nome da cena</label><input id="scene-title-input" maxlength="80" placeholder="Ex.: Floresta da Morte"><label for="scene-url">Imagem do mapa (URL HTTPS)</label><input id="scene-url" placeholder="https://.../mapa.webp"><label for="scene-grid">Tamanho da célula em pixels</label><input id="scene-grid" type="number" min="32" max="256" step="1" value="64"><button id="scene-add" class="btn primary">Salvar cena na biblioteca</button><button id="scene-cancel-edit" class="btn small" hidden>Cancelar edição</button><div id="scene-library" class="scene-library"></div></div><div id="active-scene"></div></section>
-<section class="pane" id="pane-actors" hidden><h3>Personagens</h3><p class="hint">O mestre arrasta uma ficha até o mapa para criar seu token. Duplo clique em um token abre a ficha.</p><label for="actor-search">Buscar personagem</label><input id="actor-search" type="search" placeholder="Nome ou clã"><div id="actor-list"></div><div id="token-list"></div></section>
-<section class="pane" id="pane-combat" hidden><h3>Encontro</h3><p id="turn-label">Turno 0</p><button id="next-turn" class="btn primary" hidden>Próximo turno</button><h3>Dados e efeitos</h3><button id="roll-d20" class="btn">Rolar d20</button><select id="effect-kind"><option value="chakra">Chakra</option><option value="katon">Katon</option><option value="raiton">Raiton</option></select><button id="cast-effect" class="btn" hidden>Efeito visual (mestre)</button><div id="roll-log"></div></section>
-<section class="pane" id="pane-theatre" hidden><div id="theatre-panel"></div></section>
-</aside></div>
-<div id="sheet-modal" role="dialog" aria-label="Ficha do personagem"><div class="window"><div class="window-head"><b>Ficha do personagem</b><button class="btn small" id="sheet-close">Fechar ✕</button></div><iframe id="sheet-frame" title="Ficha do Shinobi" loading="lazy"></iframe></div></div>
-<script type="module" src="./assets/vtt-studio.js"></script></body></html>
+:root{font-family:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;color:#e8e7dd;background:#101918;color-scheme:dark;--ink:#111b19;--surface:#1b2825;--surface2:#26342d;--line:#3c4d42;--gold:#d6b78b;--muted:#aebcb0}
+*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden}button,input,select,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity:.4;cursor:not-allowed}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid #cfb788;outline-offset:2px}a{color:var(--gold);text-decoration:none}
+.workspace{width:100%;height:100dvh;display:grid;grid-template-columns:62px minmax(0,1fr) minmax(285px,320px);transition:grid-template-columns .22s ease;background:#101918}
+.workspace.rail-hidden{grid-template-columns:0 minmax(0,1fr) minmax(285px,320px)}.workspace.panel-hidden{grid-template-columns:62px minmax(0,1fr) 0}.workspace.rail-hidden.panel-hidden{grid-template-columns:0 minmax(0,1fr) 0}
+.rail{grid-column:1;min-width:0;background:#17221f;border-right:1px solid #3a4a40;display:flex;flex-direction:column;align-items:center;padding:14px 5px;gap:10px;overflow:hidden;z-index:3}
+.workspace.rail-hidden .rail{visibility:hidden;border:0}
+.rail .seal{font-family:Georgia,serif;color:var(--gold);font-size:24px;padding:7px 0 14px}.rail button{width:46px;height:48px;border-radius:11px;border:1px solid transparent;background:transparent;color:#99afa2;display:grid;place-items:center;font-size:21px;transition:background .16s,color .16s,border-color .16s}
+.rail button.active,.rail button:hover{background:#34443a;border-color:#68816e;color:#f4e6cb}.rail button[hidden]{display:none}
+.rail .rail-tip{margin-top:auto;writing-mode:vertical-rl;transform:rotate(180deg);color:#7b9487;letter-spacing:.25em;font-size:9px}
+.stage-wrap{grid-column:2;min-width:0;min-height:0;position:relative;overflow:hidden;background:radial-gradient(ellipse at 55% 45%,#293d35 0%,#172723 53%,#111c1a 100%);touch-action:none}
+.stage-wrap::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,transparent 42%,rgba(5,11,10,.4) 100%);z-index:1}
+#map{width:100%;height:100%;display:block;cursor:grab;position:relative;z-index:0}#map.dragging{cursor:grabbing}
+.stage-controls{position:absolute;z-index:7;top:14px;left:14px;right:14px;display:flex;align-items:flex-start;gap:10px;pointer-events:none}
+.stage-controls>*{pointer-events:auto}.small-tools{display:flex;align-items:center;gap:7px}
+.glass-button{height:35px;min-width:35px;padding:0 11px;display:inline-flex;align-items:center;justify-content:center;gap:6px;color:#e9e4d8;background:#17241fe9;border:1px solid #617467a3;border-radius:10px;box-shadow:0 7px 22px #07100d55;backdrop-filter:blur(10px);font-size:12px}
+.glass-button:hover{background:#30453a;border-color:#b49b74}
+.stage-identity{pointer-events:none;padding:7px 12px;max-width:min(390px,40vw);border-radius:10px;background:#1c2a24a8;border:1px solid #475a4b50;backdrop-filter:blur(12px)}
+.stage-identity .eyebrow{display:block;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:#c9ae81}
+.stage-identity b{display:block;font:600 13px Georgia,serif;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;margin-top:3px}
+.stage-identity small{font-size:10px;color:#b8c4ba}
+.right-tools{margin-left:auto;display:flex;gap:7px}
+.status{position:absolute;z-index:8;top:76px;right:16px;padding:12px 15px;border-radius:10px;background:#1d2c26ec;border:1px solid #70806a;color:#ece5d6;box-shadow:0 15px 35px #07100e55;max-width:300px;font-size:12px;pointer-events:none}
+.status[hidden]{display:none}
+.scene-empty{position:absolute;z-index:2;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;text-align:center;display:flex;flex-direction:column;align-items:center;gap:9px;max-width:300px;color:#bec9bf}
+.scene-empty[hidden]{display:none}.scene-empty .scene-emblem{font:500 63px Georgia,serif;color:#cfb085;opacity:.45}
+.scene-empty strong{font:600 22px Georgia,serif;color:#ece6d6}.scene-empty small{font-size:12px;line-height:1.6}
+.stage-bottom{position:absolute;z-index:7;left:16px;bottom:16px;display:flex;gap:7px;padding:5px;background:#15211edc;border:1px solid #4e6253a0;border-radius:13px;backdrop-filter:blur(12px)}
+.stage-bottom button{height:33px;min-width:35px;border-radius:8px;border:0;background:transparent;color:#e9dfcf;font-size:17px}.stage-bottom button:hover{background:#425546}.stage-bottom .stage-label{font-size:11px;align-self:center;padding:0 8px;color:#a9bcad}
+.sidebar{grid-column:3;min-width:0;overflow-y:auto;overflow-x:hidden;scrollbar-color:#637569 #1e2b25;background:#1b2824;border-left:1px solid #405344;box-shadow:-12px 0 30px #07130e44;z-index:4}
+.workspace.panel-hidden .sidebar{visibility:hidden;overflow:hidden;border:0}
+.side-header{padding:20px 19px 12px}.side-header .overline{font-size:9px;letter-spacing:.19em;text-transform:uppercase;color:#bcab88}.side-header b{display:block;margin:6px 0 5px;font:600 21px Georgia,serif;color:#f0e8d8}.side-header p{margin:0;font-size:11px;color:#9bb2a3}
+.tabs{display:flex;align-items:center;gap:5px;margin:0 12px;padding:6px;border-radius:11px;background:#15231e;border:1px solid #394a3e;overflow:auto}
+.tabs button{flex:1;min-width:0;border:0;background:transparent;color:#b0bbad;border-radius:7px;padding:10px 6px;font-size:11px;white-space:nowrap}.tabs button.active{background:#3b4e3d;color:#ffedc7;box-shadow:inset 0 0 0 1px #9b936e40}
+.tabs button[hidden]{display:none}
+.pane{padding:18px 19px 32px}.pane[hidden]{display:none}
+h3{font:600 16px Georgia,serif;color:#eadfc9;margin:17px 0 11px}
+p,.hint{font-size:12px;color:#abbcae;line-height:1.65}.hint{margin:10px 0 16px}
+label{display:block;margin:15px 0 6px;font-size:11px;font-weight:600;letter-spacing:.025em;color:#c1cbbb}
+input,select,textarea{width:100%;padding:10px 12px;border-radius:8px;border:1px solid #516154;background:#101c19;color:#f1eadb}
+textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholder{color:#84988b}
+.btn{background:#34483d;border:1px solid #658169;color:#f0eadc;padding:10px 12px;margin:7px 5px 0 0;border-radius:8px;font-size:12px}.btn.primary{background:#846b4c;border-color:#bca17b;color:#fff5e4}.btn:hover{filter:brightness(1.14)}.btn.small{font-size:11px;padding:7px 9px}
+.entry{width:100%;display:flex;align-items:center;gap:10px;padding:10px;margin:8px 0;border-radius:10px;border:1px solid #405449;background:#26352c;color:#e7e8dc;text-align:left;cursor:pointer}
+.entry:hover,.entry.active{border-color:#c0a37e;background:#344839}.entry .thumb{width:44px;height:48px;display:grid;place-items:center;flex-shrink:0;border-radius:7px;background:radial-gradient(circle at 50% 75%,#506353,#2a382f);overflow:hidden;font-family:serif;font-size:26px;color:#dfc797}.entry .thumb img{width:100%;height:100%;object-fit:contain}
+.entry strong{display:block;font-size:12px}.entry small{display:block;color:#aabaae;font-size:11px;margin-top:3px}.entry .meta{min-width:0;flex:1;overflow:hidden}.entry .meta strong{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}
+.scene-library{display:grid;gap:15px;margin:18px 0}.scene-card{overflow:hidden;border:1px solid #4b5e4c;background:#233128;border-radius:13px;transition:border-color .18s,transform .18s}.scene-card:hover{border-color:#9b9368}.scene-card.current{border-color:#d1b185;box-shadow:0 0 0 1px #bc9c6e66}.scene-preview{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;background:#0e1915}.scene-card .scene-info{padding:12px}.scene-card .scene-info strong{display:block;font-size:13px;color:#f4ead8}.scene-card .scene-info small{display:block;font-size:11px;color:#aebdae;margin-top:4px}.scene-card .scene-actions{display:flex;flex-wrap:wrap;gap:4px;margin-top:9px}
+#actor-list>.btn{margin:6px 0 10px}.token-card{display:flex;align-items:center;gap:4px;padding:9px 0;border-bottom:1px solid #34493b;flex-wrap:wrap}.token-card>span{flex:1;min-width:100px;font-size:11px;color:#ced5c8}.token-card.selected{background:#354537}
+.permanent-world{display:flex;align-items:center;gap:12px;padding:16px;border-radius:13px;border:1px solid #756a4a;background:linear-gradient(120deg,#3d4633,#20352c)}.world-mark{width:42px;height:42px;flex:none;display:grid;place-items:center;border:1px solid #b69b7066;border-radius:11px;font:500 25px Georgia,serif;color:#d8c092}.permanent-world strong{display:block;font:600 16px Georgia,serif;color:#f0e8d5}.permanent-world p{margin:5px 0 0;font-size:11px}
+.current-scene-card{display:flex;align-items:center;gap:12px;margin:14px 0;padding:14px;border:1px solid #405848;border-radius:11px;background:#28392f}.current-scene-card .signal{height:10px;width:10px;flex:none;background:#b3996e;border-radius:50%;box-shadow:0 0 0 4px #b3996e2c}.current-scene-card b{display:block;font:600 14px Georgia,serif;color:#efe6d4}.current-scene-card small{color:#a9b9aa;font-size:11px}
+#sheet-modal{position:fixed;inset:0;z-index:30;background:#020705b8;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(7px)}#sheet-modal.open{display:flex}#sheet-modal .window{height:min(94dvh,960px);width:min(96vw,1250px);border-radius:12px;overflow:hidden;background:#1b2824;border:1px solid #8b8a72;box-shadow:0 25px 90px #0009;display:flex;flex-direction:column}.window-head{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:#182721;color:#efdfc2}.window-head b{font:600 15px Georgia,serif}#sheet-modal iframe{width:100%;flex:1;border:0;background:#f3f0e6}
+@media(max-width:840px){.workspace{grid-template-columns:54px minmax(0,1fr) 285px}.workspace.rail-hidden{grid-template-columns:0 minmax(0,1fr) 285px}.workspace.panel-hidden{grid-template-columns:54px minmax(0,1fr) 0}.rail button{width:42px;height:43px}.stage-identity{max-width:170px}.stage-identity small{display:none}}
+@media(max-width:690px){.workspace{grid-template-columns:49px minmax(0,1fr);grid-template-rows:minmax(48dvh,1fr) minmax(225px,39dvh)}.rail{grid-row:1/3;grid-column:1}.stage-wrap{grid-row:1;grid-column:2}.sidebar{grid-row:2;grid-column:2;border-left:0;border-top:1px solid #405344}.workspace.rail-hidden,.workspace.panel-hidden,.workspace.rail-hidden.panel-hidden{grid-template-columns:0 minmax(0,1fr)}.workspace.rail-hidden .stage-wrap,.workspace.rail-hidden .sidebar{grid-column:2}.workspace.panel-hidden{grid-template-rows:1fr 0}.workspace.panel-hidden .sidebar{display:none}.stage-controls{top:8px;left:8px;right:8px;gap:5px}.stage-identity{display:none}.glass-button{padding:0 8px}.stage-bottom{left:9px;bottom:9px}.tabs{margin:0 9px}}
+@media(prefers-reduced-motion:reduce){.workspace,.scene-card,.rail button{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="workspace" id="workspace">
+  <nav class="rail" id="tool-rail" aria-label="Ferramentas da mesa">
+    <div class="seal" aria-hidden="true">忍</div>
+    <button class="active" data-tab="mapa" title="Mapa atual" aria-label="Mapa atual">⌖</button>
+    <button data-tab="biblioteca" data-gm-only title="Biblioteca de mapas" aria-label="Biblioteca de mapas" hidden>▧</button>
+    <button data-tab="actors" title="Personagens" aria-label="Personagens">♟</button>
+    <button data-tab="combat" title="Combate" aria-label="Combate">⚔</button>
+    <button data-tab="theatre" title="Modo Teatro" aria-label="Modo Teatro">◈</button>
+    <span class="rail-tip" aria-hidden="true">MESA SHINOBI</span>
+  </nav>
+  <main class="stage-wrap" id="stage">
+    <canvas id="map" aria-label="Mapa da campanha. Arraste imagens dos personagens para mover os tokens; duplo clique para abrir a ficha."></canvas>
+    <div class="scene-empty" id="scene-empty"><span class="scene-emblem" aria-hidden="true">忍</span><strong>Sua próxima cena</strong><small>O mestre pode abrir a Biblioteca de Mapas e ativar um cenário para a campanha.</small></div>
+    <div class="stage-controls">
+      <div class="small-tools">
+        <button id="vtt-toggle-rail" class="glass-button" aria-label="Ocultar barra de ferramentas" title="Mostrar ou ocultar barra de ferramentas" aria-pressed="false">☰</button>
+      </div>
+      <div class="stage-identity">
+        <span class="eyebrow" id="room-heading">Mesa Permanente</span>
+        <b id="scene-name">Nenhuma cena ativa</b>
+        <small id="scene-caption">O mestre ainda não ativou o mapa.</small>
+      </div>
+      <div class="right-tools">
+        <button id="vtt-toggle-panel" class="glass-button" aria-label="Ocultar painel lateral" title="Mostrar ou ocultar painel lateral" aria-pressed="false">◧ <span> Painel</span></button>
+        <button id="vtt-fullscreen" class="glass-button" title="Tela cheia" aria-label="Tela cheia">⛶</button>
+        <a class="glass-button" href="./index.html" target="_top" title="Voltar aos Arquivos Shinobi">↩</a>
+      </div>
+    </div>
+    <div class="stage-bottom">
+      <button id="zoom-out" title="Afastar câmera" aria-label="Afastar câmera">−</button>
+      <button id="reset" title="Enquadrar mapa automaticamente" aria-label="Enquadrar mapa">⌖</button>
+      <button id="zoom-in" title="Aproximar câmera" aria-label="Aproximar câmera">+</button>
+      <button id="grid" title="Mostrar ou ocultar grade" aria-label="Mostrar ou ocultar grade">▦</button>
+    </div>
+    <div id="status" class="status" hidden role="status"></div>
+  </main>
+  <aside class="sidebar" id="side-panel">
+    <div class="side-header"><span class="overline">SHINOBI · MESA VIRTUAL</span><b>Campanha</b><p id="auth-label">Conectando ao Firebase…</p></div>
+    <div class="tabs" role="group" aria-label="Abas da mesa">
+      <button class="active" data-tab="mapa">Mapa</button>
+      <button data-tab="biblioteca" data-gm-only hidden>Biblioteca</button>
+      <button data-tab="actors">Atores</button>
+      <button data-tab="combat">Combate</button>
+      <button data-tab="theatre">Teatro</button>
+    </div>
+    <section class="pane" id="pane-mapa">
+      <div class="permanent-world"><span class="world-mark" aria-hidden="true">忍</span><div><strong>Mesa Permanente</strong><p id="world-status" role="status">Conectando à campanha…</p></div></div>
+      <h3>Cena em exibição</h3>
+      <div class="current-scene-card"><div class="signal"></div><div><b id="current-scene-label">Nenhuma cena ativa</b><small id="current-scene-subtitle">O mestre pode selecionar um mapa na biblioteca.</small></div></div>
+      <p class="hint">O mapa se adapta automaticamente à área da mesa. Use a roda do mouse para aproximar e arraste o fundo para navegar.</p>
+      <p class="hint" id="player-map-note">Os personagens são colocados no mapa pelo mestre; você pode mover seus próprios personagens.</p>
+    </section>
+    <section class="pane" id="pane-biblioteca" hidden>
+      <div id="gm-scenes" hidden>
+        <h3>Biblioteca de mapas</h3>
+        <p class="hint">Salve seus cenários aqui. Somente o mestre vê a biblioteca; os jogadores acompanham apenas o mapa que você ativar.</p>
+        <label for="scene-title-input">Nome do mapa</label><input id="scene-title-input" maxlength="80" placeholder="Ex.: Floresta da Morte">
+        <label for="scene-url">Imagem do mapa (URL HTTPS)</label><input id="scene-url" placeholder="https://.../floresta.webp">
+        <p class="hint">Não precisa configurar dimensões ou quantidade de pixels. O VTT ajusta a imagem automaticamente.</p>
+        <button id="scene-add" class="btn primary">Salvar mapa</button><button id="scene-cancel-edit" class="btn small" hidden>Cancelar edição</button>
+        <div class="scene-library" id="scene-library"></div>
+      </div>
+    </section>
+    <section class="pane" id="pane-actors" hidden>
+      <h3>Personagens</h3>
+      <p class="hint">O mestre pode arrastar a imagem original de uma ficha para o mapa. Um duplo clique abre a ficha sem sair da mesa.</p>
+      <label for="actor-search">Buscar ficha</label><input id="actor-search" type="search" placeholder="Nome ou clã">
+      <div id="actor-list"></div><div id="token-list"></div>
+    </section>
+    <section class="pane" id="pane-combat" hidden>
+      <h3>Encontro</h3><p id="turn-label">Turno 0</p>
+      <button id="next-turn" class="btn primary" hidden>Próximo turno</button>
+      <h3>Rolagens</h3><button id="roll-d20" class="btn">Rolar d20</button>
+      <select id="effect-kind" hidden><option value="chakra">Chakra</option><option value="katon">Katon</option><option value="raiton">Raiton</option></select>
+      <button id="cast-effect" class="btn" hidden>Executar efeito</button>
+      <div id="roll-log"></div>
+    </section>
+    <section class="pane" id="pane-theatre" hidden><div id="theatre-panel"></div></section>
+  </aside>
+</div>
+<div id="sheet-modal" role="dialog" aria-label="Ficha do personagem" aria-modal="true">
+  <div class="window"><div class="window-head"><b>Ficha do personagem</b><button class="btn small" id="sheet-close" aria-label="Fechar ficha">Fechar ✕</button></div><iframe id="sheet-frame" title="Ficha Shinobi" loading="lazy"></iframe></div>
+</div>
+<script type="module" src="./assets/vtt-studio.js"></script>
+</body>
+</html>
