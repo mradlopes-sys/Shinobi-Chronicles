@@ -343,6 +343,7 @@ $('vtt-toggle-panel').onclick=()=>{
   updateSpaceToggle($('vtt-toggle-panel'),hidden,'Ocultar painel lateral','Mostrar painel lateral');
 };
 workspace.addEventListener('transitionend',e=>{if(e.propertyName==='grid-template-columns')center()});
+$('vtt-exit').onclick=()=>{if(window.parent&&window.parent!==window)window.parent.postMessage({scVtt:'exit'},location.origin);else location.assign('./index.html')};
 $('vtt-fullscreen').onclick=async()=>{
   try{
     if(document.fullscreenElement)await document.exitFullscreen();
