@@ -71,7 +71,7 @@ service cloud.firestore {
       allow get: if vttAccess(roomId);
       allow list: if isAdmin();
       allow create, update: if isAdmin()
-        && request.resource.data.keys().hasOnly(['name','scene','sceneName','grid','createdAt','updatedAt','turn','theatre'])
+        && request.resource.data.keys().hasOnly(['name','scene','sceneName','activeSceneId','grid','createdAt','updatedAt','turn','theatre'])
         && request.resource.data.name is string
         && request.resource.data.name.size() <= 80;
       allow delete: if isAdmin();
