@@ -1,6 +1,5 @@
 import {createTheatre} from './vtt-theatre.js';
 import {createVisualEffects,EFFECTS} from './vtt-effects.js';
-import {createVisualEffects,EFFECTS} from './vtt-effects.js';
 import {initializeApp,getApps} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
 import {getAuth,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
 import {getFirestore,doc,getDoc,addDoc,setDoc,collection,onSnapshot,serverTimestamp,updateDoc,query,where,getDocs,deleteDoc,limit,orderBy} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
