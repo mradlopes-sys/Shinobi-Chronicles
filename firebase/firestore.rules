@@ -129,11 +129,37 @@ service cloud.firestore {
       }
       match /events/{eventId} {
         allow read: if vttAccess(roomId);
+        // Jogadores podem registrar suas rolagens, mensagens e efeitos dos próprios jutsus.
+        // Pedidos de perícia e efeitos livres continuam exclusivos do mestre.
         allow create: if vttAccess(roomId)
           && request.resource.data.keys().hasOnly(['type','uid','at','payload'])
           && request.resource.data.uid == request.auth.uid
-          && request.resource.data.type in ['roll','effect']
-          && (request.resource.data.type == 'roll' || isAdmin());
+          && request.resource.data.payload is map
+          && (
+            (request.resource.data.type == 'roll'
+              && request.resource.data.payload.dice is string
+              && request.resource.data.payload.dice in ['1d6','1d8','2d8','3d8','1d10','1d12','1d20','1d100']
+              && request.resource.data.payload.rolls is list
+              && request.resource.data.payload.rolls.size() <= 3
+              && request.resource.data.payload.total is number)
+            || (request.resource.data.type == 'message'
+              && request.resource.data.payload.text is string
+              && request.resource.data.payload.text.size() <= 400)
+            || (request.resource.data.type == 'rollRequest'
+              && isAdmin()
+              && request.resource.data.payload.targetUid is string
+              && request.resource.data.payload.skill is string
+              && request.resource.data.payload.skill.size() <= 70)
+            || (request.resource.data.type == 'effect'
+              && (isAdmin() || (
+                request.resource.data.payload.get('source', '') == 'jutsu'
+                && request.resource.data.payload.fichaId is string
+                && exists(/databases/$(database)/documents/fichas/$(request.resource.data.payload.fichaId))
+                && get(/databases/$(database)/documents/fichas/$(request.resource.data.payload.fichaId)).data.ownerUid == request.auth.uid
+              ))
+              && request.resource.data.payload.kind is string
+              && request.resource.data.payload.kind.size() <= 28)
+          );
         allow update, delete: if isAdmin();
       }
     }
