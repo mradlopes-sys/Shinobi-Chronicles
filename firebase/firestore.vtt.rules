@@ -1,0 +1,110 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // O administrador é autorizado exclusivamente por um documento criado
+    // manualmente no Console do Firebase usando o UID da conta.
+    function isAdmin() {
+      return signedIn() && (
+        request.auth.token.email == 'mestre_shinobi@players.shinobi-chronicles.invalid'
+        || exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // Cada jogador só pode ler o próprio perfil.
+    match /users/{userId} {
+      allow get: if signedIn() && (request.auth.uid == userId || isAdmin());
+      allow list: if false;
+      allow create: if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.keys().hasOnly(['username', 'criadoEm'])
+        && request.resource.data.username is string
+        && request.resource.data.username.size() >= 3
+        && request.resource.data.username.size() <= 20;
+      allow update, delete: if false;
+    }
+
+    // Uma conta pode ter várias fichas. Cada documento tem ID próprio
+    // e o proprietário é verificado por ownerUid.
+    // As consultas do jogador devem usar where('ownerUid','==',uid).
+    match /fichas/{fichaId} {
+      allow get: if signedIn()
+        && (resource.data.ownerUid == request.auth.uid || isAdmin());
+
+      allow list: if signedIn()
+        && (resource.data.ownerUid == request.auth.uid || isAdmin());
+
+      allow create: if signedIn()
+        && request.resource.data.ownerUid == request.auth.uid;
+
+      // O proprietário edita a própria ficha. Administradores autorizados
+      // podem editar qualquer ficha, sem alterar o campo ownerUid.
+      allow update: if signedIn()
+        && resource.data.ownerUid == request.resource.data.ownerUid
+        && (resource.data.ownerUid == request.auth.uid || isAdmin());
+
+      allow delete: if signedIn()
+        && resource.data.ownerUid == request.auth.uid;
+    }
+
+    // Nunca permita ao navegador conceder ou remover privilégios.
+    // Cadastre administradores apenas pelo Console / Admin SDK.
+    match /admins/{adminId} {
+      allow get: if signedIn() && request.auth.uid == adminId;
+      allow list, create, update, delete: if false;
+    }
+
+
+    // VTT: apenas mestres podem criar salas, convidar jogadores e editar cenas.
+    // Participantes podem ler a sala e mover somente seus próprios tokens.
+    function vttMember(roomId) {
+      return signedIn() && exists(/databases/$(database)/documents/vttRooms/$(roomId)/members/$(request.auth.uid));
+    }
+    function vttAccess(roomId) {
+      return isAdmin() || vttMember(roomId);
+    }
+    match /vttRooms/{roomId} {
+      allow get: if vttAccess(roomId);
+      allow list: if isAdmin();
+      allow create, update, delete: if isAdmin()
+        && request.resource.data.keys().hasOnly(['name','scene','grid','createdAt','updatedAt','turn'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() <= 80;
+      match /members/{uid} {
+        allow get: if isAdmin() || (signedIn() && request.auth.uid == uid);
+        allow list: if isAdmin();
+        allow create, update, delete: if isAdmin();
+      }
+      match /tokens/{tokenId} {
+        allow read: if vttAccess(roomId);
+        allow create, delete: if isAdmin();
+        allow update: if isAdmin() || (
+          vttMember(roomId)
+          && resource.data.ownerUid == request.auth.uid
+          && request.resource.data.ownerUid == resource.data.ownerUid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['x','y'])
+          && request.resource.data.x is number
+          && request.resource.data.y is number
+          && request.resource.data.x >= 0 && request.resource.data.x <= 1000
+          && request.resource.data.y >= 0 && request.resource.data.y <= 1000
+        );
+      }
+      match /events/{eventId} {
+        allow read: if vttAccess(roomId);
+        allow create: if vttAccess(roomId)
+          && request.resource.data.keys().hasOnly(['type','uid','at','payload'])
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.type in ['roll','effect'];
+        allow update, delete: if isAdmin();
+      }
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
