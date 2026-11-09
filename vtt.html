@@ -136,7 +136,7 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
       <button id="next-turn" class="btn primary" hidden>Próximo turno</button>
       <h3>Rolagens</h3><button id="roll-d20" class="btn">Rolar d20</button><p class="hint">O dado aparece para os participantes. Não altera automaticamente a ficha.</p>
       <label id="effect-kind-label" for="effect-kind" hidden>Efeito visual do mestre</label><select id="effect-kind" hidden></select><label id="effect-target-label" for="effect-target" hidden>Alvo da animação</label><select id="effect-target" hidden><option value="center">Centro da tela</option><option value="selected">Personagem selecionado no mapa</option></select><p class="hint" id="effect-help" hidden></p>
-      <button id="cast-effect" class="btn primary" hidden>Executar efeito para todos</button><p class="hint" id="effect-feedback" role="status"></p>
+      <button id="cast-effect" class="btn primary" hidden>Executar efeito para todos</button><p class="hint" id="effect-feedback" role="status"></p><details id="combat-effect-guide" style="margin-top:16px;border:1px solid #53634f;border-radius:10px;padding:10px"><summary style="cursor:pointer;color:#e9dcc4;font-size:12px">Guia dos efeitos visuais</summary><div id="effect-guide-items" style="margin-top:10px"></div></details>
       <div id="roll-log"></div>
     </section>
     <section class="pane" id="pane-theatre" hidden><div id="theatre-panel"></div></section>
