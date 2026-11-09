@@ -180,12 +180,13 @@ async function connectWorld(){
           const rolls=events.docs.map(d=>d.data()).filter(e=>e.type==='roll').sort((a,b)=>(b.at?.seconds||0)-(a.at?.seconds||0));
           if(rolls.length)$('roll-log').textContent='Última rolagem: d20 → '+rolls[0].payload?.result;
           for(const change of events.docChanges()){
-            if(change.type!=='added')continue;
+            if(change.type!=='added'&&change.type!=='modified')continue;
             const data=change.doc.data();
-            if(data.type!=='effect'||visualEffects.seenEvent(change.doc.id))continue;
+            if(data.type!=='effect')continue;
             if(data.payload?.sceneId&&data.payload.sceneId!==roomData?.activeSceneId)continue;
             const stamp=data.at?.toMillis?.();
             if(!stamp||Math.abs(Date.now()-stamp)>12000)continue;
+            if(visualEffects.seenEvent(change.doc.id))continue;
             if(data.payload?.nonce&&localVfxNonces.has(data.payload.nonce))continue;
             visualEffects.play(data.payload?.kind,effectPoint(data.payload));
           }
@@ -436,6 +437,7 @@ $('vtt-toggle-panel').onclick=()=>{
 };
 workspace.addEventListener('transitionend',e=>{if(e.propertyName==='grid-template-columns')center()});
 $('vtt-exit').onclick=()=>{if(window.parent&&window.parent!==window)window.parent.postMessage({scVtt:'exit'},location.origin);else location.assign('./index.html')};
+$('vtt-manage-sheets').onclick=()=>{if(!admin)return;if(window.parent&&window.parent!==window)window.parent.postMessage({scVtt:'admin'},location.origin);else location.assign('./index.html')};
 $('vtt-fullscreen').onclick=async()=>{
   try{
     if(document.fullscreenElement)await document.exitFullscreen();
