@@ -77,6 +77,7 @@ async function connectWorld(){
   if(!uid)return;
   const epoch=subscriptionEpoch, expectedUid=uid;
   room=WORLD_ID;
+  renderSheets(); // Reabilita arrastar e colocar fichas após a conexão automática.
   $('world-status').textContent='Conectando à mesa compartilhada…';
   const world=roomRef();
   try{
