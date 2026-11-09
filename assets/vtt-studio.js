@@ -327,5 +327,27 @@ canvas.onwheel=e=>{e.preventDefault();zoom(e.deltaY<0?1.1:.9)};
 $('zoom-in').onclick=()=>zoom(1.2);$('zoom-out').onclick=()=>zoom(.8);$('reset').onclick=center;$('grid').onclick=()=>{view.grid=!view.grid;$('grid').style.color=view.grid?'#f0c889':'';draw()};
 new ResizeObserver(()=>{const dpr=Math.min(window.devicePixelRatio||1,2);canvas.width=Math.round(stage.clientWidth*dpr);canvas.height=Math.round(stage.clientHeight*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);draw()}).observe(stage);
 
-$('vtt-fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen()}catch(e){show('Tela cheia não disponível: '+e.message)}};
+
+const workspace=$('workspace');
+function updateSpaceToggle(button,hidden,hiddenLabel,shownLabel){
+  button.setAttribute('aria-pressed',String(hidden));
+  button.setAttribute('aria-label',hidden?shownLabel:hiddenLabel);
+  button.title=hidden?shownLabel:hiddenLabel;
+}
+$('vtt-toggle-rail').onclick=()=>{
+  const hidden=workspace.classList.toggle('rail-hidden');
+  updateSpaceToggle($('vtt-toggle-rail'),hidden,'Ocultar ferramentas','Mostrar ferramentas');
+};
+$('vtt-toggle-panel').onclick=()=>{
+  const hidden=workspace.classList.toggle('panel-hidden');
+  updateSpaceToggle($('vtt-toggle-panel'),hidden,'Ocultar painel lateral','Mostrar painel lateral');
+};
+workspace.addEventListener('transitionend',e=>{if(e.propertyName==='grid-template-columns')center()});
+$('vtt-fullscreen').onclick=async()=>{
+  try{
+    if(document.fullscreenElement)await document.exitFullscreen();
+    else await workspace.requestFullscreen();
+  }catch(e){show('Tela cheia indisponível: '+e.message)}
+};
+
 document.addEventListener('keydown',e=>{if(e.target.closest('input,textarea,select,[contenteditable]')||$('sheet-modal').classList.contains('open'))return;const t=visibleTokens().find(x=>x.id===selected);if((e.key==='c'||e.key==='C')&&t&&canMove(t)){e.preventDefault();openSheet(t.fichaId,t.ownerUid)}if(e.key==='Delete'&&admin&&t){e.preventDefault();if(confirm('Retirar token '+t.name+'?'))deleteDoc(tokenRef(t.id)).catch(err=>show(err.message))}});
