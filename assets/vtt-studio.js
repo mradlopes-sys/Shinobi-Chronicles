@@ -53,8 +53,76 @@ function watchTokens(sceneId){
   },err=>show('Permissão dos tokens: '+err.message));
 }
 $('member-add').onclick=async()=>{if(!admin||!room)return;const id=$('member-uid').value.trim();if(!/^[A-Za-z0-9]{15,128}$/.test(id))return show('UID inválido');try{await setDoc(doc(db,'vttRooms',room,'members',id),{joinedAt:serverTimestamp()});show('Jogador autorizado')}catch(e){show(e.message)}};
-$('scene-add').onclick=async()=>{if(!admin||!room)return show('Somente o mestre pode preparar mapas');const name=$('scene-title-input').value.trim(),url=$('scene-url').value.trim();if(!name||name.length>80||!safeUrl(url))return show('Informe nome e URL HTTPS válida');try{await addDoc(collection(db,'vttRooms',room,'scenes'),{name,url,createdAt:serverTimestamp()});$('scene-title-input').value='';$('scene-url').value='';show('Cena adicionada à biblioteca')}catch(e){show(e.message)}};
-function renderScenes(){const root=$('scene-library');root.replaceChildren();for(const s of scenes){const item=document.createElement('div');item.className='entry'+(roomData?.scene===s.url?' active':'');const pic=document.createElement('span');pic.className='thumb';const img=document.createElement('img');img.src=s.url;img.alt='';img.loading='lazy';pic.append(img);const meta=document.createElement('span');meta.className='meta';const strong=document.createElement('strong');strong.textContent=s.name;meta.append(strong);const activate=document.createElement('button');activate.className='btn small';activate.textContent='Ativar';activate.onclick=async()=>{try{await updateDoc(roomRef(),{scene:s.url,sceneName:s.name,activeSceneId:s.id,updatedAt:serverTimestamp()});show('Cena ativada para todos')}catch(e){show(e.message)}};const remove=document.createElement('button');remove.className='btn small';remove.textContent='✕';remove.title='Excluir cena';remove.onclick=async()=>{if(!confirm('Excluir esta cena da biblioteca?'))return;try{await deleteDoc(doc(db,'vttRooms',room,'scenes',s.id));show('Cena excluída')}catch(e){show(e.message)}};item.append(pic,meta,activate,remove);root.append(item)}}
+
+function resetSceneEditor(){
+  editingSceneId='';
+  $('scene-title-input').value='';$('scene-url').value='';$('scene-grid').value='64';
+  $('scene-add').textContent='Salvar cena na biblioteca';
+  $('scene-cancel-edit').hidden=true;
+}
+$('scene-cancel-edit').onclick=resetSceneEditor;
+$('scene-add').onclick=async()=>{
+  if(!admin||!room)return show('Somente o mestre pode preparar cenas.');
+  const name=$('scene-title-input').value.trim(),url=$('scene-url').value.trim();
+  const grid=Number($('scene-grid').value);
+  if(!name||name.length>80||!safeUrl(url)||!Number.isInteger(grid)||grid<32||grid>256)
+    return show('Informe nome, imagem HTTPS e grade entre 32 e 256 px.');
+  try{
+    if(editingSceneId){
+      await updateDoc(doc(db,'vttRooms',room,'scenes',editingSceneId),{name,url,grid,updatedAt:serverTimestamp()});
+      if(roomData?.activeSceneId===editingSceneId){
+        await updateDoc(roomRef(),{scene:url,sceneName:name,grid,updatedAt:serverTimestamp()});
+      }
+      show('Cena atualizada na biblioteca.');
+    }else{
+      await addDoc(collection(db,'vttRooms',room,'scenes'),{name,url,grid,createdAt:serverTimestamp()});
+      show('Cena salva. Clique em Ativar para mostrá-la aos jogadores.');
+    }
+    resetSceneEditor();
+  }catch(e){show('Não foi possível salvar a cena: '+e.message)}
+};
+function renderScenes(){
+  const root=$('scene-library');root.replaceChildren();
+  if(!admin||!room)return;
+  if(!scenes.length){const p=document.createElement('p');p.textContent='Nenhuma cena salva. Cadastre seu primeiro mapa acima.';root.append(p);return}
+  for(const scene of [...scenes].sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'pt-BR'))){
+    const current=roomData?.activeSceneId===scene.id;
+    const card=document.createElement('article');card.className='scene-card'+(current?' current':'');
+    const img=document.createElement('img');img.className='scene-preview';img.src=scene.url;img.alt='Prévia de '+scene.name;img.loading='lazy';
+    const info=document.createElement('div');info.className='scene-info';
+    const title=document.createElement('strong');title.textContent=scene.name||'Cena sem nome';
+    const detail=document.createElement('small');detail.textContent=(current?'● Em exibição · ':'Privada · ')+(scene.grid||64)+' px por célula';
+    const actions=document.createElement('div');actions.className='scene-actions';
+    const activate=document.createElement('button');activate.className='btn small'+(!current?' primary':'');
+    activate.textContent=current?'Ocultar dos jogadores':'Ativar para jogadores';
+    activate.onclick=async()=>{
+      if(!admin||!room)return;
+      try{
+        if(current)await updateDoc(roomRef(),{scene:'',sceneName:'Sem cena ativa',activeSceneId:'',updatedAt:serverTimestamp()});
+        else await updateDoc(roomRef(),{scene:scene.url,sceneName:scene.name,activeSceneId:scene.id,grid:scene.grid||64,updatedAt:serverTimestamp()});
+        show(current?'Cena ocultada.':'Cena ativada para todos.');
+      }catch(e){show('Falha na ativação: '+e.message)}
+    };
+    const edit=document.createElement('button');edit.className='btn small';edit.textContent='Editar';
+    edit.onclick=()=>{
+      editingSceneId=scene.id;
+      $('scene-title-input').value=scene.name||'';
+      $('scene-url').value=scene.url||'';
+      $('scene-grid').value=String(scene.grid||64);
+      $('scene-add').textContent='Salvar alterações';
+      $('scene-cancel-edit').hidden=false;
+      $('scene-title-input').focus();
+    };
+    const remove=document.createElement('button');remove.className='btn small';remove.textContent='Excluir';remove.disabled=current;
+    remove.title=current?'Oculte a cena antes de excluí-la':'Excluir mapa da biblioteca';
+    remove.onclick=async()=>{
+      if(!admin||!room||current||!confirm('Excluir esta cena da biblioteca do mestre?'))return;
+      try{await deleteDoc(doc(db,'vttRooms',room,'scenes',scene.id));if(editingSceneId===scene.id)resetSceneEditor();show('Cena excluída.')}
+      catch(e){show('Não foi possível excluir: '+e.message)}
+    };
+    actions.append(activate,edit,remove);info.append(title,detail,actions);card.append(img,info);root.append(card);
+  }
+}
 function renderTokens(){const root=$('token-list');root.replaceChildren();if(tokens.length){const h=document.createElement('h3');h.textContent='Tokens na cena';root.append(h)}for(const t of visibleTokens()){const b=document.createElement('button');b.className='entry';b.textContent=(t.name||'Shinobi')+' · '+t.x+', '+t.y;b.onclick=()=>openSheet(t.fichaId,t.ownerUid);root.append(b)}}
 $('next-turn').onclick=async()=>{if(admin&&room)try{await updateDoc(roomRef(),{turn:(roomData?.turn||0)+1,updatedAt:serverTimestamp()})}catch(e){show(e.message)}};
 $('roll-d20').onclick=async()=>{if(!room)return show('Entre numa sala');const result=crypto.getRandomValues(new Uint32Array(1))[0]%20+1;try{await addDoc(collection(db,'vttRooms',room,'events'),{type:'roll',uid,at:serverTimestamp(),payload:{result}});show('d20 → '+result)}catch(e){show(e.message)}};
