@@ -29,3 +29,9 @@ Implementação em branch `feature/vtt-foundation`, PR #1 em rascunho. **Não pu
 - Os efeitos são visuais básicos; ainda faltam fog of war, medição, modelos de jutsu, sons e automação completa de combate.
 - Rolagem de d20 é feita no navegador, sem garantia antifraude.
 - As regras precisam ser auditadas e testadas antes de disponibilizar o multiplayer para usuários reais.
+
+## Modo Teatro (atualização)
+- O painel do mestre permite colocar até cinco tokens no palco, destacar quem fala e publicar diálogos.
+- A camada de retratos fica sobre o mapa e não modifica as posições táticas.
+- **Atualização obrigatória das regras**: a coleção `vttRooms` passa a aceitar o campo `theatre`. Publique a versão revisada das regras preservando `perfisPublicos` e `observacoesShinobi` antes de criar novas salas.
+- Retratos são exibidos quando o token possui uma URL HTTPS ou imagem data válida. Sem retrato, aparece um marcador visual.
