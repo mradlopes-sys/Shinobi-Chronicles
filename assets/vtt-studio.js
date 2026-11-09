@@ -4,8 +4,9 @@ import {getAuth,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/12.
 import {getFirestore,doc,getDoc,addDoc,setDoc,collection,onSnapshot,serverTimestamp,updateDoc,query,where,getDocs,deleteDoc,limit,orderBy} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
 const cfg={apiKey:'AIzaSyCdTZejzKXYyyAnYgak7ADEsDhfsdFgvVo',authDomain:'shinobi-chronicles-b9635.firebaseapp.com',projectId:'shinobi-chronicles-b9635',appId:'1:1000505549378:web:e1cbf459451b617f3503db'};
 const app=getApps()[0]||initializeApp(cfg),auth=getAuth(app),db=getFirestore(app);
+const WORLD_ID='shinobi-chronicles';
 const $=id=>document.getElementById(id);
-let uid='',admin=false,room='',roomData=null,tokens=[],sheets=[],scenes=[],subs=[],dragToken=null,selected=null,sceneKey='',lastRoll='',busy=false,editingSceneId='',tokenUnsub=null,tokenSceneSubscribed=null,sheetsUnsub=null;
+let uid='',admin=false,room='',roomData=null,tokens=[],sheets=[],scenes=[],subs=[],dragToken=null,selected=null,sceneKey='',lastRoll='',busy=false,editingSceneId='',tokenUnsub=null,tokenSceneSubscribed=null,sheetsUnsub=null,subscriptionEpoch=0,worldCollectionsReady=false;
 const stage=$('stage'),canvas=$('map'),ctx=canvas.getContext('2d');
 const view={cell:64,zoom:1,ox:110,oy:85,grid:false,image:null,scene:''};
 const tokenImages=new Map();function tokenImage(url){if(!safeImage(url)||url.length>85000)return null;if(!tokenImages.has(url)){const img=new Image();img.onload=draw;img.onerror=()=>tokenImages.set(url,null);img.src=url;tokenImages.set(url,img)}return tokenImages.get(url)}
@@ -16,12 +17,12 @@ const canMove=t=>admin||t.ownerUid===uid;
 const visibleTokens=()=>tokens.filter(t=>t.sceneId===(roomData?.activeSceneId||'')||(!t.sceneId&&!roomData?.activeSceneId));
 const roomRef=()=>doc(db,'vttRooms',room);
 const tokenRef=id=>doc(db,'vttRooms',room,'tokens',id);
-const stopSubs=()=>{if(tokenUnsub){tokenUnsub();tokenUnsub=null}tokenSceneSubscribed=null;subs.forEach(u=>u());subs=[];room='';roomData=null;tokens=[];scenes=[];selected=null;editingSceneId='';theatre.setState({});theatre.setTokens([]);$('room-heading').textContent='Nenhuma sala conectada';$('scene-empty').hidden=false;renderScenes();renderTokens();draw();};
+const stopSubs=()=>{subscriptionEpoch++;worldCollectionsReady=false;if(tokenUnsub){tokenUnsub();tokenUnsub=null}tokenSceneSubscribed=null;subs.forEach(u=>u());subs=[];room='';roomData=null;tokens=[];scenes=[];selected=null;editingSceneId='';theatre.setState({});theatre.setTokens([]);$('room-heading').textContent='Mesa Permanente · Shinobi Chronicles';$('world-status').textContent='Aguardando conexão…';$('scene-empty').hidden=false;renderScenes();renderTokens();draw();};
 const theatre=createTheatre({stage,panel:$('theatre-panel'),onChange:async state=>{if(!admin||!room)return;try{await updateDoc(roomRef(),{theatre:state,updatedAt:serverTimestamp()})}catch(e){show(e.message)}},isAdmin:()=>admin});
 function switchTab(name){for(const b of document.querySelectorAll('[data-tab]'))b.classList.toggle('active',b.dataset.tab===name);for(const p of document.querySelectorAll('.pane'))p.hidden=p.id!=='pane-'+name;}
 document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
-function applyRole(){for(const id of ['room-create-wrap','gm-scenes','next-turn','cast-effect','effect-kind'])$(id).hidden=!admin;$('auth-label').textContent=uid?(admin?'Mestre · permissões administrativas':'Jogador · acesso restrito'):'Faça login nos Arquivos Shinobi';theatre.refresh();renderSheets();}
-onAuthStateChanged(auth,async user=>{stopSubs();if(sheetsUnsub){sheetsUnsub();sheetsUnsub=null}uid=user?.uid||'';$('self-uid').value=uid;admin=false;sheets=[];applyRole();if(!uid){show('Faça login no Shinobi Chronicles antes de entrar na mesa.');return}try{admin=user.email==='mestre_shinobi@players.shinobi-chronicles.invalid'||(await getDoc(doc(db,'admins',uid))).exists();applyRole();loadSheets();const recent=sessionStorage.getItem('sc-vtt-last-room');if(recent&&/^[A-Za-z0-9_-]{8,80}$/.test(recent)){void join(recent)}}catch(e){show('Falha na autenticação: '+e.message)}});
+function applyRole(){for(const id of ['gm-scenes','next-turn','cast-effect','effect-kind'])$(id).hidden=!admin;$('auth-label').textContent=uid?(admin?'Mestre · permissões administrativas':'Jogador · acesso restrito'):'Faça login nos Arquivos Shinobi';theatre.refresh();renderSheets();}
+onAuthStateChanged(auth,async user=>{stopSubs();if(sheetsUnsub){sheetsUnsub();sheetsUnsub=null}uid=user?.uid||'';admin=false;sheets=[];applyRole();if(!uid){show('Faça login no Shinobi Chronicles antes de entrar na mesa.');return}try{admin=user.email==='mestre_shinobi@players.shinobi-chronicles.invalid'||(await getDoc(doc(db,'admins',uid))).exists();applyRole();loadSheets();void connectWorld()}catch(e){show('Falha na autenticação: '+e.message)}});
 function loadSheets(){
   if(sheetsUnsub){sheetsUnsub();sheetsUnsub=null}
   const source=admin?collection(db,'fichas'):query(collection(db,'fichas'),where('ownerUid','==',uid));
@@ -38,20 +39,74 @@ function openSheet(id,owner){if(!id)return show('Token sem ficha vinculada.');if
 $('sheet-close').onclick=()=>{$('sheet-modal').classList.remove('open');$('sheet-frame').src='about:blank'};
 $('sheet-modal').addEventListener('click',e=>{if(e.target===$('sheet-modal'))$('sheet-close').click()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('sheet-modal').classList.contains('open'))$('sheet-close').click()});
-$('room-create').onclick=async()=>{if(!admin)return;try{const ref=await addDoc(collection(db,'vttRooms'),{name:'Mesa Shinobi',scene:'',sceneName:'Sem cena ativa',activeSceneId:'',grid:64,createdAt:serverTimestamp(),updatedAt:serverTimestamp(),turn:0,theatre:{enabled:false,cast:[],speaker:'',dialogue:''}});$('room-id').value=ref.id;await join(ref.id)}catch(e){show('Não foi possível criar a sala: '+e.message)}};
-$('room-join').onclick=()=>join($('room-id').value.trim());
-async function copyText(value,input){
-  if(!value)return show('Nenhum código disponível ainda.');
-  try{await navigator.clipboard.writeText(value);show('Copiado para a área de transferência.')}
-  catch{input?.focus();input?.select?.();show('Copie o código selecionado com Ctrl+C.')}
-}
-$('uid-copy').onclick=()=>copyText(uid,$('self-uid'));
-$('room-copy').onclick=()=>copyText($('room-id').value.trim(),$('room-id'));
-async function join(id){if(!/^[A-Za-z0-9_-]{8,80}$/.test(id))return show('Código de sala inválido');stopSubs();try{const snap=await getDoc(doc(db,'vttRooms',id));if(!snap.exists())throw Error('Sala inexistente');room=id;roomData=snap.data();sessionStorage.setItem('sc-vtt-last-room',id);$('room-id').value=id;subs.push(onSnapshot(roomRef(),s=>{roomData=s.data();if(!roomData)return;$('room-heading').textContent=roomData.name+' · '+id;$('scene-name').textContent=roomData.sceneName||'Mesa Shinobi';$('scene-caption').textContent=roomData.scene?'Cena compartilhada':'Aguardando o mestre ativar uma cena';$('turn-label').textContent='Turno '+(roomData.turn||0);theatre.setState(roomData.theatre);view.cell=Math.max(32,Math.min(256,Number(roomData.grid)||64));$('scene-empty').hidden=!!roomData.scene;watchTokens(roomData.activeSceneId||'');theatre.setTokens(visibleTokens());renderTokens();renderScenes();loadMap(roomData.scene||'');draw()},e=>show(e.message)));
 
-if(admin)subs.push(onSnapshot(collection(db,'vttRooms',id,'scenes'),s=>{scenes=s.docs.map(d=>({id:d.id,...d.data()}));renderScenes()},e=>show('Biblioteca: '+e.message)));
-subs.push(onSnapshot(query(collection(db,'vttRooms',id,'events'),orderBy('at','desc'),limit(60)),s=>{const logs=s.docs.map(d=>d.data()).filter(e=>e.type==='roll').sort((a,b)=>(b.at?.seconds||0)-(a.at?.seconds||0));if(logs.length){const roll=logs[0];$('roll-log').textContent='Última rolagem: d20 → '+roll.payload?.result}for(const change of s.docChanges()){const e=change.doc.data();if(change.type==='added'&&e.type==='effect'&&e.at?.toMillis&&Date.now()-e.at.toMillis()<3500)flash(e.payload?.kind)}},()=>{}));
-show('Conectado à sala');renderSheets()}catch(e){stopSubs();show('Não foi possível entrar: '+e.message)}}
+// A campanha tem uma única mesa permanente; ninguém precisa criar sala ou informar UID.
+async function connectWorld(){
+  stopSubs();
+  if(!uid)return;
+  const epoch=subscriptionEpoch, expectedUid=uid;
+  room=WORLD_ID;
+  $('world-status').textContent='Conectando à mesa compartilhada…';
+  const world=roomRef();
+  try{
+    const existing=await getDoc(world);
+    if(epoch!==subscriptionEpoch||uid!==expectedUid)return;
+    if(!existing.exists()&&admin){
+      await setDoc(world,{
+        name:'Shinobi Chronicles',scene:'',sceneName:'Sem cena ativa',activeSceneId:'',
+        grid:64,createdAt:serverTimestamp(),updatedAt:serverTimestamp(),turn:0,
+        theatre:{enabled:false,cast:[],speaker:'',dialogue:''}
+      });
+    }
+    if(epoch!==subscriptionEpoch||uid!==expectedUid)return;
+    subs.push(onSnapshot(world,snap=>{
+      if(epoch!==subscriptionEpoch)return;
+      if(!snap.exists()){
+        roomData=null;
+        $('world-status').textContent='Aguardando o mestre iniciar a campanha.';
+        $('scene-name').textContent='Mesa Permanente';
+        $('scene-caption').textContent='Nenhuma cena foi preparada ainda';
+        $('scene-empty').hidden=false;
+        return;
+      }
+      roomData=snap.data();
+      $('world-status').textContent='Conectado · campanha compartilhada';
+      $('room-heading').textContent='Mesa Permanente · '+(roomData.name||'Shinobi Chronicles');
+      $('scene-name').textContent=roomData.sceneName||'Mesa Shinobi';
+      $('scene-caption').textContent=roomData.scene?'Cena compartilhada':'Aguardando o mestre ativar uma cena';
+      $('turn-label').textContent='Turno '+(roomData.turn||0);
+      theatre.setState(roomData.theatre);
+      view.cell=Math.max(32,Math.min(256,Number(roomData.grid)||64));
+      $('scene-empty').hidden=!!roomData.scene;
+      watchTokens(roomData.activeSceneId||'');
+      theatre.setTokens(visibleTokens());
+      renderTokens();renderScenes();loadMap(roomData.scene||'');draw();
+      if(!worldCollectionsReady){
+        worldCollectionsReady=true;
+        if(admin)subs.push(onSnapshot(collection(db,'vttRooms',WORLD_ID,'scenes'),sceneSnapshot=>{
+          if(epoch!==subscriptionEpoch)return;
+          scenes=sceneSnapshot.docs.map(d=>({id:d.id,...d.data()}));renderScenes();
+        },e=>show('Biblioteca: '+e.message)));
+        subs.push(onSnapshot(query(collection(db,'vttRooms',WORLD_ID,'events'),orderBy('at','desc'),limit(60)),events=>{
+          if(epoch!==subscriptionEpoch)return;
+          const rolls=events.docs.map(d=>d.data()).filter(e=>e.type==='roll').sort((a,b)=>(b.at?.seconds||0)-(a.at?.seconds||0));
+          if(rolls.length)$('roll-log').textContent='Última rolagem: d20 → '+rolls[0].payload?.result;
+          for(const change of events.docChanges()){
+            const data=change.doc.data();
+            if(change.type==='added'&&data.type==='effect'&&data.at?.toMillis&&Date.now()-data.at.toMillis()<3500)flash(data.payload?.kind);
+          }
+        },e=>show('Histórico: '+e.message)));
+      }
+    },e=>{
+      $('world-status').textContent='Conexão indisponível · confira as regras do Firebase';
+      show('Acesso à Mesa Permanente negado: '+e.message);
+    }));
+  }catch(e){
+    if(epoch!==subscriptionEpoch)return;
+    $('world-status').textContent='Não foi possível conectar à campanha';
+    show('Mesa Permanente: '+e.message+'. Confira as regras do Firebase.');
+  }
+}
 function watchTokens(sceneId){
   if(!room||tokenSceneSubscribed===sceneId)return;
   if(tokenUnsub){tokenUnsub();tokenUnsub=null}
@@ -66,8 +121,6 @@ function watchTokens(sceneId){
     theatre.setTokens(visibleTokens());renderTokens();draw();
   },err=>show('Permissão dos tokens: '+err.message));
 }
-$('member-add').onclick=async()=>{if(!admin||!room)return;const id=$('member-uid').value.trim();if(!/^[A-Za-z0-9]{15,128}$/.test(id))return show('UID inválido');try{await setDoc(doc(db,'vttRooms',room,'members',id),{joinedAt:serverTimestamp()});show('Jogador autorizado')}catch(e){show(e.message)}};
-
 function resetSceneEditor(){
   editingSceneId='';
   $('scene-title-input').value='';$('scene-url').value='';$('scene-grid').value='64';

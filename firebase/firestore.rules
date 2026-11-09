@@ -59,10 +59,14 @@ service cloud.firestore {
     }
 
 
-    // VTT: apenas mestres podem criar salas, convidar jogadores e editar cenas.
-    // Participantes podem ler a sala e mover somente seus próprios tokens.
+    // VTT: uma Mesa Permanente para todas as contas autenticadas.
+    // Apenas o ADM gerencia mapas, fichas na cena e efeitos.
+    // A lógica legada de convidados só se aplica às salas antigas, sem publicá-las.
     function vttMember(roomId) {
-      return signedIn() && exists(/databases/$(database)/documents/vttRooms/$(roomId)/members/$(request.auth.uid));
+      return signedIn() && (
+        roomId == 'shinobi-chronicles'
+        || exists(/databases/$(database)/documents/vttRooms/$(roomId)/members/$(request.auth.uid))
+      );
     }
     function vttAccess(roomId) {
       return isAdmin() || vttMember(roomId);
