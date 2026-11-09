@@ -1,37 +1,62 @@
-# VTT — instruções de instalação e teste
+# Shinobi Chronicles — Mesa Virtual (VTT)
 
-## Estado
-Implementação em branch `feature/vtt-foundation`, PR #1 em rascunho. **Não publicada, não testada em dois navegadores e não pronta para produção.**
+## Estado real
+A Mesa Virtual é um módulo experimental, inspirado nos fluxos de **Scenes**, **Actors**, **Tokens** e no módulo **Theatre Inserts** do Foundry VTT. Ela funciona dentro da interface do Shinobi Chronicles, sem substituir as fichas originais. **Não é uma instalação do Foundry nem reproduz todas as funções dele.**
 
-### O que está implementado
-- Canvas com grid, zoom, pan, arrastar tokens e importar mapa local (modo offline).
-- Autenticação Firebase e leitura das fichas do usuário.
-- Salas Firestore criadas pelo ADM, membros adicionados por UID, acesso privado.
-- Tokens online exibidos no canvas e movimentados por arrastar ou setas.
-- URL HTTPS de mapa compartilhado configurável pelo ADM, turno compartilhado, d20 demonstrativo, flash de chakra/Katon/Raiton.
-- Regras de Firestore separadas em `firebase/firestore.vtt.rules`.
+O código é publicado pelo GitHub Pages quando integrado à branch `main`. As regras de Firestore **não são publicadas pelo GitHub**.
 
-### Como adicionar ao Firebase
-1. Abra o **Firebase Console** do projeto `shinobi-chronicles-b9635`.
-2. Acesse **Firestore Database → Regras**.
-3. Abra no GitHub o arquivo `firebase/firestore.vtt.rules` da branch `feature/vtt-foundation`, copie o **arquivo inteiro** e substitua as regras atuais no Console. **Não use somente o trecho VTT**: o arquivo já contém as regras existentes de usuários e fichas.
-4. Antes de publicar, use o **Rules Playground** ou preferencialmente o **Firebase Emulator Suite** para conferir: ADM pode criar sala e token; convidado pode ler sala e mover seu token; não convidado não pode ler; jogador não pode editar tokens alheios nem a sala.
-5. Publique as regras apenas após confirmar esses casos.
-6. Revise o PR #1 e faça merge para `main` para publicar os arquivos no GitHub Pages. O VTT estará em `/Shinobi-Chronicles/vtt.html`. O site principal ainda não ganhou um botão de navegação dedicado.
-7. Faça login primeiro em `index.html` e depois abra `vtt.html` no mesmo navegador e domínio. Com ADM, clique em Criar sala. Compartilhe o ID e autorize o UID de cada jogador.
+## Funcionalidades
+- Mestre: criar sala, convidar jogadores por UID, preparar/editar/ativar/ocultar/excluir cenas em uma biblioteca privada, com imagem HTTPS e tamanho de grade configurável.
+- Jogadores: ver apenas a cena ativa, sem acesso às ferramentas de cadastro de mapas; no Firestore, a biblioteca de cenas é exclusiva do ADM.
+- Mesa: mapa central, pan, zoom, grade opcional (desligada por padrão), diretório de fichas, miniaturas de tokens, arrastar a ficha ao mapa ou adicionar pelo botão, controle de posição por proprietário, retirar tokens sem apagar fichas.
+- Fichas: duplo clique em um token autorizado (ou clique em Ficha no painel) abre o registro completo dentro de uma janela sobre a mesa.
+- Fichas do diretório sincronizam pelo Firestore; as imagens `retratos.ninja`, `retratos.casual` e `foto` são reconhecidas. Uma miniatura é criada para o token sem armazenar a imagem original inteira novamente.
+- Teatro: retratos com até cinco personagens em primeiro plano, destaque do falante e diálogo compartilhado, controlados pelo mestre.
+- Atalhos: tecla `C` abre a ficha do token selecionado; Delete remove o token selecionado somente para ADM; tela cheia e zoom.
+- Sala lembrada na mesma sessão do navegador, mesmo após acessar outras abas do site.
 
-### Importante
-- **Não é preciso criar manualmente as coleções**: `vttRooms`, `members`, `tokens` e `events` surgem com o primeiro uso.
-- Para mapas compartilhados, use uma URL HTTPS de imagem pública com CORS adequado; upload local não é compartilhado.
-- Não é preciso habilitar Firebase Storage para esta versão.
-- Regras no Console não são aplicadas automaticamente pelo GitHub.
-- Dados de `fichas/{id}` são somente lidos no protótipo. HP e chakra não são sincronizados com a mesa ainda.
-- Os efeitos são visuais básicos; ainda faltam fog of war, medição, modelos de jutsu, sons e automação completa de combate.
-- Rolagem de d20 é feita no navegador, sem garantia antifraude.
-- As regras precisam ser auditadas e testadas antes de disponibilizar o multiplayer para usuários reais.
+## Instalação das regras (etapa manual necessária)
+1. Acesse [Firebase Console](https://console.firebase.google.com/), projeto `shinobi-chronicles-b9635`.
+2. Vá a **Firestore Database → Regras**.
+3. **Faça backup** das regras já publicadas.
+4. Copie **todo** o arquivo `firebase/firestore.rules` desta atualização e substitua o conjunto das regras do Console. Ele inclui **fichas**, **usuários**, **admins**, **perfisPublicos**, **observacoesShinobi** e o **VTT**.
+5. Antes de publicar, teste no Rules Playground ou no Emulator Suite os cenários abaixo.
+6. Publique as regras e abra o site com `Ctrl+F5`.
 
-## Modo Teatro (atualização)
-- O painel do mestre permite colocar até cinco tokens no palco, destacar quem fala e publicar diálogos.
-- A camada de retratos fica sobre o mapa e não modifica as posições táticas.
-- **Atualização obrigatória das regras**: a coleção `vttRooms` passa a aceitar o campo `theatre`. Publique a versão revisada das regras preservando `perfisPublicos` e `observacoesShinobi` antes de criar novas salas.
-- Retratos são exibidos quando o token possui uma URL HTTPS ou imagem data válida. Sem retrato, aparece um marcador visual.
+Nunca copie só a coleção `vttRooms` em vez das regras completas, ou o Mural de Konoha pode perder acesso.
+
+## Testes de acesso obrigatórios
+| Teste | Esperado |
+|---|---|
+| ADM cria sala | Permitido |
+| ADM cadastra/edita/ativa mapa | Permitido |
+| Jogador convidado lê o documento da sala | Permitido |
+| Jogador convidado lê `vttRooms/{sala}/scenes` | Negado |
+| Jogador não convidado lê sala/tokens | Negado |
+| Jogador tenta criar cena, token ou alterar sala | Negado |
+| Jogador tenta ler token de cena inativa | Negado |
+| Jogador consulta tokens da cena ativa com `where('sceneId','==',activeSceneId)` | Permitido |
+| Jogador move seu token (x,y) na cena ativa | Permitido |
+| Jogador tenta mover token alheio ou trocar `ownerUid` | Negado |
+| Jogador cria efeito cinematográfico | Negado |
+| Jogador edita sua ficha original | Permitido |
+| ADM acessa ficha autorizada e mantém Mural/observações | Permitido conforme as regras existentes |
+
+**Importante:** testes de sintaxe JavaScript e interface simulada não substituem o emulador e um teste real com mestre e jogador. Não houve validação com as contas Firebase reais.
+
+## Fluxo recomendado para testar
+1. Mestre entra no site, abre **Mesa Virtual**, cria a sala e copia o código.
+2. Jogador entra com a própria conta, abre a Mesa Virtual, copia seu UID e envia ao mestre.
+3. Mestre autoriza esse UID e compartilha o código da sala.
+4. Mestre registra uma cena com URL HTTPS pública, escolhe grade (32 a 256 px) e a ativa.
+5. Mestre abre **Atores** e arrasta a ficha ao mapa; alternativamente, usa **+ Colocar token**.
+6. O jogador movimenta o token do personagem; o mestre testa o duplo clique e abre a ficha.
+7. Mestre ativa outra cena, verifica que os tokens não aparecem na cena errada e testa o Teatro.
+
+## Limitações
+- As imagens de mapas são referenciadas por **URL HTTPS**. Esta versão não faz upload para Firebase Storage nem disponibiliza um gerenciador de arquivos.
+- Dados completos de HP/chakra permanecem na ficha original; o token não mostra ainda barras de recursos sincronizadas.
+- Sem fog of war, paredes, iluminação dinâmica, templates/medição avançada, iniciativa automatizada ou macro de jutsus.
+- A rolagem d20 é feita no navegador (não é antifraude).
+- Os documentos de tokens antigos, sem `sceneId`, podem precisar ser recriados para aparecer na consulta segura por cena.
+- As regras do Firestore devem ser verificadas no console; publicar código no GitHub não atualiza regras.
