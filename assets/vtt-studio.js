@@ -241,6 +241,13 @@ function renderTokens(){
       remove.title='Remove o token, não a ficha original';
       remove.onclick=async()=>{if(!confirm('Retirar o token de '+(t.name||'Shinobi')+'? A ficha original será mantida.'))return;try{await deleteDoc(tokenRef(t.id));if(selected===t.id)selected=null;show('Token retirado; ficha preservada.')}catch(e){show(e.message)}};
       line.append(remove);
+      const original=sheets.find(f=>f.id===t.fichaId);
+      if(original){
+        const restore=document.createElement('button');restore.className='btn small';
+        restore.textContent='Atualizar PNG';restore.title='Atualizar arte de tokens criados antes desta versão';
+        restore.onclick=async()=>{try{const portrait=await tokenPortrait(original);await updateDoc(tokenRef(t.id),{portrait});show('Arte atualizada mantendo a transparência disponível na ficha.')}catch(e){show('Falha ao atualizar arte: '+e.message)}};
+        line.append(restore);
+      }
     }
     root.append(line);
   }
@@ -253,12 +260,59 @@ const css=document.createElement('style');css.textContent='@keyframes fadefx{fro
 function loadMap(url){if(sceneKey===url)return;sceneKey=url;view.image=null;if(!safeUrl(url)){view.cell=64;center();return}const img=new Image();img.onload=()=>{if(sceneKey!==url)return;view.image=img;view.cell=Math.max(32,Math.min(192,Math.round(Math.min(img.naturalWidth,img.naturalHeight)/18)));center()};img.onerror=()=>{$('scene-empty').hidden=false;show('Não foi possível carregar a imagem da cena. Confira a URL HTTPS.')};img.src=url;draw()}
 function center(){view.zoom=1;const w=stage.clientWidth,h=stage.clientHeight;if(view.image){const scale=Math.min((w-28)/view.image.width,(h-28)/view.image.height);view.zoom=Math.max(.012,Math.min(4,scale));view.ox=(w-view.image.width*view.zoom)/2;view.oy=(h-view.image.height*view.zoom)/2}else{view.ox=w/2-8*view.cell;view.oy=h/2-5*view.cell}draw()}
 const world=(x,y)=>({x:(x-view.ox)/view.zoom,y:(y-view.oy)/view.zoom});
-function draw(){const w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;ctx.clearRect(0,0,w,h);ctx.save();ctx.translate(view.ox,view.oy);ctx.scale(view.zoom,view.zoom);
-if(view.image)ctx.drawImage(view.image,0,0);else{ctx.fillStyle='#1b2b29';ctx.fillRect(-5000,-5000,10000,10000)}
-if(view.grid&&view.image){const a=world(0,0),b=world(w,h),step=view.cell;ctx.strokeStyle='#e8e8d744';ctx.lineWidth=1/view.zoom;ctx.beginPath();for(let x=Math.floor(a.x/step)*step;x<b.x;x+=step){ctx.moveTo(x,a.y);ctx.lineTo(x,b.y)}for(let y=Math.floor(a.y/step)*step;y<b.y;y+=step){ctx.moveTo(a.x,y);ctx.lineTo(b.x,y)}ctx.stroke()}
-for(const t of visibleTokens()){const x=(t.x+.5)*view.cell,y=(t.y+.5)*view.cell;ctx.beginPath();ctx.arc(x,y,view.cell*.38,0,Math.PI*2);ctx.fillStyle=t.color||'#a77a5b';ctx.fill();const image=tokenImage(t.portrait);if(image?.complete&&image.naturalWidth){ctx.save();ctx.clip();const side=Math.min(image.naturalWidth,image.naturalHeight),sx=(image.naturalWidth-side)/2,sy=(image.naturalHeight-side)/2;ctx.drawImage(image,sx,sy,side,side,x-view.cell*.38,y-view.cell*.38,view.cell*.76,view.cell*.76);ctx.restore()}ctx.strokeStyle=selected===t.id?'#ffe7a1':canMove(t)?'#f5e1b0':'#89968e';ctx.lineWidth=3;ctx.stroke();ctx.fillStyle='#fff';ctx.textAlign='center';ctx.font='bold 12px system-ui';ctx.fillText((t.name||'Shinobi').slice(0,13),x,y+view.cell*.6)}
-ctx.restore()}
-function hit(x,y){const p=world(x,y);return [...visibleTokens()].reverse().find(t=>Math.hypot(p.x-(t.x+.5)*view.cell,p.y-(t.y+.5)*view.cell)<view.cell*.4)}
+function spriteBounds(t){
+  const image=tokenImage(t.portrait);
+  const ratio=image?.naturalWidth&&image?.naturalHeight?Math.max(.16,Math.min(4,image.naturalWidth/image.naturalHeight)):.67;
+  let height=view.cell*1.65,width=height*ratio;
+  if(width>view.cell*1.7){width=view.cell*1.7;height=width/ratio}
+  const x=(t.x+.5)*view.cell,y=(t.y+1)*view.cell;
+  return {image,left:x-width/2,top:y-height,width,height,x,y};
+}
+function draw(){
+  const w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;
+  ctx.clearRect(0,0,w,h);ctx.save();
+  ctx.translate(view.ox,view.oy);ctx.scale(view.zoom,view.zoom);
+  if(view.image)ctx.drawImage(view.image,0,0);
+  else{ctx.fillStyle='#1a2923';ctx.fillRect(-5000,-5000,10000,10000)}
+  if(view.grid&&view.image){
+    const a=world(0,0),b=world(w,h),step=view.cell;
+    ctx.strokeStyle='#e8e8d735';ctx.lineWidth=1/view.zoom;ctx.beginPath();
+    for(let x=Math.floor(a.x/step)*step;x<b.x;x+=step){ctx.moveTo(x,a.y);ctx.lineTo(x,b.y)}
+    for(let y=Math.floor(a.y/step)*step;y<b.y;y+=step){ctx.moveTo(a.x,y);ctx.lineTo(b.x,y)}
+    ctx.stroke();
+  }
+  // Arte original em destaque, proporção natural, com transparência e sem máscaras, círculos ou molduras.
+  for(const t of visibleTokens()){
+    const b=spriteBounds(t);
+    if(b.image?.complete&&b.image.naturalWidth){
+      ctx.save();
+      ctx.shadowColor='rgba(0,0,0,.42)';ctx.shadowBlur=9;ctx.shadowOffsetY=5;
+      ctx.drawImage(b.image,b.left,b.top,b.width,b.height);
+      ctx.restore();
+    }else if(!t.portrait){
+      ctx.save();ctx.fillStyle='#f2e4cc';ctx.textAlign='center';ctx.font='600 12px system-ui';
+      ctx.fillText((t.name||'Shinobi').slice(0,18),b.x,b.y-view.cell*.3);ctx.restore();
+    }
+    if(selected===t.id){
+      // Apenas a seleção tem indicadores discretos nos cantos, nunca um aro permanente.
+      const pad=view.cell*.07,l=b.left-pad,r=b.left+b.width+pad,top=b.top-pad,bot=b.top+b.height+pad,d=view.cell*.14;
+      ctx.save();ctx.strokeStyle='#f7dca5';ctx.lineWidth=2/view.zoom;ctx.beginPath();
+      ctx.moveTo(l+d,top);ctx.lineTo(l,top);ctx.lineTo(l,top+d);
+      ctx.moveTo(r-d,top);ctx.lineTo(r,top);ctx.lineTo(r,top+d);
+      ctx.moveTo(l,bot-d);ctx.lineTo(l,bot);ctx.lineTo(l+d,bot);
+      ctx.moveTo(r-d,bot);ctx.lineTo(r,bot);ctx.lineTo(r,bot-d);
+      ctx.stroke();ctx.restore();
+    }
+  }
+  ctx.restore();
+}
+function hit(x,y){
+  const p=world(x,y);
+  return [...visibleTokens()].reverse().find(t=>{
+    const b=spriteBounds(t);
+    return p.x>=b.left&&p.x<=b.left+b.width&&p.y>=b.top&&p.y<=b.top+b.height;
+  });
+}
 const point=e=>{const r=canvas.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}};
 canvas.onpointerdown=e=>{if(e.button!==0)return;const p=point(e),t=hit(p.x,p.y);selected=t?.id||null;renderTokens();draw();if(t&&!canMove(t))return;dragToken={id:e.pointerId,start:p,ox:view.ox,oy:view.oy,t,original:t?{x:t.x,y:t.y}:null};canvas.setPointerCapture(e.pointerId);canvas.classList.add('dragging')};
 canvas.onpointermove=e=>{if(!dragToken||dragToken.id!==e.pointerId)return;const p=point(e);if(dragToken.t){const q=world(p.x,p.y);dragToken.t.x=Math.max(0,Math.min(1000,Math.floor(q.x/view.cell)));dragToken.t.y=Math.max(0,Math.min(1000,Math.floor(q.y/view.cell)))}else{view.ox=dragToken.ox+p.x-dragToken.start.x;view.oy=dragToken.oy+p.y-dragToken.start.y}draw()};
@@ -266,7 +320,7 @@ const finish=async e=>{if(!dragToken||dragToken.id!==e.pointerId)return;const d=
 canvas.onpointerup=finish;canvas.onpointercancel=finish;
 canvas.ondblclick=e=>{const p=point(e),t=hit(p.x,p.y);if(t)openSheet(t.fichaId,t.ownerUid)};
 canvas.ondragover=e=>{if(admin&&room){e.preventDefault();e.dataTransfer.dropEffect='copy'}};
-async function spawn(f,x,y){if(!admin||!room)return;try{await addDoc(collection(db,'vttRooms',room,'tokens'),{name:String(f.nome||f.name||'Shinobi').slice(0,40),fichaId:f.id,ownerUid:f.ownerUid,x,y,color:'#a57c64',portrait:await tokenPortrait(f),sceneId:roomData?.activeSceneId||''});show('Token criado: '+(f.nome||'Shinobi'))}catch(err){show('Falha ao criar token: '+err.message)}}
+async function spawn(f,x,y){if(!admin||!room)return;if(!roomData?.activeSceneId)return show('Ative um mapa na Biblioteca antes de colocar personagens.');try{await addDoc(collection(db,'vttRooms',room,'tokens'),{name:String(f.nome||f.name||'Shinobi').slice(0,40),fichaId:f.id,ownerUid:f.ownerUid,x,y,color:'#a57c64',portrait:await tokenPortrait(f),sceneId:roomData?.activeSceneId||''});show('Token criado: '+(f.nome||'Shinobi'))}catch(err){show('Falha ao criar token: '+err.message)}}
 canvas.ondrop=e=>{if(!admin||!room)return;e.preventDefault();const id=e.dataTransfer.getData('text/shinobi-ficha');const f=sheets.find(x=>x.id===id);if(!f)return;const p=point(e),w=world(p.x,p.y);const x=Math.max(0,Math.min(1000,Math.floor(w.x/view.cell))),y=Math.max(0,Math.min(1000,Math.floor(w.y/view.cell)));void spawn(f,x,y)};
 function zoom(factor){const x=stage.clientWidth/2,y=stage.clientHeight/2,p=world(x,y);view.zoom=Math.max(.07,Math.min(4,view.zoom*factor));view.ox=x-p.x*view.zoom;view.oy=y-p.y*view.zoom;draw()}
 canvas.onwheel=e=>{e.preventDefault();zoom(e.deltaY<0?1.1:.9)};
