@@ -144,7 +144,7 @@ export function createTheatre({stage,panel,onChange,isAdmin,publishPortrait,prev
     if(isAdmin()){
       figure.tabIndex=0;figure.setAttribute('role','button');figure.setAttribute('aria-label','Trocar retrato de '+actor.name);
       let drag=null,suppress=false;
-      figure.addEventListener('pointerdown',e=>{if(e.button!==0)return;drag={id:e.pointerId,x:e.clientX,y:e.clientY,moved:false};figure.setPointerCapture(e.pointerId);e.preventDefault();e.stopPropagation()});
+      figure.addEventListener('pointerdown',e=>{if(e.button!==0)return;drag={id:e.pointerId,x:e.clientX,y:e.clientY,moved:false};figure.setPointerCapture(e.pointerId);e.stopPropagation()});
       figure.addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId)return;if(Math.abs(e.clientX-drag.x)+Math.abs(e.clientY-drag.y)>7)drag.moved=true;if(drag.moved){const rect=overlay.getBoundingClientRect();figure.style.left=(clamp((e.clientX-rect.left)/rect.width,.1,.9)*100)+'%'}});
       const finish=e=>{if(!drag||drag.id!==e.pointerId)return;const d=drag;drag=null;if(d.moved){suppress=true;setTimeout(()=>suppress=false,160);const rect=overlay.getBoundingClientRect(),x=clamp((e.clientX-rect.left)/rect.width,.1,.9);commit({cast:state.cast.map(a=>a.id===actor.id?{...a,x}:a)})}};
       figure.addEventListener('pointerup',finish);figure.addEventListener('pointercancel',finish);
