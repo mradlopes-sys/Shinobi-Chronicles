@@ -111,9 +111,10 @@ export function createRollsPanel({panel,stage,isAdmin,getUid,getSheets,send,noti
     list.scrollTop=list.scrollHeight;
     for(const item of events){
       if(item.data.type!=='roll'||seen.has(item.id))continue;
-      seen.add(item.id);if(seen.size>300)seen.delete(seen.values().next().value);
       const ms=item.data.at?.toMillis?.();
-      if(ms&&Math.abs(Date.now()-ms)<6000&&item.data.uid!==getUid())animation(item.data.payload||{dice:'2d8',total:0,label:'Rolagem'});
+      if(!ms)continue; // Aguarda o timestamp de servidor para não perder eventos remotos pendentes.
+      seen.add(item.id);if(seen.size>300)seen.delete(seen.values().next().value);
+      if(Math.abs(Date.now()-ms)<6000&&item.data.uid!==getUid())animation(item.data.payload||{dice:'2d8',total:0,label:'Rolagem'});
     }
   }
   return {
