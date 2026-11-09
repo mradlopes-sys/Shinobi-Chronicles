@@ -1,50 +1,38 @@
-# Mesa Virtual Permanente — Shinobi Chronicles
+# Shinobi Chronicles — Mesa Virtual imersiva
 
-## Como funciona
+A Mesa Virtual é uma campanha permanente, integrada à interface do site. Todos os shinobi autenticados entram automaticamente; não há salas, códigos ou convites por UID.
 
-Existe **uma única campanha**, compartilhada automaticamente entre as contas autenticadas. Não há mais criação de salas, códigos de sala ou convite por UID. O VTT continua dentro do site, mantendo as fichas acessíveis.
+## Navegação e interface
 
-- **Mestre:** basta abrir `Mesa Virtual` no site com a conta ADM. Na primeira entrada, a campanha `vttRooms/shinobi-chronicles` será inicializada no Firestore automaticamente (se ainda não existir). O mestre pode salvar, editar, ativar e ocultar cenas, arrastar fichas para gerar tokens, gerenciar combates e usar o Modo Teatro.
-- **Jogadores:** entram em `Mesa Virtual` com suas contas, são conectados automaticamente à campanha e enxergam somente a cena ativa. Podem mover os próprios tokens e abrir suas fichas com duplo clique. Não podem adicionar mapas, gerenciar cenas ou criar/excluir tokens.
-- **Jogadores conectados antes do mestre:** verão a tela de espera; quando o mestre acessar e preparar a campanha, a conexão é atualizada em tempo real.
+O VTT ocupa a janela inteira e evita a duplicação de menus do site. O botão de retorno volta aos Arquivos Shinobi, preservando a experiência de navegação. A barra de ferramentas à esquerda e o painel à direita podem ser ocultados separadamente; há também botão de tela cheia, zoom, centralização e grade opcional.
 
-O projeto conserva a estrutura `vttRooms` para compatibilidade técnica, **mas não expõe salas ao usuário**. A campanha permanente usa sempre o documento fixo `vttRooms/shinobi-chronicles`.
+- **Mapa:** cena atual e informações da campanha.
+- **Biblioteca:** aba exclusiva do mestre, com cadastro, edição, ativação, ocultação e exclusão de mapas por URL HTTPS. Não exige medidas manuais em pixels; a imagem é adaptada automaticamente à área do mapa.
+- **Atores:** mostra fichas permitidas. O mestre arrasta uma ficha para o mapa ou usa o botão de adicionar. O duplo clique em uma figura abre a ficha original em modal.
+- **Combate:** turnos, rolagem demonstrativa de d20 e efeitos visuais do mestre.
+- **Teatro:** palco **independente dos tokens do mapa**. O mestre escolhe livremente até seis fichas, posiciona os retratos arrastando pelo palco, define quem fala e transmite diálogos em tempo real.
 
-## Regras obrigatórias do Firebase
+## Imagens sem círculo
 
-O GitHub Pages não publica regras do Firestore. Depois da atualização do código, o administrador deve atualizar as regras no Firebase Console:
+A exportação dos tokens mantém o retrato inteiro e sua proporção, preservando o canal alfa de PNG/WebP. Não há conversão para JPEG recortado nem moldura circular. O tamanho do sprite é ajustado automaticamente à escala da cena.
 
-1. Abra Firebase Console → Firestore Database → Regras.
-2. Faça backup das regras atuais.
-3. Substitua pelo conteúdo **completo** de `firebase/firestore.rules` da branch principal. O arquivo inclui os caminhos `users`, `fichas`, `admins`, `perfisPublicos`, `observacoesShinobi` e VTT.
-4. Valide permissões com Rules Playground ou preferencialmente Firebase Emulator Suite.
-5. Publique as regras; recarregue o site.
+Arquivos PNG enviados nas fichas são normalmente comprimidos para WebP com transparência em navegadores modernos. Retratos anteriormente convertidos para JPEG quadrado podem ser atualizados pelo mestre com **Atualizar PNG** em Atores. Se o próprio arquivo já tiver um fundo opaco, o VTT não consegue remover esse fundo.
 
-A alteração principal está na função `vttMember(roomId)`: a campanha permanente passa a permitir acesso de leitura a qualquer usuário **autenticado**, sem convite por UID, mantendo controle de escrita nas mãos do mestre. As salas antigas continuam protegidas por seus antigos membros.
+## Firebase
 
-## Testes essenciais
+Esta atualização **não precisa de novas regras do Firebase** se já estão publicadas as regras da Mesa Permanente. O Firestore continua controlando o acesso autenticado, as permissões do mestre, cenas privadas, fichas dos jogadores e tokens. Os arquivos de regras completas do projeto permanecem na pasta firebase, incluindo os caminhos de perfis públicos e observações privadas.
 
-| Ação | Resultado |
-| --- | --- |
-| ADM abre a Mesa Virtual pela primeira vez | Inicializa automaticamente o documento permanente |
-| Jogador logado abre VTT sem mestre online | Visualiza estado de espera, sem criar sala |
-| ADM prepara e ativa uma cena | Atualização vista por todos os jogadores |
-| Jogador tenta cadastrar mapa ou editar sala | Negado na interface e pelo Firestore |
-| Jogador tenta ler a coleção privada de cenas | Negado |
-| Jogador tenta ler token de cena inativa | Negado |
-| Jogador move token de outro jogador | Negado |
-| Jogador abre sua ficha pelo token | Permitido |
-| Jogador não autenticado tenta acessar | Negado |
+## Teste com mestre e jogador
 
-## Sobre mesas antigas
+1. O mestre abre o VTT no site e ativa um mapa da Biblioteca.
+2. O mestre arrasta uma ficha com PNG transparente para o mapa e confirma a imagem inteira e o duplo clique na ficha.
+3. No Teatro, o mestre escolhe um personagem fora do mapa, posiciona e publica uma fala.
+4. Um jogador conectado em outro navegador confirma que vê mapa e Teatro, mas não a Biblioteca.
+5. Ambos testam esconder a barra esquerda, ocultar o painel direito e ampliar a mesa.
 
-Nenhuma sala ou cena antiga é excluída. O documento permanente é novo e **não importa automaticamente** mapas e tokens salvos nas salas anteriores. Se houver conteúdo importante nelas, será necessário migrar os documentos separadamente.
+## Limitações
 
-## Recursos atuais e limitações
-
-- Biblioteca visual de cenas com URLs HTTPS, grade configurável e ativação pelo mestre.
-- Diretório de personagens vinculado a `fichas`, retratos e tokens; duplo clique abre a ficha dentro do VTT.
-- Posição dos tokens, turnos, rolagem d20 demonstrativa, efeitos visuais básicos e Modo Teatro.
-- Não é um clone completo do Foundry: ainda faltam paredes, iluminação dinâmica, neblina de guerra, automação de jutsus e integração plena de HP/chakra.
-- A rolagem é client-side e não tem comprovação antifraude.
-- **Teste real com múltiplos navegadores e Firebase ainda é necessário.**
+- Mapas por URL HTTPS, sem upload no Firebase Storage.
+- Ainda não há fog of war, paredes, iluminação, medição avançada ou automação completa dos jutsus e HP/chakra.
+- Rolagem d20 client-side não é antifraude.
+- **Não houve validação real de multiplayer no Firebase nem teste em dois navegadores**. Os controles precisam ser verificados antes do uso público.
