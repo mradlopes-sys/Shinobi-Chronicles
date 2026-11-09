@@ -1,110 +1,137 @@
-// Palco narrativo, sem dependência dos tokens da cena tática.
-export function createTheatre({stage,panel,onChange,isAdmin,resolveActor}){
-  const style=document.createElement('style');
-  style.textContent='#sc-theatre{position:absolute;inset:0;z-index:4;display:none;overflow:hidden;pointer-events:none;background:linear-gradient(180deg,#06110b16,#07140f55 58%,#06100bd0)}#sc-theatre.open{display:block}#sc-theatre .stage-character{position:absolute;transform:translate(-50%,-100%);width:min(30%,300px);height:min(68%,610px);display:flex;flex-direction:column;align-items:center;justify-content:flex-end;opacity:.76;pointer-events:none;touch-action:none;user-select:none;-webkit-user-select:none}#sc-theatre.directable .stage-character{pointer-events:auto;cursor:grab}#sc-theatre .stage-character.dragging{cursor:grabbing;z-index:6!important}#sc-theatre .stage-character.speaking{opacity:1}#sc-theatre .stage-character:not(.speaking){filter:saturate(.7) brightness(.8)}#sc-theatre .stage-character img{max-height:calc(100% - 26px);height:auto;width:auto;max-width:100%;object-fit:contain;object-position:center bottom;pointer-events:none;filter:drop-shadow(0 11px 16px #000a)}#sc-theatre .stand-in{width:66%;height:70%;display:grid;place-items:center;border-radius:80px 80px 7px 7px;background:linear-gradient(130deg,#4a5c4a,#21352b);font:500 60px Georgia,serif;color:#efddb0}#sc-theatre .nameplate{border:1px solid #b39c7777;border-radius:6px;background:#14221edc;font-size:11px;font-weight:700;color:#ffedcb;padding:5px 10px;text-shadow:0 2px 6px #000;max-width:95%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#sc-theatre .dialogue{position:absolute;bottom:2%;left:5%;right:5%;z-index:8;min-height:74px;padding:13px 19px;border:1px solid #c5ad81a8;border-radius:13px;background:linear-gradient(105deg,#15241ef3,#192e27f0);box-shadow:0 18px 44px #0008;pointer-events:none;backdrop-filter:blur(9px)}#sc-theatre .dialogue strong{display:block;color:#f8d7a2;font:600 15px Georgia,serif;margin-bottom:6px}#sc-theatre .dialogue p{margin:0;font-size:14px;line-height:1.5;color:#f4eee3;white-space:pre-wrap;overflow-wrap:anywhere}.theatre-controls h3{margin:15px 0 9px}.theatre-controls .cast-row{display:flex;gap:7px;align-items:center;padding:8px 9px;margin:7px 0;border-radius:8px;background:#293b30;border:1px solid #51654f}.theatre-controls .cast-row .name{min-width:0;flex:1;font-size:12px}.theatre-controls .cast-row button{background:#34473b;border:1px solid #758872;border-radius:7px;color:#ede2c8;padding:6px 9px;font-size:11px;cursor:pointer}.theatre-controls .director-only[hidden]{display:none}@media(max-width:700px){#sc-theatre .stage-character{width:34%;height:55%}#sc-theatre .dialogue{left:3%;right:3%;bottom:2%;padding:9px 12px;min-height:60px}#sc-theatre .dialogue p{font-size:12px}}';
-  document.head.append(style);
-  const overlay=document.createElement('div');overlay.id='sc-theatre';overlay.setAttribute('aria-live','polite');stage.append(overlay);
+// Palco de interpretação independente da cena tática: não lê tokens do mapa.
+// Retratos publicados separadamente pelo mestre, preservando a qualidade das fichas.
+export function createTheatre({stage,panel,onChange,isAdmin,publishPortrait}){
+  const css=document.createElement('style');
+  css.textContent=[
+    '#sc-theatre{position:absolute;inset:0;z-index:4;display:none;overflow:hidden;pointer-events:none;background:linear-gradient(180deg,transparent 62%,rgba(4,9,12,.43) 100%)}',
+    '#sc-theatre.open{display:block}',
+    '#sc-theatre .stage-character{position:absolute;bottom:0;transform:translateX(-50%);width:min(34%,395px);height:min(75%,780px);display:flex;align-items:center;justify-content:flex-end;pointer-events:none;touch-action:none;user-select:none;-webkit-user-select:none;filter:drop-shadow(0 9px 12px #0006)}',
+    '#sc-theatre.directable .stage-character{pointer-events:auto;cursor:grab}',
+    '#sc-theatre .stage-character.dragging{cursor:grabbing;z-index:7!important}',
+    '#sc-theatre .stage-character img{display:block;width:auto;height:auto;max-height:100%;max-width:100%;object-fit:contain;object-position:center bottom;pointer-events:none;user-select:none}',
+    '#sc-theatre .stage-character .placeholder{display:grid;place-items:center;width:55%;height:55%;font:500 45px Georgia,serif;color:#d6bb8e;background:#23372e90;border:1px dashed #baa17d70;border-radius:18px 18px 0 0}',
+    '.theatre-controls h3{margin:14px 0 8px}',
+    '.theatre-controls .cast-row{display:grid;grid-template-columns:1fr auto;gap:7px;margin:9px 0;padding:10px;border:1px solid #526b58;background:#263a2e;border-radius:10px}',
+    '.theatre-controls .cast-row strong{font-size:12px;color:#f4e7d3}',
+    '.theatre-controls .cast-row .cast-variant{grid-column:1;grid-row:2;margin:0;font-size:11px}',
+    '.theatre-controls .cast-row button{grid-column:2;grid-row:1/3;align-self:center;border:1px solid #72866e;border-radius:8px;background:#334a3c;color:#f5e9d3;padding:8px;font-size:11px;cursor:pointer}',
+    '.theatre-controls .director-only[hidden]{display:none}',
+    '@media(max-width:720px){#sc-theatre .stage-character{height:min(62%,490px);width:40%}}',
+    '@media(prefers-reduced-motion:reduce){#sc-theatre .stage-character{transition:none}}'
+  ].join('\n');
+  document.head.append(css);
+  const overlay=document.createElement('div');
+  overlay.id='sc-theatre';overlay.setAttribute('aria-label','Palco narrativo');stage.append(overlay);
   const controls=document.createElement('section');controls.className='theatre-controls';
-  controls.innerHTML='<h3>Modo Teatro</h3><p class="hint">Palco independente dos tokens no mapa. Escolha qualquer personagem das fichas e arraste a imagem dele pelo palco para definir a posição.</p><div id="sc-theatre-director" class="director-only"><button type="button" class="btn primary" id="sc-theatre-toggle">Abrir palco</button><label for="sc-theatre-actor">Personagem do elenco</label><select id="sc-theatre-actor"></select><button type="button" class="btn" id="sc-theatre-add">+ Colocar no palco</button><h3>Personagens no palco</h3><div id="sc-theatre-cast-list"></div><label for="sc-theatre-speaker">Quem está falando?</label><select id="sc-theatre-speaker"></select><label for="sc-theatre-text">Diálogo ou narração</label><textarea id="sc-theatre-text" maxlength="400" placeholder="Digite a fala..."></textarea><button type="button" class="btn primary" id="sc-theatre-speak">Exibir fala</button><button type="button" class="btn" id="sc-theatre-clear-dialogue">Limpar diálogo</button><button type="button" class="btn" id="sc-theatre-clear">Retirar todos</button></div><p class="hint" id="sc-theatre-viewer-note" hidden>O mestre controla o elenco, as posições e o diálogo para todos.</p>';
+  controls.innerHTML='<h3>Modo Teatro</h3><p class="hint">Personagens alinhados pela base da tela, sobre o mapa. Não precisam de tokens nem têm caixas de diálogo. Arraste os retratos para reorganizá-los.</p><div class="director-only" id="sc-theatre-director"><button class="btn primary" id="sc-theatre-toggle" type="button">Mostrar Teatro</button><label for="sc-theatre-category">Tipo de personagem</label><select id="sc-theatre-category"><option value="player">Fichas dos jogadores</option><option value="npc">NPCs do mestre</option></select><label for="sc-theatre-actor">Ficha</label><select id="sc-theatre-actor"></select><label for="sc-theatre-variant">Retrato da ficha</label><select id="sc-theatre-variant"></select><button class="btn primary" id="sc-theatre-add" type="button">Adicionar ao Teatro</button><h3>Personagens posicionados</h3><div id="sc-theatre-cast-list"></div><button type="button" class="btn" id="sc-theatre-clear">Retirar todos</button><p class="hint" id="sc-theatre-status" role="status"></p></div><p class="hint" id="sc-theatre-viewer-note" hidden>O mestre seleciona os retratos e organiza os personagens para todos.</p>';
   panel.append(controls);
   const $=id=>document.getElementById(id);
-  let state={enabled:false,cast:[],speaker:'',dialogue:''},actors=[],adding=false;
-  const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
-  const validImage=s=>typeof s==='string'&&(/^https:\/\/[^\s"'<>]{1,1500}$/.test(s)||/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]{1,100000}$/.test(s));
-  function normalize(next){
-    const cast=Array.isArray(next?.cast)?next.cast.slice(0,6).filter(x=>x&&typeof x==='object'&&typeof x.id==='string').map(x=>({
-      id:x.id.slice(0,100),name:String(x.name||'Shinobi').slice(0,70),
-      portrait:validImage(x.portrait)?x.portrait:'',
-      x:clamp(Number(x.x)||.5,.08,.92),y:clamp(Number(x.y)||.78,.3,.9)
+  const variants=[{id:'casual',name:'Casual'},{id:'ninja',name:'Ninja'},{id:'ferido',name:'Ferido'},{id:'grave',name:'Gravemente ferido'}];
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  let state={enabled:false,cast:[]},actors=[],images=new Map(),busy=false;
+  function norm(next){
+    const cast=Array.isArray(next?.cast)?next.cast.filter(c=>c&&typeof c.id==='string').slice(0,6).map(c=>({
+      id:c.id.slice(0,110),name:String(c.name||'Shinobi').slice(0,70),
+      variant:variants.some(v=>v.id===c.variant)?c.variant:'ninja',
+      x:clamp(Number(c.x)||.5,.10,.90),
+      legacyPortrait:typeof c.portrait==='string'?c.portrait:''
     })):[];
-    return {enabled:!!next?.enabled,cast,speaker:String(next?.speaker||''),dialogue:String(next?.dialogue||'').slice(0,400)};
+    return {enabled:!!next?.enabled,cast};
   }
-  function commit(patch){if(!isAdmin())return;state=normalize({...state,...patch});render();void onChange(state)}
+  function commit(patch){
+    if(!isAdmin())return;
+    state=norm({...state,...patch});render();
+    Promise.resolve(onChange({enabled:state.enabled,cast:state.cast.map(({legacyPortrait,...c})=>c)})).catch(e=>setStatus(String(e)));
+  }
+  function setStatus(message){$('sc-theatre-status').textContent=message}
+  function actorVariants(actor){return variants.filter(v=>actor?.variants?.includes(v.id))}
+  function updateActorOptions(){
+    const group=$('sc-theatre-category').value,selector=$('sc-theatre-actor'),old=selector.value;
+    selector.replaceChildren();
+    const list=actors.filter(a=>a.category===group);
+    for(const a of list){const o=document.createElement('option');o.value=a.id;o.textContent=a.name;selector.append(o)}
+    if(list.some(a=>a.id===old))selector.value=old;
+    updateVariantOptions();
+  }
+  function updateVariantOptions(){
+    const actor=actors.find(a=>a.id===$('sc-theatre-actor').value),selector=$('sc-theatre-variant'),old=selector.value;
+    selector.replaceChildren();
+    const available=actorVariants(actor);
+    for(const v of available){const o=document.createElement('option');o.value=v.id;o.textContent=v.name;selector.append(o)}
+    if(available.some(v=>v.id===old))selector.value=old;
+    else if(available.some(v=>v.id==='ninja'))selector.value='ninja';
+    $('sc-theatre-add').disabled=!isAdmin()||busy||state.cast.length>=6||!available.length;
+  }
+  $('sc-theatre-category').onchange=updateActorOptions;
+  $('sc-theatre-actor').onchange=updateVariantOptions;
   $('sc-theatre-toggle').onclick=()=>commit({enabled:!state.enabled});
   $('sc-theatre-add').onclick=async()=>{
-    if(!isAdmin()||adding||state.cast.length>=6)return;
-    const id=$('sc-theatre-actor').value;
-    if(!id||state.cast.some(x=>x.id===id))return;
-    adding=true;$('sc-theatre-add').disabled=true;
+    if(!isAdmin()||busy||state.cast.length>=6)return;
+    const id=$('sc-theatre-actor').value,variant=$('sc-theatre-variant').value;
+    if(!id||!variant||state.cast.some(a=>a.id===id))return setStatus('Esse personagem já está no palco.');
+    busy=true;updateVariantOptions();setStatus('Preparando o retrato original…');
     try{
-      const found=await resolveActor(id);
-      if(!found||!isAdmin())return;
-      const count=state.cast.length;
-      const actor={id,name:String(found.name||'Shinobi').slice(0,70),portrait:validImage(found.portrait)?found.portrait:'',x:clamp(.24+count*.12,.09,.9),y:.77};
-      commit({enabled:true,cast:[...state.cast,actor],speaker:state.speaker||id});
-    }catch(e){console.warn('Falha ao inserir retrato no teatro:',e)}
-    finally{adding=false;$('sc-theatre-add').disabled=false}
+      const actor=actors.find(a=>a.id===id);
+      await publishPortrait(id,variant);
+      const previous=state.cast;
+      const list=[...previous,{id,name:actor?.name||'Shinobi',variant,x:.5}];
+      const placed=list.map((a,i)=>({...a,x:list.length===1?.5:.14+.72*i/(list.length-1)}));
+      commit({enabled:true,cast:placed});setStatus('');
+    }catch(e){setStatus('Falha ao publicar retrato: '+e.message)}
+    finally{busy=false;updateVariantOptions()}
   };
-  $('sc-theatre-speak').onclick=()=>commit({enabled:true,speaker:$('sc-theatre-speaker').value,dialogue:$('sc-theatre-text').value});
-  $('sc-theatre-clear-dialogue').onclick=()=>commit({dialogue:''});
-  $('sc-theatre-clear').onclick=()=>commit({cast:[],speaker:'',dialogue:''});
-  function populate(select,options,previous,blank){
-    select.replaceChildren();
-    if(blank){const opt=document.createElement('option');opt.value='';opt.textContent=blank;select.append(opt)}
-    for(const item of options){const opt=document.createElement('option');opt.value=item.id;opt.textContent=item.name;select.append(opt)}
-    if(options.some(item=>item.id===previous))select.value=previous;
+  $('sc-theatre-clear').onclick=()=>commit({cast:[]});
+  async function changeVariant(actor,variant){
+    if(!isAdmin()||!actor||variant===actor.variant)return;
+    setStatus('Carregando outro retrato…');
+    try{await publishPortrait(actor.id,variant);commit({cast:state.cast.map(c=>c.id===actor.id?{...c,variant}:c)});setStatus('')}
+    catch(e){setStatus('Não foi possível alterar a imagem: '+e.message)}
   }
   function render(){
     $('sc-theatre-director').hidden=!isAdmin();
     $('sc-theatre-viewer-note').hidden=isAdmin();
-    $('sc-theatre-toggle').textContent=state.enabled?'Ocultar palco':'Abrir palco';
-    $('sc-theatre-add').disabled=!isAdmin()||adding||state.cast.length>=6;
+    $('sc-theatre-toggle').textContent=state.enabled?'Ocultar Teatro':'Mostrar Teatro';
     overlay.classList.toggle('open',state.enabled);
     overlay.classList.toggle('directable',isAdmin());
-    const chosenActor=$('sc-theatre-actor').value,chosenSpeaker=$('sc-theatre-speaker').value;
-    populate($('sc-theatre-actor'),actors,chosenActor,'Escolha uma ficha');
-    populate($('sc-theatre-speaker'),state.cast,chosenSpeaker||state.speaker,'Narrador');
-    if(state.cast.some(a=>a.id===state.speaker))$('sc-theatre-speaker').value=state.speaker;
-    const castList=$('sc-theatre-cast-list');castList.replaceChildren();
-    if(!state.cast.length){const hint=document.createElement('p');hint.textContent='Nenhum retrato no palco.';castList.append(hint)}
-    for(const actor of state.cast){
+    updateActorOptions();
+    const list=$('sc-theatre-cast-list');list.replaceChildren();
+    if(!state.cast.length){const p=document.createElement('p');p.textContent='Nenhum personagem no Teatro.';list.append(p)}
+    if(isAdmin())for(const a of state.cast){
       const row=document.createElement('div');row.className='cast-row';
-      const name=document.createElement('span');name.className='name';name.textContent=actor.name;
-      const remove=document.createElement('button');remove.textContent='Retirar';remove.onclick=()=>commit({cast:state.cast.filter(a=>a.id!==actor.id),speaker:state.speaker===actor.id?'':state.speaker});
-      row.append(name,remove);castList.append(row);
+      const name=document.createElement('strong');name.textContent=a.name;
+      const selector=document.createElement('select');selector.className='cast-variant';selector.setAttribute('aria-label','Retrato de '+a.name);
+      const actor=actors.find(x=>x.id===a.id);
+      for(const v of variants){
+        if(!actor?.variants?.includes(v.id)&&v.id!==a.variant)continue;
+        const o=document.createElement('option');o.value=v.id;o.textContent=v.name;selector.append(o)
+      }
+      selector.value=a.variant;selector.onchange=()=>void changeVariant(a,selector.value);
+      const remove=document.createElement('button');remove.textContent='Retirar';remove.onclick=()=>commit({cast:state.cast.filter(x=>x.id!==a.id)});
+      row.append(name,selector,remove);list.append(row);
     }
     overlay.replaceChildren();
     if(!state.enabled)return;
-    for(let idx=0;idx<state.cast.length;idx++){
-      const actor=state.cast[idx];
-      const el=document.createElement('div');el.className='stage-character'+(state.speaker===actor.id?' speaking':'');
-      el.style.left=(actor.x*100)+'%';el.style.top=(actor.y*100)+'%';el.style.zIndex=String(idx+2);
-      el.setAttribute('aria-label',actor.name+' no palco');
-      if(validImage(actor.portrait)){
-        const img=document.createElement('img');img.src=actor.portrait;img.alt=actor.name;img.draggable=false;el.append(img);
-      }else{
-        const stand=document.createElement('div');stand.className='stand-in';stand.textContent='忍';el.append(stand);
-      }
-      const label=document.createElement('span');label.className='nameplate';label.textContent=actor.name;el.append(label);
+    for(let i=0;i<state.cast.length;i++){
+      const actor=state.cast[i],figure=document.createElement('div');figure.className='stage-character';
+      figure.style.left=(actor.x*100)+'%';figure.style.zIndex=String(i+2);figure.setAttribute('aria-label',actor.name);
+      const asset=images.get(actor.id),src=asset?.variant===actor.variant?asset.image:actor.legacyPortrait;
+      if(typeof src==='string'&&(/^(https:\/\/)/.test(src)||/^data:image\/(png|jpeg|webp);base64,/.test(src))){
+        const img=document.createElement('img');img.src=src;img.alt=actor.name;img.draggable=false;figure.append(img);
+      }else{const placeholder=document.createElement('span');placeholder.className='placeholder';placeholder.textContent='忍';figure.append(placeholder)}
       if(isAdmin()){
-        let drag=null;
-        el.addEventListener('pointerdown',e=>{
-          if(e.button!==0)return;drag={id:e.pointerId};el.setPointerCapture(e.pointerId);el.classList.add('dragging');
-          e.stopPropagation();e.preventDefault();
-        });
-        el.addEventListener('pointermove',e=>{
-          if(!drag||drag.id!==e.pointerId)return;
-          const rect=overlay.getBoundingClientRect(),x=clamp((e.clientX-rect.left)/rect.width,.08,.92),y=clamp((e.clientY-rect.top)/rect.height,.3,.9);
-          drag.x=x;drag.y=y;el.style.left=(x*100)+'%';el.style.top=(y*100)+'%';
-        });
-        const finish=e=>{
-          if(!drag||drag.id!==e.pointerId)return;
-          const pos=drag;drag=null;el.classList.remove('dragging');
-          if(pos.x!==undefined)commit({cast:state.cast.map(x=>x.id===actor.id?{...x,x:pos.x,y:pos.y}:x)});
-        };
-        el.addEventListener('pointerup',finish);el.addEventListener('pointercancel',finish);
+        let dragging=null;
+        figure.addEventListener('pointerdown',e=>{if(e.button!==0)return;dragging={id:e.pointerId};figure.setPointerCapture(e.pointerId);figure.classList.add('dragging');e.stopPropagation();e.preventDefault()});
+        figure.addEventListener('pointermove',e=>{if(!dragging||dragging.id!==e.pointerId)return;const rect=overlay.getBoundingClientRect();dragging.x=clamp((e.clientX-rect.left)/rect.width,.1,.9);figure.style.left=(dragging.x*100)+'%'});
+        const finish=e=>{if(!dragging||dragging.id!==e.pointerId)return;const x=dragging.x;dragging=null;figure.classList.remove('dragging');if(x!==undefined)commit({cast:state.cast.map(c=>c.id===actor.id?{...c,x}:c)})};
+        figure.addEventListener('pointerup',finish);figure.addEventListener('pointercancel',finish);
       }
-      overlay.append(el);
-    }
-    if(state.dialogue){
-      const box=document.createElement('div');box.className='dialogue';
-      const name=document.createElement('strong');name.textContent=state.cast.find(x=>x.id===state.speaker)?.name||'Narrador';
-      const p=document.createElement('p');p.textContent=state.dialogue;box.append(name,p);overlay.append(box);
+      overlay.append(figure);
     }
   }
   return {
-    setState(value){state=normalize(value||{});render()},
-    setActors(items){actors=(Array.isArray(items)?items:[]).filter(x=>x&&typeof x.id==='string').map(x=>({id:x.id,name:String(x.name||'Shinobi')}));render()},
+    setState(value){state=norm(value||{});render()},
+    setActors(items){actors=(Array.isArray(items)?items:[]).filter(a=>a&&a.id).map(a=>({id:String(a.id),name:String(a.name||'Shinobi'),category:a.category==='npc'?'npc':'player',variants:Array.isArray(a.variants)?a.variants:[]}));render()},
+    setPortrait(id,image,variant){if(image)images.set(id,{image,variant});else images.delete(id);render()},
     refresh:render
   };
 }
