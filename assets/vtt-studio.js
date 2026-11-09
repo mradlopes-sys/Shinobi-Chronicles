@@ -326,7 +326,7 @@ canvas.ondrop=e=>{if(!admin||!room)return;e.preventDefault();const id=e.dataTran
 function zoom(factor){const x=stage.clientWidth/2,y=stage.clientHeight/2,p=world(x,y);view.zoom=Math.max(.07,Math.min(4,view.zoom*factor));view.ox=x-p.x*view.zoom;view.oy=y-p.y*view.zoom;draw()}
 canvas.onwheel=e=>{e.preventDefault();zoom(e.deltaY<0?1.1:.9)};
 $('zoom-in').onclick=()=>zoom(1.2);$('zoom-out').onclick=()=>zoom(.8);$('reset').onclick=center;$('grid').onclick=()=>{view.grid=!view.grid;$('grid').style.color=view.grid?'#f0c889':'';draw()};
-new ResizeObserver(()=>{const dpr=Math.min(window.devicePixelRatio||1,2);canvas.width=Math.round(stage.clientWidth*dpr);canvas.height=Math.round(stage.clientHeight*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);draw()}).observe(stage);
+new ResizeObserver(()=>{const dpr=Math.min(window.devicePixelRatio||1,2);canvas.width=Math.round(stage.clientWidth*dpr);canvas.height=Math.round(stage.clientHeight*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);if(view.image)center();else draw()}).observe(stage);
 
 
 const workspace=$('workspace');
