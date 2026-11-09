@@ -84,11 +84,18 @@ service cloud.firestore {
         allow list: if isAdmin();
         allow create, update, delete: if isAdmin();
       }
+      // Tokens de cenas não ativas não podem ser lidos por jogadores.
+      // A consulta do jogador DEVE incluir where('sceneId','==',activeSceneId).
       match /tokens/{tokenId} {
-        allow read: if vttAccess(roomId);
+        function inActiveScene() {
+          return vttMember(roomId)
+            && resource.data.get('sceneId', '') ==
+              get(/databases/$(database)/documents/vttRooms/$(roomId)).data.get('activeSceneId', '');
+        }
+        allow get, list: if isAdmin() || inActiveScene();
         allow create, delete: if isAdmin();
         allow update: if isAdmin() || (
-          vttMember(roomId)
+          inActiveScene()
           && resource.data.ownerUid == request.auth.uid
           && request.resource.data.ownerUid == resource.data.ownerUid
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['x','y'])
@@ -103,7 +110,8 @@ service cloud.firestore {
         allow create: if vttAccess(roomId)
           && request.resource.data.keys().hasOnly(['type','uid','at','payload'])
           && request.resource.data.uid == request.auth.uid
-          && request.resource.data.type in ['roll','effect'];
+          && request.resource.data.type in ['roll','effect']
+          && (request.resource.data.type == 'roll' || isAdmin());
         allow update, delete: if isAdmin();
       }
     }
