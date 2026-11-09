@@ -48,3 +48,16 @@ O arquivo preserva `users`, `admins`, `fichas`, `perfisPublicos` e `observacoesS
 - Retratos só têm a resolução que foi armazenada na ficha original; recuperar detalhes que já foram comprimidos não é possível.
 - Imagens de mapas usam URLs HTTPS, sem upload por Firebase Storage.
 - Ainda não existem paredes, neblina de guerra, iluminação dinâmica, automação de dano/chakra, medição avançada ou antifraude nas rolagens.
+
+
+## Atualização: Rolagens, régua e VTT integrado — novembro de 2026
+
+- **Rolagens:** o antigo painel Combate vira Rolagens com chat, dados livres (1d6, 1d8, 2d8, 3d8, 1d10, 1d12, 1d20, 1d100), modificador e animação. Rolagens de perícias e combate feitas na ficha são publicadas no histórico da Mesa Permanente. Perícias e ataques seguem 2d8; iniciativa segue 1d8 + atributos/perícias conforme a ficha.
+- **Solicitações do mestre:** o ADM seleciona uma ficha e perícia; o jogador recebe no histórico um botão para lançar a rolagem com o modificador calculado da própria ficha.
+- **Mapa sem grid:** removida a grade de todos os mapas e o encaixe em células ao arrastar tokens. A régua (⌁) mede distâncias em unidades relativas: 1 u = 1% da largura do mapa. Ela não presume metros nem deslocamentos oficiais.
+- **Efeitos de jutsus:** nas fichas, o botão Usar no VTT dispara um efeito cinematográfico baseado no nome/descrição da técnica. Esse reconhecimento é uma correspondência aproximada de elementos e palavras-chave (Katon, Suiton, Raiton etc.); caso não reconheça, exibe chakra. Não causa dano nem desconta chakra automaticamente.
+- **Teatro:** retratos com transparência recebem enquadramento pelo conteúdo visível da imagem, alinhando a base; um clique na figura alterna entre as quatro variantes disponíveis. Prévia local e transição suavizam a troca. Imagens sem transparência ou bloqueadas por CORS podem conservar bordas incorporadas.
+- **Site integrado:** a Mesa Virtual continua dentro do Shinobi, ao lado da barra de navegação principal; a seta do lobby recolhe/expande esse menu sem recarregar o iframe. O banner da página inicial mantém o título Sua próxima sessão começa aqui e a ilustração enviada do Shikamaru com Naruto jogando shogi.
+- **Segurança:** a versão precisa da publicação manual de `firebase/firestore.rules`, que mantém as coleções originais, acrescenta eventos de rolagem, chat e pedidos de perícia e autoriza somente eventos de jutsu associados a fichas pertencentes ao jogador. Isso **não** equivale a validação antifraude da rolagem ou da técnica usada.
+
+**Testes:** verifique as regras com duas contas (mestre e jogador), o chat do VTT, a rolagem da ficha, o pedido de perícia, a troca de retrato, o disparo de um Katon e a régua sem grade. O código não foi testado em duas sessões reais do Firebase por esta ferramenta.
