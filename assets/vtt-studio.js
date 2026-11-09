@@ -13,7 +13,7 @@ const safeUrl=s=>typeof s==='string'&&/^https:\/\/[^\s"'<>]+$/i.test(s)&&s.lengt
 const safeImage=s=>safeUrl(s)||(typeof s==='string'&&s.length<=1200000&&/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(s));
 const show=(msg)=>{const x=$('status');x.textContent=msg;x.hidden=false;clearTimeout(show.timer);show.timer=setTimeout(()=>x.hidden=true,5500)};
 const canMove=t=>admin||t.ownerUid===uid;
-const visibleTokens=()=>tokens.filter(t=>!t.sceneId||t.sceneId===(roomData?.activeSceneId||''));
+const visibleTokens=()=>tokens.filter(t=>t.sceneId===(roomData?.activeSceneId||'')||(!t.sceneId&&!roomData?.activeSceneId));
 const roomRef=()=>doc(db,'vttRooms',room);
 const tokenRef=id=>doc(db,'vttRooms',room,'tokens',id);
 const stopSubs=()=>{if(tokenUnsub){tokenUnsub();tokenUnsub=null}tokenSceneSubscribed=null;subs.forEach(u=>u());subs=[];room='';roomData=null;tokens=[];scenes=[];selected=null;editingSceneId='';theatre.setState({});theatre.setTokens([]);$('room-heading').textContent='Nenhuma sala conectada';$('scene-empty').hidden=false;renderScenes();renderTokens();draw();};
@@ -33,11 +33,25 @@ $('sheet-modal').addEventListener('click',e=>{if(e.target===$('sheet-modal'))$('
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('sheet-modal').classList.contains('open'))$('sheet-close').click()});
 $('room-create').onclick=async()=>{if(!admin)return;try{const ref=await addDoc(collection(db,'vttRooms'),{name:'Mesa Shinobi',scene:'',sceneName:'Sem cena ativa',activeSceneId:'',grid:64,createdAt:serverTimestamp(),updatedAt:serverTimestamp(),turn:0,theatre:{enabled:false,cast:[],speaker:'',dialogue:''}});$('room-id').value=ref.id;await join(ref.id)}catch(e){show('Não foi possível criar a sala: '+e.message)}};
 $('room-join').onclick=()=>join($('room-id').value.trim());
-async function join(id){if(!/^[A-Za-z0-9_-]{8,80}$/.test(id))return show('Código de sala inválido');stopSubs();try{const snap=await getDoc(doc(db,'vttRooms',id));if(!snap.exists())throw Error('Sala inexistente');room=id;$('room-id').value=id;subs.push(onSnapshot(roomRef(),s=>{roomData=s.data();if(!roomData)return;$('room-heading').textContent=roomData.name+' · '+id;$('scene-name').textContent=roomData.sceneName||'Mesa Shinobi';$('scene-caption').textContent=roomData.scene?'Cena compartilhada':'Aguardando o mestre ativar uma cena';$('turn-label').textContent='Turno '+(roomData.turn||0);theatre.setState(roomData.theatre);theatre.setTokens(visibleTokens());renderTokens();loadMap(roomData.scene||'')},e=>show(e.message)));
-subs.push(onSnapshot(collection(db,'vttRooms',id,'tokens'),s=>{tokens=s.docs.map(d=>({id:d.id,...d.data()}));theatre.setTokens(visibleTokens());renderTokens();draw()},e=>show(e.message)));
+async function join(id){if(!/^[A-Za-z0-9_-]{8,80}$/.test(id))return show('Código de sala inválido');stopSubs();try{const snap=await getDoc(doc(db,'vttRooms',id));if(!snap.exists())throw Error('Sala inexistente');room=id;roomData=snap.data();$('room-id').value=id;subs.push(onSnapshot(roomRef(),s=>{roomData=s.data();if(!roomData)return;$('room-heading').textContent=roomData.name+' · '+id;$('scene-name').textContent=roomData.sceneName||'Mesa Shinobi';$('scene-caption').textContent=roomData.scene?'Cena compartilhada':'Aguardando o mestre ativar uma cena';$('turn-label').textContent='Turno '+(roomData.turn||0);theatre.setState(roomData.theatre);view.cell=Math.max(32,Math.min(256,Number(roomData.grid)||64));$('scene-empty').hidden=!!roomData.scene;watchTokens(roomData.activeSceneId||'');theatre.setTokens(visibleTokens());renderTokens();renderScenes();loadMap(roomData.scene||'');draw()},e=>show(e.message)));
+
 if(admin)subs.push(onSnapshot(collection(db,'vttRooms',id,'scenes'),s=>{scenes=s.docs.map(d=>({id:d.id,...d.data()}));renderScenes()},e=>show('Biblioteca: '+e.message)));
 subs.push(onSnapshot(collection(db,'vttRooms',id,'events'),s=>{const logs=s.docs.map(d=>d.data()).filter(e=>e.type==='roll').sort((a,b)=>(b.at?.seconds||0)-(a.at?.seconds||0));if(logs.length){const roll=logs[0];$('roll-log').textContent='Última rolagem: d20 → '+roll.payload?.result}for(const change of s.docChanges()){const e=change.doc.data();if(change.type==='added'&&e.type==='effect'&&e.at?.toMillis&&Date.now()-e.at.toMillis()<3500)flash(e.payload?.kind)}},()=>{}));
 show('Conectado à sala');renderSheets()}catch(e){stopSubs();show('Não foi possível entrar: '+e.message)}}
+function watchTokens(sceneId){
+  if(!room||tokenSceneSubscribed===sceneId)return;
+  if(tokenUnsub){tokenUnsub();tokenUnsub=null}
+  tokenSceneSubscribed=sceneId;tokens=[];selected=null;renderTokens();draw();
+  const watchingRoom=room;
+  const ref=collection(db,'vttRooms',room,'tokens');
+  // Os jogadores consultam somente tokens da cena ativa; o mestre administra todos.
+  const source=admin?ref:query(ref,where('sceneId','==',sceneId));
+  tokenUnsub=onSnapshot(source,snap=>{
+    if(room!==watchingRoom)return;
+    tokens=snap.docs.map(d=>({id:d.id,...d.data()}));
+    theatre.setTokens(visibleTokens());renderTokens();draw();
+  },err=>show('Permissão dos tokens: '+err.message));
+}
 $('member-add').onclick=async()=>{if(!admin||!room)return;const id=$('member-uid').value.trim();if(!/^[A-Za-z0-9]{15,128}$/.test(id))return show('UID inválido');try{await setDoc(doc(db,'vttRooms',room,'members',id),{joinedAt:serverTimestamp()});show('Jogador autorizado')}catch(e){show(e.message)}};
 $('scene-add').onclick=async()=>{if(!admin||!room)return show('Somente o mestre pode preparar mapas');const name=$('scene-title-input').value.trim(),url=$('scene-url').value.trim();if(!name||name.length>80||!safeUrl(url))return show('Informe nome e URL HTTPS válida');try{await addDoc(collection(db,'vttRooms',room,'scenes'),{name,url,createdAt:serverTimestamp()});$('scene-title-input').value='';$('scene-url').value='';show('Cena adicionada à biblioteca')}catch(e){show(e.message)}};
 function renderScenes(){const root=$('scene-library');root.replaceChildren();for(const s of scenes){const item=document.createElement('div');item.className='entry'+(roomData?.scene===s.url?' active':'');const pic=document.createElement('span');pic.className='thumb';const img=document.createElement('img');img.src=s.url;img.alt='';img.loading='lazy';pic.append(img);const meta=document.createElement('span');meta.className='meta';const strong=document.createElement('strong');strong.textContent=s.name;meta.append(strong);const activate=document.createElement('button');activate.className='btn small';activate.textContent='Ativar';activate.onclick=async()=>{try{await updateDoc(roomRef(),{scene:s.url,sceneName:s.name,activeSceneId:s.id,updatedAt:serverTimestamp()});show('Cena ativada para todos')}catch(e){show(e.message)}};const remove=document.createElement('button');remove.className='btn small';remove.textContent='✕';remove.title='Excluir cena';remove.onclick=async()=>{if(!confirm('Excluir esta cena da biblioteca?'))return;try{await deleteDoc(doc(db,'vttRooms',room,'scenes',s.id));show('Cena excluída')}catch(e){show(e.message)}};item.append(pic,meta,activate,remove);root.append(item)}}
