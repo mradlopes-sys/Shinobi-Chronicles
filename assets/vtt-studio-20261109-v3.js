@@ -1,4 +1,4 @@
-import {createTheatre} from './vtt-theatre.js';
+import {createTheatre} from './vtt-theatre-v2.js';
 import {createRollsPanel} from './vtt-rolls.js';
 import {createVisualEffects,EFFECTS} from './vtt-effects.js';
 import {initializeApp,getApps} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
@@ -41,6 +41,7 @@ const theatre=createTheatre({
     await updateDoc(roomRef(),{theatre:state,updatedAt:serverTimestamp()});
   },
   isAdmin:()=>admin,
+  previewPortrait:(id,variant)=>{const f=sheets.find(x=>x.id===id);return variant==='casual'?(f?.retratos?.casual||f?.foto):f?.retratos?.[variant]},
   publishPortrait:async(id,variant)=>{
     if(!admin||!room)throw Error('Somente o mestre pode publicar retratos.');
     const f=sheets.find(x=>x.id===id);
