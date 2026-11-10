@@ -25,7 +25,7 @@ const combatDirector=createCombatDirector({
     if(!admin||!room)throw Error('Apenas o mestre pode controlar a iniciativa.');
     await updateDoc(roomRef(),{combat:next,updatedAt:serverTimestamp()});
   },
-  notify:show,portrait:f=>portrait(f)
+  notify:message=>show(message),portrait:f=>portrait(f)
 });
 function refreshCombatTargets(){
   const input=$('effect-target');if(!input)return;
