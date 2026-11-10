@@ -3849,20 +3849,26 @@ html.vtt-sheet-context .cv-toolbar{margin-top:0}
 @media(max-width:760px){.shell.vtt-shell{grid-template-columns:74px minmax(0,1fr)}.shell.vtt-shell.sidebar-folded{grid-template-columns:49px minmax(0,1fr)}.vtt-shell .sidebar{padding:10px 5px}.vtt-shell .sidebar .nav-item{font-size:0!important;justify-content:center}.vtt-shell .sidebar .nav-icon{font-size:18px!important}.vtt-shell .sidebar .brand-name,.vtt-shell .sidebar .brand-sub,.vtt-shell .sidebar .nav-category,.vtt-shell .sidebar .sidebar-bottom{display:none}}
 </style>
 <style>
-/* Mesa Virtual: ilustração em página dupla, sem cartão/miniatura destacada. */
+/* Mesa Virtual: mesma paleta do banner principal, mantendo arte e degradê. */
 .hero.hero-vtt{
   margin-top:22px;min-height:308px;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);
   position:relative;isolation:isolate;overflow:hidden;
-  border:1px solid #d7c7bc;background:
-  radial-gradient(ellipse 48% 100% at 78% 60%,#ffffffba 0%,transparent 98%),
-  linear-gradient(99deg,#f0e5dc 0%,#f3eae1 46%,#fbf9f3 100%);
-  box-shadow:0 14px 35px #35271e12
+  border:1px solid rgba(var(--theme-rgb),.37);
+  background:
+    radial-gradient(ellipse 59% 91% at 6% 15%,rgba(var(--theme-rgb),.17),transparent 96%),
+    linear-gradient(100deg,#e9e0d0 0%,#e8e0d1 55%,#d9d9c9 100%);
+  box-shadow:0 14px 34px #1a241a2a
 }
-.hero.hero-vtt:after{content:"";position:absolute;z-index:4;inset:12px;border:1px solid #b9a89b42;pointer-events:none}
+.hero.hero-vtt:before{
+  content:"";display:block;position:absolute;inset:0;z-index:0;
+  pointer-events:none;opacity:.4;
+  background:radial-gradient(ellipse 34% 30% at 2% 100%,rgba(var(--theme-rgb),.17),transparent 95%);
+}
+.hero.hero-vtt:after{content:"";position:absolute;z-index:4;inset:12px;border:1px solid #8f86705e;pointer-events:none}
 .hero-vtt .hero-copy{position:relative;z-index:3;padding:clamp(24px,2.7vw,34px) clamp(27px,4.1vw,62px)}
-.hero-vtt .eyebrow{letter-spacing:.16em;color:#925951}
-.hero-vtt h2{font:600 clamp(27px,2.65vw,39px)/1.21 var(--serif);letter-spacing:-.047em;color:#3f3934;margin:12px 0 11px}
-.hero-vtt p{max-width:555px;font-size:13px;line-height:1.7;color:#615f57}
+.hero-vtt .eyebrow{letter-spacing:.16em;color:var(--theme-deep);font-weight:800}
+.hero-vtt h2{font:600 clamp(27px,2.65vw,39px)/1.21 var(--serif);letter-spacing:-.047em;color:#352c29;margin:12px 0 11px}
+.hero-vtt p{max-width:555px;font-size:13px;line-height:1.7;color:#4d534a}
 .hero-vtt .mt24{margin-top:16px}
 .hero-vtt .hero-scene{position:relative;min-height:308px;background:transparent;overflow:hidden}
 .hero-vtt .hero-scene img{
@@ -3875,8 +3881,8 @@ html.vtt-sheet-context .cv-toolbar{margin-top:0}
 }
 .hero-vtt .hero-scene:after{
   content:"";pointer-events:none;position:absolute;z-index:2;inset:0;
-  background:linear-gradient(90deg,#f3eae1 0%,#f3eae1a0 13%,transparent 46%),
-    linear-gradient(0deg,#f7f2e83b,transparent 25%);
+  background:linear-gradient(90deg,rgba(233,224,208,.86) 0%,rgba(233,224,208,.45) 13%,transparent 46%),
+    linear-gradient(0deg,rgba(48,55,42,.08),transparent 34%);
 }
 @media(max-width:800px){
   .hero.hero-vtt{grid-template-columns:1fr}
@@ -3886,9 +3892,31 @@ html.vtt-sheet-context .cv-toolbar{margin-top:0}
   .hero-vtt .hero-scene img{width:100%;height:100%;object-position:center 45%;
     -webkit-mask-image:linear-gradient(180deg,transparent 0%,#0009 17%,#000 40%);
     mask-image:linear-gradient(180deg,transparent 0%,#0009 17%,#000 40%)}
-  .hero-vtt .hero-scene:after{background:linear-gradient(180deg,#f2e8df 0%,transparent 28%)}
+  .hero-vtt .hero-scene:after{background:linear-gradient(180deg,#e9e0d0 0%,transparent 28%)}
 }
 @media(max-width:470px){.hero-vtt .hero-copy{padding:26px 22px 12px}.hero-vtt .hero-scene{min-height:180px}}
+/* No modo escuro, ambos os banners compartilham o mesmo fundo e contraste. */
+html[data-appearance="dark"] #app .shell .hero.hero-vtt{
+  background:
+    radial-gradient(ellipse 51% 70% at 84% 32%,rgba(var(--theme-rgb),.16),transparent 85%),
+    linear-gradient(116deg,#14231b,#253d2e 58%,#18281f)!important;
+  border-color:#536e57!important;
+}
+html[data-appearance="dark"] #app .shell .hero.hero-vtt h2{color:#f1efe4!important}
+html[data-appearance="dark"] #app .shell .hero.hero-vtt p{color:#cbd5c5!important}
+html[data-appearance="dark"] #app .shell .hero.hero-vtt .eyebrow{color:#d7b8a4!important}
+html[data-appearance="dark"] #app .shell .hero.hero-vtt .hero-scene img{
+  mix-blend-mode:normal;filter:brightness(.76) saturate(.82);
+}
+html[data-appearance="dark"] #app .shell .hero.hero-vtt .hero-scene:after{
+  background:linear-gradient(90deg,rgba(20,35,27,.94),rgba(20,35,27,.42) 18%,transparent 46%),
+    linear-gradient(0deg,rgba(20,35,27,.36),transparent 35%);
+}
+@media(max-width:800px){
+  html[data-appearance="dark"] #app .shell .hero.hero-vtt .hero-scene:after{
+    background:linear-gradient(180deg,#14231b 0%,transparent 28%);
+  }
+}
 </style></head>
 <body>
 <div id="app"><p style="text-align:center;padding:50px;font-family:Georgia">Carregando os arquivos shinobi...</p></div>
