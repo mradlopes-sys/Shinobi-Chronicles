@@ -1,6 +1,6 @@
 import {createTheatre} from './vtt-theatre-v17.js';
 import {createRollsPanel,makeDicePayload} from './vtt-rolls-v4.js';
-import {createVisualEffects,EFFECTS} from './vtt-effects-v2.js';
+import {createVisualEffects,EFFECTS} from './vtt-effects-v2.js?v=20261110-motion2';
 import {DEFAULT_METERS_PER_CELL,metersPerCell,pixelsToMeters,calibrateMetersPerCell,formatMeters,scaleBar} from './vtt-metrics-v1.js';
 import {initializeApp,getApps} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
 import {getAuth,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
