@@ -970,8 +970,9 @@ function draw(){
   const w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;
   ctx.clearRect(0,0,w,h);ctx.save();
   ctx.translate(view.ox,view.oy);ctx.scale(view.zoom,view.zoom);
+  // Fora dos limites da imagem, o canvas fica transparente e exibe o fundo
+  // escuro da área de jogo, independentemente do modo claro/escuro.
   if(view.image)ctx.drawImage(view.image,0,0);
-  else{ctx.fillStyle=document.documentElement.dataset.appearance==='dark'?'#15231d':'#eeeae1';ctx.fillRect(-5000,-5000,10000,10000)}
   // Arte original em destaque, proporção natural, com transparência e sem máscaras, círculos ou molduras.
   for(const t of visibleTokens()){
     const b=spriteBounds(t);
