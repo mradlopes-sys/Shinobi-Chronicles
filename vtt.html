@@ -126,6 +126,23 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
 @media(max-width:840px){.workspace{grid-template-columns:54px minmax(0,1fr) 300px}.workspace.rail-hidden{grid-template-columns:0 minmax(0,1fr) 300px}}
 @media(max-width:690px){.workspace{grid-template-columns:49px minmax(0,1fr);grid-template-rows:minmax(45dvh,1fr) minmax(225px,40dvh)}.workspace.rail-hidden{grid-template-columns:0 minmax(0,1fr)}.pane{padding:12px 13px 28px}.stage-identity{display:none}}
 @media(prefers-reduced-motion:reduce){.scene-entry,.actor-folder .entry,.vtt-folder .folder-chevron,.tabs button{transition:none!important}}
+/* Acesso ao Teatro pela ficha: menu contextual, sem aba independente. */
+.actor-row{display:flex;align-items:center;gap:6px;min-width:0;margin:8px 0}
+.actor-row>.entry{flex:1;min-width:0;margin:0;position:relative}
+.actor-row>.entry:focus-visible{outline:2px solid #d9c08f;outline-offset:2px}
+.actor-row.on-stage>.entry{border-color:#bca16fa8;background:linear-gradient(110deg,#40553d,#2d4738)}
+.actor-stage-dot{width:7px;height:7px;flex:none;border-radius:50%;background:#d6ba82;box-shadow:0 0 0 4px #d5b98924}
+.actor-more{display:grid;place-items:center;flex:0 0 31px;width:31px;height:37px;border:1px solid #657b628e;border-radius:9px;background:#253a2f;color:#e2cb9f;font-size:22px;line-height:1;cursor:pointer;transition:border-color .15s,background .15s}
+.actor-more:hover,.actor-more:focus-visible{background:#596847;border-color:#d5b988;outline-offset:2px}
+.actor-context-menu{position:fixed;z-index:45;width:224px;max-width:calc(100vw - 16px);padding:7px;border:1px solid #9e967577;border-radius:13px;background:linear-gradient(145deg,#2e4233,#14281f);box-shadow:0 20px 45px #040a07bd,0 0 0 1px #faf1da15;backdrop-filter:blur(12px);animation:actor-menu-enter .14s ease-out}
+.actor-menu-caption{padding:9px 11px 11px;margin-bottom:5px;border-bottom:1px solid #73866c57;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:600 13px Georgia,serif;color:#f4e5c8}
+.actor-menu-action{display:flex;align-items:center;gap:10px;width:100%;padding:10px 11px;border:0;border-radius:8px;background:transparent;color:#e2eadb;text-align:left;font-size:12px;cursor:pointer}
+.actor-menu-action:hover,.actor-menu-action:focus-visible{background:#5b70573b;outline-color:#d6bd8c}
+.actor-menu-action.danger{color:#f3c4b6}
+.actor-menu-action.danger:hover{background:#723f3b70}
+.actor-menu-icon{width:20px;flex:none;text-align:center;font:600 16px Georgia,serif;color:#ddc28e}
+@keyframes actor-menu-enter{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.actor-context-menu{animation:none}.actor-more{transition:none}}
 </style>
 </head>
 <body>
@@ -134,7 +151,6 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
     <div class="seal" aria-hidden="true">忍</div>
     <button class="active" data-tab="campanha" title="Campanha, mapas e personagens" aria-label="Campanha">⌖</button>
     <button data-tab="rolls" title="Rolagens e chat" aria-label="Rolagens e chat">⚄</button>
-    <button data-tab="theatre" title="Modo Teatro" aria-label="Modo Teatro">◈</button>
     <span class="rail-tip" aria-hidden="true">MESA SHINOBI</span>
   </nav>
   <main class="stage-wrap" id="stage">
@@ -168,7 +184,6 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
     <div class="tabs" role="group" aria-label="Abas da mesa">
       <button class="active" data-tab="campanha">Campanha</button>
       <button data-tab="rolls">Rolagens</button>
-      <button data-tab="theatre">Teatro</button>
     </div>
     <section class="pane" id="pane-campanha">
       <div class="campaign-status"><span class="campaign-status-dot" aria-hidden="true"></span><div><span class="campaign-kicker">SESSÃO COMPARTILHADA</span><strong>Mesa Permanente</strong><p id="world-status" role="status">Conectando à campanha…</p></div></div>
@@ -207,7 +222,7 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
         <div class="folder-content"><div id="token-list"></div></div>
       </details>
       <button class="btn manage-sheets-btn" type="button" id="vtt-manage-sheets" data-gm-only hidden>Gerenciar fichas na Central do Mestre ↗</button>
-      <p class="campaign-footnote">Arraste uma ficha da pasta para posicioná-la no mapa. No Teatro, os retratos permanecem fixos.</p>
+      <p class="campaign-footnote">Clique na ficha para abri-la. Para o Teatro, use o <strong>botão direito</strong> sobre um personagem ou o menu <strong>⋯</strong>. O mestre também pode arrastar fichas até o mapa tático.</p>
     </section>
     <section class="pane" id="pane-rolls" hidden>
       <div id="rolls-panel"></div><details class="vtt-roll-fx" style="margin-top:14px"><summary style="cursor:pointer;color:#e7d3b2;font-size:12px">Encontros e efeitos cinematográficos</summary><h3>Turno</h3><p id="turn-label">Turno 0</p><button id="next-turn" class="btn primary" hidden>Próximo turno</button>
@@ -215,12 +230,12 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
       <button id="cast-effect" class="btn primary" hidden>Executar efeito para todos</button><p class="hint" id="effect-feedback" role="status"></p><details id="combat-effect-guide" style="margin-top:16px;border:1px solid #53634f;border-radius:10px;padding:10px"><summary style="cursor:pointer;color:#e9dcc4;font-size:12px">Guia dos efeitos visuais</summary><div id="effect-guide-items" style="margin-top:10px"></div></details>
       </details>
     </section>
-    <section class="pane" id="pane-theatre" hidden><div id="theatre-panel"></div></section>
+
   </aside>
 </div>
 <div id="sheet-modal" role="dialog" aria-label="Ficha do personagem" aria-modal="true">
   <div class="window"><div class="window-head"><b>Ficha do personagem</b><button class="btn small" id="sheet-close" aria-label="Fechar ficha">Fechar ✕</button></div><iframe id="sheet-frame" title="Ficha Shinobi" loading="lazy"></iframe></div>
 </div>
-<script type="module" src="./assets/vtt-studio-20261110-v8.js"></script>
+<script type="module" src="./assets/vtt-studio-20261110-v9.js"></script>
 </body>
 </html>
