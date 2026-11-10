@@ -785,7 +785,7 @@ function renderTokens(){
   if(!list.length){const p=document.createElement('p');p.textContent=admin?'Arraste uma ficha da pasta Jogadores ou NPCs até o mapa para colocar um token.':'O mestre ainda não colocou personagens nesta cena.';root.append(p);return}
   for(const t of list){
     const line=document.createElement('div');line.className='token-card'+(selected===t.id?' selected':'');
-    const name=document.createElement('span');name.textContent=(t.name||'Shinobi')+' · '+t.x+', '+t.y;
+    const name=document.createElement('span');name.textContent=(t.name||'Shinobi')+' · X '+formatMeters((t.x+.5)*currentMetersPerCell())+' · Y '+formatMeters((t.y+1)*currentMetersPerCell());
     const choose=document.createElement('button');choose.className='btn small';choose.textContent='Localizar';
     choose.onclick=()=>{selected=t.id;view.ox=stage.clientWidth/2-(t.x+.5)*view.cell*view.zoom;view.oy=stage.clientHeight/2-(t.y+.5)*view.cell*view.zoom;renderTokens();draw()};
     line.append(name,choose);
@@ -921,6 +921,33 @@ function draw(){
   }
   ctx.restore();
   drawRuler();
+  drawTokenTravel();
+}
+// Mostra a distância de deslocamento durante um arraste, sem impor grade.
+function drawTokenTravel(){
+  if(!dragToken?.t||!dragToken.original||measure.enabled)return;
+  const t=dragToken.t,old=dragToken.original;
+  const a={
+    x:view.ox+(old.x+.5)*view.cell*view.zoom,
+    y:view.oy+(old.y+1)*view.cell*view.zoom
+  };
+  const b={
+    x:view.ox+(t.x+.5)*view.cell*view.zoom,
+    y:view.oy+(t.y+1)*view.cell*view.zoom
+  };
+  const meters=Math.hypot(t.x-old.x,t.y-old.y)*currentMetersPerCell();
+  if(meters<.05)return;
+  ctx.save();
+  ctx.setLineDash([5,5]);ctx.lineWidth=1.6;ctx.strokeStyle='#f5d399';
+  ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.setLineDash([]);
+  const label=formatMeters(meters),x=(a.x+b.x)/2,y=(a.y+b.y)/2;
+  ctx.font='700 11px system-ui';
+  const w=ctx.measureText(label).width+16;
+  ctx.fillStyle='#1b2e24ed';ctx.strokeStyle='#d9bb8d';ctx.lineWidth=1;
+  ctx.beginPath();ctx.roundRect(x-w/2,y-30,w,22,6);ctx.fill();ctx.stroke();
+  ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#fff0d0';
+  ctx.fillText(label,x,y-19);
+  ctx.restore();
 }
 function hit(x,y){
   const p=world(x,y);
