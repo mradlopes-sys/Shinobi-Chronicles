@@ -3,10 +3,33 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#121b1a">
+<meta name="theme-color" content="#f6f3ed">
+<script>
+(function(){
+  const appearanceKey='shinobi-appearance';
+  function applyAppearance(value){
+    const next=value==='dark'?'dark':'light';
+    if(document.documentElement.dataset.appearance===next)return;
+    document.documentElement.dataset.appearance=next;
+    const meta=document.querySelector('meta[name="theme-color"]');
+    if(meta)meta.content=next==='dark'?'#101917':'#f6f3ed';
+    window.dispatchEvent(new Event('sc-vtt-appearance'));
+  }
+  try{applyAppearance(localStorage.getItem(appearanceKey))}
+  catch(error){applyAppearance('light')}
+  window.addEventListener('storage',event=>{
+    if(event.key===appearanceKey)applyAppearance(event.newValue);
+  });
+  window.addEventListener('message',event=>{
+    if(event.origin!==location.origin||event.source!==window.parent||event.data?.scVtt!=='appearance')return;
+    applyAppearance(event.data.appearance);
+  });
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Yuji+Boku&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
 <title>Mesa Virtual | Shinobi Chronicles</title>
 <style>
 :root{font-family:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;color:#e8e7dd;background:#101918;color-scheme:dark;--ink:#111b19;--surface:#1b2825;--surface2:#26342d;--line:#3c4d42;--gold:#d6b78b;--muted:#aebcb0}
@@ -248,6 +271,7 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
   #fx-quick [data-fx]:hover{transform:none}}
 
 </style>
+<link rel="stylesheet" href="./assets/vtt-shinobi-theme-v1.css?v=20261110-theme1">
 </head>
 <body>
 <div class="workspace" id="workspace">
@@ -395,6 +419,6 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
   </div>
 </div>
 <script src="./assets/shinobi-jutsu-presentation-v1.js?v=20261110-sfx3"></script>
-<script type="module" src="./assets/vtt-studio-20261110-v21.js?v=20261110-tokencast5"></script>
+<script type="module" src="./assets/vtt-studio-20261110-v21.js?v=20261110-theme1"></script>
 </body>
 </html>
