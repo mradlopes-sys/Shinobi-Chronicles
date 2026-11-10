@@ -7,22 +7,69 @@
 <script>
 (function(){
   const appearanceKey='shinobi-appearance';
+  const root=document.documentElement;
+  const SAFE_COLOR=/^#[0-9a-fA-F]{6}$/;
+  const SAFE_ID=/^[a-z]{2,24}$/;
   function applyAppearance(value){
     const next=value==='dark'?'dark':'light';
-    if(document.documentElement.dataset.appearance===next)return;
-    document.documentElement.dataset.appearance=next;
+    const changed=root.dataset.appearance!==next;
+    root.dataset.appearance=next;
     const meta=document.querySelector('meta[name="theme-color"]');
     if(meta)meta.content=next==='dark'?'#101917':'#f6f3ed';
-    window.dispatchEvent(new Event('sc-vtt-appearance'));
+    if(changed)window.dispatchEvent(new Event('sc-vtt-appearance'));
+  }
+  function applyClan(payload){
+    const color=payload&&SAFE_COLOR.test(String(payload.color||''))?payload.color:'#975d50';
+    const hex=color.slice(1),rgb=[0,2,4].map(i=>parseInt(hex.slice(i,i+2),16));
+    root.style.setProperty('--vtt-clan',color);
+    root.style.setProperty('--vtt-clan-rgb',rgb.join(','));
+    const id=payload&&SAFE_ID.test(String(payload.id||''))?payload.id:'';
+    if(id)root.dataset.clan=id;else delete root.dataset.clan;
+    const name=String(payload?.name||'').slice(0,32);
+    const kanji=String(payload?.kanji||'忍').slice(0,2);
+    const label=document.getElementById('vtt-clan-label');
+    const mark=document.getElementById('vtt-clan-symbol');
+    if(label)label.textContent=name?'ESTILO '+name.toLocaleUpperCase('pt-BR'):'ARQUIVOS SHINOBI';
+    if(mark)mark.textContent=kanji;
+  }
+  function applyTheme(payload){
+    if(!payload||typeof payload!=='object')return;
+    applyAppearance(payload.appearance);
+    applyClan(payload.clan);
   }
   try{applyAppearance(localStorage.getItem(appearanceKey))}
   catch(error){applyAppearance('light')}
+  applyClan(null);
   window.addEventListener('storage',event=>{
     if(event.key===appearanceKey)applyAppearance(event.newValue);
   });
   window.addEventListener('message',event=>{
-    if(event.origin!==location.origin||event.source!==window.parent||event.data?.scVtt!=='appearance')return;
-    applyAppearance(event.data.appearance);
+    if(event.origin!==location.origin||event.source!==window.parent)return;
+    if(event.data?.scVtt==='theme')applyTheme(event.data);
+    else if(event.data?.scVtt==='appearance')applyAppearance(event.data.appearance);
+  });
+  try{
+    if(window.parent!==window&&window.parent.location.origin===location.origin){
+      const parentRoot=window.parent.document.documentElement;
+      applyAppearance(parentRoot.dataset.appearance);
+      const wrapper=window.parent.document.querySelector('.vtt-shell');
+      const color=wrapper?.style.getPropertyValue('--theme-accent')?.trim();
+      if(color&&SAFE_COLOR.test(color)){
+        applyClan({color,id:wrapper.getAttribute('data-theme')});
+      }
+    }
+  }catch(error){/* A mesa também abre sozinha, fora do iframe do site. */}
+  document.addEventListener('DOMContentLoaded',()=>{
+    const mark=root.dataset.clan;
+    if(mark){
+      const wrapper=window.parent!==window?window.parent.document.querySelector('.vtt-shell'):null;
+      if(wrapper){
+        const id=wrapper.getAttribute('data-theme')||'';
+        const names={uchiha:'Uchiha',senju:'Senju',uzumaki:'Uzumaki',hyuga:'Hyūga',aburame:'Aburame',nara:'Nara',inuzuka:'Inuzuka',akimichi:'Akimichi',yamanaka:'Yamanaka',sarutobi:'Sarutobi',hatake:'Hatake',semcla:'Sem Clã'};
+        const symbols={uchiha:'火',senju:'木',uzumaki:'渦',hyuga:'眼',aburame:'虫',nara:'影',inuzuka:'犬',akimichi:'食',yamanaka:'心',sarutobi:'猿',hatake:'雷',semcla:'忍'};
+        applyClan({id,color:wrapper.style.getPropertyValue('--theme-accent').trim(),name:names[id]||id,kanji:symbols[id]||'忍'});
+      }
+    }else applyClan(null);
   });
 })();
 </script>
@@ -272,6 +319,7 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
 
 </style>
 <link rel="stylesheet" href="./assets/vtt-shinobi-theme-v1.css?v=20261110-theme1">
+<link rel="stylesheet" href="./assets/vtt-ink-scroll-v2.css?v=20261110-inkv2">
 </head>
 <body>
 <div class="workspace" id="workspace">
@@ -327,7 +375,7 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
     <div id="status" class="status" hidden role="status"></div>
   </main>
   <aside class="sidebar" id="side-panel">
-    <div class="side-header"><span class="overline">SHINOBI · MESA VIRTUAL</span><b>Mesa Virtual</b><p id="auth-label">Conectando ao Firebase…</p></div>
+    <div class="side-header"><span class="overline">SHINOBI · MESA VIRTUAL</span><b>Mesa Virtual</b><p id="auth-label">Conectando ao Firebase…</p><div class="vtt-clan-mark" aria-label="Identidade visual da mesa"><span class="mark" id="vtt-clan-symbol" aria-hidden="true">忍</span><span class="clan-label" id="vtt-clan-label">ARQUIVOS SHINOBI</span></div></div>
     <div class="tabs" role="group" aria-label="Abas da mesa">
       <button class="active" data-tab="rolls">Rolagens</button>
       <button data-tab="campanha">Campanha</button>
@@ -419,6 +467,6 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
   </div>
 </div>
 <script src="./assets/shinobi-jutsu-presentation-v1.js?v=20261110-sfx3"></script>
-<script type="module" src="./assets/vtt-studio-20261110-v21.js?v=20261110-theme1"></script>
+<script type="module" src="./assets/vtt-studio-20261110-v21.js?v=20261110-inkv2"></script>
 </body>
 </html>
