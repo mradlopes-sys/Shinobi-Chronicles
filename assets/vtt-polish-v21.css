@@ -159,3 +159,15 @@ input:focus,select:focus,textarea:focus{border-color:#d2b484;box-shadow:0 0 0 3p
 #rolls-panel .vr-clean{background:#4e48322c;border:1px solid #ad957058;color:#d9c5a2}
 #rolls-panel .vr-clean:hover{background:#8c674b54;border-color:#e2b88a}
 @media(prefers-reduced-motion:reduce){#rolls-panel .vr-message,#rolls-panel .vr-roll-button{transition:none!important}}
+
+/* O palco usa o mesmo ouro fosco e verde das ferramentas, sem mudar hitbox/imagens. */
+#stage #sc-theatre .stage-tools{border-color:#c1a678a8;border-radius:11px;
+  background:linear-gradient(130deg,#233c2eec,#162920eb);box-shadow:0 8px 22px #030a0666,inset 0 1px 0 #fae5b419}
+#stage #sc-theatre .stage-tools button{border-radius:7px;border-color:#a0a38366;
+  background:#3b5540;color:#f1dfbf;transition:background .16s,transform .16s,border-color .16s}
+#stage #sc-theatre .stage-tools button:hover{background:#876e4c;border-color:#ead09a}
+#stage #sc-theatre .stage-tools button.active{background:linear-gradient(115deg,#af9060,#79603d);border-color:#efd19f}
+#stage #sc-theatre .stage-name{background:linear-gradient(0deg,#0b1d15aa,#142a203d);color:#ffefd4;
+  text-shadow:0 2px 6px #000e,0 0 12px #0007}
+#stage #sc-theatre .stage-scale-tools{border-left-color:#bba78170}
+#stage #sc-theatre .stage-tools button:focus-visible{outline:2px solid #dfc397;outline-offset:2px}
