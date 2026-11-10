@@ -33,7 +33,7 @@ export function createTheatre({stage,onChange,isAdmin,publishPortrait,previewPor
   const icons={casual:'☀',ninja:'忍',triste:'☂',ferido:'✚',grave:'!'};
   const labels={casual:'Casual',ninja:'Traje ninja',triste:'Triste',ferido:'Ferido',grave:'Gravemente ferido'};
   const validImage=v=>typeof v==='string'&&(/^https:\/\/[^\s"'<>]+$/i.test(v)||/^data:image\/(png|jpeg|webp);base64,/i.test(v));
-  let state={enabled:false,cast:[]},actors=[],queue=Promise.resolve();
+  let state={enabled:false,cast:[]},actors=[],queue=Promise.resolve(),pendingWrites=0;
   const published=new Map(),vitals=new Map(),figures=new Map(),bounds=new Map(),pendingAdds=new Set();
   const displayCache=new Map();
   const hasActor=id=>state.cast.some(x=>x.id===id);
@@ -50,13 +50,14 @@ export function createTheatre({stage,onChange,isAdmin,publishPortrait,previewPor
   function save(patch){
     if(!isAdmin())return Promise.resolve(false);
     const previous=state,next=clean({...state,...patch});
+    pendingWrites++;
     state=next;render();
     const task=queue.catch(()=>{}).then(()=>onChange({enabled:next.enabled,cast:next.cast}));
     queue=task;
     return task.then(()=>true).catch(e=>{
       if(JSON.stringify(state)===JSON.stringify(next)){state=previous;render()}
       warn(e.message);return false;
-    });
+    }).finally(()=>{pendingWrites=Math.max(0,pendingWrites-1)});
   }
   function effective(actor){
     if(!actor.auto)return actor.variant;
@@ -330,6 +331,9 @@ export function createTheatre({stage,onChange,isAdmin,publishPortrait,previewPor
     setState(value){
       const next=clean(value||{});
       if(JSON.stringify(state)===JSON.stringify(next))return;
+      // O Firebase pode entregar snapshots de imagens anteriores após um
+      // clique rápido. Só aceitar o estado remoto após a última gravação.
+      if(pendingWrites>0)return;
       state=next;render();
     },
     setActors(value){
