@@ -469,7 +469,7 @@ html[data-appearance] :is(.rail button,.tabs button,.vtt-folder>summary,.btn,.gl
    A pigmentação modifica o VTT; não encobre mapas ou retratos.
    ------------------------------------------------------------- */
 html[data-appearance] {
-  --vtt-display:color-mix(in srgb,var(--vtt-pigment) 78%,#26332b);
+  --vtt-display:color-mix(in srgb,var(--vtt-pigment) 54%,#26332b);
   --vtt-blend:rgba(var(--vtt-rgb),.24);
   --vtt-blend-strong:rgba(var(--vtt-rgb),.40);
   --vtt-button:color-mix(in srgb,var(--vtt-pigment) 56%,#26372c);
