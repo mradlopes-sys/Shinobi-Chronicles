@@ -23,7 +23,9 @@ const combatDirector=createCombatDirector({
   },
   saveCombat:async next=>{
     if(!admin||!room)throw Error('Apenas o mestre pode controlar a iniciativa.');
-    await updateDoc(roomRef(),{combat:next,updatedAt:serverTimestamp()});
+    // As regras publicadas autorizam "theatre", mas nao um campo "combat"
+    // no nivel raiz do documento. Usamos atualizacao pontual no mapa permitido.
+    await updateDoc(roomRef(),{'theatre.combat':next,updatedAt:serverTimestamp()});
   },
   notify:message=>show(message),portrait:f=>portrait(f)
 });
@@ -136,7 +138,14 @@ const theatre=createTheatre({
   },
   onChange:async state=>{
     if(!admin||!room)throw Error('Apenas o mestre altera o Teatro.');
-    await updateDoc(roomRef(),{theatre:state,updatedAt:serverTimestamp()});
+    // Atualizar apenas as propriedades do Teatro preserva a iniciativa no mesmo mapa.
+    // Gravar "theatre:state" por inteiro apagaria o carrossel em cada mudanca de ator.
+    await updateDoc(roomRef(),{
+      'theatre.enabled':state.enabled,
+      'theatre.cast':state.cast,
+      'theatre.revision':state.revision,
+      updatedAt:serverTimestamp()
+    });
   },
   isAdmin:()=>admin,
   previewPortrait:(id,variant)=>{const f=sheets.find(x=>x.id===id);return variant==='casual'?(f?.retratos?.casual||f?.foto):f?.retratos?.[variant]},
@@ -647,7 +656,7 @@ async function connectWorld(){
         return;
       }
       roomData=snap.data();masterUid=roomData?.masterUid||masterUid;
-      combatDirector.setData(roomData.combat);refreshCombatTargets();
+      combatDirector.setData(roomData.theatre?.combat||roomData.combat);refreshCombatTargets();
       theatre.setState(roomData.theatre);
       const cast=theatre.getCast();
       updateTheatreDirectory();
