@@ -1,6 +1,6 @@
 import {createTheatre} from './vtt-theatre-v17.js';
 import {createRollsPanel,makeDicePayload,rollForSheet} from './vtt-rolls-v4.js?v=20261110-d1';
-import {createCombatDirector} from './vtt-combat-director-v1.js?v=20261110-c1';
+import {createCombatDirector} from './vtt-combat-director-v1.js?v=20261110-c2';
 import {createVisualEffects,EFFECTS} from './vtt-effects-v2.js?v=20261110-jutsus2';
 import {DEFAULT_METERS_PER_CELL,metersPerCell,pixelsToMeters,calibrateMetersPerCell,formatMeters,scaleBar} from './vtt-metrics-v1.js';
 import {initializeApp,getApps} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
@@ -436,6 +436,12 @@ function openActorMenu(sheet,x,y,opener=null){
       show(ok?'Personagem adicionado ao Teatro.':'Não foi possível adicionar. Confira os retratos da ficha e o limite do palco.');
       renderSheets();
     });
+  }
+  // Ações iguais para o painel de atores e para o clique direito no token.
+  if(combatDirector.hasEntry(sheet.id)){
+    action('Retirar da iniciativa','−',()=>combatDirector.removeOne(sheet.id));
+  }else{
+    action('Adicionar à iniciativa','⚄',()=>combatDirector.addOne(sheet.id));
   }
   action('Abrir ficha','▤',()=>openSheet(sheet.id,sheet.ownerUid));
   document.body.append(menu);
@@ -1058,6 +1064,17 @@ canvas.onpointermove=e=>{if(measure.enabled&&measure.drag){const p=point(e);meas
 const finish=async e=>{if(measure.drag){measure.drag=false;updateMetricDrawStatus();draw();return}if(!dragToken||dragToken.id!==e.pointerId)return;const d=dragToken;dragToken=null;canvas.classList.remove('dragging');if(d.t&&room&&(d.t.x!==d.original.x||d.t.y!==d.original.y)){try{await updateDoc(tokenRef(d.t.id),{x:d.t.x,y:d.t.y})}catch(err){d.t.x=d.original.x;d.t.y=d.original.y;draw();show('Movimento recusado: '+err.message)}}};
 canvas.onpointerup=finish;canvas.onpointercancel=finish;
 canvas.ondblclick=e=>{const p=point(e),t=hit(p.x,p.y);if(t)openSheet(t.fichaId,t.ownerUid)};
+canvas.oncontextmenu=e=>{
+  if(!admin||!room||measure.enabled)return;
+  const p=point(e),token=hit(p.x,p.y);
+  if(!token){closeActorMenu();return}
+  // O menu só substitui o clique direito nativo sobre personagens do mapa.
+  e.preventDefault();
+  selected=token.id;renderTokens();draw();
+  const sheet=sheets.find(f=>f.id===token.fichaId);
+  if(!sheet){show('Token sem ficha disponível: não é possível usar Teatro ou iniciativa.');return}
+  openActorMenu(sheet,e.clientX,e.clientY,canvas);
+};
 canvas.ondragover=e=>{if(admin&&room){e.preventDefault();e.dataTransfer.dropEffect='copy'}};
 async function spawn(f,x,y){if(!admin||!room)return;if(!roomData?.activeSceneId)return show('Ative um mapa na Biblioteca antes de colocar personagens.');try{await addDoc(collection(db,'vttRooms',room,'tokens'),{name:String(f.nome||f.name||'Shinobi').slice(0,40),fichaId:f.id,ownerUid:f.ownerUid,x,y,color:'#a57c64',portrait:await tokenPortrait(f),sceneId:roomData?.activeSceneId||''});show('Token criado: '+(f.nome||'Shinobi'))}catch(err){show('Falha ao criar token: '+err.message)}}
 canvas.ondrop=e=>{if(!admin||!room)return;e.preventDefault();const id=e.dataTransfer.getData('text/shinobi-ficha');const f=sheets.find(x=>x.id===id);if(!f)return;const p=point(e),w=world(p.x,p.y);const x=Math.max(0,Math.min(1000,Math.round((w.x/view.cell-.5)*1000)/1000)),y=Math.max(0,Math.min(1000,Math.round((w.y/view.cell-1)*1000)/1000));void spawn(f,x,y)};
