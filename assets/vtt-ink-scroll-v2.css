@@ -738,3 +738,120 @@ html[data-appearance] #sheet-modal iframe {
 @media(prefers-reduced-motion:reduce){
   html[data-appearance] .tabs button.active::after{animation:none!important}
 }
+
+
+/* SHINOBI · tipografia shodō · 2026-11-10
+   O mesmo desenho à mão usado no diário de missões; kanji em Yuji Boku.
+   Caligrafia para títulos e ações principais, DM Sans para leitura funcional. */
+html[data-appearance] {
+  --vtt-display-font:'Caveat Brush','Yuji Boku','Segoe Print',cursive;
+  --vtt-japanese-font:'Yuji Boku','Noto Serif JP',serif;
+}
+html[data-appearance] .side-header b {
+  font:400 clamp(33px,3.5vw,41px)/1.06 var(--vtt-display-font)!important;
+  letter-spacing:.005em!important;
+  margin:3px 0 8px;
+  text-transform:none;
+}
+html[data-appearance] .pane h3,
+html[data-appearance] .sc-combat-heading h2,
+html[data-appearance] .sc-combat-heading h3,
+html[data-appearance] #rolls-panel .vr-title {
+  font-family:var(--vtt-display-font)!important;
+  font-size:clamp(23px,2.9vw,30px)!important;
+  font-weight:400!important;
+  line-height:1.12!important;
+  letter-spacing:0!important;
+}
+html[data-appearance] .sc-combat-heading h2{
+  font-size:34px!important;
+}
+html[data-appearance] .sc-combat-heading h3{
+  font-size:26px!important;
+}
+html[data-appearance] #rolls-panel .vr-title{
+  font-size:30px!important;
+}
+html[data-appearance] .stage-identity b {
+  font:400 22px/1.08 var(--vtt-display-font)!important;
+  letter-spacing:0!important;
+}
+html[data-appearance] .vtt-folder .folder-info strong,
+html[data-appearance] .scene-entry strong,
+html[data-appearance] .scene-card .scene-info strong,
+html[data-appearance] .current-scene-card b,
+html[data-appearance] .campaign-status strong,
+html[data-appearance] .permanent-world strong{
+  font-family:var(--vtt-display-font)!important;
+  font-size:20px!important;
+  font-weight:400!important;
+  line-height:1.16!important;
+  letter-spacing:0!important;
+}
+html[data-appearance] .tabs button {
+  font:400 19px/1.05 var(--vtt-display-font)!important;
+  letter-spacing:.01em;
+}
+html[data-appearance] .sc-combat-hero strong{
+  font:400 27px/1.1 var(--vtt-display-font)!important;
+  letter-spacing:0;
+}
+html[data-appearance] .sc-turn-header b,
+html[data-appearance] .sc-turn-body strong,
+html[data-appearance] .sc-combat-person b,
+html[data-appearance] .actor-menu-caption{
+  font-family:var(--vtt-display-font)!important;
+  font-size:clamp(15px,1.5vw,19px)!important;
+  font-weight:400!important;
+  line-height:1.1!important;
+  letter-spacing:0!important;
+}
+html[data-appearance] .sc-turn-header b{
+  font-size:18px!important;
+}
+html[data-appearance] .sc-turn-body strong{
+  font-size:17px!important;
+}
+html[data-appearance] .sc-combat-person b{
+  font-size:18px!important;
+}
+html[data-appearance] .sc-turn-body,
+html[data-appearance] .sc-combat-person{
+  min-width:0;
+}
+html[data-appearance] #rolls-panel .vr-author,
+html[data-appearance] #rolls-panel .vr-result-copy b,
+html[data-appearance] .sc-metric-card header strong,
+html[data-appearance] .sc-metric-hud .metric-value{
+  font-family:var(--vtt-display-font)!important;
+  font-weight:400!important;
+  letter-spacing:0;
+}
+html[data-appearance] #rolls-panel .vr-author{font-size:19px!important}
+html[data-appearance] #rolls-panel .vr-result-copy b{font-size:20px!important}
+html[data-appearance] .sc-metric-card header strong{font-size:23px!important}
+html[data-appearance] .sc-metric-hud .metric-value{font-size:26px!important}
+html[data-appearance] .side-header .overline,
+html[data-appearance] .campaign-section-label,
+html[data-appearance] .sc-combat-heading>span,
+html[data-appearance] .side-header #auth-label,
+html[data-appearance] .vtt-clan-mark,
+html[data-appearance] .vr-message p,
+html[data-appearance] :is(input,textarea,select),
+html[data-appearance] #rolls-panel .vr-field,
+html[data-appearance] .sc-combat-hint{
+  font-family:var(--vtt-body)!important;
+}
+html[data-appearance] .rail .seal,
+html[data-appearance] .vtt-clan-mark .mark,
+html[data-appearance] .side-header::before,
+html[data-appearance] .campaign-section-label .section-ornament{
+  font-family:var(--vtt-japanese-font)!important;
+}
+@media(max-width:690px){
+  html[data-appearance] .side-header b{font-size:31px!important}
+  html[data-appearance] .pane h3,
+  html[data-appearance] #rolls-panel .vr-title{font-size:25px!important}
+  html[data-appearance] .stage-identity b{font-size:19px!important}
+  html[data-appearance] .tabs button{font-size:18px!important}
+}
