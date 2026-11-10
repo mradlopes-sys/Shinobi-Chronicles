@@ -62,7 +62,12 @@
   document.addEventListener('DOMContentLoaded',()=>{
     const mark=root.dataset.clan;
     if(mark){
-      const wrapper=window.parent!==window?window.parent.document.querySelector('.vtt-shell'):null;
+      // Falha silenciosamente quando a mesa é incorporada por outra origem.
+      let wrapper=null;
+      try{
+        if(window.parent!==window&&window.parent.location.origin===location.origin)
+          wrapper=window.parent.document.querySelector('.vtt-shell');
+      }catch(error){/* janela externa */ }
       if(wrapper){
         const id=wrapper.getAttribute('data-theme')||'';
         const names={uchiha:'Uchiha',senju:'Senju',uzumaki:'Uzumaki',hyuga:'Hyūga',aburame:'Aburame',nara:'Nara',inuzuka:'Inuzuka',akimichi:'Akimichi',yamanaka:'Yamanaka',sarutobi:'Sarutobi',hatake:'Hatake',semcla:'Sem Clã'};
