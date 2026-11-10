@@ -1,0 +1,464 @@
+/* SHINOBI CHRONICLES / MESA VIRTUAL
+   Makimono: a custom archival/inkwash skin, synchronized with clan and appearance.
+   Nothing in this file recolors canvas maps, character art or tactical tokens. */
+
+html[data-appearance]{
+  --vtt-pigment:var(--vtt-clan,#955b4d);
+  --vtt-rgb:var(--vtt-clan-rgb,149,91,77);
+  --vtt-title:'Noto Serif JP',Georgia,serif;
+  --vtt-body:'DM Sans',Arial,sans-serif;
+  --vtt-brush:'Yuji Boku','Caveat Brush',serif;
+  --vtt-char:'Yuji Boku','Noto Serif JP',serif;
+  --vtt-ink:#2c2e28;
+  --vtt-fade:#64685d;
+  --vtt-line:#cec9bb;
+  --vtt-paper:#f8f5ee;
+  --vtt-paper-light:#fffdf8;
+  --vtt-paper-muted:#f0ebe1;
+  --vtt-edge:#e3dbcb;
+  --vtt-seal:#a04e46;
+  --vtt-display:color-mix(in srgb,var(--vtt-pigment) 65%,#282c27);
+  --vtt-blend:rgba(var(--vtt-rgb),.12);
+  --vtt-blend-strong:rgba(var(--vtt-rgb),.22);
+  --vtt-button:#313e34;
+  --vtt-button-ink:#faf4e6;
+  --vtt-sheen:#fffefa;
+}
+html[data-appearance="dark"]{
+  --vtt-ink:#e6e5db;
+  --vtt-fade:#abb5a6;
+  --vtt-line:#455249;
+  --vtt-paper:#19231e;
+  --vtt-paper-light:#202e26;
+  --vtt-paper-muted:#152019;
+  --vtt-edge:#2d3c31;
+  --vtt-seal:#d29c90;
+  --vtt-display:color-mix(in srgb,var(--vtt-pigment) 44%,#ece4d3);
+  --vtt-blend:rgba(var(--vtt-rgb),.14);
+  --vtt-blend-strong:rgba(var(--vtt-rgb),.27);
+  --vtt-button:color-mix(in srgb,var(--vtt-pigment) 35%,#2b4131);
+  --vtt-button-ink:#f1e8d8;
+  --vtt-sheen:#f0ecd8;
+}
+html[data-appearance] body{
+  font-family:var(--vtt-body)!important;letter-spacing:.005em;
+  text-rendering:optimizeLegibility;
+}
+html[data-appearance] .workspace{--sc-accent:var(--vtt-display);--sc-accent-soft:var(--vtt-blend);--sc-gold:var(--vtt-display);
+ --sc-green:var(--vtt-display);--sc-green-soft:var(--vtt-blend);--sc-primary:var(--vtt-button);
+ --sc-primary-text:var(--vtt-button-ink);}
+html[data-appearance] .workspace .sidebar{
+  color:var(--vtt-ink);
+  background:
+    radial-gradient(ellipse 84% 35% at 97% 2%,rgba(var(--vtt-rgb),.13),transparent 76%),
+    radial-gradient(ellipse 92% 24% at 0 82%,rgba(var(--vtt-rgb),.07),transparent 80%),
+    radial-gradient(circle at 7% 27%,rgba(142,133,105,.04) 0 9%,transparent 20%),
+    linear-gradient(108deg,var(--vtt-edge) 0,var(--vtt-paper) 8%,var(--vtt-paper) 86%,var(--vtt-paper-muted));
+  border-left:1px solid var(--vtt-line);
+  box-shadow:inset 7px 0 14px rgba(88,73,52,.045),-8px 0 25px rgba(0,0,0,.07);
+  scrollbar-width:thin;
+  scrollbar-color:var(--vtt-line) transparent;
+}
+html[data-appearance="dark"] .workspace .sidebar{
+  background:
+    radial-gradient(ellipse 84% 43% at 94% -5%,rgba(var(--vtt-rgb),.15),transparent 76%),
+    radial-gradient(ellipse 85% 30% at 8% 86%,rgba(var(--vtt-rgb),.075),transparent 79%),
+    linear-gradient(108deg,#111a15 0,var(--vtt-paper) 9%,var(--vtt-paper) 89%,#16221a);
+}
+html[data-appearance] .workspace .sidebar::before{
+  content:"";position:sticky;display:block;top:0;height:3px;z-index:6;margin-bottom:-3px;
+  background:linear-gradient(90deg,transparent 0 6%,var(--vtt-pigment) 7% 58%,transparent 94%);
+  opacity:.6;pointer-events:none
+}
+html[data-appearance] .workspace .sidebar :is(h2,h3,b,strong){text-rendering:optimizeLegibility}
+html[data-appearance] .side-header{
+  isolation:isolate;position:relative;
+  margin:0 0 16px;padding:17px 18px 19px;
+  border:0;border-bottom:1px solid var(--vtt-line);
+  background:linear-gradient(90deg,transparent,var(--vtt-blend) 60%,transparent);
+}
+html[data-appearance] .side-header::before{
+  content:"忍";position:absolute;right:9px;top:-11px;
+  font:400 92px/1 var(--vtt-char);color:var(--vtt-pigment);
+  opacity:.1;transform:rotate(-11deg);pointer-events:none;z-index:-1
+}
+html[data-appearance] .side-header::after{
+  content:"";position:absolute;bottom:-2px;left:18px;width:74px;height:3px;
+  background:var(--vtt-pigment);opacity:.77;border-radius:70% 12% 60% 20%;
+  transform:rotate(-1.3deg)
+}
+html[data-appearance] .side-header .overline{
+  font:700 9px/1.4 var(--vtt-body);letter-spacing:.16em;color:var(--vtt-display);
+}
+html[data-appearance] .side-header b{
+  display:block;margin:5px 0 5px;
+  font:600 29px/1.15 var(--vtt-title);letter-spacing:-.045em;
+  color:var(--vtt-ink);
+}
+html[data-appearance] .side-header #auth-label{
+  color:var(--vtt-fade);font-size:10px;line-height:1.6;margin:5px 0 0;
+}
+html[data-appearance] .vtt-clan-mark{
+  display:inline-flex;align-items:center;gap:7px;margin-top:9px;
+  padding:4px 8px 4px 5px;max-width:100%;
+  background:var(--vtt-blend);border:1px solid var(--vtt-blend-strong);
+  color:var(--vtt-display);font:700 9px/1.3 var(--vtt-body);
+  letter-spacing:.07em;
+}
+html[data-appearance] .vtt-clan-mark .mark{
+  display:grid;place-items:center;height:23px;width:23px;flex:0 0 23px;
+  background:var(--vtt-pigment);color:#fff9eb;
+  border-radius:1px 3px 1px 2px;font:400 16px/1 var(--vtt-char);
+  box-shadow:inset 0 0 0 2px #ffffff32;
+}
+html[data-appearance] .vtt-clan-mark .clan-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-appearance] .tabs{
+  display:flex;align-items:center;margin:0 13px 13px;padding:0 0 8px;gap:3px;
+  background:transparent;border:0;border-bottom:1px solid var(--vtt-line);
+  box-shadow:none;border-radius:0;
+}
+html[data-appearance] .tabs button{
+  min-height:36px;position:relative;overflow:visible;
+  padding:9px 4px;border:0;border-radius:1px;
+  background:transparent;color:var(--vtt-fade);
+  font:600 11px var(--vtt-body);box-shadow:none;
+}
+html[data-appearance] .tabs button:hover:not(.active){background:var(--vtt-blend);color:var(--vtt-ink)}
+html[data-appearance] .tabs button.active{
+  background:transparent;color:var(--vtt-display);border:0;box-shadow:none
+}
+html[data-appearance] .tabs button.active::after{
+  content:"";position:absolute;left:8px;right:8px;bottom:-9px;height:3px;
+  background:var(--vtt-pigment);border-radius:35% 90% 20% 70%;
+  box-shadow:5px 1px 0 -1px var(--vtt-display);
+  transform:rotate(-1deg);animation:sc-brush-mark .25s ease-out both
+}
+@keyframes sc-brush-mark{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+html[data-appearance] .pane{padding:14px 18px 36px;color:var(--vtt-ink)}
+html[data-appearance] .pane h3,
+html[data-appearance] .sc-combat-heading h2,
+html[data-appearance] .sc-combat-heading h3,
+html[data-appearance] #rolls-panel .vr-title{
+  font:600 18px/1.27 var(--vtt-title);letter-spacing:-.055em;color:var(--vtt-ink)
+}
+html[data-appearance] .pane h3:not(.plain){position:relative;padding-bottom:8px}
+html[data-appearance] .pane h3:not(.plain)::after{
+  content:"";position:absolute;left:0;bottom:0;width:min(108px,60%);
+  height:1px;background:linear-gradient(90deg,var(--vtt-pigment),transparent)
+}
+html[data-appearance] :is(.campaign-section-label,.fx-quick-head,.sc-combat-heading>span){
+  font-family:var(--vtt-body)!important;
+  font-size:9px!important;letter-spacing:.15em;color:var(--vtt-display)!important
+}
+html[data-appearance] .campaign-section-label{
+  margin:21px 0 10px;border:0;border-bottom:1px solid var(--vtt-line);
+  padding-bottom:6px;
+}
+html[data-appearance] .campaign-section-label .section-ornament{
+  font:400 21px var(--vtt-char);color:var(--vtt-display)
+}
+html[data-appearance] :is(.scene-entry,.vtt-folder,.entry,.scene-card,.current-scene-card,.campaign-status,
+ .sc-combat-line,.sc-combat-pick){
+  border-radius:3px!important;
+  box-shadow:none!important;
+  background:linear-gradient(120deg,var(--vtt-paper-light),var(--vtt-paper) 92%)!important;
+  border-color:var(--vtt-line)!important;
+}
+html[data-appearance] :is(.scene-entry,.vtt-folder,.scene-card,.entry,.sc-combat-pick):hover{
+  border-color:var(--vtt-display)!important;
+}
+html[data-appearance] .vtt-folder{margin:9px 0;border-left:3px solid var(--vtt-blend-strong)!important}
+html[data-appearance] .vtt-folder[open]{border-left-color:var(--vtt-pigment)!important}
+html[data-appearance] .vtt-folder>summary{padding:12px 11px;min-height:49px}
+html[data-appearance] .vtt-folder .folder-symbol{
+  border-radius:2px;background:var(--vtt-blend);border:1px solid var(--vtt-line);
+  color:var(--vtt-display);font:400 22px/1 var(--vtt-char)
+}
+html[data-appearance] .vtt-folder .folder-info strong{
+  font:600 12px/1.3 var(--vtt-title);letter-spacing:-.035em;color:var(--vtt-ink)
+}
+html[data-appearance] .vtt-folder .folder-info small{font:10px/1.4 var(--vtt-body);color:var(--vtt-fade)}
+html[data-appearance] .vtt-folder .folder-count{
+  border-radius:2px;background:transparent;border-color:var(--vtt-line);
+  color:var(--vtt-display);font-weight:600
+}
+html[data-appearance] .vtt-folder[open] .folder-content{
+  border-top:1px solid var(--vtt-line);
+  background:linear-gradient(180deg,var(--vtt-blend),transparent 64px)
+}
+html[data-appearance] .current-scene-card{border-left:3px solid var(--vtt-pigment)!important}
+html[data-appearance] .scene-entry .scene-thumbnail,
+html[data-appearance] .entry .thumb,
+html[data-appearance] .actor-folder .entry .thumb{
+  border-radius:2px;
+  background:var(--vtt-paper-muted);
+  border:1px solid var(--vtt-line);
+}
+html[data-appearance] .actor-row.on-stage>.entry{
+  background:var(--vtt-blend)!important;
+  border-left:3px solid var(--vtt-pigment)!important
+}
+html[data-appearance] .actor-more{border-radius:2px;background:transparent;border-color:var(--vtt-line)}
+html[data-appearance] .entry:hover,html[data-appearance] .actor-row .entry:hover{
+  background:var(--vtt-blend)!important;transform:none
+}
+html[data-appearance] :is(.btn,.sc-combat-primary,.sc-combat-controls button,
+ .sc-jutsu-soundbar button,.fx-quick-grid button,.vr-quick button){
+  border-radius:3px!important;
+  transition:border-color .15s,background .15s,transform .15s;
+  box-shadow:none!important
+}
+html[data-appearance] .btn.primary,
+html[data-appearance] .sc-combat-primary,
+html[data-appearance] #rolls-panel .vr-roll-button{
+  background:var(--vtt-button);color:var(--vtt-button-ink);
+  border:1px solid var(--vtt-display);font-weight:700
+}
+html[data-appearance] .btn.primary:hover,
+html[data-appearance] .sc-combat-primary:hover,
+html[data-appearance] #rolls-panel .vr-roll-button:hover{
+  background:color-mix(in srgb,var(--vtt-button) 80%,var(--vtt-pigment));
+}
+html[data-appearance] :is(input,select,textarea){
+  border-radius:2px;background:var(--vtt-paper-light);
+  font:500 11px/1.45 var(--vtt-body);
+  border:1px solid var(--vtt-line);border-bottom-color:var(--vtt-display);
+  color:var(--vtt-ink);box-shadow:inset 0 1px 2px #51463606;
+}
+html[data-appearance] :is(input,select,textarea):focus{
+  border-color:var(--vtt-display)!important;
+  box-shadow:0 0 0 2px var(--vtt-blend)!important;
+}
+html[data-appearance] :is(label,.hint,.vtt-metric-form-notice,.campaign-footnote){color:var(--vtt-fade)}
+html[data-appearance] .actor-context-menu{
+  background:var(--vtt-paper-light);border-radius:4px;
+  border:1px solid var(--vtt-line);border-top:3px solid var(--vtt-pigment);
+  box-shadow:0 15px 32px #0b130d4a
+}
+html[data-appearance] .actor-menu-caption{
+  font:600 13px var(--vtt-title);color:var(--vtt-ink);
+  border-bottom-color:var(--vtt-line)
+}
+html[data-appearance] .actor-menu-action{font-size:11px}
+html[data-appearance] .actor-menu-icon{color:var(--vtt-display);font-family:var(--vtt-char)}
+/* Combat turns: restrained ink stroke indicates current action. */
+html[data-appearance] #sc-turn-strip{
+  border-radius:3px;background:var(--vtt-paper-light);
+  border:1px solid var(--vtt-line);border-top:2px solid var(--vtt-pigment);
+  box-shadow:0 8px 23px #0c160c33;
+}
+html[data-appearance] .sc-turn-header b{font:600 11px/1.2 var(--vtt-title)}
+html[data-appearance] .sc-turn-header small{font:700 8px/1.35 var(--vtt-body);color:var(--vtt-display)}
+html[data-appearance] .sc-turn-card{border-radius:2px}
+html[data-appearance] .sc-turn-card.is-active{
+  background:var(--vtt-blend);border-color:transparent;
+  border-bottom:2px solid var(--vtt-pigment);box-shadow:none
+}
+html[data-appearance] .sc-turn-card.is-next{
+  background:transparent;border:1px dashed var(--vtt-line)
+}
+html[data-appearance] .sc-turn-pic{border-radius:2px}
+html[data-appearance] .sc-turn-body strong{font:600 11px var(--vtt-title);letter-spacing:-.05em}
+html[data-appearance] .sc-turn-card.is-active .sc-turn-body small{color:var(--vtt-display)}
+html[data-appearance] .sc-turn-score{color:var(--vtt-display)}
+/* Combat journal: a register rather than a dashboard. */
+html[data-appearance] .sc-combat-heading h2{
+  font-size:24px;line-height:1.26;position:relative;padding-bottom:10px
+}
+html[data-appearance] .sc-combat-heading h2::after{
+  content:"";position:absolute;bottom:0;left:0;width:105px;height:2px;
+  background:linear-gradient(90deg,var(--vtt-pigment),transparent);
+  border-radius:50% 30% 75% 20%
+}
+html[data-appearance] .sc-combat-heading h3{font-size:17px}
+html[data-appearance] .sc-combat-heading p,
+html[data-appearance] .sc-combat-heading small{color:var(--vtt-fade)}
+html[data-appearance] .sc-combat-hero{
+  border-radius:3px;background:var(--vtt-paper-light);
+  border:1px solid var(--vtt-line);border-left:3px solid var(--vtt-pigment);
+  box-shadow:none
+}
+html[data-appearance] .sc-combat-line.active{
+  border-color:var(--vtt-display)!important;
+  background:var(--vtt-blend)!important;
+  box-shadow:inset 3px 0 var(--vtt-pigment)!important
+}
+html[data-appearance] .sc-combat-rank{color:var(--vtt-display)}
+html[data-appearance] .sc-combat-score input{border-radius:2px}
+html[data-appearance] .sc-combat-pick.selected{
+  background:var(--vtt-blend)!important;
+  border-color:var(--vtt-display)!important
+}
+/* Chat: a stack of short paper missives, no neon panels. */
+html[data-appearance] #rolls-panel .vr-title{
+  font-size:20px;position:relative;padding-left:15px
+}
+html[data-appearance] #rolls-panel .vr-title::before{
+  content:"";position:absolute;top:3px;bottom:2px;left:0;width:3px;
+  transform:rotate(-2deg);background:var(--vtt-pigment);border-radius:30% 70% 10% 80%
+}
+html[data-appearance] #rolls-panel .vr-head{border-bottom:1px solid var(--vtt-line)}
+html[data-appearance] #rolls-panel .vr-feed{
+  background:
+    radial-gradient(ellipse 95% 46% at 92% 4%,var(--vtt-blend),transparent 78%),
+    linear-gradient(180deg,var(--vtt-paper-muted),var(--vtt-paper));
+  border:1px solid var(--vtt-line);border-radius:2px;
+  box-shadow:inset 0 1px var(--vtt-sheen);padding:10px
+}
+html[data-appearance] #rolls-panel .vr-message{
+  border-radius:2px;background:var(--vtt-paper-light);
+  border:1px solid var(--vtt-line);
+  border-left:2px solid var(--vtt-blend-strong);
+  box-shadow:0 2px 6px #3d35200b
+}
+html[data-appearance] #rolls-panel .vr-message.own{border-left-color:var(--vtt-pigment)}
+html[data-appearance] #rolls-panel .vr-message.roll{border-left-color:var(--vtt-display)}
+html[data-appearance] #rolls-panel .vr-message.blind{border-left-color:var(--vtt-seal)}
+html[data-appearance] #rolls-panel .vr-author{font-family:var(--vtt-title)}
+html[data-appearance] #rolls-panel .vr-mode{
+  border-radius:2px;background:var(--vtt-blend);color:var(--vtt-display)
+}
+html[data-appearance] #rolls-panel .vr-total{color:var(--vtt-display);font:600 31px/1 var(--vtt-title)}
+html[data-appearance] #rolls-panel .vr-dice{
+  border-radius:3px;
+  background:
+    linear-gradient(135deg,var(--vtt-blend),transparent 52%),
+    linear-gradient(120deg,var(--vtt-paper-light),var(--vtt-paper));
+  border:1px solid var(--vtt-line)
+}
+html[data-appearance] #rolls-panel .vr-quick button{
+  border-radius:2px;border-bottom:2px solid var(--vtt-line)
+}
+html[data-appearance] #rolls-panel .vr-quick button.selected{
+  background:var(--vtt-blend);color:var(--vtt-display);border-color:var(--vtt-pigment)
+}
+html[data-appearance] #rolls-panel .vr-modes span{border-radius:2px}
+html[data-appearance] #rolls-panel .vr-modes input:checked+span{
+  background:var(--vtt-blend);color:var(--vtt-display);border-color:var(--vtt-pigment)
+}
+html[data-appearance] #rolls-panel .vr-chat-compose button{
+  background:var(--vtt-button);color:var(--vtt-button-ink);border-radius:2px
+}
+/* The stage controls look like rolled paper labels, but remain tactile. */
+html[data-appearance] .stage-identity,
+html[data-appearance] .glass-button,
+html[data-appearance] .stage-bottom{
+  border-radius:3px;box-shadow:0 6px 17px #080f0b39;
+  border-color:var(--vtt-line);background:var(--vtt-paper-light)
+}
+html[data-appearance] .stage-identity{
+  border-left:3px solid var(--vtt-pigment);
+  min-height:43px
+}
+html[data-appearance] .stage-identity .eyebrow{font-size:8px;letter-spacing:.17em;color:var(--vtt-display)}
+html[data-appearance] .stage-identity b{font:600 14px/1.25 var(--vtt-title);color:var(--vtt-ink)}
+html[data-appearance] .stage-bottom button{border-radius:2px}
+html[data-appearance] .stage-bottom button.active{
+  background:var(--vtt-blend);color:var(--vtt-display);
+  box-shadow:inset 0 -2px var(--vtt-pigment)
+}
+html[data-appearance] .sc-metric-hud,
+html[data-appearance] .sc-metric-card,
+html[data-appearance] .sc-metric-status{
+  border-radius:3px;background:var(--vtt-paper-light);
+  border:1px solid var(--vtt-line);
+  box-shadow:0 7px 22px #03080532;
+}
+html[data-appearance] .sc-metric-hud .metric-head{color:var(--vtt-display)}
+html[data-appearance] .sc-metric-hud .metric-value{font-family:var(--vtt-title)}
+html[data-appearance] .sc-metric-hud .metric-scale-line{border-color:var(--vtt-pigment)}
+html[data-appearance] .sc-metric-card header strong{font-family:var(--vtt-title)}
+html[data-appearance] .vtt-roll-fx{
+  border-radius:3px;background:var(--vtt-paper);border-color:var(--vtt-line)
+}
+html[data-appearance] .fx-quick-grid button{
+  border-radius:2px;background:var(--vtt-paper-light);
+  border-left:2px solid var(--vtt-blend-strong)
+}
+html[data-appearance] .fx-quick-grid button:hover{
+  border-left-color:var(--vtt-pigment);background:var(--vtt-blend)
+}
+html[data-appearance] .sc-jutsu-soundbar{border-radius:2px;background:var(--vtt-paper-light)}
+html[data-appearance] .sc-jutsu-soundbar button{background:var(--vtt-button);color:var(--vtt-button-ink)}
+html[data-appearance] .vr-min-tray{
+  border-radius:3px;background:var(--vtt-paper-light);border-color:var(--vtt-line);
+  box-shadow:0 8px 25px #02090348
+}
+html[data-appearance] .vr-min-tray::before{background:linear-gradient(90deg,transparent,var(--vtt-pigment),transparent)}
+html[data-appearance] .vr-min-outline{fill:var(--vtt-paper-muted);stroke:var(--vtt-display)}
+html[data-appearance] .vr-min-facets{stroke:var(--vtt-display)}
+html[data-appearance] .vr-min-result strong{font-family:var(--vtt-title);color:var(--vtt-display)}
+/* The permanent rail has its own dark sumi palette, matching the parent menu. */
+html[data-appearance] .rail{
+  background:
+    radial-gradient(ellipse 90% 32% at 50% 12%,rgba(var(--vtt-rgb),.22),transparent 78%),
+    linear-gradient(160deg,#1a231d,#121d17 86%)!important;
+  border-right:1px solid #ffffff15;
+  box-shadow:inset -1px 0 #09100a,3px 0 10px #080e0830
+}
+html[data-appearance] .rail .seal{
+  position:relative;width:44px;height:52px;margin:2px 0 15px;
+  display:grid;place-items:center;
+  font:400 30px/1 var(--vtt-char);color:#f1dbc0;
+  border:0;border-radius:0;
+  background:radial-gradient(circle,rgba(var(--vtt-rgb),.25),transparent 72%);
+}
+html[data-appearance] .rail .seal::after{
+  content:"";position:absolute;inset:auto 6px -5px;height:2px;
+  background:var(--vtt-pigment);
+  transform:rotate(-3deg)
+}
+html[data-appearance] .rail button{
+  width:45px;height:46px;border:0;border-radius:2px;
+  font:600 21px/1 var(--vtt-char);color:#b9c4b5;
+}
+html[data-appearance] .rail button.active{
+  color:#fff2de;background:rgba(var(--vtt-rgb),.18);
+  border:0;border-left:3px solid var(--vtt-pigment);box-shadow:none
+}
+html[data-appearance] .rail button:hover{
+  color:#f3e9d5;background:rgba(var(--vtt-rgb),.14);border-color:transparent
+}
+html[data-appearance] .rail .rail-tip{letter-spacing:.21em;color:#9aa998}
+/* Floating sheets and the theatre preserve their original artwork. */
+html[data-appearance] #sheet-modal .window{
+  border-radius:3px;border-color:var(--vtt-line);
+}
+html[data-appearance] #sheet-modal .window-head{
+  background:linear-gradient(105deg,#23352a,#17241c);
+  border-bottom:2px solid var(--vtt-pigment);
+  color:#f6f0df
+}
+html[data-appearance] #sheet-modal .window-head b{font-family:var(--vtt-title)}
+html[data-appearance] #stage #sc-theatre .stage-tools{
+  border-radius:3px;background:var(--vtt-paper);
+  border:1px solid var(--vtt-line);
+}
+html[data-appearance] #stage #sc-theatre .stage-tools button{
+  border-radius:2px;background:var(--vtt-paper-light)
+}
+html[data-appearance] #stage #sc-theatre .stage-tools button.active{
+  background:var(--vtt-blend);color:var(--vtt-display);
+  border-bottom:2px solid var(--vtt-pigment)
+}
+/* Custom watercolor wash and tactile paper grain, never over images. */
+html[data-appearance] .sidebar::after{
+  content:"";position:fixed;z-index:-1;pointer-events:none;width:0;height:0;opacity:0
+}
+html[data-appearance] .workspace .sidebar .pane::before{content:none}
+html[data-appearance] ::selection{background:var(--vtt-blend-strong);color:var(--vtt-ink)}
+html[data-appearance] :is(.rail button,.tabs button,.vtt-folder>summary,.btn,.glass-button):focus-visible{
+  outline:2px solid var(--vtt-pigment);outline-offset:2px
+}
+@media(max-width:690px){
+  html[data-appearance] .side-header{padding:12px 13px 14px}
+  html[data-appearance] .side-header b{font-size:23px}
+  html[data-appearance] .side-header::before{font-size:73px;top:-4px}
+  html[data-appearance] .pane{padding:12px 12px 30px}
+  html[data-appearance] .tabs{margin:0 9px 10px}
+  html[data-appearance] .rail button{width:40px;height:42px}
+}
+@media(prefers-reduced-motion:reduce){
+  html[data-appearance] .tabs button.active::after{animation:none!important}
+  html[data-appearance] :is(.btn,.tabs button,.rail button,.vtt-folder>summary){transition:none!important}
+}
