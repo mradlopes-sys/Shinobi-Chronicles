@@ -164,6 +164,84 @@ service cloud.firestore {
           && request.resource.data.y >= 0 && request.resource.data.y <= 1000
         );
       }
+      // Quatro modos de rolagem: cada modo usa um caminho próprio.
+      // Nenhuma rolagem secreta deve entrar na coleção pública 'events'.
+      function validPrivateRoll() {
+        let d = request.resource.data;
+        return d.keys().hasOnly([
+          'type','uid','mode','dice','rolls','bonus','total','label','character','at'
+        ])
+          && d.type == 'privateRoll'
+          && d.uid is string && d.uid.size() > 0
+          && d.at is timestamp
+          && d.dice in ['1d6','1d8','2d8','3d8','1d10','1d12','1d20','1d100']
+          && d.rolls is list && d.rolls.size() > 0 && d.rolls.size() <= 3
+          && d.bonus is number && d.bonus >= -99 && d.bonus <= 99
+          && d.total is number
+          && d.label is string && d.label.size() <= 80
+          && d.character is string && d.character.size() <= 80;
+      }
+
+      // Só o próprio dono consegue consultar suas rolagens individuais.
+      // Mesmo o ADM não tem permissão de listá-las.
+      match /privateRolls/{ownerUid}/entries/{rollId} {
+        allow get, list: if signedIn() && request.auth.uid == ownerUid;
+        allow create: if vttAccess(roomId)
+          && request.auth.uid == ownerUid
+          && validPrivateRoll()
+          && request.resource.data.uid == ownerUid
+          && request.resource.data.mode == 'self';
+        allow update: if false;
+        allow delete: if signedIn() && request.auth.uid == ownerUid;
+      }
+
+      // 'Para o mestre': só o ADM acessa o resultado; autor envia sem leitura.
+      match /gmRolls/{rollId} {
+        allow get, list: if isAdmin();
+        allow create: if vttAccess(roomId)
+          && validPrivateRoll()
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.mode == 'gm';
+        allow update: if false;
+        allow delete: if isAdmin();
+      }
+
+      // Rolagem cega: jogador envia SOMENTE pedido, nunca resultado.
+      // O navegador do mestre autenticado lança dados e registra o desfecho.
+      function validBlindRequest() {
+        let d = request.resource.data;
+        return d.keys().hasOnly([
+          'uid','dice','bonus','label','character','status','at'
+        ])
+          && d.uid == request.auth.uid
+          && d.status == 'pending'
+          && d.at is timestamp
+          && d.dice in ['1d6','1d8','2d8','3d8','1d10','1d12','1d20','1d100']
+          && d.bonus is number && d.bonus >= -99 && d.bonus <= 99
+          && d.label is string && d.label.size() <= 80
+          && d.character is string && d.character.size() <= 80;
+      }
+      match /blindRequests/{requestId} {
+        allow get, list: if isAdmin();
+        allow create: if vttAccess(roomId) && validBlindRequest();
+        allow update: if isAdmin()
+          && resource.data.status == 'pending'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'status','resolvedAt'
+          ])
+          && request.resource.data.status == 'resolved'
+          && request.resource.data.resolvedAt is timestamp;
+        allow delete: if isAdmin();
+      }
+      match /blindRolls/{rollId} {
+        allow get, list: if isAdmin();
+        allow create: if isAdmin()
+          && validPrivateRoll()
+          && request.resource.data.mode == 'blind';
+        allow update: if false;
+        allow delete: if isAdmin();
+      }
+
       match /events/{eventId} {
         allow read: if vttAccess(roomId);
         // Jogadores podem registrar suas rolagens, mensagens e efeitos dos próprios jutsus.
@@ -197,7 +275,13 @@ service cloud.firestore {
               && request.resource.data.payload.kind is string
               && request.resource.data.payload.kind.size() <= 28)
           );
-        allow update, delete: if isAdmin();
+        allow update: if isAdmin();
+        // O mestre apaga todo o chat; autores podem excluir suas mensagens.
+        allow delete: if isAdmin() || (
+          signedIn()
+          && resource.data.type == 'message'
+          && resource.data.uid == request.auth.uid
+        );
       }
     }
 
