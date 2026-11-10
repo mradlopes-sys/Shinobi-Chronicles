@@ -1,0 +1,82 @@
+/* Shinobi Chronicles · Mesa Virtual | gestos de batalha, tinta e papel */
+:root{--sc-vtt-ease:cubic-bezier(.19,.77,.2,1)}
+/* Entrada na mesa como uma impressão sobre o palco. */
+.workspace .stage-wrap{isolation:isolate}
+.workspace .stage-wrap::after{
+  content:"";pointer-events:none;position:absolute;inset:0;z-index:2;
+  background:radial-gradient(ellipse at 49% 47%,transparent 28%,#b3c4a31b 64%,transparent 80%),
+    repeating-conic-gradient(from 0deg at 50% 50%,transparent 0deg 25deg,#a9c7a80c 26deg 27deg,transparent 28deg 52deg);
+  opacity:0;animation:sc-vtt-stage-reveal 1.1s .12s var(--sc-vtt-ease) backwards
+}
+@keyframes sc-vtt-stage-reveal{0%{opacity:0;transform:scale(.94)}
+  44%{opacity:.6}100%{opacity:0;transform:scale(1.07)}}
+.workspace .stage-controls{animation:sc-vtt-controls .46s .08s var(--sc-vtt-ease) backwards}
+.workspace .stage-bottom{animation:sc-vtt-controls .47s .22s var(--sc-vtt-ease) backwards}
+.workspace .side-header{animation:sc-vtt-controls .48s .08s var(--sc-vtt-ease) backwards}
+@keyframes sc-vtt-controls{from{opacity:0;transform:translateY(-9px)}to{opacity:1;transform:none}}
+.workspace .pane:not([hidden]){animation:sc-vtt-pane .26s var(--sc-vtt-ease) backwards}
+@keyframes sc-vtt-pane{from{opacity:.25;transform:translateX(8px)}
+  to{opacity:1;transform:none}}
+
+/* Rolagens: dado materializado em um anel de tinta, sem ocultar o resultado. */
+.vr-dice-layer{isolation:isolate}
+.vr-dice-layer::before{
+  content:"";position:absolute;pointer-events:none;z-index:-1;
+  width:145px;height:145px;left:50%;top:33%;
+  border:2px dashed #dbc08d9c;border-radius:50%;
+  background:radial-gradient(circle,transparent 30%,#ddc49212 52%,transparent 68%);
+  box-shadow:0 0 45px #d9b88431;
+  animation:sc-vtt-dice-sigil .95s var(--sc-vtt-ease) both
+}
+@keyframes sc-vtt-dice-sigil{0%{opacity:0;transform:translate(-50%,-50%) scale(.4) rotate(-55deg)}
+  30%{opacity:.95}100%{opacity:0;transform:translate(-50%,-50%) scale(1.42) rotate(25deg)}}
+#rolls-panel .vr-die{filter:drop-shadow(0 9px 18px #050e09aa)}
+#rolls-panel .vr-feed .vr-message:last-child{animation:sc-vtt-message .32s var(--sc-vtt-ease) backwards}
+@keyframes sc-vtt-message{from{opacity:0;transform:translateY(9px);filter:blur(1px)}
+  to{opacity:1;transform:none;filter:none}}
+#rolls-panel .vr-message.roll{position:relative}
+#rolls-panel .vr-message.roll::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:linear-gradient(180deg,#f5deb1,transparent);
+  transform-origin:top;animation:sc-vtt-dice-line .4s var(--sc-vtt-ease) backwards
+}
+@keyframes sc-vtt-dice-line{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+#rolls-panel .vr-quick button.selected{box-shadow:0 0 0 1px #dec39754,inset 0 0 15px #bea27924}
+#rolls-panel .vr-roll-button:active{transform:translateY(2px) scale(.98)}
+
+/* Pastas e cenas: abertura em camadas; sem escalar o mapa real. */
+.vtt-folder[open]>.folder-content{animation:sc-vtt-folder .3s var(--sc-vtt-ease) backwards}
+@keyframes sc-vtt-folder{from{opacity:0;transform:translateY(-6px);
+  clip-path:inset(0 0 32%)}to{opacity:1;transform:none;clip-path:inset(0)}}
+.vtt-folder[open]>.folder-content :is(.entry,.scene-card){transition:transform .25s var(--sc-vtt-ease),border-color .25s}
+.scene-card{transition:border-color .28s,box-shadow .3s,transform .27s var(--sc-vtt-ease)}
+.scene-card .scene-preview{transition:transform .55s var(--sc-vtt-ease);transform-origin:center}
+.scene-card:hover{transform:translateY(-3px);box-shadow:0 12px 25px #06120b88}
+.scene-card:hover .scene-preview{transform:scale(1.025)}
+#actor-list .actor-row .entry:active,#npc-list .actor-row .entry:active{transform:scale(.99)}
+.scene-entry:active{transform:scale(.99)}
+#fx-quick [data-fx]{position:relative;transition:transform .2s,border-color .2s,background .2s}
+#fx-quick [data-fx]:hover{transform:translateY(-2px)}
+#fx-quick [data-fx]:active{transform:scale(.97)}
+#fx-quick [data-fx="katon"]:hover{border-color:#db8069}
+#fx-quick [data-fx="raiton"]:hover{border-color:#90c8da}
+#fx-quick [data-fx="suiton"]:hover{border-color:#7bbbc2}
+#fx-quick [data-fx="iryo"]:hover{border-color:#87be91}
+#fx-quick [data-fx="smoke"]:hover{border-color:#b1b4aa}
+
+/* Ficha flutuante: abre como um documento retirado de um arquivo. */
+#sheet-modal.open .window{animation:sc-vtt-sheet-in .34s var(--sc-vtt-ease) backwards}
+@keyframes sc-vtt-sheet-in{from{opacity:0;transform:translateY(13px) scale(.97)}
+  to{opacity:1;transform:none}}
+/* Animações são breves, sem efeitos em loop e respeitam movimento reduzido. */
+@media(prefers-reduced-motion:reduce){
+  .workspace .stage-wrap::after,.workspace .stage-controls,.workspace .stage-bottom,
+  .workspace .side-header,.workspace .pane:not([hidden]),.vr-dice-layer::before,
+  #rolls-panel .vr-feed .vr-message:last-child,
+  #rolls-panel .vr-message.roll::before,.vtt-folder[open]>.folder-content,
+  #sheet-modal.open .window{animation:none!important;filter:none!important}
+  #fx-quick [data-fx],.scene-card,.scene-card .scene-preview{transition:none!important}
+  #fx-quick [data-fx]:hover,.scene-card:hover,.scene-card:hover .scene-preview{transform:none!important}
+}
+@media(hover:none){.scene-card:hover,.scene-card:hover .scene-preview,
+  #fx-quick [data-fx]:hover{transform:none}}
