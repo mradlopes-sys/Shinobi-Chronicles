@@ -254,7 +254,12 @@ export function createTheatre({stage,onChange,isAdmin,publishPortrait,previewPor
       }
       reveal(fig);fit();return;
     }
-    if(fig._originalSource===source){fit();return}
+    if(fig._originalSource===source){
+      // Ao voltar rapidamente para o visual atual, cancela uma troca anterior
+      // que ainda está decodificando. Evita que ela apareça depois do clique.
+      fig._pending='';
+      fit();return;
+    }
     if(fig._pending===source)return;
     // Enquanto o próximo retrato carrega, o anterior permanece integralmente
     // visível. Cliques sucessivos não podem apagar ou recriar o personagem.
