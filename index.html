@@ -4171,7 +4171,7 @@ html[data-appearance="dark"] #app .shell .hero.hero-vtt .hero-scene:after{
   const chakraMax=p=>10+3*n(p.atributos.ESP);
   const totals=p=>({attrs:ATTRS.reduce((s,[k])=>s+n(p.atributos[k]),0),skills:SKILLS.reduce((s,[k])=>s+n(p.pericias[k]),0),powers:p.poderes.reduce((s,x)=>s+n(x?.nivel),0)+Math.max(0,p.aptidoes.filter(x=>x?.nome?.trim()).length-3)*2,social:n(p.sociais.Carisma)+n(p.sociais.Manipulacao)});
   const trained=(p,key)=>{const a=skillInfo(key);return a&&!a[2]||n(p.pericias[key])>0};
-  function fresh(clanId){const attrs=Object.fromEntries(ATTRS.map(([k])=>[k,0]));const skills=Object.fromEntries(SKILLS.map(([k])=>[k,0]));return{ownerUid:uid(),usuario:S.user?.displayName||'Visitante',clanId,claHijutsu:clanOf(clanId).name,nome:'',idade:'',vila:'Konohagakure',graduacao:'Genin',descricao:'',nc:4,atributos:attrs,sociais:{Carisma:0,Manipulacao:0},pericias:skills,combateAjustes:{CC:0,CD:0,ESQ:0,LM:0},poderes:[],aptidoes:[],jutsus:[],inventario:[],evolucoes:[],ryos:100,recursos:{vit:30,chakra:null},historico:'',historia:'',foto:'',retratos:{casual:'',ninja:'',ferido:'',grave:''},retratoBase:'casual',criadoEm:Date.now(),atualizadoEm:Date.now(),versao:1}}
+  function fresh(clanId){const attrs=Object.fromEntries(ATTRS.map(([k])=>[k,0]));const skills=Object.fromEntries(SKILLS.map(([k])=>[k,0]));return{ownerUid:uid(),usuario:S.user?.displayName||'Visitante',clanId,claHijutsu:clanOf(clanId).name,nome:'',idade:'',vila:'Konohagakure',graduacao:'Genin',descricao:'',nc:4,atributos:attrs,sociais:{Carisma:0,Manipulacao:0},pericias:skills,combateAjustes:{CC:0,CD:0,ESQ:0,LM:0},poderes:[],aptidoes:[],jutsus:[],inventario:[],evolucoes:[],ryos:100,recursos:{vit:30,chakra:null},historico:'',historia:'',foto:'',retratos:{casual:'',ninja:'',triste:'',ferido:'',grave:''},retratoBase:'casual',criadoEm:Date.now(),atualizadoEm:Date.now(),versao:1}}
 
   function vitalityValue(p){const v=p?.recursos?.vit;return v===null||v===undefined||v===''?vitMax(p):Math.max(0,Math.min(vitMax(p),Math.round(n(v))))}
   function vitalStepper(p,mode='guide'){
@@ -4240,18 +4240,18 @@ html[data-appearance="dark"] #app .shell .hero.hero-vtt .hero-scene:after{
     }
   }
 
-  function normalize(raw){const p={...fresh(raw.clanId||'semcla'),...raw};p.atributos={...fresh(p.clanId).atributos,...(raw.atributos||{})};p.pericias={...fresh(p.clanId).pericias,...(raw.pericias||{})};p.sociais={Carisma:0,Manipulacao:0,...(raw.sociais||{})};p.combateAjustes={CC:0,CD:0,ESQ:0,LM:0,...(raw.combateAjustes||{})};p.recursos={vit:null,chakra:null,...(raw.recursos||{})};p.retratos={casual:'',ninja:'',ferido:'',grave:'',...(raw.retratos||{})};p.retratoBase=raw.retratoBase==='ninja'?'ninja':'casual';for(const k of ['poderes','aptidoes','jutsus','inventario','evolucoes'])if(!Array.isArray(p[k]))p[k]=[];if(!NC_TABLE[p.nc])p.nc=4;const v=p.recursos.vit;p.recursos.vit=v===null||v===undefined||v===''?vitMax(p):Math.max(0,Math.min(vitMax(p),Math.round(n(v))));return p}
+  function normalize(raw){const p={...fresh(raw.clanId||'semcla'),...raw};p.atributos={...fresh(p.clanId).atributos,...(raw.atributos||{})};p.pericias={...fresh(p.clanId).pericias,...(raw.pericias||{})};p.sociais={Carisma:0,Manipulacao:0,...(raw.sociais||{})};p.combateAjustes={CC:0,CD:0,ESQ:0,LM:0,...(raw.combateAjustes||{})};p.recursos={vit:null,chakra:null,...(raw.recursos||{})};p.retratos={casual:'',ninja:'',triste:'',ferido:'',grave:'',...(raw.retratos||{})};p.retratoBase=raw.retratoBase==='ninja'?'ninja':'casual';for(const k of ['poderes','aptidoes','jutsus','inventario','evolucoes'])if(!Array.isArray(p[k]))p[k]=[];if(!NC_TABLE[p.nc])p.nc=4;const v=p.recursos.vit;p.recursos.vit=v===null||v===undefined||v===''?vitMax(p):Math.max(0,Math.min(vitMax(p),Math.round(n(v))));return p}
 
   const PORTRAIT_SOURCE_MAX=12*1024*1024;
   const PORTRAIT_DATA_MAX=122000;
 const PORTRAIT_DOCUMENT_MAX=860000;
-const PORTRAIT_VARIANTS=[{key:'casual',label:'Casual',symbol:'日'},{key:'ninja',label:'Ninja',symbol:'忍'},{key:'ferido',label:'Ferido',symbol:'十'},{key:'grave',label:'Gravemente ferido',symbol:'!'}];
+const PORTRAIT_VARIANTS=[{key:'casual',label:'Casual',symbol:'日'},{key:'ninja',label:'Traje ninja',symbol:'忍'},{key:'triste',label:'Triste',symbol:'雨'},{key:'ferido',label:'Ferido',symbol:'十'},{key:'grave',label:'Gravemente ferido',symbol:'!'}];
   function portraitVariant(key){return PORTRAIT_VARIANTS.find(v=>v.key===key)||PORTRAIT_VARIANTS[0]}
 
 function portraitOwn(p,key){return key==='casual'?(p?.retratos?.casual||p?.foto||''):(p?.retratos?.[key]||'')}
 
 function portraitPhoto(p,key){
- const picks={casual:['casual','ninja','ferido','grave'],ninja:['ninja','casual','ferido','grave'],ferido:['ferido','ninja','casual','grave'],grave:['grave','ferido','ninja','casual']};
+ const picks={casual:['casual','ninja','triste','ferido','grave'],ninja:['ninja','casual','triste','ferido','grave'],triste:['triste','casual','ninja','ferido','grave'],ferido:['ferido','ninja','casual','grave','triste'],grave:['grave','ferido','ninja','casual','triste']};
  for(const k of picks[key]||picks.casual){let img=portraitOwn(p,k);if(img)return img}
  return '';
 }
@@ -4297,7 +4297,7 @@ function portraitEditor(p){
  return `<div class="portrait-editor portrait-editor-gallery">
  <div class="portrait-editor-preview">${img?`<img data-portrait-display src="${E(img)}" alt="Retrato ${E(portraitVariant(key).label)}" onerror="this.hidden=true">`:'<span>忍</span>'}</div>
  <div class="portrait-editor-info"><strong>Retratos do personagem</strong>
- <p>Envie até quatro imagens half-body, sem cortes. A ficha usa automaticamente o retrato ferido com 50% da Vitalidade e o gravemente ferido com 25%.</p>
+ <p>Envie até cinco imagens half-body, sem cortes. A ficha usa automaticamente o retrato ferido com 50% da Vitalidade e o gravemente ferido com 25%.</p>
  <div class="portrait-editor-state">Exibindo: <b data-portrait-label>${E(portraitVariant(key).label)}</b>${state==='ferido'||state==='grave'?' · condição automática':''}</div>
  <div class="portrait-variant-grid">${PORTRAIT_VARIANTS.map(v=>{
   const present=!!portraitOwn(p,v.key);
@@ -4409,7 +4409,7 @@ function isImageDataUrl(value){
   const data=await compressPortrait(file);
   if(S.sheetId!==sheetId||active()!==sheet||!canEditCurrent())return showToast('Abra novamente a ficha para enviar o retrato.',true);
   const prev={foto:sheet.foto,retratos:{...sheet.retratos},base:sheet.retratoBase};
-  const gallery={casual:'',ninja:'',ferido:'',grave:'',...sheet.retratos};
+  const gallery={casual:'',ninja:'',triste:'',ferido:'',grave:'',...sheet.retratos};
   if(sheet.foto&&!gallery.casual)gallery.casual=sheet.foto;
   gallery[slot]=data;sheet.retratos=gallery;sheet.foto='';
   if(slot==='casual'||slot==='ninja')sheet.retratoBase=slot;
@@ -4436,7 +4436,7 @@ async function removePortrait(key){
  if(!sheet||!portraitOwn(sheet,slot))return;
  if(S.saveTimer){clearTimeout(S.saveTimer);S.saveTimer=null}
  const previous={foto:sheet.foto,retratos:{...sheet.retratos}};
- sheet.retratos={casual:'',ninja:'',ferido:'',grave:'',...sheet.retratos,[slot]:''};
+ sheet.retratos={casual:'',ninja:'',triste:'',ferido:'',grave:'',...sheet.retratos,[slot]:''};
  if(slot==='casual')sheet.foto='';
  if(S.portraitPreview?.sheetId===id&&S.portraitPreview.key===slot)S.portraitPreview=null;
  render();
@@ -6647,7 +6647,7 @@ function canvaUpdateArray(el,preserveFocus=false){
 
 
 let vttSidebarCollapsed=false;
-  function vttView(){return '<div class="shell vtt-shell '+(vttSidebarCollapsed?'sidebar-folded':'')+'">'+side()+'<main class="main vtt-main"><div id="vtt-host"><iframe title="Mesa Virtual Shinobi Chronicles" src="./vtt.html?build=20261110-v4" style="display:block;width:100%;height:100%;border:0;background:#111c19" allow="fullscreen"></iframe></div></main></div>'}
+  function vttView(){return '<div class="shell vtt-shell '+(vttSidebarCollapsed?'sidebar-folded':'')+'">'+side()+'<main class="main vtt-main"><div id="vtt-host"><iframe title="Mesa Virtual Shinobi Chronicles" src="./vtt.html?build=20261110-v5" style="display:block;width:100%;height:100%;border:0;background:#111c19" allow="fullscreen"></iframe></div></main></div>'}
   let vttSheetRequested=false;
   function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="margin:15vh auto;max-width:500px"><h3>Carregando os arquivos shinobi...</h3><p>Conectando ao sistema de autenticação.</p></div>';return}if(CONFIGURED&&!S.user&&!['login'].includes(S.view))S.view='login';if(!vttSheetRequested&&new URLSearchParams(location.search).has('vttSheet')&&S.user&&!S.loading){vttSheetRequested=true;const requested=new URLSearchParams(location.search).get('vttSheet');if(S.sheets.some(x=>x.id===requested)){void openSheet(requested)}else if(S.isAdmin&&S.adminUnlocked&&fb){void (async()=>{try{const snap=await fb.getDoc(fb.doc(fb.db,'fichas',requested));if(!snap.exists())return;S.sheet=normalize(snap.data());S.sheetId=requested;S.adminViewing=true;S.canvaMode='original';S.canvaPage=1;S.view='sheet';render()}catch(e){showToast('Não foi possível abrir a ficha: '+e.message,true)}})()}}let screen={quadros:PublicBoard.view,home,vtt:vttView,clans,sheet:canvaSheetView,guia:guideView,biblioteca:libraryView,diario:diaryView,fichas:mySheets,admin:adminView,'admin-gate':adminGate,login}[S.view]||home;$('#app').innerHTML=screen();if(S.modal)$('#app').insertAdjacentHTML('beforeend',S.modal==='delete'?deleteModal():clanModal());if(S.view==='biblioteca')librarySearchFilter();integratedFilter();if(S.view==='quadros')PublicBoard.refreshThreads?.();if(S.view==='diario'&&S.diaryEnterAnimate)S.diaryEnterAnimate=false}
 
