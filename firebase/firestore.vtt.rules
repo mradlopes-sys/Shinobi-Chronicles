@@ -75,9 +75,13 @@ service cloud.firestore {
       allow get: if vttAccess(roomId);
       allow list: if isAdmin();
       allow create, update: if isAdmin()
-        && request.resource.data.keys().hasOnly(['name','masterUid','scene','sceneName','activeSceneId','grid','createdAt','updatedAt','turn','theatre'])
+        && request.resource.data.keys().hasOnly(['name','masterUid','scene','sceneName','activeSceneId','grid','metersPerCell','createdAt','updatedAt','turn','theatre'])
         && request.resource.data.name is string
-        && request.resource.data.name.size() <= 80;
+        && request.resource.data.name.size() <= 80
+        // Mapas antigos continuam válidos; o novo campo é validado quando usado.
+        && request.resource.data.get('metersPerCell', 2) is number
+        && request.resource.data.get('metersPerCell', 2) >= 0.05
+        && request.resource.data.get('metersPerCell', 2) <= 1000;
       allow delete: if isAdmin();
       // Biblioteca privada do mestre: jogadores recebem apenas a cena ativa no documento da sala.
       match /scenes/{sceneId} {
