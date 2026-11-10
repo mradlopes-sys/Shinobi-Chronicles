@@ -1,0 +1,544 @@
+/* Shinobi Chronicles · Mesa Virtual / Sistema visual unificado
+   Papéis, tinta, aquarela e metal envelhecido. Os mapas, retratos e hitboxes
+   permanecem originais; o tema altera somente a interface. */
+html[data-appearance="light"]{
+ color-scheme:light;
+ --sc-paper:#f6f3ed;
+ --sc-paper-2:#eeeae1;
+ --sc-paper-3:#e4dfd4;
+ --sc-elev:#fffdfa;
+ --sc-ink:#222723;
+ --sc-ink-2:#445149;
+ --sc-muted:#6c716b;
+ --sc-subtle:#879086;
+ --sc-stroke:#d9d4c8;
+ --sc-stroke-strong:#c5bdad;
+ --sc-accent:#a24645;
+ --sc-accent-soft:#a2464517;
+ --sc-green:#405e49;
+ --sc-green-soft:#405e4919;
+ --sc-gold:#ab895c;
+ --sc-gold-soft:#ab895c1d;
+ --sc-primary:#314a39;
+ --sc-primary-text:#fffaf0;
+ --sc-shadow:#312f261b;
+ --sc-map:#eae5db;
+ --sc-map-shade:#1d2f2455;
+ --sc-rail:#191e1b;
+ --sc-rail-text:#d8dbd3;
+ --sc-rail-hover:#2f3931;
+ --sc-white:#fffdfa;
+}
+html[data-appearance="dark"]{
+ color-scheme:dark;
+ --sc-paper:#101917;
+ --sc-paper-2:#17231f;
+ --sc-paper-3:#25342d;
+ --sc-elev:#1c2a25;
+ --sc-ink:#e6e9e0;
+ --sc-ink-2:#d2d9cc;
+ --sc-muted:#afbaae;
+ --sc-subtle:#8b9b8e;
+ --sc-stroke:#3b4d44;
+ --sc-stroke-strong:#536657;
+ --sc-accent:#df9989;
+ --sc-accent-soft:#df99891e;
+ --sc-green:#8eaa8f;
+ --sc-green-soft:#8eaa8f1b;
+ --sc-gold:#d0ae79;
+ --sc-gold-soft:#d0ae791d;
+ --sc-primary:#526e57;
+ --sc-primary-text:#fff6e7;
+ --sc-shadow:#00000050;
+ --sc-map:#15231d;
+ --sc-map-shade:#050e0b75;
+ --sc-rail:#111814;
+ --sc-rail-text:#dfe4d8;
+ --sc-rail-hover:#29382d;
+ --sc-white:#f0f1e9;
+}
+html[data-appearance]{
+ font-family:'DM Sans',Arial,sans-serif;
+ color:var(--sc-ink);
+ background:var(--sc-paper);
+ --ink:var(--sc-ink);
+ --surface:var(--sc-paper-2);
+ --surface2:var(--sc-paper-3);
+ --line:var(--sc-stroke);
+ --gold:var(--sc-gold);
+ --muted:var(--sc-muted);
+ --sc-bg:var(--sc-paper);
+ --sc-panel:var(--sc-paper-2);
+ --sc-panel-raised:var(--sc-paper-3);
+ --sc-stroke:var(--sc-stroke);
+ --sc-stroke-hot:var(--sc-gold);
+ --sc-parchment:var(--sc-ink);
+ --sc-muted:var(--sc-muted);
+ --sc-gold:var(--sc-gold);
+ --vtt-accent:var(--sc-gold);
+ --vtt-seam:var(--sc-stroke);
+ --vtt-quiet:var(--sc-muted);
+}
+html[data-appearance] body{
+ color:var(--sc-ink);
+ background:var(--sc-paper);
+ font-family:'DM Sans',Arial,sans-serif;
+ -webkit-font-smoothing:antialiased;
+}
+html[data-appearance] :is(button,input,textarea,select){font-family:'DM Sans',Arial,sans-serif}
+html[data-appearance] :is(.side-header b,.pane h3,.scene-entry strong,.vtt-folder .folder-info strong,
+ .sc-combat-heading h2,.sc-combat-heading h3,.vr-title,.stage-identity b,.sc-turn-header b,
+ .sc-metric-card strong,.sc-combat-hero strong,.scene-card .scene-info strong){
+ font-family:'Noto Serif JP',Georgia,serif;
+}
+html[data-appearance] :is(button,input,textarea,select):focus-visible{
+ outline:2px solid var(--sc-accent);outline-offset:2px;
+}
+html[data-appearance] :is(input,textarea,select){
+ background:var(--sc-elev);color:var(--sc-ink);
+ border:1px solid var(--sc-stroke-strong);
+ border-radius:8px;
+}
+html[data-appearance] :is(input,textarea,select)::placeholder{color:var(--sc-subtle)}
+html[data-appearance] :is(input,textarea,select):focus{
+ border-color:var(--sc-accent)!important;
+ box-shadow:0 0 0 3px var(--sc-accent-soft);
+}
+html[data-appearance] .workspace{background:var(--sc-paper)}
+/* Barra de ferramentas: dialoga com a navegação escura da página principal. */
+html[data-appearance] .rail{
+ background:linear-gradient(170deg,var(--sc-rail),#202c23 90%);
+ color:var(--sc-rail-text);border-right:1px solid #ffffff14;
+ box-shadow:inset -1px 0 #050c0840;
+}
+html[data-appearance="dark"] .rail{background:linear-gradient(170deg,#111814,#17251d 93%)}
+html[data-appearance] .rail .seal{
+ color:#e2c9a0;background:radial-gradient(circle at 50% 55%,#a2464534,transparent 74%);
+ border:1px solid #c8aa8c5e;border-radius:50%;
+ box-shadow:none;font-family:'Noto Serif JP',Georgia,serif;
+}
+html[data-appearance] .rail button{color:#b7c5b5;border-color:transparent;background:transparent}
+html[data-appearance] .rail button:hover{color:#fff2da;background:var(--sc-rail-hover);border-color:#c6b59654}
+html[data-appearance] .rail button.active{
+ color:#fff4e1;
+ background:linear-gradient(135deg,#3c5140,#2a3e31);
+ border-color:#b8a17b8c;
+ box-shadow:inset 3px 0 #c2a175;
+}
+html[data-appearance] .rail .rail-tip{color:#9bab9a}
+/* Palco: não filtrar nem recolorir a ilustração original do cenário. */
+html[data-appearance] .stage-wrap{background:var(--sc-map)}
+html[data-appearance] .stage-wrap::before{opacity:.12;background:radial-gradient(ellipse at center,transparent 56%,var(--sc-map-shade) 100%)}
+html[data-appearance] .stage-wrap.scene-loading #map{filter:none}
+html[data-appearance] .scene-empty{color:var(--sc-muted)}
+html[data-appearance] .scene-empty strong{color:var(--sc-ink);font-family:'Noto Serif JP',Georgia,serif}
+html[data-appearance] .scene-empty .scene-emblem{color:var(--sc-accent);opacity:.4}
+html[data-appearance] .scene-empty small{color:var(--sc-muted)}
+html[data-appearance] .glass-button,
+html[data-appearance] .stage-identity,
+html[data-appearance] .stage-bottom{
+ background:var(--sc-paper);
+ border:1px solid var(--sc-stroke-strong);
+ color:var(--sc-ink);
+ box-shadow:0 6px 21px var(--sc-shadow);
+ backdrop-filter:blur(13px);
+}
+html[data-appearance] .glass-button:hover,html[data-appearance] .stage-identity:hover{
+ background:var(--sc-elev);border-color:var(--sc-gold);
+}
+html[data-appearance] .stage-identity .eyebrow{color:var(--sc-accent);font-weight:700}
+html[data-appearance] .stage-identity b{color:var(--sc-ink)}
+html[data-appearance] .stage-identity small{color:var(--sc-muted)}
+html[data-appearance] .stage-bottom button{color:var(--sc-ink)}
+html[data-appearance] .stage-bottom button:hover{background:var(--sc-green-soft)}
+html[data-appearance] .stage-bottom button.active{
+ color:var(--sc-primary-text);background:var(--sc-primary);box-shadow:none
+}
+html[data-appearance] .stage-bottom .tool-divider{background:var(--sc-stroke-strong)}
+html[data-appearance] .status{
+ background:var(--sc-elev);color:var(--sc-ink);
+ border-color:var(--sc-stroke-strong);
+ box-shadow:0 10px 28px var(--sc-shadow);
+}
+/* Painel lateral como as páginas e fichas do site: papel branco, tinta e aquarela. */
+html[data-appearance="light"] .sidebar{
+ background:
+  radial-gradient(ellipse 78% 32% at 100% 0%,#a0b3a025,transparent 80%),
+  radial-gradient(ellipse 60% 20% at 0% 70%,#b9635a0e,transparent 88%),
+  linear-gradient(165deg,#f8f5ef,#f2eee5 66%,#eeeae1);
+}
+html[data-appearance="dark"] .sidebar{
+ background:
+  radial-gradient(ellipse 85% 43% at 100% 0%,#6179601d,transparent 75%),
+  radial-gradient(ellipse 75% 39% at 0% 100%,#a246450b,transparent 86%),
+  linear-gradient(165deg,#1a2923,#111e19 84%);
+}
+html[data-appearance] .sidebar{
+ color:var(--sc-ink);border-left:1px solid var(--sc-stroke);
+ box-shadow:-8px 0 25px var(--sc-shadow);
+ scrollbar-color:var(--sc-stroke-strong) transparent;
+}
+html[data-appearance] .side-header{
+ border-bottom:1px solid var(--sc-stroke);
+ padding-bottom:14px;margin-bottom:12px;
+}
+html[data-appearance] .side-header .overline{color:var(--sc-accent);letter-spacing:.18em}
+html[data-appearance] .side-header b{color:var(--sc-ink);font-weight:600}
+html[data-appearance] .side-header p{color:var(--sc-muted)}
+html[data-appearance] .tabs{
+ background:var(--sc-paper-2);
+ border-color:var(--sc-stroke);box-shadow:none;border-radius:9px
+}
+html[data-appearance] .tabs button{color:var(--sc-muted);font-weight:700;border-radius:6px}
+html[data-appearance] .tabs button:hover:not(.active){background:var(--sc-green-soft);color:var(--sc-ink)}
+html[data-appearance] .tabs button.active{
+ color:var(--sc-primary-text);background:var(--sc-primary);border-color:var(--sc-primary);
+ box-shadow:none;
+}
+html[data-appearance] .pane{color:var(--sc-ink)}
+html[data-appearance] .pane h3{color:var(--sc-ink);font-weight:600}
+html[data-appearance] :is(p,.hint,label){color:var(--sc-muted)}
+html[data-appearance] label{color:var(--sc-ink-2)}
+html[data-appearance] .campaign-section-label{color:var(--sc-muted);border-color:var(--sc-stroke)}
+html[data-appearance] .campaign-section-label .section-ornament{color:var(--sc-accent)}
+html[data-appearance] .campaign-status,
+html[data-appearance] .permanent-world{
+ background:linear-gradient(135deg,var(--sc-paper-2),var(--sc-elev));
+ color:var(--sc-ink);border-color:var(--sc-stroke-strong);box-shadow:none;
+}
+html[data-appearance] .world-mark{color:var(--sc-accent);background:var(--sc-accent-soft);border-color:var(--sc-accent-soft)}
+html[data-appearance] .permanent-world strong{color:var(--sc-ink)}
+html[data-appearance] .scene-entry,
+html[data-appearance] .vtt-folder,
+html[data-appearance] .scene-card,
+html[data-appearance] .entry,
+html[data-appearance] .current-scene-card{
+ color:var(--sc-ink);
+ background:var(--sc-elev);
+ border:1px solid var(--sc-stroke);
+ box-shadow:none;
+}
+html[data-appearance] :is(.scene-entry,.vtt-folder,.scene-card,.entry,.current-scene-card):hover{
+ border-color:var(--sc-gold);
+}
+html[data-appearance] .scene-entry strong,
+html[data-appearance] .scene-card .scene-info strong,
+html[data-appearance] .current-scene-card b{color:var(--sc-ink)}
+html[data-appearance] .scene-entry small,
+html[data-appearance] .scene-card .scene-info small,
+html[data-appearance] .current-scene-card small,
+html[data-appearance] .entry small{color:var(--sc-muted)}
+html[data-appearance] .scene-card.current{border-color:var(--sc-green);box-shadow:inset 3px 0 var(--sc-green)}
+html[data-appearance] .scene-preview{background:var(--sc-paper-2)}
+html[data-appearance] .scene-thumbnail{background:var(--sc-paper-2)}
+html[data-appearance] .current-scene-card .signal{background:var(--sc-accent);box-shadow:0 0 0 4px var(--sc-accent-soft)}
+html[data-appearance] .vtt-folder[open]{border-color:var(--sc-stroke-strong);background:var(--sc-paper);box-shadow:none}
+html[data-appearance] .vtt-folder>summary:hover{background:var(--sc-green-soft)}
+html[data-appearance] .vtt-folder .folder-content{border-top-color:var(--sc-stroke)}
+html[data-appearance] .vtt-folder .folder-symbol{
+ color:var(--sc-green);background:var(--sc-green-soft);border-color:var(--sc-stroke)
+}
+html[data-appearance] .vtt-folder .folder-info strong{color:var(--sc-ink)}
+html[data-appearance] .vtt-folder .folder-info small{color:var(--sc-muted)}
+html[data-appearance] .vtt-folder .folder-count{
+ background:var(--sc-paper-2);border-color:var(--sc-stroke);
+ color:var(--sc-ink-2);
+}
+html[data-appearance] .vtt-folder .folder-chevron{color:var(--sc-gold)}
+html[data-appearance] .vtt-folder .folder-content input,
+html[data-appearance] .actor-filter input{background:var(--sc-elev);border-color:var(--sc-stroke-strong)}
+html[data-appearance] .actor-folder .entry,
+html[data-appearance] .actor-row>.entry{background:var(--sc-elev);border-color:var(--sc-stroke)}
+html[data-appearance] .actor-row .entry:hover{transform:translateX(2px);background:var(--sc-green-soft);border-color:var(--sc-gold)}
+html[data-appearance] .entry .thumb{background:var(--sc-paper-2);border:1px solid var(--sc-stroke);color:var(--sc-green)}
+html[data-appearance] .entry strong{color:var(--sc-ink)}
+html[data-appearance] .actor-row.on-stage>.entry{
+ background:var(--sc-green-soft);border-color:var(--sc-green)
+}
+html[data-appearance] .actor-stage-dot{background:var(--sc-accent);box-shadow:0 0 0 3px var(--sc-accent-soft)}
+html[data-appearance] .actor-more{background:var(--sc-paper-2);color:var(--sc-ink-2);border-color:var(--sc-stroke)}
+html[data-appearance] .actor-more:hover{background:var(--sc-green-soft);border-color:var(--sc-green)}
+html[data-appearance] .token-card{border-bottom-color:var(--sc-stroke)}
+html[data-appearance] .token-card>span{color:var(--sc-ink)}
+html[data-appearance] .token-card.selected{background:var(--sc-green-soft)}
+html[data-appearance] .manage-sheets-btn{background:var(--sc-paper-2)}
+html[data-appearance] .campaign-footnote{color:var(--sc-muted)}
+html[data-appearance] .btn{
+ background:var(--sc-paper-2);border-color:var(--sc-stroke-strong);
+ color:var(--sc-ink);box-shadow:none
+}
+html[data-appearance] .btn:hover{background:var(--sc-green-soft);filter:none;border-color:var(--sc-green)}
+html[data-appearance] .btn.primary{
+ color:var(--sc-primary-text);background:var(--sc-primary);border-color:var(--sc-primary)
+}
+html[data-appearance] .btn.primary:hover{filter:brightness(1.08);background:var(--sc-primary)}
+/* Menu de botão direito no token: semelhante aos menus de seleção do site. */
+html[data-appearance] .actor-context-menu{
+ background:var(--sc-elev);border-color:var(--sc-stroke-strong);color:var(--sc-ink);
+ box-shadow:0 17px 35px var(--sc-shadow);
+}
+html[data-appearance] .actor-menu-caption{color:var(--sc-ink);border-bottom-color:var(--sc-stroke)}
+html[data-appearance] .actor-menu-action{color:var(--sc-ink);background:transparent}
+html[data-appearance] .actor-menu-action:hover,
+html[data-appearance] .actor-menu-action:focus-visible{background:var(--sc-green-soft)}
+html[data-appearance] .actor-menu-icon{color:var(--sc-green)}
+html[data-appearance] .actor-menu-action.danger{color:var(--sc-accent)}
+html[data-appearance] .actor-menu-action.danger:hover{background:var(--sc-accent-soft)}
+/* Iniciativa: uma faixa fina de papel acima do mapa. */
+html[data-appearance] #sc-turn-strip{
+ background:var(--sc-elev);border-color:var(--sc-stroke-strong);color:var(--sc-ink);
+ box-shadow:0 8px 28px var(--sc-shadow);
+}
+html[data-appearance] .sc-turn-header{border-bottom-color:var(--sc-stroke)}
+html[data-appearance] .sc-turn-header small{color:var(--sc-accent)}
+html[data-appearance] .sc-turn-header b{color:var(--sc-ink);border-left-color:var(--sc-stroke)}
+html[data-appearance] .sc-turn-header .sc-turn-next{color:var(--sc-muted)}
+html[data-appearance] .sc-turn-next strong{color:var(--sc-ink)}
+html[data-appearance] .sc-turn-header button{background:var(--sc-paper-2);color:var(--sc-ink);border-color:var(--sc-stroke)}
+html[data-appearance] .sc-turn-header button:hover{background:var(--sc-green-soft)}
+html[data-appearance] .sc-turn-card{color:var(--sc-ink);background:transparent;border-color:transparent}
+html[data-appearance] .sc-turn-card:hover:not(:disabled){background:var(--sc-green-soft)}
+html[data-appearance] .sc-turn-card.is-active{
+ background:var(--sc-green-soft);border-color:var(--sc-green);box-shadow:none
+}
+html[data-appearance] .sc-turn-card.is-next{background:var(--sc-gold-soft);border-color:var(--sc-stroke)}
+html[data-appearance] .sc-turn-body strong{color:var(--sc-ink)}
+html[data-appearance] .sc-turn-body small{color:var(--sc-muted)}
+html[data-appearance] .sc-turn-card.is-active .sc-turn-body small{color:var(--sc-green)}
+html[data-appearance] .sc-turn-score{color:var(--sc-ink-2)}
+html[data-appearance] .sc-turn-pic{background:var(--sc-paper-2);border-color:var(--sc-stroke);color:var(--sc-gold)}
+/* Central de combate — formularios e controles com o mesmo papel e tinta. */
+html[data-appearance] #pane-combate .sc-combat-heading>span{color:var(--sc-accent)}
+html[data-appearance] #pane-combate .sc-combat-heading h2,
+html[data-appearance] #pane-combate .sc-combat-heading h3{color:var(--sc-ink)}
+html[data-appearance] #pane-combate .sc-combat-heading p,
+html[data-appearance] #pane-combate .sc-combat-heading small{color:var(--sc-muted)}
+html[data-appearance] #pane-combate .sc-combat-heading.sub{border-top-color:var(--sc-stroke)}
+html[data-appearance] .sc-combat-hero{
+ background:linear-gradient(135deg,var(--sc-paper-2),var(--sc-elev));
+ color:var(--sc-ink);border-color:var(--sc-stroke-strong);box-shadow:none
+}
+html[data-appearance] .sc-combat-hero small{color:var(--sc-muted)}
+html[data-appearance] .sc-combat-hero strong{color:var(--sc-ink)}
+html[data-appearance] .sc-combat-primary,
+html[data-appearance] .sc-combat-controls button.primary{
+ color:var(--sc-primary-text);background:var(--sc-primary);border-color:var(--sc-primary);box-shadow:none
+}
+html[data-appearance] .sc-combat-controls button,
+html[data-appearance] .sc-combat-controls button:not(.primary){
+ background:var(--sc-paper-2);border-color:var(--sc-stroke);
+ color:var(--sc-ink)
+}
+html[data-appearance] .sc-combat-controls button.primary{
+ color:var(--sc-primary-text);background:var(--sc-primary);border-color:var(--sc-primary)
+}
+html[data-appearance] .sc-combat-controls button.danger{
+ background:var(--sc-accent-soft);color:var(--sc-accent);border-color:var(--sc-accent)
+}
+html[data-appearance] .sc-combat-line{
+ background:var(--sc-elev);border-color:var(--sc-stroke);box-shadow:none
+}
+html[data-appearance] .sc-combat-line.active{
+ background:var(--sc-green-soft);border-color:var(--sc-green);
+ box-shadow:inset 3px 0 var(--sc-green)
+}
+html[data-appearance] .sc-combat-rank{color:var(--sc-gold)}
+html[data-appearance] .sc-combat-pic{background:var(--sc-paper-2);color:var(--sc-green);border-color:var(--sc-stroke)}
+html[data-appearance] .sc-combat-person b{color:var(--sc-ink)}
+html[data-appearance] .sc-combat-person small{color:var(--sc-muted)}
+html[data-appearance] .sc-combat-score{color:var(--sc-muted)}
+html[data-appearance] .sc-combat-score input{background:var(--sc-elev);color:var(--sc-ink);border-color:var(--sc-stroke-strong)}
+html[data-appearance] .sc-combat-remove{color:var(--sc-accent)}
+html[data-appearance] .sc-combat-empty{color:var(--sc-muted);border-color:var(--sc-stroke)}
+html[data-appearance] .sc-combat-search{background:var(--sc-elev);color:var(--sc-ink);border-color:var(--sc-stroke-strong)}
+html[data-appearance] .sc-combat-controls.small span{color:var(--sc-muted)}
+html[data-appearance] .sc-combat-pick{
+ color:var(--sc-ink);background:var(--sc-elev);border-color:var(--sc-stroke)
+}
+html[data-appearance] .sc-combat-pick.selected{
+ background:var(--sc-green-soft);border-color:var(--sc-green)
+}
+html[data-appearance] .sc-combat-pick.already{opacity:.62}
+html[data-appearance] .sc-combat-pick .sc-combat-check{color:var(--sc-green)}
+html[data-appearance] .sc-combat-hint{color:var(--sc-muted)}
+/* Efeitos de jutsus: o conteúdo original permanece, só a moldura acompanha. */
+html[data-appearance] .vtt-roll-fx{
+ background:var(--sc-paper-2);border-color:var(--sc-stroke);color:var(--sc-ink);
+ box-shadow:none
+}
+html[data-appearance] .vtt-roll-fx>summary{color:var(--sc-ink)!important}
+html[data-appearance] .vtt-roll-fx>summary:hover{color:var(--sc-accent)!important}
+html[data-appearance] .fx-quick-head{color:var(--sc-accent)}
+html[data-appearance] .fx-quick-grid button{
+ background:var(--sc-elev);color:var(--sc-ink);
+ border-color:var(--sc-stroke);box-shadow:none
+}
+html[data-appearance] .fx-quick-grid button:hover{
+ background:var(--sc-green-soft);border-color:var(--sc-green)
+}
+html[data-appearance] .fx-quick-grid button .fx-symbol{color:var(--sc-green)}
+html[data-appearance] .fx-target-hint{color:var(--sc-muted)}
+html[data-appearance] .sc-jutsu-soundbar{
+ background:var(--sc-elev);color:var(--sc-ink);border-color:var(--sc-stroke)
+}
+html[data-appearance] .sc-jutsu-soundbar button{
+ background:var(--sc-primary);color:var(--sc-primary-text);border-color:var(--sc-primary)
+}
+html[data-appearance] .sc-jutsu-soundbar label{color:var(--sc-ink)}
+html[data-appearance] .sc-jutsu-soundbar input{accent-color:var(--sc-green)}
+/* Chat e rolagens: são montados em tempo de execução, por isso a especificidade
+   inclui #rolls-panel para superar estilos locais sem alterá-los nem tocar na lógica. */
+html[data-appearance] #rolls-panel{color:var(--sc-ink);--rGold:var(--sc-gold);--rBorder:var(--sc-stroke);--rMuted:var(--sc-muted)}
+html[data-appearance] #rolls-panel .vr-title{color:var(--sc-ink);font-family:'Noto Serif JP',Georgia,serif}
+html[data-appearance] #rolls-panel .vr-mini{color:var(--sc-muted)}
+html[data-appearance] #rolls-panel .vr-clean{
+ color:var(--sc-accent);background:var(--sc-accent-soft);border-color:var(--sc-stroke)
+}
+html[data-appearance] #rolls-panel .vr-clean:hover{background:var(--sc-accent-soft);border-color:var(--sc-accent)}
+html[data-appearance] #rolls-panel .vr-feed{
+ color:var(--sc-ink);
+ background:linear-gradient(165deg,var(--sc-paper-2),var(--sc-elev));
+ border-color:var(--sc-stroke);box-shadow:inset 0 1px var(--sc-white);
+}
+html[data-appearance] #rolls-panel .vr-message{
+ color:var(--sc-ink);background:var(--sc-elev);border-color:var(--sc-stroke);box-shadow:none
+}
+html[data-appearance] #rolls-panel .vr-message.own{border-color:var(--sc-green)}
+html[data-appearance] #rolls-panel .vr-message.roll{border-left-color:var(--sc-gold)}
+html[data-appearance] #rolls-panel .vr-message.private{border-left-color:var(--sc-green)}
+html[data-appearance] #rolls-panel .vr-message.blind{border-left-color:var(--sc-accent)}
+html[data-appearance] #rolls-panel .vr-author,
+html[data-appearance] #rolls-panel .vr-result-copy b{color:var(--sc-ink)}
+html[data-appearance] #rolls-panel .vr-mode{
+ color:var(--sc-ink-2);background:var(--sc-gold-soft);border-color:var(--sc-stroke)
+}
+html[data-appearance] #rolls-panel .vr-message p{color:var(--sc-ink-2)}
+html[data-appearance] #rolls-panel .vr-time{color:var(--sc-subtle)}
+html[data-appearance] #rolls-panel .vr-empty{color:var(--sc-muted)}
+html[data-appearance] #rolls-panel .vr-empty:before{color:var(--sc-gold)}
+html[data-appearance] #rolls-panel .vr-delete{color:var(--sc-accent)}
+html[data-appearance] #rolls-panel .vr-result{background:var(--sc-paper-2);color:var(--sc-ink)}
+html[data-appearance] #rolls-panel .vr-result:hover{background:var(--sc-green-soft)}
+html[data-appearance] #rolls-panel .vr-total{color:var(--sc-green);text-shadow:none}
+html[data-appearance] #rolls-panel .vr-result-copy small{color:var(--sc-muted)}
+html[data-appearance] #rolls-panel .vr-breakdown{
+ color:var(--sc-ink-2);background:var(--sc-paper-2);
+ border:1px solid var(--sc-stroke);
+}
+html[data-appearance] #rolls-panel .vr-chat-compose input{
+ color:var(--sc-ink);background:var(--sc-elev);border-color:var(--sc-stroke-strong)
+}
+html[data-appearance] #rolls-panel .vr-chat-compose button{
+ color:var(--sc-primary-text);background:var(--sc-primary);border-color:var(--sc-primary)
+}
+html[data-appearance] #rolls-panel .vr-dice{
+ background:linear-gradient(140deg,var(--sc-paper-2),var(--sc-elev));
+ border-color:var(--sc-stroke);box-shadow:none;
+}
+html[data-appearance] #rolls-panel .vr-dice-mini{color:var(--sc-muted)}
+html[data-appearance] #rolls-panel .vr-quick button{
+ color:var(--sc-ink-2);background:var(--sc-elev);border-color:var(--sc-stroke)
+}
+html[data-appearance] #rolls-panel .vr-quick button:hover{background:var(--sc-green-soft)}
+html[data-appearance] #rolls-panel .vr-quick button.selected{
+ color:var(--sc-primary-text);background:var(--sc-primary);border-color:var(--sc-primary);box-shadow:none
+}
+html[data-appearance] #rolls-panel .vr-field{color:var(--sc-muted)}
+html[data-appearance] #rolls-panel .vr-field input,
+html[data-appearance] #rolls-panel .vr-field select{
+ color:var(--sc-ink);background:var(--sc-elev);border-color:var(--sc-stroke-strong)
+}
+html[data-appearance] #rolls-panel .vr-modes span{
+ color:var(--sc-ink-2);background:var(--sc-elev);border-color:var(--sc-stroke)
+}
+html[data-appearance] #rolls-panel .vr-modes input:checked+span{
+ background:var(--sc-green-soft);color:var(--sc-green);border-color:var(--sc-green)
+}
+html[data-appearance] #rolls-panel .vr-roll-button{
+ color:var(--sc-primary-text);background:var(--sc-primary);
+ border-color:var(--sc-primary);box-shadow:none;
+}
+html[data-appearance] #rolls-panel .vr-explain{color:var(--sc-muted)}
+/* Dados sobre o cenário: acabamento de papel, alinhado com o novo HUD. */
+html[data-appearance] .vr-dice-layer.vr-dice-minimal{color:var(--sc-ink)}
+html[data-appearance] .vr-min-tray{
+ background:var(--sc-elev);
+ border-color:var(--sc-stroke-strong);
+ box-shadow:0 12px 30px var(--sc-shadow)
+}
+html[data-appearance] .vr-min-tray::before{background:linear-gradient(90deg,transparent,var(--sc-gold),transparent)}
+html[data-appearance] .vr-min-heading{color:var(--sc-ink);border-bottom-color:var(--sc-stroke)}
+html[data-appearance] .vr-min-heading>small{
+ color:var(--sc-accent);background:var(--sc-accent-soft);border-color:var(--sc-stroke)
+}
+html[data-appearance] .vr-min-outline{fill:var(--sc-paper-3);stroke:var(--sc-gold)}
+html[data-appearance] .vr-min-facets{stroke:var(--sc-green)}
+html[data-appearance] .vr-min-face{fill:var(--sc-ink);stroke:var(--sc-ink)}
+html[data-appearance] .vr-min-result{border-left-color:var(--sc-stroke)}
+html[data-appearance] .vr-min-result strong{color:var(--sc-green);text-shadow:none}
+html[data-appearance] .vr-min-result small{color:var(--sc-muted)}
+/* Ferramentas de medição: legíveis sobre paisagens claras e escuras. */
+html[data-appearance] .sc-metric-hud,
+html[data-appearance] .sc-metric-card,
+html[data-appearance] .sc-metric-status{
+ color:var(--sc-ink);background:var(--sc-elev);
+ border-color:var(--sc-stroke-strong);
+ box-shadow:0 8px 25px var(--sc-shadow);
+}
+html[data-appearance] .sc-metric-hud .metric-head{color:var(--sc-accent)}
+html[data-appearance] .sc-metric-hud .metric-head button{color:var(--sc-green)}
+html[data-appearance] .sc-metric-hud .metric-scale-line{
+ background:linear-gradient(90deg,var(--sc-gold) 0 50%,var(--sc-paper-3) 50% 100%);
+ border-color:var(--sc-gold);
+}
+html[data-appearance] .sc-metric-hud .metric-value{color:var(--sc-ink)}
+html[data-appearance] .sc-metric-hud .metric-hint{color:var(--sc-muted)}
+html[data-appearance] .sc-metric-card strong{color:var(--sc-ink)}
+html[data-appearance] .sc-metric-card p{color:var(--sc-muted)}
+html[data-appearance] .sc-metric-card header button{background:var(--sc-paper-2);color:var(--sc-ink)}
+html[data-appearance] .sc-metric-card .metric-info{color:var(--sc-ink-2)}
+html[data-appearance] .sc-metric-card button.metric-save{background:var(--sc-primary);color:var(--sc-primary-text);border-color:var(--sc-primary)}
+html[data-appearance] .sc-metric-status{color:var(--sc-ink)}
+html[data-appearance] .vtt-metric-form-notice{color:var(--sc-muted)}
+html[data-appearance] .vtt-metric-form-notice strong{color:var(--sc-ink)}
+/* A folha flutuante continua sem filtros nem alteração das ilustrações. */
+html[data-appearance] #sheet-modal .window{
+ background:#f6f3ed;border-color:var(--sc-stroke-strong);
+ box-shadow:0 17px 55px #0005;
+}
+html[data-appearance] #sheet-modal .window-head{
+ background:var(--sc-rail);color:#f3e5d3;border-bottom-color:#ad947050
+}
+html[data-appearance] #sheet-modal .window-head b{font-family:'Noto Serif JP',Georgia,serif}
+html[data-appearance] #sheet-modal .window-head .drag-help{color:#b8c5b9}
+html[data-appearance] #sheet-modal #sheet-close{color:#f2dfc8;background:#334637;border-color:#7b8b69}
+html[data-appearance] #sheet-modal iframe{background:#f6f3ed}
+/* Teatro — apenas barra de ações, nunca a arte dos personagens. */
+html[data-appearance] #stage #sc-theatre .stage-tools{
+ background:var(--sc-elev);border-color:var(--sc-stroke-strong);
+ box-shadow:0 8px 22px var(--sc-shadow)
+}
+html[data-appearance] #stage #sc-theatre .stage-tools button{
+ background:var(--sc-paper-2);color:var(--sc-ink);
+ border-color:var(--sc-stroke)
+}
+html[data-appearance] #stage #sc-theatre .stage-tools button:hover{background:var(--sc-green-soft)}
+html[data-appearance] #stage #sc-theatre .stage-tools button.active{
+ color:var(--sc-primary-text);background:var(--sc-primary);border-color:var(--sc-primary)
+}
+html[data-appearance] #stage #sc-theatre .stage-scale-tools{border-left-color:var(--sc-stroke)}
+/* Itens com estilos inline no guia do mestre. */
+html[data-appearance] #combat-effect-guide{border-color:var(--sc-stroke)!important}
+html[data-appearance] #effect-guide-items>div{border-bottom-color:var(--sc-stroke)!important}
+html[data-appearance] #effect-guide-items strong{color:var(--sc-ink)!important}
+html[data-appearance] #effect-guide-items p{color:var(--sc-muted)!important}
+html[data-appearance] #pane-combate .vtt-roll-fx h3{color:var(--sc-ink)}
+@media(max-width:690px){
+ html[data-appearance] .sidebar{border-top-color:var(--sc-stroke)}
+ html[data-appearance] .side-header{margin-bottom:8px}
+ html[data-appearance] .stage-wrap::before{opacity:.08}
+}
+@media(prefers-reduced-motion:reduce){
+ html[data-appearance] .tabs button,html[data-appearance] .rail button,
+ html[data-appearance] .entry,html[data-appearance] .btn{transition:none!important}
+}
