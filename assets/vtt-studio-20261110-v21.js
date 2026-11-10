@@ -842,7 +842,7 @@ $('cast-effect').onclick=async()=>{
 };
 function automaticMapCell(img){return Math.max(32,Math.min(192,Math.round(Math.min(img.naturalWidth||img.width,img.naturalHeight||img.height)/18)))}
 function loadMap(url){if(sceneKey===url)return;sceneKey=url;view.image=null;if(!safeUrl(url)){view.cell=64;center();return}const img=new Image();img.onload=()=>{if(sceneKey!==url)return;view.image=img;view.cell=automaticMapCell(img);center()};img.onerror=()=>{$('scene-empty').hidden=false;show('Não foi possível carregar a imagem da cena. Confira a URL HTTPS.')};img.src=url;draw()}
-function center(){view.zoom=1;const w=stage.clientWidth,h=stage.clientHeight;if(view.image){const scale=Math.min((w-28)/view.image.width,(h-28)/view.image.height);view.zoom=Math.max(.012,Math.min(4,scale));view.ox=(w-view.image.width*view.zoom)/2;view.oy=(h-view.image.height*view.zoom)/2}else{view.ox=w/2-8*view.cell;view.oy=h/2-5*view.cell}draw()}
+function center(){view.zoom=1;const w=stage.clientWidth,h=stage.clientHeight;if(view.image){const scale=Math.min((w-28)/view.image.width,(h-28)/view.image.height);view.zoom=Math.max(.012,Math.min(4,scale));view.ox=(w-view.image.width*view.zoom)/2;view.oy=(h-view.image.height*view.zoom)/2}else{view.ox=w/2-8*view.cell;view.oy=h/2-5*view.cell}draw();updateMetricHud()}
 const world=(x,y)=>({x:(x-view.ox)/view.zoom,y:(y-view.oy)/view.zoom});
 function spriteBounds(t){
   const image=tokenImage(t.portrait);
@@ -892,30 +892,110 @@ function hit(x,y){
   });
 }
 function drawRuler(){
-  if(!measure.start||!measure.end)return;
+  if(!measure.enabled||!measure.start||!measure.end)return;
   const a={x:view.ox+measure.start.x*view.zoom,y:view.oy+measure.start.y*view.zoom};
   const b={x:view.ox+measure.end.x*view.zoom,y:view.oy+measure.end.y*view.zoom};
   const px=Math.hypot(measure.end.x-measure.start.x,measure.end.y-measure.start.y);
-  const units=100*px/Math.max(1,view.image?.naturalWidth||view.image?.width||stage.clientWidth/view.zoom);
-  ctx.save();ctx.strokeStyle='#ffe0a2';ctx.lineWidth=2;ctx.setLineDash([8,5]);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.setLineDash([]);
-  for(const p of [a,b]){ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);ctx.fillStyle='#fff1ca';ctx.fill()}
-  const label=units.toFixed(1)+' u',x=(a.x+b.x)/2,y=(a.y+b.y)/2;
-  ctx.font='bold 13px system-ui';const width=ctx.measureText(label).width+20;
-  ctx.fillStyle='#14221ee8';ctx.fillRect(x-width/2,y-27,width,24);ctx.fillStyle='#ffe7b6';ctx.textAlign='center';ctx.fillText(label,x,y-10);ctx.restore();
+  if(px<1)return;
+  const label=formatMeters(pixelsToMeters(px,view.cell,currentMetersPerCell()));
+  ctx.save();
+  ctx.lineCap='round';ctx.strokeStyle='#f3d5a0';ctx.lineWidth=2.7;
+  ctx.shadowBlur=8;ctx.shadowColor='#0b170de0';ctx.setLineDash([8,5]);
+  ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+  ctx.shadowBlur=0;ctx.setLineDash([]);
+  for(const p of [a,b]){
+    ctx.beginPath();ctx.arc(p.x,p.y,4.7,0,Math.PI*2);
+    ctx.fillStyle='#fff1d2';ctx.fill();ctx.strokeStyle='#5d7456';ctx.lineWidth=2;ctx.stroke();
+  }
+  const x=(a.x+b.x)/2,y=(a.y+b.y)/2;
+  ctx.font='700 12px system-ui';
+  const width=ctx.measureText(label).width+23;
+  ctx.fillStyle='#15281fe9';ctx.strokeStyle='#cdb58a';ctx.lineWidth=1;
+  const left=x-width/2,top=y-35;
+  ctx.beginPath();ctx.roundRect(left,top,width,25,7);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#ffe8b6';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(label,x,top+12.5);
+  ctx.restore();
 }
 const point=e=>{const r=canvas.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}};
-canvas.onpointerdown=e=>{if(e.button!==0)return;const p=point(e);if(measure.enabled){measure.start=world(p.x,p.y);measure.end=measure.start;measure.drag=true;canvas.setPointerCapture(e.pointerId);draw();return}const t=hit(p.x,p.y);selected=t?.id||null;renderTokens();draw();if(t&&!canMove(t))return;dragToken={id:e.pointerId,start:p,ox:view.ox,oy:view.oy,t,original:t?{x:t.x,y:t.y}:null};canvas.setPointerCapture(e.pointerId);canvas.classList.add('dragging')};
-canvas.onpointermove=e=>{if(measure.enabled&&measure.drag){const p=point(e);measure.end=world(p.x,p.y);draw();return}if(!dragToken||dragToken.id!==e.pointerId)return;const p=point(e);if(dragToken.t){const q=world(p.x,p.y);dragToken.t.x=Math.max(0,Math.min(1000,Math.round((q.x/view.cell-.5)*1000)/1000));dragToken.t.y=Math.max(0,Math.min(1000,Math.round((q.y/view.cell-1)*1000)/1000))}else{view.ox=dragToken.ox+p.x-dragToken.start.x;view.oy=dragToken.oy+p.y-dragToken.start.y}draw()};
-const finish=async e=>{if(measure.drag){measure.drag=false;draw();return}if(!dragToken||dragToken.id!==e.pointerId)return;const d=dragToken;dragToken=null;canvas.classList.remove('dragging');if(d.t&&room&&(d.t.x!==d.original.x||d.t.y!==d.original.y)){try{await updateDoc(tokenRef(d.t.id),{x:d.t.x,y:d.t.y})}catch(err){d.t.x=d.original.x;d.t.y=d.original.y;draw();show('Movimento recusado: '+err.message)}}};
+canvas.onpointerdown=e=>{if(e.button!==0)return;const p=point(e);if(measure.enabled){if(!view.image)return show('Ative e carregue um cenário antes de medir.');measure.start=world(p.x,p.y);measure.end=measure.start;measure.drag=true;measure.drawnPx=0;canvas.setPointerCapture(e.pointerId);updateMetricDrawStatus();draw();return}const t=hit(p.x,p.y);selected=t?.id||null;renderTokens();draw();if(t&&!canMove(t))return;dragToken={id:e.pointerId,start:p,ox:view.ox,oy:view.oy,t,original:t?{x:t.x,y:t.y}:null};canvas.setPointerCapture(e.pointerId);canvas.classList.add('dragging')};
+canvas.onpointermove=e=>{if(measure.enabled&&measure.drag){const p=point(e);measure.end=world(p.x,p.y);measure.drawnPx=Math.hypot(measure.end.x-measure.start.x,measure.end.y-measure.start.y);updateMetricDrawStatus();draw();return}if(!dragToken||dragToken.id!==e.pointerId)return;const p=point(e);if(dragToken.t){const q=world(p.x,p.y);dragToken.t.x=Math.max(0,Math.min(1000,Math.round((q.x/view.cell-.5)*1000)/1000));dragToken.t.y=Math.max(0,Math.min(1000,Math.round((q.y/view.cell-1)*1000)/1000))}else{view.ox=dragToken.ox+p.x-dragToken.start.x;view.oy=dragToken.oy+p.y-dragToken.start.y}draw()};
+const finish=async e=>{if(measure.drag){measure.drag=false;updateMetricDrawStatus();draw();return}if(!dragToken||dragToken.id!==e.pointerId)return;const d=dragToken;dragToken=null;canvas.classList.remove('dragging');if(d.t&&room&&(d.t.x!==d.original.x||d.t.y!==d.original.y)){try{await updateDoc(tokenRef(d.t.id),{x:d.t.x,y:d.t.y})}catch(err){d.t.x=d.original.x;d.t.y=d.original.y;draw();show('Movimento recusado: '+err.message)}}};
 canvas.onpointerup=finish;canvas.onpointercancel=finish;
 canvas.ondblclick=e=>{const p=point(e),t=hit(p.x,p.y);if(t)openSheet(t.fichaId,t.ownerUid)};
 canvas.ondragover=e=>{if(admin&&room){e.preventDefault();e.dataTransfer.dropEffect='copy'}};
 async function spawn(f,x,y){if(!admin||!room)return;if(!roomData?.activeSceneId)return show('Ative um mapa na Biblioteca antes de colocar personagens.');try{await addDoc(collection(db,'vttRooms',room,'tokens'),{name:String(f.nome||f.name||'Shinobi').slice(0,40),fichaId:f.id,ownerUid:f.ownerUid,x,y,color:'#a57c64',portrait:await tokenPortrait(f),sceneId:roomData?.activeSceneId||''});show('Token criado: '+(f.nome||'Shinobi'))}catch(err){show('Falha ao criar token: '+err.message)}}
 canvas.ondrop=e=>{if(!admin||!room)return;e.preventDefault();const id=e.dataTransfer.getData('text/shinobi-ficha');const f=sheets.find(x=>x.id===id);if(!f)return;const p=point(e),w=world(p.x,p.y);const x=Math.max(0,Math.min(1000,Math.round((w.x/view.cell-.5)*1000)/1000)),y=Math.max(0,Math.min(1000,Math.round((w.y/view.cell-1)*1000)/1000));void spawn(f,x,y)};
-function zoom(factor){const x=stage.clientWidth/2,y=stage.clientHeight/2,p=world(x,y);view.zoom=Math.max(.07,Math.min(4,view.zoom*factor));view.ox=x-p.x*view.zoom;view.oy=y-p.y*view.zoom;draw()}
+function zoom(factor){const x=stage.clientWidth/2,y=stage.clientHeight/2,p=world(x,y);view.zoom=Math.max(.07,Math.min(4,view.zoom*factor));view.ox=x-p.x*view.zoom;view.oy=y-p.y*view.zoom;draw();updateMetricHud()}
 canvas.onwheel=e=>{e.preventDefault();zoom(e.deltaY<0?1.1:.9)};
-$('zoom-in').onclick=()=>zoom(1.2);$('zoom-out').onclick=()=>zoom(.8);$('reset').onclick=center;$('tool-ruler').onclick=()=>{measure.enabled=!measure.enabled;measure.start=null;measure.end=null;measure.drag=false;$('tool-ruler').classList.toggle('active',measure.enabled);$('tool-ruler').setAttribute('aria-pressed',String(measure.enabled));show(measure.enabled?'Régua: arraste para medir. Uma unidade corresponde a 1% da largura do mapa.':'Régua desativada.');draw()};
-new ResizeObserver(()=>{const dpr=Math.min(window.devicePixelRatio||1,2);canvas.width=Math.round(stage.clientWidth*dpr);canvas.height=Math.round(stage.clientHeight*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);if(view.image)center();else draw()}).observe(stage);
+$('zoom-in').onclick=()=>zoom(1.2);$('zoom-out').onclick=()=>zoom(.8);$('reset').onclick=center;function setMetricTool(mode){
+  const calibrating=mode==='calibrate',enabled=mode==='ruler'||calibrating;
+  if(enabled&&!view.image){show('Abra um mapa para medir distâncias.');return}
+  if(calibrating&&!admin){show('Só o mestre pode calibrar a escala.');return}
+  measure.enabled=enabled;measure.calibrating=calibrating;measure.drag=false;
+  measure.start=null;measure.end=null;measure.drawnPx=0;
+  $('metric-known-distance').value='';
+  $('tool-ruler').classList.toggle('active',enabled&&!calibrating);
+  $('tool-calibrate').classList.toggle('active',calibrating);
+  $('tool-ruler').setAttribute('aria-pressed',String(enabled&&!calibrating));
+  $('tool-calibrate').setAttribute('aria-pressed',String(calibrating));
+  $('metric-card').hidden=!calibrating;
+  canvas.style.cursor=enabled?'crosshair':'';
+  updateMetricDrawStatus();draw();
+  if(calibrating)show('Calibração: arraste a régua sobre uma distância conhecida.');
+  else if(enabled)show('Régua em metros: arraste entre dois pontos. Pressione R para sair.');
+}
+$('tool-ruler').onclick=()=>setMetricTool(measure.enabled&&!measure.calibrating?'off':'ruler');
+$('tool-calibrate').onclick=()=>setMetricTool(measure.calibrating?'off':'calibrate');
+$('metric-hud-calibrate').onclick=()=>setMetricTool('calibrate');
+$('metric-close').onclick=()=>setMetricTool('off');
+$('metric-known-distance').addEventListener('input',updateMetricDrawStatus);
+$('metric-save').onclick=async()=>{
+  if(!admin||!room||!roomData?.activeSceneId||!view.image)
+    return show('Só é possível calibrar uma cena ativa como mestre.');
+  if(measure.drawnPx<2)return show('Desenhe uma linha de referência sobre o mapa.');
+  const known=Number($('metric-known-distance').value);
+  const scale=calibrateMetersPerCell(measure.drawnPx,known,view.cell);
+  if(scale===null)return show('Distância fora do intervalo. Calibre entre 0,05 m e 1.000 m por célula.');
+  const button=$('metric-save');button.disabled=true;
+  try{
+    const sceneId=roomData.activeSceneId;
+    await updateDoc(doc(db,'vttRooms',room,'scenes',sceneId),{metersPerCell:scale,updatedAt:serverTimestamp()});
+    await updateDoc(roomRef(),{metersPerCell:scale,updatedAt:serverTimestamp()});
+    roomData.metersPerCell=scale;
+    updateMetricHud();draw();
+    setMetricTool('off');
+    show('Escala salva: '+formatMeters(scale)+' por célula virtual, compartilhada com todos.');
+  }catch(error){show('Não foi possível salvar a calibração: '+error.message)}
+  finally{button.disabled=false}
+};
+document.addEventListener('keydown',e=>{
+  const target=e.target;
+  if(target?.closest?.('input,textarea,select,[contenteditable="true"]'))return;
+  if($('sheet-modal').classList.contains('open')||e.ctrlKey||e.metaKey||e.altKey)return;
+  if(e.key?.toLowerCase()==='r'&&!e.repeat){
+    e.preventDefault();
+    setMetricTool(measure.enabled?'off':'ruler');
+  }else if(e.key==='Escape'&&measure.enabled){setMetricTool('off')}
+});
+let previousStageWidth=0,previousStageHeight=0;
+new ResizeObserver(()=>{
+  const width=stage.clientWidth,height=stage.clientHeight;
+  if(!width||!height)return;
+  const hadViewport=previousStageWidth>0&&previousStageHeight>0;
+  const centerBefore=hadViewport?world(previousStageWidth/2,previousStageHeight/2):null;
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  previousStageWidth=width;previousStageHeight=height;
+  if(centerBefore){
+    view.ox=width/2-centerBefore.x*view.zoom;
+    view.oy=height/2-centerBefore.y*view.zoom;
+    draw();
+  }else if(view.image)center();
+  else draw();
+  updateMetricHud();
+}).observe(stage);
 
 
 const workspace=$('workspace');
@@ -933,7 +1013,9 @@ $('vtt-toggle-panel').onclick=()=>{
   const hidden=workspace.classList.toggle('panel-hidden');
   updateSpaceToggle($('vtt-toggle-panel'),hidden,'Ocultar painel lateral','Mostrar painel lateral');
 };
-workspace.addEventListener('transitionend',e=>{if(e.propertyName==='grid-template-columns')center()});
+workspace.addEventListener('transitionend',e=>{
+  if(e.propertyName==='grid-template-columns'){draw();updateMetricHud()}
+});
 $('vtt-exit').onclick=()=>{if(window.parent&&window.parent!==window)window.parent.postMessage({scVtt:'exit'},location.origin);else location.assign('./index.html')};
 $('vtt-manage-sheets').onclick=()=>{if(!admin)return;if(window.parent&&window.parent!==window)window.parent.postMessage({scVtt:'admin'},location.origin);else location.assign('./index.html')};
 $('vtt-fullscreen').onclick=async()=>{
