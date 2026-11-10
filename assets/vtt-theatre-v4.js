@@ -1,7 +1,7 @@
 // SHINOBI CHRONICLES — Teatro: elenco fixo, imagens integrais, escala coerente e direção explícita.
 export function createTheatre({stage,panel,onChange,isAdmin,publishPortrait,previewPortrait}){
   const css=document.createElement('style');
-  css.textContent=String.raw\`
+  css.textContent=String.raw`
 #sc-theatre{position:absolute;inset:0;z-index:4;overflow:hidden;pointer-events:none;display:none;align-items:flex-end;justify-content:space-around;gap:0;padding:76px 2.2% 0;background:linear-gradient(180deg,transparent 45%,#040b0a20 75%,#03090870)}
 #sc-theatre.open{display:flex}
 #sc-theatre .stage-character{position:relative;height:100%;flex:1 1 0;min-width:0;max-width:450px;isolation:isolate;pointer-events:none}
@@ -25,11 +25,11 @@ export function createTheatre({stage,panel,onChange,isAdmin,publishPortrait,prev
 .theatre-controls [hidden]{display:none!important}
 @media(max-width:700px){#sc-theatre{padding:55px 1.5% 0}#sc-theatre .stage-name{font-size:9px;padding:4px 6px}}
 @media(prefers-reduced-motion:reduce){#sc-theatre img{transition:none!important}}
-\`;
+`;
   document.head.append(css);
   const overlay=document.createElement('div');overlay.id='sc-theatre';overlay.setAttribute('aria-label','Palco dos personagens');stage.append(overlay);
   const controls=document.createElement('section');controls.className='theatre-controls';
-  controls.innerHTML=\`<h3>Modo Teatro</h3>
+  controls.innerHTML=`<h3>Modo Teatro</h3>
   <div class="theatre-info"><p>Elenco fixo, todos alinhados pela altura visível. Clique no nome sobre um personagem para abrir os controles. As artes são exibidas inteiras, sem recorte automático e sem movimentação ao clicar.</p></div>
   <div id="sc-theatre-director">
     <button class="btn primary" id="sc-theatre-toggle">Mostrar Teatro</button>
@@ -42,7 +42,7 @@ export function createTheatre({stage,panel,onChange,isAdmin,publishPortrait,prev
     <button class="btn" id="sc-theatre-clear">Retirar todos</button>
     <p class="hint" id="sc-theatre-status" role="status"></p>
   </div>
-  <p class="hint" id="sc-theatre-viewer-note" hidden>O mestre escolhe o elenco e os visuais. As condições de ferimento acompanham a Vitalidade das fichas.</p>\`;
+  <p class="hint" id="sc-theatre-viewer-note" hidden>O mestre escolhe o elenco e os visuais. As condições de ferimento acompanham a Vitalidade das fichas.</p>`;
   panel.append(controls);
   const $=id=>document.getElementById(id);
   const variants=['casual','ninja','triste','ferido','grave'];
