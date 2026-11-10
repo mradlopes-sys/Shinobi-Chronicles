@@ -159,6 +159,7 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
 @keyframes actor-menu-enter{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){.actor-context-menu{animation:none}.actor-more{transition:none}}
 </style>
+<link rel="stylesheet" href="./assets/vtt-polish-v21.css">
 </head>
 <body>
 <div class="workspace" id="workspace">
@@ -190,7 +191,24 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
       <button id="zoom-out" title="Afastar câmera" aria-label="Afastar câmera">−</button>
       <button id="reset" title="Enquadrar mapa automaticamente" aria-label="Enquadrar mapa">⌖</button>
       <button id="zoom-in" title="Aproximar câmera" aria-label="Aproximar câmera">+</button>
-      <button id="tool-ruler" title="Medir distância no mapa" aria-label="Régua de distância" aria-pressed="false">⌁</button>
+      <span class="tool-divider" aria-hidden="true"></span>
+      <button id="tool-ruler" class="measure-icon" title="Medir em metros (R)" aria-label="Régua em metros (atalho R)" aria-pressed="false">📏</button>
+      <button id="tool-calibrate" class="measure-icon" data-gm-only hidden title="Calibrar metros da cena" aria-label="Calibrar a escala do cenário" aria-pressed="false">⚙</button>
+    </div>
+    <div id="metric-status" class="sc-metric-status" role="status" hidden>Arraste para medir em metros</div>
+    <div id="metric-hud" class="sc-metric-hud uncalibrated" hidden>
+      <div class="metric-head"><span>ESCALA DO CENÁRIO</span><button type="button" id="metric-hud-calibrate" data-gm-only hidden title="Calibrar escala">Ajustar</button></div>
+      <div id="metric-scale-line" class="metric-scale-line"></div>
+      <strong id="metric-scale-value" class="metric-value">— m</strong>
+      <span id="metric-scale-hint" class="metric-hint">Aguardando calibração</span>
+    </div>
+    <div id="metric-card" class="sc-metric-card" hidden>
+      <header><strong>Calibrar distância</strong><button type="button" id="metric-close" aria-label="Fechar calibração">✕</button></header>
+      <p>Arraste uma linha sobre o mapa entre dois pontos de distância conhecida. Digite abaixo quantos metros ela representa.</p>
+      <div id="metric-drawn" class="metric-info">Arraste a régua para selecionar dois pontos</div>
+      <label for="metric-known-distance">Distância real (metros)</label>
+      <input id="metric-known-distance" type="number" min="0.1" max="100000" step="0.1" value="" placeholder="Ex.: 12">
+      <button id="metric-save" class="metric-save" type="button" disabled>Salvar escala para esta cena</button>
     </div>
     <div id="status" class="status" hidden role="status"></div>
   </main>
@@ -216,6 +234,9 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
             <p class="hint">Cenários privados do mestre. Os jogadores veem apenas o mapa em exibição.</p>
             <label for="scene-title-input">Nome do cenário</label><input id="scene-title-input" maxlength="80" placeholder="Ex.: Floresta da Morte">
             <label for="scene-url">Imagem (URL HTTPS)</label><input id="scene-url" placeholder="https://.../floresta.webp">
+            <label for="scene-meter-scale">Escala do mapa (metros por célula virtual)</label>
+            <input id="scene-meter-scale" type="number" min="0.05" max="1000" step="0.05" value="2" placeholder="2">
+            <p class="vtt-metric-form-notice">Valor sugerido: <strong>2 m</strong> por célula. Para precisão, ative o mapa e use a ferramenta <strong>Calibrar</strong> sobre uma distância conhecida.</p>
             <button id="scene-add" class="btn primary">Salvar mapa</button><button id="scene-cancel-edit" class="btn small" hidden>Cancelar edição</button>
             <div class="scene-library" id="scene-library"></div>
           </div>
@@ -240,7 +261,20 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
       <p class="campaign-footnote">Clique na ficha para abri-la. Para o Teatro, use o <strong>botão direito</strong> sobre um personagem ou o menu <strong>⋯</strong>. O mestre também pode arrastar fichas até o mapa tático.</p>
     </section>
     <section class="pane" id="pane-rolls">
-      <div id="rolls-panel"></div><details class="vtt-roll-fx" style="margin-top:14px"><summary style="cursor:pointer;color:#e7d3b2;font-size:12px">Encontros e efeitos cinematográficos</summary><h3>Turno</h3><p id="turn-label">Turno 0</p><button id="next-turn" class="btn primary" hidden>Próximo turno</button>
+      <div id="rolls-panel"></div><details class="vtt-roll-fx" style="margin-top:14px"><summary style="cursor:pointer;color:#e7d3b2;font-size:12px">Combate e efeitos</summary>
+      <div class="fx-quick-head" data-gm-only hidden>EFEITOS RÁPIDOS DO MESTRE</div>
+      <div id="fx-quick" class="fx-quick-grid" data-gm-only hidden>
+        <button type="button" data-fx="chakra"><span class="fx-symbol">✧</span>Chakra</button>
+        <button type="button" data-fx="katon"><span class="fx-symbol">✦</span>Katon</button>
+        <button type="button" data-fx="suiton"><span class="fx-symbol">≈</span>Suiton</button>
+        <button type="button" data-fx="raiton"><span class="fx-symbol">ϟ</span>Raiton</button>
+        <button type="button" data-fx="taijutsu"><span class="fx-symbol">✸</span>Impacto</button>
+        <button type="button" data-fx="iryo"><span class="fx-symbol">✚</span>Cura</button>
+        <button type="button" data-fx="smoke"><span class="fx-symbol">☁</span>Fumaça</button>
+        <button type="button" data-fx="shunshin"><span class="fx-symbol">◉</span>Shunshin</button>
+      </div>
+      <p class="fx-target-hint" data-gm-only hidden>Escolha o alvo no menu abaixo ou selecione um token no mapa. Um clique executa o efeito para todos.</p>
+      <h3>Turno</h3><p id="turn-label">Turno 0</p><button id="next-turn" class="btn primary" hidden>Próximo turno</button>
       <label id="effect-kind-label" for="effect-kind" hidden>Efeito visual do mestre</label><select id="effect-kind" hidden></select><label id="effect-target-label" for="effect-target" hidden>Alvo da animação</label><select id="effect-target" hidden><option value="center">Centro da tela</option><option value="selected">Personagem selecionado no mapa</option></select><p class="hint" id="effect-help" hidden></p>
       <button id="cast-effect" class="btn primary" hidden>Executar efeito para todos</button><p class="hint" id="effect-feedback" role="status"></p><details id="combat-effect-guide" style="margin-top:16px;border:1px solid #53634f;border-radius:10px;padding:10px"><summary style="cursor:pointer;color:#e9dcc4;font-size:12px">Guia dos efeitos visuais</summary><div id="effect-guide-items" style="margin-top:10px"></div></details>
       </details>
