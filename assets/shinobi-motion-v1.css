@@ -1,0 +1,148 @@
+/* Shinobi Chronicles | movimentos de nanquim • 2026-11
+   CSS visual: não modifica dados, imagens do Canva nem regras de combate. */
+:root{--sc-ease-out:cubic-bezier(.18,.78,.22,1);--sc-ease-ink:cubic-bezier(.22,.68,.22,1)}
+/* Chegada de uma nova página: papel, pincel e revelação. */
+#app .content.sc-view-arrival{position:relative;animation:sc-page-rise .48s var(--sc-ease-out) both}
+#app .content.sc-view-arrival::before{
+  content:"";position:absolute;pointer-events:none;top:18px;left:clamp(22px,4vw,65px);
+  width:min(280px,42%);height:4px;z-index:4;transform-origin:0 50%;
+  background:linear-gradient(90deg,rgba(var(--theme-rgb,79,101,78),.8),rgba(var(--theme-rgb,79,101,78),.28) 63%,transparent);
+  -webkit-mask-image:linear-gradient(90deg,black 0%,black 70%,transparent);
+  mask-image:linear-gradient(90deg,black 0%,black 70%,transparent);
+  animation:sc-ink-stroke .75s .07s var(--sc-ease-ink) both
+}
+@keyframes sc-page-rise{0%{opacity:.35;transform:translateY(12px)}100%{opacity:1;transform:none}}
+@keyframes sc-ink-stroke{0%{opacity:0;transform:scaleX(.04) skewX(-18deg)}
+  35%{opacity:.82}70%{opacity:.7;transform:scaleX(1) skewX(-8deg)}
+  100%{opacity:0;transform:scaleX(1) skewX(-8deg)}}
+@keyframes sc-card-arrive{from{opacity:0;transform:translateY(17px) scale(.987)}
+  to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes sc-hero-arrive{from{opacity:.4;transform:translateY(9px);filter:blur(2px)}
+  to{opacity:1;transform:none;filter:none}}
+#app .sc-view-arrival .hero,
+#app .sc-view-arrival .sheet-banner,
+#app .sc-view-arrival .lib-hero{animation:sc-hero-arrive .69s var(--sc-ease-out) backwards}
+#app .sc-view-arrival .clan-card,
+#app .sc-view-arrival .my-sheet-card,
+#app .sc-view-arrival .lib-card,
+#app .sc-view-arrival .mini-stat{animation:sc-card-arrive .55s var(--sc-ease-out) backwards}
+#app .sc-view-arrival .clan-card:nth-child(3n+1),
+#app .sc-view-arrival .lib-card:nth-child(3n+1){animation-delay:.08s}
+#app .sc-view-arrival .clan-card:nth-child(3n+2),
+#app .sc-view-arrival .lib-card:nth-child(3n+2){animation-delay:.13s}
+#app .sc-view-arrival .clan-card:nth-child(3n),
+#app .sc-view-arrival .lib-card:nth-child(3n){animation-delay:.18s}
+#app .sc-view-arrival .my-sheet-card:nth-child(even),
+#app .sc-view-arrival .mini-stat:nth-child(even){animation-delay:.12s}
+/* Não animar a posição dos campos sobre as imagens originais do Canva. */
+#app .sc-view-arrival .cv-toolbar,
+#app .sc-view-arrival .cv-pages{animation:sc-hero-arrive .36s var(--sc-ease-out) backwards}
+
+/* Clãs: pigmento na borda, ilustração intacta e um discreto movimento de câmera. */
+#app .clan-card{isolation:isolate;transition:transform .36s var(--sc-ease-out),box-shadow .36s,border-color .3s}
+#app .clan-card::before{content:"";position:absolute;top:0;left:0;width:100%;height:3px;z-index:5;
+  transform:scaleX(0);transform-origin:left;opacity:.85;pointer-events:none;
+  background:linear-gradient(90deg,var(--theme-deep,#536e59),rgba(var(--theme-rgb,80,107,80),.35),transparent);
+  transition:transform .4s var(--sc-ease-ink)}
+#app .clan-card:hover::before,#app .clan-card:focus-visible::before{transform:scaleX(1)}
+#app .clan-art img{transition:transform .55s var(--sc-ease-out);transform-origin:50% 50%}
+#app .clan-card:hover .clan-art img,#app .clan-card:focus-visible .clan-art img{transform:scale(1.035) translateY(-2px)}
+#app .clan-card .arrow{transition:transform .38s var(--sc-ease-out),border-color .3s,background .3s}
+#app .clan-card:hover .arrow,#app .clan-card:focus-visible .arrow{
+  transform:translateX(3px) rotate(-18deg);border-color:rgba(var(--theme-rgb,80,107,80),.55);
+  background:rgba(var(--theme-rgb,80,107,80),.07)}
+
+/* Navegação como marcador de tinta; botões respondem sem exagerar. */
+#app .nav-item{position:relative;transition:background-color .2s,color .2s,transform .2s}
+#app .nav-item.active::after{content:"";position:absolute;left:10px;top:24%;bottom:24%;width:3px;
+  border-radius:3px;background:#cda986;transform-origin:center;animation:sc-ink-marker .35s var(--sc-ease-out) backwards}
+@keyframes sc-ink-marker{from{transform:scaleY(.05);opacity:0}to{transform:scaleY(1);opacity:1}}
+#app .tab.active,#app .cv-pages button.active{position:relative}
+#app .tab.active::after{content:"";position:absolute;left:18%;right:18%;bottom:0;height:2px;
+  background:var(--theme-deep,#886b55);animation:sc-tab-underline .3s var(--sc-ease-ink) both}
+@keyframes sc-tab-underline{from{transform:scaleX(0);opacity:0}to{transform:scaleX(1);opacity:1}}
+#app .button,#app .journal-btn,#app .step{transition:transform .18s var(--sc-ease-out),box-shadow .22s,background-color .2s,border-color .2s}
+#app .button:active,#app .journal-btn:active,#app .step:active{transform:translateY(1px) scale(.98)}
+#app :is(.button,.tab,.nav-item,.journal-btn):focus-visible{outline:2px solid var(--theme-deep,#7b896d);outline-offset:3px}
+
+/* Biblioteca: fichas como pequenos registros, com assinatura visual própria. */
+#app .lib-card{transition:transform .3s var(--sc-ease-out),box-shadow .3s,border-color .3s}
+#app .lib-card::after{content:"";position:absolute;pointer-events:none;inset:auto 16px 0;height:3px;
+  background:linear-gradient(90deg,transparent,var(--theme-deep,#536d59),transparent);
+  opacity:0;transform:scaleX(.18);transition:opacity .25s,transform .34s var(--sc-ease-ink)}
+#app .lib-card:hover,#app .lib-card:focus-within{transform:translateY(-4px);
+  box-shadow:0 14px 30px rgba(24,39,27,.14);border-color:rgba(var(--theme-rgb,80,107,80),.54)}
+#app .lib-card:hover::after,#app .lib-card:focus-within::after{opacity:.7;transform:scaleX(1)}
+#app .int-card{transition:border-color .24s,box-shadow .24s}
+#app .int-card:focus-within{box-shadow:0 7px 20px rgba(30,47,34,.09);border-color:rgba(var(--theme-rgb,80,107,80),.4)}
+
+/* Diário: páginas reveladas como texto escrito; o carimbo deixa pó de tinta. */
+#app .journal-section-content{animation:sc-diary-ink .32s var(--sc-ease-out) backwards;
+  transform-origin:top center}
+@keyframes sc-diary-ink{from{opacity:0;transform:translateY(-7px);
+  clip-path:inset(0 0 40% 0)}to{opacity:1;transform:none;clip-path:inset(0)}}
+#app .journal-section-toggle .journal-symbol{transition:transform .3s var(--sc-ease-out),color .3s}
+#app .journal-section-toggle:hover .journal-symbol{transform:rotate(-12deg) scale(1.08)}
+#app .journal-section-toggle[aria-expanded="true"] .journal-symbol{color:var(--journal-green,#44674a)}
+.journal-stamp-overlay::before,.journal-stamp-overlay::after{
+  content:"";pointer-events:none;position:absolute;left:50%;top:50%;
+  width:min(70vw,390px);aspect-ratio:1;border-radius:50%;
+  background:repeating-conic-gradient(from 7deg,transparent 0 12deg,rgba(148,53,42,.4) 13deg 14deg,transparent 15deg 33deg);
+  -webkit-mask-image:radial-gradient(circle,transparent 0 39%,#000 40% 44%,transparent 70%);
+  mask-image:radial-gradient(circle,transparent 0 39%,#000 40% 44%,transparent 70%);
+  animation:sc-stamp-burst .9s .23s ease-out both
+}
+.journal-stamp-overlay::after{width:min(85vw,490px);animation-delay:.3s;opacity:.6;transform:translate(-50%,-50%) rotate(23deg)}
+@keyframes sc-stamp-burst{0%{opacity:0;transform:translate(-50%,-50%) rotate(-8deg) scale(.4)}
+  36%{opacity:.55}100%{opacity:0;transform:translate(-50%,-50%) rotate(19deg) scale(1.25)}}
+
+/* Evolução: marcação do NC e selo de tinta após a abertura original do pergaminho. */
+.evo-ink-stamp{position:relative}
+.evo-ink-stamp::after{content:"";position:absolute;inset:-12px;border:1px dashed currentColor;
+  border-radius:50%;opacity:0;animation:sc-evo-seal-ring .9s 3.55s ease-out both}
+@keyframes sc-evo-seal-ring{from{opacity:.48;transform:scale(.6) rotate(-35deg)}to{opacity:0;transform:scale(1.65) rotate(18deg)}}
+.evo-path-node.is-current::before{animation:sc-evo-current 2.8s ease-in-out infinite}
+@keyframes sc-evo-current{0%,100%{box-shadow:0 0 0 4px #cbd8c6}
+  50%{box-shadow:0 0 0 7px rgba(var(--theme-rgb,80,107,80),.1)}}
+
+/* Combate: impacto de kunai em papel e respostas diferentes para cada ação. */
+.cb-entry::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(123deg,transparent 46%,#f6e9c600 47%,#f6e9c677 49%,transparent 50%),
+    linear-gradient(57deg,transparent 47%,#d9eff000 48%,#d9eff066 50%,transparent 51%);
+  mix-blend-mode:screen;animation:sc-kunai-slice 1.07s ease-out both}
+@keyframes sc-kunai-slice{0%,39%{opacity:0;transform:scale(.94)}45%{opacity:.9}
+  65%{opacity:.18;transform:scale(1.08)}100%{opacity:0;transform:scale(1.16)}}
+.cb-feedback-effect.is-jutsu::before{border-style:dashed;box-shadow:0 0 22px #b5cee36b,inset 0 0 22px #b5cee344}
+.cb-feedback-effect.is-chakra::before{border-style:double;border-width:5px;box-shadow:0 0 35px #8ccbdd55}
+.cb-feedback-effect.is-hit::before{border-radius:7%;transform:translate(-50%,-50%) scale(.5) rotate(45deg);
+  animation:sc-combat-hit-outline .76s ease-out both}
+@keyframes sc-combat-hit-outline{0%{opacity:0;transform:translate(-50%,-50%) scale(.18) rotate(18deg)}
+  35%{opacity:.7}100%{opacity:0;transform:translate(-50%,-50%) scale(1.2) rotate(45deg)}}
+.cb-feedback-effect.is-healing::after{background:repeating-conic-gradient(from 0deg,
+  transparent 0 34deg,currentColor 36deg 39deg,transparent 40deg 60deg)}
+
+/* Modais, alertas e pequenos retornos. */
+#app .modalshade{animation:sc-modal-veil .22s ease-out backwards}
+#app .modalshade > *{animation:sc-card-arrive .33s var(--sc-ease-out) backwards}
+@keyframes sc-modal-veil{from{opacity:0}to{opacity:1}}
+.toast{animation:sc-toast-arrive .32s var(--sc-ease-out) backwards}
+@keyframes sc-toast-arrive{from{opacity:0;transform:translateY(11px) scale(.98)}
+  to{opacity:1;transform:none}}
+
+/* As animações não devem atrasar interações nem incomodar usuários sensíveis. */
+@media(hover:none){#app .clan-card:hover .clan-art img{transform:none}
+  #app .lib-card:hover{transform:none}}
+@media(prefers-reduced-motion:reduce){
+  #app .sc-view-arrival,#app .sc-view-arrival::before,
+  #app .sc-view-arrival *,#app .clan-card::before,
+  #app .lib-card::after,#app .tab.active::after,
+  #app .nav-item.active::after,.journal-stamp-overlay::before,.journal-stamp-overlay::after,
+  .evo-ink-stamp::after,.evo-path-node.is-current::before,.cb-entry::after,
+  .cb-feedback-effect.is-hit::before,.toast{animation:none!important;transition:none!important}
+  #app .clan-card:hover .clan-art img,#app .lib-card:hover,
+  #app .journal-section-toggle:hover .journal-symbol{transform:none!important}
+  #app .sc-view-arrival{opacity:1!important;transform:none!important;filter:none!important}
+}
+@media print{#app .content.sc-view-arrival,#app .sc-view-arrival *,
+  .evo-path-node.is-current::before{animation:none!important;transition:none!important}
+  .journal-stamp-overlay::before,.journal-stamp-overlay::after,.cb-entry::after{display:none!important}}
