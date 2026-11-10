@@ -83,7 +83,9 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
 .scene-entry .scene-entry-copy b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .scene-entry .scene-entry-copy small{display:block;line-height:1.4;margin-top:4px}
 .scene-open-chevron{font-size:21px;color:#d4c194}
-.scene-thumbnail{flex:0 0 34px;height:34px;border:1px solid #bba47755;border-radius:9px;display:grid;place-items:center;color:#cfb88c;font-size:18px;background:#1d332a}
+ .scene-thumbnail{flex:0 0 43px;width:43px;height:43px;border:1px solid #bba47755;border-radius:9px;display:grid;place-items:center;color:#cfb88c;font-size:18px;background:#1d332a}
+.scene-thumbnail img{display:block;width:100%;height:100%;object-fit:cover;object-position:center;border-radius:8px}
+.scene-thumbnail img[hidden]{display:none!important}
 .campaign-status{display:flex;align-items:center;gap:10px;padding:15px;border:1px solid #71856b88;border-radius:14px;background:linear-gradient(114deg,#4a5440a6,#263c30 72%);box-shadow:inset 0 1px 0 #fff1b415;margin:4px 0 23px}
 .campaign-status-dot{width:9px;height:9px;background:#b7d5a4;border-radius:50%;box-shadow:0 0 0 5px #a8ca9650,0 0 15px #c3d79c6a;flex:none}
 .campaign-status .campaign-kicker{font-size:9px;color:#cfb98a;letter-spacing:.15em;display:block;margin-bottom:5px}
@@ -173,7 +175,7 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
 
       <div class="campaign-section-label"><span>01 · CENÁRIO</span><span class="section-ornament">景</span></div>
       <button class="current-scene-card scene-entry" type="button" id="scene-open-panel" title="Abrir biblioteca de mapas">
-        <span class="scene-thumbnail" aria-hidden="true">▧</span>
+        <span class="scene-thumbnail" aria-hidden="true"><img id="scene-current-preview" alt="" hidden><span id="scene-current-icon">▧</span></span>
         <span class="scene-entry-copy"><b id="current-scene-label">Nenhuma cena ativa</b><small id="current-scene-subtitle">Clique para explorar os mapas</small></span>
         <span class="scene-open-chevron" aria-hidden="true">⌄</span>
       </button>
