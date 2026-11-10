@@ -31,6 +31,8 @@
     const mark=document.getElementById('vtt-clan-symbol');
     if(label)label.textContent=name?'ESTILO '+name.toLocaleUpperCase('pt-BR'):'ARQUIVOS SHINOBI';
     if(mark)mark.textContent=kanji;
+    const header=document.querySelector('.side-header');
+    if(header)header.setAttribute('data-vtt-glyph',kanji);
   }
   function applyTheme(payload){
     if(!payload||typeof payload!=='object')return;
@@ -324,7 +326,7 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
 
 </style>
 <link rel="stylesheet" href="./assets/vtt-shinobi-theme-v1.css?v=20261110-theme1">
-<link rel="stylesheet" href="./assets/vtt-ink-scroll-v2.css?v=20261110-inkv2">
+<link rel="stylesheet" href="./assets/vtt-ink-scroll-v2.css?v=20261110-inkv3">
 </head>
 <body>
 <div class="workspace" id="workspace">
@@ -472,6 +474,6 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
   </div>
 </div>
 <script src="./assets/shinobi-jutsu-presentation-v1.js?v=20261110-sfx3"></script>
-<script type="module" src="./assets/vtt-studio-20261110-v21.js?v=20261110-inkv2"></script>
+<script type="module" src="./assets/vtt-studio-20261110-v21.js?v=20261110-inkv3"></script>
 </body>
 </html>
