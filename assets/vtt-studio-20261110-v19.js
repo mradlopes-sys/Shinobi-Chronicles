@@ -609,6 +609,40 @@ async function connectWorld(){
             visualEffects.play(data.payload?.kind,effectPoint(data.payload));
           }
         },e=>show('Histórico: '+e.message)));
+        // Private rolls are fetched by the only principal authorized to see them.
+        subs.push(onSnapshot(
+          query(collection(db,'vttRooms',WORLD_ID,'privateRolls',uid,'entries'),orderBy('at','desc'),limit(90)),
+          snapshot=>{
+            if(epoch!==subscriptionEpoch)return;
+            secretRollFeeds.self=snapshot.docs.map(d=>({id:d.id,data:d.data()}));
+            syncSecretFeed();
+          },e=>show('Rolagens privadas: publique as novas regras do Firebase. '+e.message)
+        ));
+        if(admin){
+          subs.push(onSnapshot(
+            query(collection(db,'vttRooms',WORLD_ID,'gmRolls'),orderBy('at','desc'),limit(90)),
+            snapshot=>{
+              if(epoch!==subscriptionEpoch)return;
+              secretRollFeeds.gm=snapshot.docs.map(d=>({id:d.id,data:d.data()}));
+              syncSecretFeed();
+            },e=>show('Rolagens do mestre: publique as regras do Firebase. '+e.message)
+          ));
+          subs.push(onSnapshot(
+            query(collection(db,'vttRooms',WORLD_ID,'blindRolls'),orderBy('at','desc'),limit(90)),
+            snapshot=>{
+              if(epoch!==subscriptionEpoch)return;
+              secretRollFeeds.blind=snapshot.docs.map(d=>({id:d.id,data:d.data()}));
+              syncSecretFeed();
+            },e=>show('Rolagens cegas: publique as regras do Firebase. '+e.message)
+          ));
+          subs.push(onSnapshot(
+            query(collection(db,'vttRooms',WORLD_ID,'blindRequests'),where('status','==','pending'),limit(45)),
+            snapshot=>{
+              if(epoch!==subscriptionEpoch)return;
+              for(const req of snapshot.docs)void resolveBlindRequest(req,epoch);
+            },e=>show('Pedidos cegos: publique as regras do Firebase. '+e.message)
+          ));
+        }
       }
     },e=>{
       $('world-status').textContent='Conexão indisponível · confira as regras do Firebase';
