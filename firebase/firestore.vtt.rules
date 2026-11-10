@@ -84,20 +84,57 @@ service cloud.firestore {
         allow read, create, update, delete: if isAdmin();
       }
 
-      // Cada retrato no palco é publicado pelo ADM em documento separado:
-      // mantém resolução sem fazer o mapa/estado da sala ultrapassar 1 MiB.
-      // Jogadores leem somente retratos cujos IDs já conhecem pelo palco.
+      // O mestre publica as expressões do Teatro em um documento por ficha,
+      // sem duplicar as imagens no documento da sala. Compatível com arte antiga.
+      function validTheatrePortraits() {
+        let source = request.resource.data.get('image', '');
+        let variants = request.resource.data.get('variants', {});
+        return source is string
+          && source.size() <= 160000
+          && variants is map
+          && variants.keys().hasOnly(['casual','ninja','triste','ferido','grave'])
+          && variants.get('casual', '') is string && variants.get('casual', '').size() <= 160000
+          && variants.get('ninja', '') is string && variants.get('ninja', '').size() <= 160000
+          && variants.get('triste', '') is string && variants.get('triste', '').size() <= 160000
+          && variants.get('ferido', '') is string && variants.get('ferido', '').size() <= 160000
+          && variants.get('grave', '') is string && variants.get('grave', '').size() <= 160000
+          && request.resource.data.name is string
+          && request.resource.data.name.size() <= 70
+          && request.resource.data.ownerUid is string;
+      }
       match /theatrePortraits/{fichaId} {
         allow get: if vttAccess(roomId);
         allow list: if false;
         allow create, update: if isAdmin()
-          && request.resource.data.keys().hasOnly(['image','variant','name','ownerUid','updatedAt'])
-          && request.resource.data.image is string
-          && request.resource.data.image.size() <= 160000
-          && request.resource.data.name is string
-          && request.resource.data.name.size() <= 70
+          && request.resource.data.keys().hasOnly(['image','variant','variants','name','ownerUid','updatedAt'])
+          && validTheatrePortraits();
+        allow delete: if isAdmin();
+      }
+
+      // O HP do Teatro é um resumo numérico público para participantes da mesa.
+      // A ficha completa continua privada. Apenas o dono da ficha ou ADM escreve.
+      function validTheatreVitality(fichaId) {
+        return request.resource.data.keys().hasOnly(['ownerUid','current','max','updatedAt'])
           && request.resource.data.ownerUid is string
-          && request.resource.data.variant in ['casual','ninja','ferido','grave'];
+          && request.resource.data.current is number
+          && request.resource.data.max is number
+          && request.resource.data.max > 0 && request.resource.data.max <= 100000
+          && request.resource.data.current >= 0
+          && request.resource.data.current <= request.resource.data.max
+          && request.resource.data.updatedAt is timestamp
+          && exists(/databases/$(database)/documents/fichas/$(fichaId))
+          && get(/databases/$(database)/documents/fichas/$(fichaId)).data.ownerUid == request.resource.data.ownerUid;
+      }
+      match /theatreVitals/{fichaId} {
+        allow get: if vttAccess(roomId);
+        allow list: if false;
+        allow create: if vttAccess(roomId)
+          && validTheatreVitality(fichaId)
+          && (isAdmin() || request.auth.uid == request.resource.data.ownerUid);
+        allow update: if vttAccess(roomId)
+          && validTheatreVitality(fichaId)
+          && resource.data.ownerUid == request.resource.data.ownerUid
+          && (isAdmin() || request.auth.uid == resource.data.ownerUid);
         allow delete: if isAdmin();
       }
 
