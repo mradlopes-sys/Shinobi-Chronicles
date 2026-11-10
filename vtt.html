@@ -164,8 +164,8 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
 <div class="workspace" id="workspace">
   <nav class="rail" id="tool-rail" aria-label="Ferramentas da mesa">
     <div class="seal" aria-hidden="true">忍</div>
-    <button class="active" data-tab="campanha" title="Campanha, mapas e personagens" aria-label="Campanha">⌖</button>
-    <button data-tab="rolls" title="Rolagens e chat" aria-label="Rolagens e chat">⚄</button>
+    <button class="active" data-tab="rolls" title="Rolagens e chat" aria-label="Rolagens e chat">⚄</button>
+    <button data-tab="campanha" title="Campanha, mapas e personagens" aria-label="Campanha">⌖</button>
     <span class="rail-tip" aria-hidden="true">MESA SHINOBI</span>
   </nav>
   <main class="stage-wrap" id="stage">
@@ -195,12 +195,12 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
     <div id="status" class="status" hidden role="status"></div>
   </main>
   <aside class="sidebar" id="side-panel">
-    <div class="side-header"><span class="overline">SHINOBI · MESA VIRTUAL</span><b>Campanha</b><p id="auth-label">Conectando ao Firebase…</p></div>
+    <div class="side-header"><span class="overline">SHINOBI · MESA VIRTUAL</span><b>Mesa Virtual</b><p id="auth-label">Conectando ao Firebase…</p></div>
     <div class="tabs" role="group" aria-label="Abas da mesa">
-      <button class="active" data-tab="campanha">Campanha</button>
-      <button data-tab="rolls">Rolagens</button>
+      <button class="active" data-tab="rolls">Rolagens</button>
+      <button data-tab="campanha">Campanha</button>
     </div>
-    <section class="pane" id="pane-campanha">
+    <section class="pane" id="pane-campanha" hidden>
       <div class="campaign-status"><span class="campaign-status-dot" aria-hidden="true"></span><div><span class="campaign-kicker">SESSÃO COMPARTILHADA</span><strong>Mesa Permanente</strong><p id="world-status" role="status">Conectando à campanha…</p></div></div>
 
       <div class="campaign-section-label"><span>01 · CENÁRIO</span><span class="section-ornament">景</span></div>
@@ -239,7 +239,7 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
       <button class="btn manage-sheets-btn" type="button" id="vtt-manage-sheets" data-gm-only hidden>Gerenciar fichas na Central do Mestre ↗</button>
       <p class="campaign-footnote">Clique na ficha para abri-la. Para o Teatro, use o <strong>botão direito</strong> sobre um personagem ou o menu <strong>⋯</strong>. O mestre também pode arrastar fichas até o mapa tático.</p>
     </section>
-    <section class="pane" id="pane-rolls" hidden>
+    <section class="pane" id="pane-rolls">
       <div id="rolls-panel"></div><details class="vtt-roll-fx" style="margin-top:14px"><summary style="cursor:pointer;color:#e7d3b2;font-size:12px">Encontros e efeitos cinematográficos</summary><h3>Turno</h3><p id="turn-label">Turno 0</p><button id="next-turn" class="btn primary" hidden>Próximo turno</button>
       <label id="effect-kind-label" for="effect-kind" hidden>Efeito visual do mestre</label><select id="effect-kind" hidden></select><label id="effect-target-label" for="effect-target" hidden>Alvo da animação</label><select id="effect-target" hidden><option value="center">Centro da tela</option><option value="selected">Personagem selecionado no mapa</option></select><p class="hint" id="effect-help" hidden></p>
       <button id="cast-effect" class="btn primary" hidden>Executar efeito para todos</button><p class="hint" id="effect-feedback" role="status"></p><details id="combat-effect-guide" style="margin-top:16px;border:1px solid #53634f;border-radius:10px;padding:10px"><summary style="cursor:pointer;color:#e9dcc4;font-size:12px">Guia dos efeitos visuais</summary><div id="effect-guide-items" style="margin-top:10px"></div></details>
@@ -258,6 +258,6 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
     <iframe id="sheet-frame" title="Ficha original do Shinobi Chronicles" loading="lazy"></iframe>
   </div>
 </div>
-<script type="module" src="./assets/vtt-studio-20261110-v18.js"></script>
+<script type="module" src="./assets/vtt-studio-20261110-v19.js"></script>
 </body>
 </html>
