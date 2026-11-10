@@ -462,3 +462,279 @@ html[data-appearance] :is(.rail button,.tabs button,.vtt-folder>summary,.btn,.gl
   html[data-appearance] .tabs button.active::after{animation:none!important}
   html[data-appearance] :is(.btn,.tabs button,.rail button,.vtt-folder>summary){transition:none!important}
 }
+
+
+/* -------------------------------------------------------------
+   INK & CLAN PRESENCE · 2026-11-10 · personalização acentuada
+   A pigmentação modifica o VTT; não encobre mapas ou retratos.
+   ------------------------------------------------------------- */
+html[data-appearance] {
+  --vtt-display:color-mix(in srgb,var(--vtt-pigment) 78%,#26332b);
+  --vtt-blend:rgba(var(--vtt-rgb),.24);
+  --vtt-blend-strong:rgba(var(--vtt-rgb),.40);
+  --vtt-button:color-mix(in srgb,var(--vtt-pigment) 56%,#26372c);
+  --vtt-inkwater:color-mix(in srgb,var(--vtt-pigment) 28%,var(--vtt-paper));
+  --vtt-inkwater-soft:color-mix(in srgb,var(--vtt-pigment) 15%,var(--vtt-paper-light));
+  --vtt-inkwater-deep:color-mix(in srgb,var(--vtt-pigment) 41%,var(--vtt-paper));
+  --vtt-pigment-border:color-mix(in srgb,var(--vtt-pigment) 65%,var(--vtt-line));
+  --vtt-seal:var(--vtt-display);
+}
+html[data-appearance="dark"] {
+  --vtt-display:color-mix(in srgb,var(--vtt-pigment) 62%,#efe7d6);
+  --vtt-blend:rgba(var(--vtt-rgb),.24);
+  --vtt-blend-strong:rgba(var(--vtt-rgb),.42);
+  --vtt-button:color-mix(in srgb,var(--vtt-pigment) 57%,#263a2f);
+  --vtt-inkwater:color-mix(in srgb,var(--vtt-pigment) 24%,var(--vtt-paper));
+  --vtt-inkwater-soft:color-mix(in srgb,var(--vtt-pigment) 13%,var(--vtt-paper-light));
+  --vtt-inkwater-deep:color-mix(in srgb,var(--vtt-pigment) 36%,var(--vtt-paper));
+  --vtt-pigment-border:color-mix(in srgb,var(--vtt-pigment) 72%,var(--vtt-line));
+}
+html[data-appearance] .workspace .stage-wrap {
+  /* Sempre escuro, mesmo no modo claro; não acrescenta filtros ao mapa. */
+  background:
+    radial-gradient(ellipse 85% 75% at 54% 43%,#29342c 0%,#18231c 56%,#0c130f 100%)!important;
+  background-color:#101711!important;
+}
+html[data-appearance="dark"] .workspace .stage-wrap {
+  background:
+    radial-gradient(ellipse 85% 76% at 53% 42%,#253128 0%,#131e17 55%,#090f0c 100%)!important;
+  background-color:#090f0c!important;
+}
+html[data-appearance] .stage-wrap #map {background:transparent!important}
+html[data-appearance] .stage-wrap::before {
+  background:radial-gradient(ellipse at 50% 50%,transparent 70%,rgba(0,0,0,.14) 100%);
+  opacity:.16;
+}
+/* A navegação escura recebe o tom do clã sem parecer uma coluna fluorescente. */
+html[data-appearance] .workspace .rail {
+  background:
+    radial-gradient(ellipse 145% 42% at 50% 4%,rgba(var(--vtt-rgb),.48),transparent 83%),
+    linear-gradient(180deg,#263328 0%,#141f18 58%,#0f1712 100%)!important;
+  border-right-color:var(--vtt-pigment);
+}
+html[data-appearance] .rail .seal {
+  background:radial-gradient(circle,rgba(var(--vtt-rgb),.52),transparent 72%);
+  color:#ffecd2;
+}
+html[data-appearance] .rail button.active {
+  color:#fff9e9;
+  background:linear-gradient(110deg,rgba(var(--vtt-rgb),.53),rgba(var(--vtt-rgb),.16))!important;
+  border-left:3px solid var(--vtt-pigment);
+  box-shadow:inset 0 1px rgba(255,255,255,.07)!important;
+}
+html[data-appearance] .rail button:hover:not(.active) {
+  background:rgba(var(--vtt-rgb),.28)!important;
+}
+/* Papel aquarelado: a superfície muda visivelmente com o clã. */
+html[data-appearance] .workspace .sidebar {
+  background:
+    radial-gradient(ellipse 110% 43% at 101% 0%,rgba(var(--vtt-rgb),.29),transparent 82%),
+    radial-gradient(ellipse 83% 30% at -17% 85%,rgba(var(--vtt-rgb),.21),transparent 85%),
+    linear-gradient(110deg,var(--vtt-edge) 0%,var(--vtt-inkwater-soft) 11%,var(--vtt-paper) 73%,var(--vtt-inkwater-soft) 100%);
+  border-left-color:var(--vtt-pigment);
+  box-shadow:inset 4px 0 0 rgba(var(--vtt-rgb),.10),-8px 0 25px #090e0d16;
+}
+html[data-appearance="dark"] .workspace .sidebar {
+  background:
+    radial-gradient(ellipse 115% 52% at 100% -8%,rgba(var(--vtt-rgb),.29),transparent 84%),
+    radial-gradient(ellipse 98% 39% at -20% 90%,rgba(var(--vtt-rgb),.19),transparent 86%),
+    linear-gradient(110deg,#111a15 0%,var(--vtt-paper) 12%,var(--vtt-inkwater-soft) 100%);
+  box-shadow:inset 4px 0 0 rgba(var(--vtt-rgb),.14),-8px 0 25px #03080756;
+}
+html[data-appearance] .side-header {
+  background:
+    radial-gradient(ellipse 76% 80% at 94% 25%,rgba(var(--vtt-rgb),.25),transparent 82%),
+    linear-gradient(99deg,var(--vtt-blend),transparent 88%);
+  border-bottom-color:var(--vtt-pigment-border);
+}
+html[data-appearance] .side-header::before {
+  content:attr(data-vtt-glyph);
+  right:10px;top:-9px;
+  font-size:110px;
+  opacity:.22;
+  color:var(--vtt-pigment);
+}
+html[data-appearance="dark"] .side-header::before {opacity:.27}
+html[data-appearance] .side-header::after{
+  width:118px;height:4px;
+  background:linear-gradient(90deg,var(--vtt-pigment),var(--vtt-pigment-border),transparent);
+}
+html[data-appearance] .vtt-clan-mark {
+  background:var(--vtt-inkwater);
+  border-color:var(--vtt-pigment-border);
+  color:var(--vtt-display);
+  box-shadow:inset 2px 0 var(--vtt-pigment);
+}
+html[data-appearance] .vtt-clan-mark .mark {
+  background:var(--vtt-pigment);
+  box-shadow:inset 0 0 0 2px #ffffff45,0 2px 5px #0002;
+}
+html[data-appearance] .tabs button.active {
+  background:linear-gradient(180deg,var(--vtt-blend),transparent 85%);
+}
+html[data-appearance] .tabs button.active::after {
+  height:4px;left:5px;right:5px;
+  background:var(--vtt-pigment);
+}
+html[data-appearance] .campaign-section-label,
+html[data-appearance] .sc-combat-heading.sub {
+  border-color:var(--vtt-pigment-border);
+}
+html[data-appearance] :is(
+  .scene-entry,.vtt-folder,.entry,.scene-card,.current-scene-card,
+  .campaign-status,.sc-combat-line,.sc-combat-pick
+) {
+  background:linear-gradient(112deg,var(--vtt-inkwater-soft),var(--vtt-paper-light) 76%)!important;
+  border-color:color-mix(in srgb,var(--vtt-pigment) 28%,var(--vtt-line))!important;
+}
+html[data-appearance] :is(.scene-entry,.vtt-folder,.entry,.scene-card,.current-scene-card):hover {
+  border-color:var(--vtt-pigment-border)!important;
+  background:linear-gradient(112deg,var(--vtt-inkwater),var(--vtt-paper-light) 90%)!important;
+}
+html[data-appearance] .vtt-folder[open] {
+  background:linear-gradient(120deg,var(--vtt-inkwater-soft),var(--vtt-paper) 80%)!important;
+  border-left-color:var(--vtt-pigment)!important;
+}
+html[data-appearance] .vtt-folder .folder-symbol {
+  background:var(--vtt-inkwater);
+  border-color:var(--vtt-pigment-border);
+}
+html[data-appearance] .vtt-folder .folder-count {
+  background:var(--vtt-blend);
+  border-color:var(--vtt-pigment-border);
+}
+html[data-appearance] .actor-row.on-stage>.entry {
+  background:linear-gradient(105deg,var(--vtt-inkwater-deep),var(--vtt-inkwater-soft))!important;
+  border-color:var(--vtt-pigment-border)!important;
+}
+html[data-appearance] .scene-card.current {
+  background:linear-gradient(115deg,var(--vtt-inkwater),var(--vtt-paper-light))!important;
+  border-color:var(--vtt-pigment-border)!important;
+  box-shadow:inset 3px 0 var(--vtt-pigment)!important;
+}
+html[data-appearance] .current-scene-card {
+  border-left:4px solid var(--vtt-pigment)!important;
+  background:linear-gradient(110deg,var(--vtt-inkwater),var(--vtt-paper-light))!important;
+}
+html[data-appearance] .btn.primary,
+html[data-appearance] .sc-combat-primary,
+html[data-appearance] #rolls-panel .vr-roll-button {
+  background:var(--vtt-button);
+  border-color:var(--vtt-pigment);
+  box-shadow:inset 0 -2px rgba(0,0,0,.13)!important;
+}
+html[data-appearance] :is(.fx-quick-grid button,.sc-jutsu-soundbar button):hover {
+  border-color:var(--vtt-pigment)!important;
+}
+html[data-appearance] :is(input,textarea,select):focus {
+  outline-color:var(--vtt-pigment);
+}
+/* Iniciativa: o clã pinta a faixa e a carta ativa, não apenas os numerais. */
+html[data-appearance] #sc-turn-strip {
+  background:linear-gradient(110deg,var(--vtt-inkwater),var(--vtt-paper-light) 76%);
+  border-top:3px solid var(--vtt-pigment);
+  border-left-color:var(--vtt-pigment-border);
+}
+html[data-appearance] .sc-turn-card.is-active{
+  background:var(--vtt-inkwater)!important;
+  border-bottom:3px solid var(--vtt-pigment);
+}
+html[data-appearance] .sc-turn-card.is-next{
+  background:var(--vtt-inkwater-soft)!important;
+  border-color:var(--vtt-pigment-border);
+}
+html[data-appearance] .sc-turn-pic,
+html[data-appearance] .sc-combat-pic {
+  border-color:var(--vtt-pigment-border);
+}
+html[data-appearance] .sc-combat-hero {
+  background:linear-gradient(100deg,var(--vtt-inkwater),var(--vtt-paper-light) 80%);
+  border-left:4px solid var(--vtt-pigment);
+}
+html[data-appearance] .sc-combat-line.active,
+html[data-appearance] .sc-combat-pick.selected {
+  background:linear-gradient(110deg,var(--vtt-inkwater),var(--vtt-paper-light) 90%)!important;
+  border-color:var(--vtt-pigment-border)!important;
+}
+html[data-appearance] .sc-combat-controls button.primary {
+  background:var(--vtt-button)!important;
+  border-color:var(--vtt-pigment)!important;
+  color:var(--vtt-button-ink)!important;
+}
+/* Chat, dados e jutsus: aquarela da mesma família cromática. */
+html[data-appearance] #rolls-panel .vr-feed {
+  background:
+    radial-gradient(ellipse 105% 54% at 99% -12%,var(--vtt-inkwater),transparent 85%),
+    linear-gradient(170deg,var(--vtt-paper-muted),var(--vtt-paper));
+  border-color:var(--vtt-pigment-border);
+}
+html[data-appearance] #rolls-panel .vr-message {
+  background:linear-gradient(110deg,var(--vtt-inkwater-soft),var(--vtt-paper-light) 70%);
+  border-color:color-mix(in srgb,var(--vtt-pigment) 34%,var(--vtt-line));
+}
+html[data-appearance] #rolls-panel .vr-message.own {
+  background:linear-gradient(110deg,var(--vtt-inkwater),var(--vtt-paper-light) 85%);
+  border-left:3px solid var(--vtt-pigment);
+}
+html[data-appearance] #rolls-panel .vr-dice {
+  background:linear-gradient(115deg,var(--vtt-inkwater),var(--vtt-paper-light) 75%);
+  border-color:var(--vtt-pigment-border);
+}
+html[data-appearance] #rolls-panel .vr-result {
+  background:var(--vtt-inkwater-soft);
+}
+html[data-appearance] #rolls-panel .vr-result:hover {
+  background:var(--vtt-inkwater);
+}
+html[data-appearance] #rolls-panel .vr-quick button.selected,
+html[data-appearance] #rolls-panel .vr-modes input:checked+span {
+  background:var(--vtt-inkwater)!important;
+  color:var(--vtt-display)!important;
+  border-color:var(--vtt-pigment)!important;
+}
+html[data-appearance] .vtt-roll-fx {
+  background:linear-gradient(115deg,var(--vtt-inkwater),var(--vtt-paper));
+  border-left:3px solid var(--vtt-pigment);
+}
+html[data-appearance] .fx-quick-grid button {
+  background:var(--vtt-inkwater-soft);
+  border-left-color:var(--vtt-pigment);
+}
+html[data-appearance] .sc-jutsu-soundbar {
+  background:var(--vtt-inkwater-soft);
+  border-color:var(--vtt-pigment-border);
+}
+/* Ferramentas flutuantes: manchas de aquarela contidas só no próprio controle. */
+html[data-appearance] .stage-identity,
+html[data-appearance] .stage-bottom,
+html[data-appearance] .sc-metric-hud,
+html[data-appearance] .sc-metric-card {
+  background:linear-gradient(115deg,var(--vtt-inkwater),var(--vtt-paper-light) 82%);
+  border-color:var(--vtt-pigment-border);
+}
+html[data-appearance] .stage-identity{
+  border-left:4px solid var(--vtt-pigment);
+}
+html[data-appearance] .stage-bottom button.active {
+  background:var(--vtt-inkwater);
+  border-bottom:2px solid var(--vtt-pigment);
+}
+html[data-appearance] .sc-metric-hud .metric-scale-line {
+  border-color:var(--vtt-pigment);
+}
+html[data-appearance] .actor-context-menu {
+  background:linear-gradient(130deg,var(--vtt-inkwater-soft),var(--vtt-paper-light));
+  border-top:3px solid var(--vtt-pigment);
+}
+html[data-appearance] .actor-menu-action:hover {
+  background:var(--vtt-inkwater);
+}
+/* As cores do clã não modificam a arte original do mapa, dos tokens e do teatro. */
+html[data-appearance] .workspace .stage-wrap #map,
+html[data-appearance] #stage #sc-theatre .stage-actors img,
+html[data-appearance] #sheet-modal iframe {
+  filter:none!important;
+}
+@media(prefers-reduced-motion:reduce){
+  html[data-appearance] .tabs button.active::after{animation:none!important}
+}
