@@ -79,62 +79,59 @@ export function createRollsPanel({panel,stage,isAdmin,getUid,getSheets,send,send
   const name=()=>sheets.find(f=>f.ownerUid===getUid())?.nome||'Shinobi';
   const escTime=d=>d.at?.toDate?.()?.toLocaleTimeString?.('pt-BR',{hour:'2-digit',minute:'2-digit'})||'';
   const createdAt=d=>d.at?.toMillis?.()||((d.at?.seconds||0)*1000)||0;
+  // Dados em pergaminho: animação curta, limpa e fiel à quantidade de faces.
   function animation(result){
     if(!result||typeof result.total!=='number')return;
-    const previous=stage.querySelector('.vr-dice-layer.vr-dice-cinematic');
-    if(previous)previous.remove();
-    const layer=document.createElement('div');
-    layer.className='vr-dice-layer vr-dice-cinematic';
-    layer.setAttribute('aria-label','Resultado da rolagem '+String(result.total));
-    const board=document.createElement('div');board.className='vr-cinematic-board';
-    const label=document.createElement('div');label.className='vr-cinematic-heading';
-    label.textContent=String(result.label||'Rolagem de dados').slice(0,80)+' · '+String(result.dice||'2d8');
-    const row=document.createElement('div');row.className='vr-cinematic-dice';
-    const values=Array.isArray(result.rolls)?result.rolls.slice(0,6):[];
+    stage.querySelector('.vr-dice-layer')?.remove();
+    const faces=Math.min(100,Math.max(4,Number(String(result.dice||'2d8').match(/d(\d+)/i)?.[1])||8));
+    const sides=faces===6?6:faces===8?8:faces===12?12:faces===20?20:10;
+    const shapes={
+      6:{points:'12,12 58,12 58,58 12,58',detail:'M12 12 L22 22 M58 12 L48 22 M58 58 L48 48 M12 58 L22 48'},
+      8:{points:'35,3 65,35 35,70 5,35',detail:'M35 3 L35 70 M5 35 L35 23 L65 35 M5 35 L35 50 L65 35'},
+      10:{points:'35,3 58,12 66,41 35,72 4,41 12,12',detail:'M35 3 L35 72 M4 41 L35 24 L66 41 M12 12 L35 24 L58 12'},
+      12:{points:'35,4 56,12 68,32 61,55 35,71 9,55 2,32 14,12',detail:'M14 12 L23 24 M56 12 L47 24 M9 55 L22 48 M61 55 L48 48 M35 71 L35 59'},
+      20:{points:'35,3 60,16 68,47 51,66 19,66 2,47 10,16',detail:'M35 3 L10 16 L20 44 L35 60 L50 44 L60 16 Z M35 3 L35 24 L20 44 M35 24 L50 44 M35 60 L19 66 M35 60 L51 66'}
+    };
+    const shape=shapes[sides];
+    const NS='http://www.w3.org/2000/svg';
+    const makeSVG=(value)=>{
+      const svg=document.createElementNS(NS,'svg');
+      svg.setAttribute('viewBox','0 0 70 75');
+      svg.setAttribute('aria-hidden','true');
+      const base=document.createElementNS(NS,'polygon');
+      base.setAttribute('points',shape.points);base.setAttribute('class','vr-min-outline');
+      const facets=document.createElementNS(NS,'path');
+      facets.setAttribute('d',shape.detail);facets.setAttribute('class','vr-min-facets');
+      svg.append(base,facets);
+      const text=document.createElementNS(NS,'text');
+      text.setAttribute('x','35');text.setAttribute('y','39');
+      text.setAttribute('text-anchor','middle');text.setAttribute('dominant-baseline','middle');
+      text.setAttribute('class','vr-min-face');text.textContent=String(value);
+      svg.append(text);return svg;
+    };
+    const layer=document.createElement('div');layer.className='vr-dice-layer vr-dice-minimal';
+    layer.setAttribute('role','status');layer.setAttribute('aria-label','Rolagem '+String(result.dice||'')+'; resultado '+result.total);
+    const tray=document.createElement('div');tray.className='vr-min-tray';
+    const top=document.createElement('div');top.className='vr-min-heading';
+    const caption=document.createElement('span');caption.textContent=String(result.label||'Rolagem').slice(0,60);
+    const kind=document.createElement('small');kind.textContent=String(result.dice||'2d8');
+    top.append(caption,kind);
+    const main=document.createElement('div');main.className='vr-min-main';
+    const dice=document.createElement('div');dice.className='vr-min-dice';
+    const values=Array.isArray(result.rolls)?result.rolls.slice(0,4):[];
     for(let i=0;i<values.length;i++){
-      const value=Number.isFinite(Number(values[i]))?Math.max(0,Math.min(100,Number(values[i]))):0;
-      const die=document.createElement('div');die.className='vr-cinematic-die';
+      const die=document.createElement('div');die.className='vr-min-die';
       die.style.setProperty('--vr-i',String(i));
-      const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
-      svg.setAttribute('viewBox','0 0 110 120');svg.setAttribute('aria-hidden','true');
-      // Um verdadeiro octaedro estilizado, com facetas de luz e número separado do total.
-      const NS='http://www.w3.org/2000/svg';
-      const polygon=(points,fill,stroke='',strokeWidth=0)=>{
-        const p=document.createElementNS(NS,'polygon');p.setAttribute('points',points);
-        p.setAttribute('fill',fill);
-        if(stroke){p.setAttribute('stroke',stroke);p.setAttribute('stroke-width',String(strokeWidth))}
-        svg.append(p);
-      };
-      polygon('55,4 103,59 55,116 7,59','#bea276','#edd9ac',2.2);
-      polygon('55,4 55,116 8,59','#a1845d');
-      polygon('55,4 103,59 55,63','#e6d0a2');
-      polygon('55,4 55,63 8,59','#d6ba85');
-      polygon('103,59 55,116 55,63','#b29466');
-      polygon('55,63 55,116 8,59','#886c4e');
-      const topLine=document.createElementNS(NS,'path');
-      topLine.setAttribute('d','M55 4 V116 M8 59 L55 63 L103 59');
-      topLine.setAttribute('stroke','#fff0c5');topLine.setAttribute('stroke-opacity','.47');
-      topLine.setAttribute('stroke-width','1.2');topLine.setAttribute('fill','none');
-      svg.append(topLine);
-      const number=document.createElementNS(NS,'text');number.textContent=String(value);
-      number.setAttribute('x','55');number.setAttribute('y','72');
-      number.setAttribute('text-anchor','middle');
-      number.setAttribute('dominant-baseline','middle');
-      svg.append(number);die.append(svg);row.append(die);
+      die.append(makeSVG(Number(values[i])||0));dice.append(die);
     }
-    if(!values.length){const empty=document.createElement('span');empty.textContent='⚄';empty.className='vr-cinematic-heading';row.append(empty)}
-    const summary=document.createElement('div');summary.className='vr-cinematic-summary';
-    const sum=document.createElement('span');sum.className='formula';
-    sum.textContent=values.join(' + ')||'—';
-    const mod=document.createElement('span');mod.className='separator';
+    const sum=document.createElement('div');sum.className='vr-min-result';
+    const number=document.createElement('strong');number.textContent=String(result.total);
+    const breakdown=document.createElement('small');
     const bonus=Number(result.bonus)||0;
-    mod.textContent=(bonus<0?' − ':' + ')+Math.abs(bonus);
-    const equals=document.createElement('span');equals.className='separator';equals.textContent=' = ';
-    const total=document.createElement('strong');total.textContent=String(result.total);
-    summary.append(sum,mod,equals,total);
-    const shadow=document.createElement('div');shadow.className='vr-cinematic-shadow';
-    board.append(label,row,summary,shadow);layer.append(board);stage.append(layer);
-    window.setTimeout(()=>layer.remove(),2650);
+    breakdown.textContent=values.join(' + ')+(bonus>0?' + '+bonus:bonus<0?' − '+Math.abs(bonus):'');
+    sum.append(number,breakdown);main.append(dice,sum);tray.append(top,main);layer.append(tray);
+    stage.append(layer);
+    window.setTimeout(()=>layer.remove(),2250);
   }
   async function roll(info){
     if(rolling)return;
