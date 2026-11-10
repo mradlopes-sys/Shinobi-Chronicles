@@ -348,6 +348,12 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
     </section>
     <section class="pane" id="pane-rolls">
       <div id="rolls-panel"></div><details class="vtt-roll-fx" style="margin-top:14px"><summary style="cursor:pointer;color:#e7d3b2;font-size:12px">Combate e efeitos</summary>
+      <div class="sc-jutsu-soundbar" aria-label="Áudio das técnicas da campanha">
+        <button type="button" id="vtt-jutsu-audio-toggle" aria-pressed="true">🔊 Sons ativados</button>
+        <label for="vtt-jutsu-audio-volume">Volume <input type="range" id="vtt-jutsu-audio-volume" min="0" max="100" step="5" value="55"></label>
+        <output id="vtt-jutsu-audio-value" for="vtt-jutsu-audio-volume">55%</output>
+      </div>
+      <p class="hint" style="margin:0 2px 12px">Efeitos de jutsus acionados pelas fichas chegam aqui com som original. O navegador pode exigir um clique antes de liberar áudio.</p>
       <div class="fx-quick-head" data-gm-only hidden>EFEITOS RÁPIDOS DO MESTRE</div>
       <div id="fx-quick" class="fx-quick-grid" data-gm-only hidden>
         <button type="button" data-fx="chakra"><span class="fx-symbol">✧</span>Chakra</button>
@@ -378,6 +384,7 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
     <iframe id="sheet-frame" title="Ficha original do Shinobi Chronicles" loading="lazy"></iframe>
   </div>
 </div>
-<script type="module" src="./assets/vtt-studio-20261110-v21.js?v=20261110-motion2"></script>
+<script src="./assets/shinobi-jutsu-presentation-v1.js?v=20261110-sfx1"></script>
+<script type="module" src="./assets/vtt-studio-20261110-v21.js?v=20261110-jutsus1"></script>
 </body>
 </html>
