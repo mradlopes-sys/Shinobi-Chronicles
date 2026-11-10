@@ -1,6 +1,6 @@
 import {createTheatre} from './vtt-theatre-v17.js';
 import {createRollsPanel,makeDicePayload} from './vtt-rolls-v4.js';
-import {createVisualEffects,EFFECTS} from './vtt-effects-v2.js?v=20261110-motion2';
+import {createVisualEffects,EFFECTS} from './vtt-effects-v2.js?v=20261110-jutsus1';
 import {DEFAULT_METERS_PER_CELL,metersPerCell,pixelsToMeters,calibrateMetersPerCell,formatMeters,scaleBar} from './vtt-metrics-v1.js';
 import {initializeApp,getApps} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
 import {getAuth,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
@@ -12,6 +12,29 @@ const $=id=>document.getElementById(id);
 let uid='',admin=false,room='',roomData=null,tokens=[],sheets=[],scenes=[],subs=[],dragToken=null,selected=null,sceneKey='',lastRoll='',busy=false,editingSceneId='',tokenUnsub=null,tokenSceneSubscribed=null,sheetsUnsub=null,subscriptionEpoch=0,worldCollectionsReady=false,portraitSubs=new Map(),vitalSubs=new Map(),lastVitals=new Map(),vitalTimer=null,masterUid='',lastStageRosterKey='__initial__',secretRollFeeds={self:[],gm:[],blind:[]},blindProcessing=new Set();
 const stage=$('stage'),canvas=$('map'),ctx=canvas.getContext('2d');
 const visualEffects=createVisualEffects(stage);
+function syncJutsuAudioControls(){
+  const panel=window.SHINOBI_JUTSU_FX;
+  const current=panel?.getSettings?.()||{enabled:true,volume:55};
+  const toggle=$('vtt-jutsu-audio-toggle'),range=$('vtt-jutsu-audio-volume'),label=$('vtt-jutsu-audio-value');
+  if(toggle){
+    toggle.textContent=current.enabled?'🔊 Sons ativados':'🔇 Sons silenciados';
+    toggle.setAttribute('aria-pressed',String(current.enabled));
+  }
+  if(range&&document.activeElement!==range)range.value=current.volume;
+  if(label)label.textContent=current.volume+'%';
+}
+$('vtt-jutsu-audio-toggle')?.addEventListener('click',()=>{
+  window.SHINOBI_JUTSU_FX?.toggle?.();
+  syncJutsuAudioControls();
+});
+$('vtt-jutsu-audio-volume')?.addEventListener('input',event=>{
+  window.SHINOBI_JUTSU_FX?.volume?.(event.target.value);
+  syncJutsuAudioControls();
+});
+syncJutsuAudioControls();
+window.addEventListener('storage',event=>{
+  if(event.key==='sc-jutsu-sound-v1')syncJutsuAudioControls();
+});
 const localVfxNonces=new Set();
 const effectOptions=$('effect-kind');
 for(const fx of EFFECTS){const option=document.createElement('option');option.value=fx.id;option.textContent=fx.name;effectOptions.append(option)}
@@ -638,7 +661,7 @@ async function connectWorld(){
             if(!stamp||Math.abs(Date.now()-stamp)>12000)continue;
             if(visualEffects.seenEvent(change.doc.id))continue;
             if(data.payload?.nonce&&localVfxNonces.has(data.payload.nonce))continue;
-            visualEffects.play(data.payload?.kind,effectPoint(data.payload));
+            visualEffects.play(data.payload?.kind,effectPoint(data.payload),data.payload?.jutsuName||'');
           }
         },e=>show('Histórico: '+e.message)));
         // Private rolls are fetched by the only principal authorized to see them.
@@ -811,10 +834,14 @@ function renderTokens(){
 }
 $('next-turn').onclick=async()=>{if(admin&&room)try{await updateDoc(roomRef(),{turn:(roomData?.turn||0)+1,updatedAt:serverTimestamp()})}catch(e){show(e.message)}};
 function effectPoint(payload){
-  if(payload?.target&&Number.isFinite(payload.target.x)&&Number.isFinite(payload.target.y)){
+  let target=payload?.target;
+  if(!target&&payload?.fichaId){
+    target=visibleTokens().find(t=>t.fichaId===payload.fichaId);
+  }
+  if(target&&Number.isFinite(target.x)&&Number.isFinite(target.y)){
     return {
-      x:view.ox+(payload.target.x+.5)*view.cell*view.zoom,
-      y:view.oy+(payload.target.y+.5)*view.cell*view.zoom
+      x:view.ox+(target.x+.5)*view.cell*view.zoom,
+      y:view.oy+(target.y+.5)*view.cell*view.zoom
     };
   }
   return {x:stage.clientWidth/2,y:stage.clientHeight/2};
