@@ -349,6 +349,13 @@ export function createTheatre({stage,onChange,isAdmin,publishPortrait,previewPor
     addActor,
     removeActor,
     selectVariant,
+    getCast:()=>state.cast.map(a=>({...a})),
+    reset(){
+      expectedRevision='';expectedUntil=0;
+      pendingWrites=0;queue=Promise.resolve();
+      state=clean({});published.clear();vitals.clear();
+      render();
+    },
     setState(value){
       const next=clean(value||{});
       if(expectedRevision){
