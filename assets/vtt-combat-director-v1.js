@@ -126,6 +126,41 @@ export function createCombatDirector({panel,strip,getAdmin,getSheets,getRoomData
   try{await saveCombat(next)}catch(err){combat=previous;notify('Erro ao salvar iniciativa: '+err.message)}
   finally{busy=false;drawStrip();drawBoard()}
  }
+ // Menu contextual: operar uma única ficha sem modificar a seleção em lote.
+ async function addOne(sheetId){
+  if(!allowed()||busy)return false;
+  if(combat.entries.some(e=>e.id===sheetId)){notify('Este personagem já está na iniciativa.');return false}
+  const f=getSheets().find(item=>item.id===sheetId);
+  if(!f){notify('A ficha vinculada ao token não está disponível.');return false}
+  if(combat.entries.length>=cap){notify('Limite de '+cap+' participantes por combate.');return false}
+  const before=combat;busy=true;drawStrip();drawBoard();
+  try{
+   const roll=rollInitiative(f);
+   const entry={id:f.id,name:String(f.nome||f.name||'Shinobi').slice(0,60),
+    portrait:await smallPortrait(f),bonus:roll.bonus,roll:roll.roll,score:roll.score,
+    order:combat.entries.length};
+   const next=normalize({...combat,entries:[...combat.entries,entry]});
+   if(!next.started){
+    const first=next.entries.slice().sort((a,b)=>b.score-a.score||a.order-b.order)[0];
+    next.activeId=first?.id||'';
+   }
+   await saveCombat(next);combat=next;
+   notify((f.nome||f.name||'Personagem')+' entrou na iniciativa ('+entry.score+').');
+   return true;
+  }catch(error){
+   combat=before;notify('Não foi possível adicionar à iniciativa: '+error.message);return false;
+  }finally{busy=false;drawStrip();drawBoard()}
+ }
+ async function removeOne(sheetId){
+  if(!allowed()||busy||!combat.entries.some(e=>e.id===sheetId))return false;
+  const before=combat,entries=combat.entries.filter(e=>e.id!==sheetId);
+  const next=normalize({...combat,entries,activeId:combat.activeId===sheetId?'':combat.activeId,
+   started:combat.started&&entries.length>0});
+  busy=true;combat=next;drawStrip();drawBoard();
+  try{await saveCombat(next);notify('Personagem retirado da iniciativa.');return true}
+  catch(error){combat=before;notify('Não foi possível retirar da iniciativa: '+error.message);return false}
+  finally{busy=false;drawStrip();drawBoard()}
+ }
  async function add(){
   if(!allowed()||busy)return;
   const toAdd=getSheets().filter(f=>selected.has(f.id)&&!combat.entries.some(x=>x.id===f.id));
@@ -203,5 +238,6 @@ export function createCombatDirector({panel,strip,getAdmin,getSheets,getRoomData
  };
  drawStrip();drawBoard();
  return {setData(raw){if(!busy)combat=normalize(raw||{});drawStrip();drawBoard()},
-  refresh(){drawStrip();drawBoard()},getData(){return combat}};
+  refresh(){drawStrip();drawBoard()},getData(){return combat},
+  hasEntry:id=>combat.entries.some(e=>e.id===id),addOne,removeOne};
 }
