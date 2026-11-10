@@ -398,12 +398,13 @@ function openSheet(id,owner){
     return show('Somente o dono e o ADM podem abrir esta ficha.');
   }
   const modal=$('sheet-modal');
+  // Measure and clamp only after the floating window is visible.
+  modal.classList.add('open');
   initialFloatPosition();
   $('sheet-window-title').textContent=found.nome||found.name||'Ficha do personagem';
   const target='./index.html?vttSheet='+encodeURIComponent(id);
   const frame=$('sheet-frame');
   if(frame.getAttribute('src')!==target)frame.src=target;
-  modal.classList.add('open');
   sheetDrag.focus({preventScroll:true});
 }
 function closeSheet(){
