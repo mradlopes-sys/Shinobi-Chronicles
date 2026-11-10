@@ -162,6 +162,7 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
 <link rel="stylesheet" href="./assets/vtt-polish-v21.css">
 <link rel="stylesheet" href="./assets/vtt-motion-v1.css?v=20261110">
 <link rel="stylesheet" href="./assets/vtt-combat-director-v1.css?v=20261110-c1">
+<link rel="stylesheet" href="./assets/vtt-dice-cinematic-v1.css?v=20261110-d1">
 <style id="vtt-motion-critical">
 /* Shinobi Chronicles · Mesa Virtual | gestos de batalha, tinta e papel */
 :root{--sc-vtt-ease:cubic-bezier(.19,.77,.2,1)}
@@ -355,7 +356,7 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
     <section class="pane" id="pane-combate" hidden>
       <div id="sc-combat-director"></div>
       <div class="sc-combat-heading sub"><h3>Efeitos do mestre</h3><small>Ative habilidades sobre tokens e controle os efeitos da mesa.</small></div>
-      <details class="vtt-roll-fx" style="margin-top:14px"><summary style="cursor:pointer;color:#e7d3b2;font-size:12px">Combate e efeitos</summary>
+      <details class="vtt-roll-fx" open style="margin-top:14px"><summary style="cursor:pointer;color:#e7d3b2;font-size:12px">Efeitos visuais e áudio</summary>
       <div class="sc-jutsu-soundbar" aria-label="Áudio das técnicas da campanha">
         <button type="button" id="vtt-jutsu-audio-toggle" aria-pressed="true">🔊 Sons ativados</button>
         <button type="button" id="vtt-jutsu-audio-test">▶ Testar som</button>
@@ -375,7 +376,7 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
         <button type="button" data-fx="shunshin"><span class="fx-symbol">◉</span>Shunshin</button>
       </div>
       <p class="fx-target-hint" data-gm-only hidden>Escolha o alvo no menu abaixo ou selecione um token no mapa. Um clique executa o efeito para todos.</p>
-      <h3>Turno</h3><p id="turn-label">Turno 0</p><button id="next-turn" class="btn primary" hidden>Próximo turno</button>
+      <p id="turn-label" hidden>Turno 0</p><button id="next-turn" class="btn primary" hidden>Próximo turno</button>
       <label id="effect-kind-label" for="effect-kind" hidden>Efeito visual do mestre</label><select id="effect-kind" hidden></select><label id="effect-target-label" for="effect-target" hidden>Alvo da animação</label><select id="effect-target" hidden><option value="center">Centro da tela</option><option value="selected">Personagem selecionado no mapa</option></select><p class="hint" id="effect-help" hidden></p>
       <button id="cast-effect" class="btn primary" hidden>Executar efeito para todos</button><p class="hint" id="effect-feedback" role="status"></p><details id="combat-effect-guide" style="margin-top:16px;border:1px solid #53634f;border-radius:10px;padding:10px"><summary style="cursor:pointer;color:#e9dcc4;font-size:12px">Guia dos efeitos visuais</summary><div id="effect-guide-items" style="margin-top:10px"></div></details>
       </details>
@@ -394,6 +395,6 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
   </div>
 </div>
 <script src="./assets/shinobi-jutsu-presentation-v1.js?v=20261110-sfx3"></script>
-<script type="module" src="./assets/vtt-studio-20261110-v21.js?v=20261110-combat1"></script>
+<script type="module" src="./assets/vtt-studio-20261110-v21.js?v=20261110-combat2"></script>
 </body>
 </html>
