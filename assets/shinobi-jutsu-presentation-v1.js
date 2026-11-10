@@ -70,9 +70,11 @@
     const prefs=getSettings();if(!prefs.enabled||prefs.volume<=0)return false;
     let ctx;try{ctx=contextReady()}catch(e){return false}
     if(!ctx)return false;
+    // Sem um gesto inicial do usuário, não enfileirar sons remotos para tocar atrasados.
+    if(ctx.state==='suspended'&&global.navigator?.userActivation?.isActive===false)return false;
     // A trilha é gerada no navegador: cada jutsu recebe uma variação determinística.
     const type=audioProfile[kind]||audioProfile.chakra;
-    const id=hash(name||kind),variant=.91+((id%19)/100);
+    const id=hash(name||kind),variant=.86+((id%29)/100),cadence=((id>>>7)%5)*.013;
     const now=ctx.currentTime+.018,master=ctx.createGain();
     master.gain.value=Math.min(.14,prefs.volume/100*.125);
     master.connect(ctx.destination);
@@ -91,8 +93,9 @@
       const notes=type.notes;
       notes.forEach((offset,i)=>{
         const pct=i/Math.max(1,notes.length-1);
-        const pitch=type.base*Math.pow(2,(offset+(id%5-2)*.33)/12)*variant;
-        const delay=kind==='explosion'||kind==='taijutsu'?.065*i:.075*i;
+        const fingerprint=((id>>>((i%4)*5))&7)-3;
+        const pitch=type.base*Math.pow(2,(offset+fingerprint*.48)/12)*variant;
+        const delay=(kind==='explosion'||kind==='taijutsu'?.06:.076)*i+cadence*(i%2);
         tone(pitch,now+delay,Math.min(.72,.31+(1-pct)*.28),type.wave,.27-pct*.08,
           type.slide*(i===0?1:1.03));
       });
