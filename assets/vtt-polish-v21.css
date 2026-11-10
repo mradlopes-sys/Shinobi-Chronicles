@@ -141,3 +141,21 @@ input:focus,select:focus,textarea:focus{border-color:#d2b484;box-shadow:0 0 0 3p
   .pane,.status,.stage-wrap.scene-loading:after{animation:none!important}
   #map,.btn,.glass-button,.stage-bottom button,.actor-row .entry,.fx-quick-grid button,.tabs button{transition:none!important}
 }
+
+/* Histórico e dados: mesma hierarquia e contraste do restante da Mesa. */
+#rolls-panel .vr-chat{margin-top:3px;margin-bottom:19px}
+#rolls-panel .vr-head{padding-bottom:12px}
+#rolls-panel .vr-title{font-family:Georgia,serif;color:#f8eacd;letter-spacing:-.03em}
+#rolls-panel .vr-feed{border-color:#81947b80;background:radial-gradient(ellipse 95% 70% at 100% 0%,#637a4a13,transparent 70%),linear-gradient(180deg,#14281efa,#16281ff0);border-radius:12px;box-shadow:inset 0 1px 0 #ffffff0b;min-height:155px}
+#rolls-panel .vr-message{border-color:#81907756;background:linear-gradient(130deg,#2a4032d9,#23392cd8);transition:border-color .16s}
+#rolls-panel .vr-message:hover{border-color:#beab8478}
+#rolls-panel .vr-total{font-size:31px;text-shadow:0 1px 12px #dbb57526}
+#rolls-panel .vr-mode{background:#5e563b48;color:#e9d5b1}
+#rolls-panel .vr-dice{background:radial-gradient(ellipse at 96% 0%,#ac94622b,transparent 62%),linear-gradient(155deg,#304737,#1c3026);border-color:#85957992;box-shadow:0 10px 27px #0002,inset 0 1px 0 #e9c59012}
+#rolls-panel .vr-roll-button{border-color:#e0bd8e;box-shadow:0 7px 17px #080d0945,inset 0 1px 0 #fbe0b533;transition:filter .17s,transform .17s}
+#rolls-panel .vr-roll-button:hover{transform:translateY(-1px);filter:brightness(1.11)}
+#rolls-panel .vr-roll-button:active{transform:translateY(0)}
+#rolls-panel .vr-quick button:focus-visible,#rolls-panel .vr-modes input:focus-visible+span{outline:2px solid #e5c493;outline-offset:2px}
+#rolls-panel .vr-clean{background:#4e48322c;border:1px solid #ad957058;color:#d9c5a2}
+#rolls-panel .vr-clean:hover{background:#8c674b54;border-color:#e2b88a}
+@media(prefers-reduced-motion:reduce){#rolls-panel .vr-message,#rolls-panel .vr-roll-button{transition:none!important}}
