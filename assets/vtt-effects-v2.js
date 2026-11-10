@@ -24,6 +24,8 @@ export function createVisualEffects(stage){
     '.scfx .disc{position:absolute;left:50%;top:50%;border-radius:50%;width:45%;height:45%;transform:translate(-50%,-50%);background:radial-gradient(circle,var(--fx-c),transparent 71%);opacity:.78;animation:scfx-pulse 1250ms ease-out forwards}',
     '.scfx .ring{position:absolute;left:50%;top:50%;width:106px;height:106px;border:2px solid var(--fx-c);border-radius:50%;transform:translate(-50%,-50%) scale(.12);box-shadow:0 0 16px var(--fx-c);animation:scfx-ring 1020ms ease-out forwards}',
     '.scfx .spark{position:absolute;left:50%;top:50%;font-size:var(--fx-size);font-weight:800;color:var(--fx-c);text-shadow:0 0 9px var(--fx-c);animation:scfx-spark 1050ms ease-out forwards;transform-origin:center;user-select:none}',
+    '.scfx .jutsu-caption{position:absolute;left:var(--fx-x);top:calc(var(--fx-y) + 102px);transform:translateX(-50%);max-width:min(72vw,360px);padding:9px 13px;border:1px solid #d6c59a9c;background:#11231edc;color:#f5eddb;font:600 13px/1.4 Georgia,serif;text-align:center;overflow-wrap:anywhere;box-shadow:0 8px 20px #08130ba8;animation:scfx-caption-show 1550ms ease-out both}',
+    '@keyframes scfx-caption-show{0%,8%{opacity:0;filter:blur(3px)}30%,72%{opacity:1;filter:none}100%{opacity:0}}',
     '.scfx.aura .source{animation:scfx-aura 1450ms ease-out forwards}.scfx.waves .ring{border-width:2px;animation-duration:1600ms}.scfx.wind .spark{animation-name:scfx-orbit}.scfx.lightning .spark{font-size:40px;animation-name:scfx-lightning}.scfx.smoke .disc{filter:grayscale(1);opacity:.9;animation-name:scfx-smoke}.scfx.illusion .ring{border-style:dashed;animation-name:scfx-illusion}.scfx.teleport .disc{animation-name:scfx-teleport}.scfx.barrier .ring{border-width:7px;animation-name:scfx-barrier}.scfx.snow .spark{animation-name:scfx-snow}',
     '@keyframes scfx-flash{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}18%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1.3)}}',
     '@keyframes scfx-pulse{0%{opacity:.05;transform:translate(-50%,-50%) scale(.24)}38%{opacity:.85}100%{opacity:0;transform:translate(-50%,-50%) scale(2.3)}}',
@@ -78,7 +80,7 @@ export function createVisualEffects(stage){
   ].join('\n');
   document.head.append(style);
   const seen=new Set(),activeLayers=[];
-  function play(kind,point){
+  function play(kind,point,techniqueName=''){
     const def=EFFECTS.find(e=>e.id===kind);if(!def)return false;
     const rect=stage.getBoundingClientRect();
     const px=Number.isFinite(point?.x)?Math.max(5,Math.min(rect.width-5,point.x)):rect.width/2;
@@ -103,7 +105,14 @@ export function createVisualEffects(stage){
       p.style.animationDelay=(i%5*36)+'ms';
       source.append(p);
     }
-    layer.append(source);stage.append(layer);
+    layer.append(source);
+    if(techniqueName){
+      const caption=document.createElement('div');caption.className='jutsu-caption';
+      caption.textContent=String(techniqueName).slice(0,80);
+      layer.append(caption);
+    }
+    stage.append(layer);
+    window.SHINOBI_JUTSU_FX?.audio?.(kind,String(techniqueName||def.name));
     setTimeout(()=>{layer.remove();const i=activeLayers.indexOf(layer);if(i!==-1)activeLayers.splice(i,1)},1750);
     return true;
   }
