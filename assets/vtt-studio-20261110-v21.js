@@ -840,8 +840,46 @@ $('cast-effect').onclick=async()=>{
     $('effect-feedback').textContent='Não foi possível compartilhar o efeito com os jogadores.';
   }
 };
+// Um toque para executar efeitos frequentes; posiciona no token selecionado
+// quando existe um alvo, senão no centro da cena.
+for(const button of document.querySelectorAll('#fx-quick [data-fx]')){
+  button.addEventListener('click',()=>{
+    if(!admin||!room)return show('Efeitos rápidos disponíveis apenas para o mestre.');
+    const id=button.dataset.fx;
+    if(!EFFECTS.some(effect=>effect.id===id))return;
+    effectOptions.value=id;updateEffectHelp();
+    $('effect-target').value=visibleTokens().some(t=>t.id===selected)?'selected':'center';
+    $('cast-effect').click();
+  });
+}
 function automaticMapCell(img){return Math.max(32,Math.min(192,Math.round(Math.min(img.naturalWidth||img.width,img.naturalHeight||img.height)/18)))}
-function loadMap(url){if(sceneKey===url)return;sceneKey=url;view.image=null;if(!safeUrl(url)){view.cell=64;center();return}const img=new Image();img.onload=()=>{if(sceneKey!==url)return;view.image=img;view.cell=automaticMapCell(img);center()};img.onerror=()=>{$('scene-empty').hidden=false;show('Não foi possível carregar a imagem da cena. Confira a URL HTTPS.')};img.src=url;draw()}
+function loadMap(url){
+  if(sceneKey===url)return;
+  sceneKey=url;
+  // Ruler coordinates from a different scene must never remain on this map.
+  if(measure.enabled)setMetricTool('off');
+  measure.start=null;measure.end=null;measure.drawnPx=0;
+  view.image=null;
+  if(!safeUrl(url)){
+    stage.classList.remove('scene-loading');view.cell=64;center();
+    updateMetricHud();return;
+  }
+  stage.classList.add('scene-loading');
+  const img=new Image();
+  img.onload=()=>{
+    if(sceneKey!==url)return;
+    view.image=img;view.cell=automaticMapCell(img);center();
+    updateMetricHud();
+    setTimeout(()=>{if(sceneKey===url)stage.classList.remove('scene-loading')},230);
+  };
+  img.onerror=()=>{
+    if(sceneKey!==url)return;
+    stage.classList.remove('scene-loading');
+    $('scene-empty').hidden=false;updateMetricHud();
+    show('Não foi possível carregar a imagem da cena. Confira a URL HTTPS.');
+  };
+  img.src=url;draw();
+}
 function center(){view.zoom=1;const w=stage.clientWidth,h=stage.clientHeight;if(view.image){const scale=Math.min((w-28)/view.image.width,(h-28)/view.image.height);view.zoom=Math.max(.012,Math.min(4,scale));view.ox=(w-view.image.width*view.zoom)/2;view.oy=(h-view.image.height*view.zoom)/2}else{view.ox=w/2-8*view.cell;view.oy=h/2-5*view.cell}draw();updateMetricHud()}
 const world=(x,y)=>({x:(x-view.ox)/view.zoom,y:(y-view.oy)/view.zoom});
 function spriteBounds(t){
