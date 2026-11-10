@@ -909,7 +909,7 @@ for(const button of document.querySelectorAll('#fx-quick [data-fx]')){
     const id=button.dataset.fx;
     if(!EFFECTS.some(effect=>effect.id===id))return;
     effectOptions.value=id;updateEffectHelp();
-    $('effect-target').value=visibleTokens().some(t=>t.id===selected)?'selected':'center';
+    // O efeito rápido usa o alvo já escolhido no seletor do mestre.
     $('cast-effect').click();
   });
 }
