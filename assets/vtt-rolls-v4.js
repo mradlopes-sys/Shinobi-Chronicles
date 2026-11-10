@@ -81,12 +81,60 @@ export function createRollsPanel({panel,stage,isAdmin,getUid,getSheets,send,send
   const createdAt=d=>d.at?.toMillis?.()||((d.at?.seconds||0)*1000)||0;
   function animation(result){
     if(!result||typeof result.total!=='number')return;
-    const box=document.createElement('div');box.className='vr-dice-layer';
-    const face=document.createElement('div');face.className='vr-die';face.textContent=String(result.total);
-    const caption=document.createElement('div');caption.className='vr-die-label';
-    caption.textContent=String(result.label||'Rolagem')+' · '+result.dice;
-    box.append(face,caption);stage.append(box);
-    setTimeout(()=>box.remove(),1100);
+    const previous=stage.querySelector('.vr-dice-layer.vr-dice-cinematic');
+    if(previous)previous.remove();
+    const layer=document.createElement('div');
+    layer.className='vr-dice-layer vr-dice-cinematic';
+    layer.setAttribute('aria-label','Resultado da rolagem '+String(result.total));
+    const board=document.createElement('div');board.className='vr-cinematic-board';
+    const label=document.createElement('div');label.className='vr-cinematic-heading';
+    label.textContent=String(result.label||'Rolagem de dados').slice(0,80)+' · '+String(result.dice||'2d8');
+    const row=document.createElement('div');row.className='vr-cinematic-dice';
+    const values=Array.isArray(result.rolls)?result.rolls.slice(0,6):[];
+    for(let i=0;i<values.length;i++){
+      const value=Number.isFinite(Number(values[i]))?Math.max(0,Math.min(100,Number(values[i]))):0;
+      const die=document.createElement('div');die.className='vr-cinematic-die';
+      die.style.setProperty('--vr-i',String(i));
+      const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+      svg.setAttribute('viewBox','0 0 110 120');svg.setAttribute('aria-hidden','true');
+      // Um verdadeiro octaedro estilizado, com facetas de luz e número separado do total.
+      const NS='http://www.w3.org/2000/svg';
+      const polygon=(points,fill,stroke='',strokeWidth=0)=>{
+        const p=document.createElementNS(NS,'polygon');p.setAttribute('points',points);
+        p.setAttribute('fill',fill);
+        if(stroke){p.setAttribute('stroke',stroke);p.setAttribute('stroke-width',String(strokeWidth))}
+        svg.append(p);
+      };
+      polygon('55,4 103,59 55,116 7,59','#bea276','#edd9ac',2.2);
+      polygon('55,4 55,116 8,59','#a1845d');
+      polygon('55,4 103,59 55,63','#e6d0a2');
+      polygon('55,4 55,63 8,59','#d6ba85');
+      polygon('103,59 55,116 55,63','#b29466');
+      polygon('55,63 55,116 8,59','#886c4e');
+      const topLine=document.createElementNS(NS,'path');
+      topLine.setAttribute('d','M55 4 V116 M8 59 L55 63 L103 59');
+      topLine.setAttribute('stroke','#fff0c5');topLine.setAttribute('stroke-opacity','.47');
+      topLine.setAttribute('stroke-width','1.2');topLine.setAttribute('fill','none');
+      svg.append(topLine);
+      const number=document.createElementNS(NS,'text');number.textContent=String(value);
+      number.setAttribute('x','55');number.setAttribute('y','72');
+      number.setAttribute('text-anchor','middle');
+      number.setAttribute('dominant-baseline','middle');
+      svg.append(number);die.append(svg);row.append(die);
+    }
+    if(!values.length){const empty=document.createElement('span');empty.textContent='⚄';empty.className='vr-cinematic-heading';row.append(empty)}
+    const summary=document.createElement('div');summary.className='vr-cinematic-summary';
+    const sum=document.createElement('span');sum.className='formula';
+    sum.textContent=values.join(' + ')||'—';
+    const mod=document.createElement('span');mod.className='separator';
+    const bonus=Number(result.bonus)||0;
+    mod.textContent=(bonus<0?' − ':' + ')+Math.abs(bonus);
+    const equals=document.createElement('span');equals.className='separator';equals.textContent=' = ';
+    const total=document.createElement('strong');total.textContent=String(result.total);
+    summary.append(sum,mod,equals,total);
+    const shadow=document.createElement('div');shadow.className='vr-cinematic-shadow';
+    board.append(label,row,summary,shadow);layer.append(board);stage.append(layer);
+    window.setTimeout(()=>layer.remove(),2650);
   }
   async function roll(info){
     if(rolling)return;
