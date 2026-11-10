@@ -1,31 +1,92 @@
-/* Shinobi Chronicles: rolagem de dados · octaedros com física estilizada */
-.vr-dice-layer.vr-dice-cinematic{bottom:clamp(75px,19%,174px);left:50%;width:min(380px,calc(100% - 22px));z-index:11;text-align:center;isolation:isolate;filter:drop-shadow(0 22px 24px #030907b0);animation:vr-throw-exit 2.7s ease both}
-.vr-dice-layer.vr-dice-cinematic:before{display:none}
-.vr-cinematic-board{position:relative;overflow:hidden;border:1px solid #a89a7d;border-radius:16px;padding:15px 17px 13px;background:radial-gradient(ellipse at 50% 32%,#546349a3,transparent 70%),linear-gradient(140deg,#273d2eeb,#0e1f18f5);backdrop-filter:blur(18px);box-shadow:inset 0 1px #e9d9af31,inset 0 0 22px #0005,0 9px 28px #01080696}
-.vr-cinematic-board:before{content:"";position:absolute;pointer-events:none;inset:8px;border:1px solid #c3a97439;border-radius:10px}
-.vr-cinematic-board:after{content:"";position:absolute;pointer-events:none;inset:auto 10% 45%;height:1px;background:linear-gradient(90deg,transparent,#dcb982a0,transparent);animation:vr-throw-swipe .7s ease-out both}
-.vr-cinematic-heading{position:relative;font:800 9px/1.35 system-ui;letter-spacing:.15em;text-transform:uppercase;color:#d4bea0;margin-bottom:5px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
-.vr-cinematic-dice{position:relative;display:flex;align-items:center;justify-content:center;gap:clamp(2px,1.5vw,13px);padding:5px 0 11px;perspective:740px}
-.vr-cinematic-die{width:clamp(56px,12vw,87px);height:clamp(62px,13vw,93px);flex:none;position:relative;transform-style:preserve-3d;filter:drop-shadow(0 14px 7px #0009);animation:vr-throw-d8 .85s cubic-bezier(.17,.68,.23,1.05) both;animation-delay:calc(var(--vr-i,0) * 105ms)}
-.vr-cinematic-die svg{width:100%;height:100%;overflow:visible;display:block}
-.vr-cinematic-die svg text{font:800 32px Georgia,serif;fill:#fff5dd;paint-order:stroke fill;stroke:#52432d;stroke-width:2.5px;text-shadow:0 2px 3px #1b150dc0}
-.vr-cinematic-summary{display:flex;gap:6px;align-items:baseline;justify-content:center;border-top:1px solid #c9b99b2c;padding-top:10px;min-height:34px;animation:vr-throw-total .35s 1s ease-out both}
-.vr-cinematic-summary .formula{font:700 11px system-ui;color:#b9c8b5}
-.vr-cinematic-summary .separator{font-size:12px;color:#c7b78f}
-.vr-cinematic-summary strong{font:700 25px/1 Georgia,serif;color:#ffe4a8;text-shadow:0 0 15px #ffdda534}
-.vr-cinematic-shadow{position:absolute;z-index:-1;left:18%;right:18%;bottom:24%;height:22%;background:#060c08a6;filter:blur(25px);border-radius:50%}
-@keyframes vr-throw-d8{
-  0%{opacity:0;transform:translate3d(-28px,-95px,0) rotateX(76deg) rotateY(-96deg) rotateZ(-135deg) scale(.7)}
-  43%{opacity:1;transform:translate3d(8px,6px,0) rotateX(-23deg) rotateY(34deg) rotateZ(28deg) scale(1.07)}
-  62%{transform:translate3d(-4px,-16px,0) rotateX(15deg) rotateY(-18deg) rotateZ(-12deg) scale(.98)}
-  83%{transform:translate3d(2px,2px,0) rotateX(-7deg) rotateY(5deg) rotateZ(4deg) scale(1.035)}
-  100%{opacity:1;transform:none}
+/* Shinobi Chronicles · rolagem compacta em papel e nanquim (v2)
+   Sem grandes placas 3D: cada dado possui geometria própria e resultado legível. */
+.vr-dice-layer.vr-dice-minimal{
+ position:absolute;z-index:12;bottom:clamp(65px,17%,150px);left:50%;
+ width:min(330px,calc(100% - 24px));box-sizing:border-box;
+ transform:translateX(-50%);text-align:left;pointer-events:none;
+ filter:none;animation:sc-dice-presence 2.2s ease both
 }
-@keyframes vr-throw-swipe{from{opacity:0;transform:scaleX(.05)}45%{opacity:1}to{opacity:.6;transform:scaleX(1)}}
-@keyframes vr-throw-total{0%{opacity:0;transform:translateY(10px);filter:blur(3px)}100%{opacity:1;transform:none;filter:none}}
-@keyframes vr-throw-exit{0%{opacity:0;transform:translate(-50%,18px) scale(.98)}
-  13%{opacity:1;transform:translate(-50%,0) scale(1)}79%{opacity:1}
-  100%{opacity:0;transform:translate(-50%,-14px) scale(.975)}}
-@media(max-width:690px){.vr-dice-layer.vr-dice-cinematic{bottom:55px;width:min(300px,calc(100% - 20px))}.vr-cinematic-board{padding:10px 12px}.vr-cinematic-die{width:61px;height:67px}}
-@media(prefers-reduced-motion:reduce){.vr-dice-layer.vr-dice-cinematic,.vr-cinematic-die,.vr-cinematic-summary,.vr-cinematic-board:after{animation:none!important;opacity:1!important;transform:translateX(-50%)!important}
-  .vr-cinematic-die,.vr-cinematic-summary{transform:none!important}}
+.vr-dice-layer.vr-dice-minimal::before,
+.vr-dice-layer.vr-dice-minimal::after{display:none!important}
+.vr-min-tray{
+ box-sizing:border-box;position:relative;overflow:hidden;
+ padding:11px 13px 12px;background:rgba(23,40,31,.94);
+ border:1px solid rgba(197,182,149,.56);border-radius:10px;
+ box-shadow:0 9px 28px rgba(3,12,6,.46),inset 0 1px 0 rgba(251,240,211,.09);
+ backdrop-filter:blur(13px)
+}
+.vr-min-tray::before{
+ content:"";position:absolute;inset:0 0 auto;height:2px;
+ background:linear-gradient(90deg,transparent,rgba(214,191,137,.62),transparent);opacity:.8
+}
+.vr-min-heading{
+ display:flex;gap:12px;align-items:center;justify-content:space-between;min-width:0;
+ color:#ebe7d9;font:600 11px/1.35 system-ui,sans-serif;
+ padding:0 1px 9px;margin-bottom:8px;border-bottom:1px solid rgba(189,186,155,.15)
+}
+.vr-min-heading>span{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;min-width:0}
+.vr-min-heading>small{
+ display:inline-flex;flex:none;color:#c5b48d;background:rgba(206,183,121,.08);
+ border:1px solid rgba(202,178,122,.22);border-radius:4px;padding:3px 5px;
+ font:700 9px/1.2 system-ui,sans-serif;letter-spacing:.03em;text-transform:uppercase
+}
+.vr-min-main{display:flex;align-items:center;justify-content:space-between;gap:9px;min-height:47px}
+.vr-min-dice{display:flex;align-items:center;gap:4px;flex:1;min-width:0;justify-content:center}
+.vr-min-die{
+ width:min(52px,23%);max-width:52px;aspect-ratio:70/75;
+ flex:0 1 52px;display:block;position:relative;transform-origin:50% 68%;
+ animation:sc-die-land .59s cubic-bezier(.17,.85,.29,1.1) both;
+ animation-delay:calc(var(--vr-i,0) * 95ms)
+}
+.vr-min-die svg{display:block;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 5px 4px rgba(0,0,0,.22))}
+.vr-min-outline{
+ fill:#e1d2ad;stroke:#f4e7cd;stroke-width:1.9;stroke-linejoin:round
+}
+.vr-min-facets{
+ fill:none;stroke:#8e937e;stroke-width:1.4;stroke-linejoin:round;opacity:.53
+}
+.vr-min-face{
+ fill:#24382e;stroke:#24382e;stroke-width:.15px;paint-order:stroke fill;
+ font:700 23px/1 Georgia,serif;letter-spacing:-1px
+}
+.vr-min-result{
+ border-left:1px solid rgba(204,190,150,.25);padding-left:12px;min-width:60px;
+ display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+ animation:sc-dice-result .3s .56s ease-out both
+}
+.vr-min-result strong{
+ color:#ffe7b7;font:600 28px/1 Georgia,serif;font-variant-numeric:tabular-nums;
+ text-shadow:0 0 9px rgba(235,211,152,.13)
+}
+.vr-min-result small{
+ max-width:130px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
+ font:600 9px/1.3 system-ui,sans-serif;color:#b8c6b6
+}
+@keyframes sc-dice-presence{
+ 0%{opacity:0;transform:translate(-50%,11px)}
+ 12%{opacity:1;transform:translate(-50%,0)}
+ 80%{opacity:1}
+ 100%{opacity:0;transform:translate(-50%,-6px)}
+}
+@keyframes sc-die-land{
+ 0%{opacity:0;transform:translate(13px,-35px) rotate(33deg) scale(.77)}
+ 43%{opacity:1;transform:translate(-5px,5px) rotate(-11deg) scale(1.05)}
+ 68%{transform:translate(0,-6px) rotate(5deg)}
+ 100%{opacity:1;transform:none}
+}
+@keyframes sc-dice-result{
+ 0%{opacity:0;transform:translateY(7px)}
+ 100%{opacity:1;transform:none}
+}
+@media(max-width:670px){
+ .vr-dice-layer.vr-dice-minimal{bottom:clamp(54px,13%,100px);width:min(280px,calc(100% - 18px))}
+ .vr-min-tray{padding:9px 11px}
+ .vr-min-die{max-width:44px;flex-basis:44px}
+ .vr-min-result strong{font-size:25px}
+}
+@media(prefers-reduced-motion:reduce){
+ .vr-dice-layer.vr-dice-minimal,.vr-min-die,.vr-min-result{
+  animation:none!important;opacity:1!important
+ }
+ .vr-dice-layer.vr-dice-minimal{transform:translateX(-50%)!important}
+}
