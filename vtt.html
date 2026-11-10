@@ -60,15 +60,77 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
 @media(prefers-reduced-motion:reduce){.workspace,.scene-card,.rail button{transition:none!important}}
 .rail-arrow{width:34px!important;min-width:34px!important;font-size:15px!important;padding:0!important;border-radius:7px 11px 11px 7px!important}
 .stage-bottom button.active{background:#655539;color:#ffe5ad}
+/* Mesa 2026: navegação reduzida, hierarquia clara e pastas expansíveis. */
+:root{--vtt-accent:#d9c397;--vtt-seam:#526958;--vtt-quiet:#a7bcb0}
+.workspace{grid-template-columns:62px minmax(0,1fr) minmax(305px,340px)}
+.workspace.rail-hidden{grid-template-columns:0 minmax(0,1fr) minmax(305px,340px)}
+.sidebar{background:radial-gradient(ellipse 90% 42% at 100% 0%,#40594a33,transparent 75%),linear-gradient(165deg,#20332c,#182721 64%,#172820);scrollbar-width:thin}
+.side-header{padding:24px 20px 15px}
+.side-header b{font-size:25px;letter-spacing:-.035em}
+.tabs{margin:0 15px;gap:5px;padding:5px;border:1px solid #526b5777;background:#12211c9c;border-radius:13px}
+.tabs button{border-radius:9px;padding:11px 5px;font-weight:600;transition:background .2s,color .2s,box-shadow .2s}
+.tabs button.active{background:linear-gradient(145deg,#536d55,#344d3e);color:#fff4d7;box-shadow:inset 0 0 0 1px #a2af8d66,0 5px 12px #08140e40}
+.pane{padding:17px 17px 38px}
+.stage-identity{pointer-events:auto;text-align:left;cursor:pointer;display:block;color:inherit;transition:background .2s,border-color .2s,transform .2s}
+.stage-identity:hover{background:#304539ed;border-color:#a88f62aa;transform:translateY(-1px)}
+.stage-identity:focus-visible{outline:2px solid #dec18d}
+.stage-scene-line{display:flex;gap:12px;align-items:center;justify-content:space-between}
+.stage-identity b{margin-top:4px}
+.stage-identity .scene-launch-icon{color:#e0cca1;font-size:17px}
+.scene-entry{cursor:pointer;text-align:left;width:100%;border-radius:13px;transition:background .2s,border-color .2s,transform .2s,box-shadow .2s}
+.scene-entry:hover{transform:translateY(-2px);background:#344c3e;border-color:#bfa579;box-shadow:0 9px 22px #07110a36}
+.scene-entry .scene-entry-copy{min-width:0;flex:1}
+.scene-entry .scene-entry-copy b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scene-entry .scene-entry-copy small{display:block;line-height:1.4;margin-top:4px}
+.scene-open-chevron{font-size:21px;color:#d4c194}
+.scene-thumbnail{flex:0 0 34px;height:34px;border:1px solid #bba47755;border-radius:9px;display:grid;place-items:center;color:#cfb88c;font-size:18px;background:#1d332a}
+.campaign-status{display:flex;align-items:center;gap:10px;padding:15px;border:1px solid #71856b88;border-radius:14px;background:linear-gradient(114deg,#4a5440a6,#263c30 72%);box-shadow:inset 0 1px 0 #fff1b415;margin:4px 0 23px}
+.campaign-status-dot{width:9px;height:9px;background:#b7d5a4;border-radius:50%;box-shadow:0 0 0 5px #a8ca9650,0 0 15px #c3d79c6a;flex:none}
+.campaign-status .campaign-kicker{font-size:9px;color:#cfb98a;letter-spacing:.15em;display:block;margin-bottom:5px}
+.campaign-status strong{display:block;font:600 17px Georgia,serif;color:#f4ead6}
+.campaign-status p{margin:4px 0 0;font-size:11px;line-height:1.3}
+.campaign-section-label{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:20px 1px 10px;color:#d3be94;font:700 10px system-ui,sans-serif;letter-spacing:.16em}
+.campaign-section-label:after{content:'';height:1px;background:#879b774b;flex:1;order:1}
+.campaign-section-label .section-ornament{order:2;font-size:17px;letter-spacing:0;font-family:Georgia,serif;opacity:.63}
+.vtt-folder{border:1px solid #57715e89;border-radius:12px;background:#1c3028bb;margin:10px 0;overflow:hidden;transition:border-color .2s,background .2s,box-shadow .2s}
+.vtt-folder[open]{border-color:#9b9e78a6;background:#263c30a0;box-shadow:0 5px 18px #08150f2e}
+.vtt-folder>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:13px 12px;cursor:pointer;user-select:none;transition:background .16s}
+.vtt-folder>summary::-webkit-details-marker{display:none}
+.vtt-folder>summary:hover{background:#526b4c39}
+.vtt-folder .folder-symbol{width:34px;height:36px;flex:none;display:grid;place-items:center;border-radius:9px;background:#41573f;border:1px solid #819b7159;color:#edddad;font-size:19px}
+.vtt-folder .folder-info{flex:1;min-width:0;display:grid;gap:3px}
+.vtt-folder .folder-info strong{font-size:12px;color:#f1e7d1}
+.vtt-folder .folder-info small{font-size:10px;color:#a5b9ab}
+.vtt-folder .folder-count{background:#32463a;border:1px solid #6f866e88;min-width:24px;text-align:center;padding:3px 6px;border-radius:7px;color:#e7d5b1;font-size:10px;font-weight:700}
+.vtt-folder .folder-chevron{transition:transform .2s;color:#c5b58f;font-size:17px}
+.vtt-folder[open] .folder-chevron{transform:rotate(180deg)}
+.vtt-folder .folder-content{padding:4px 11px 15px;border-top:1px solid #70816a35}
+.vtt-folder .folder-content label{margin-top:13px}
+.vtt-folder .folder-content input{background:#16261f;border-color:#5e735e}
+.vtt-folder .scene-library{gap:10px;margin:13px 0 0}
+.vtt-folder .scene-card{border-radius:10px}
+.actor-filter{margin:8px 0 13px}.actor-filter label{font-size:10px;color:#b6c6b6;margin:0 0 7px}
+.actor-filter input{background:#14231d;border-radius:10px}
+.actor-folder .entry{margin:8px 0;padding:8px;border-color:#59705a87;background:#2d46367a;transition:background .2s,border-color .2s,transform .2s}
+.actor-folder .entry:hover{transform:translateX(3px);background:#46664b;border-color:#b8ac83}
+.actor-folder .entry .thumb{width:42px;height:46px;border-radius:8px}
+.actor-folder .entry strong{font-size:12px}.actor-folder .entry small{font-size:10px}
+#token-list>h3{font:600 12px system-ui,sans-serif;letter-spacing:.04em;color:#c8dac5;margin:12px 0 6px}
+.token-folder .token-card{padding:9px 0;gap:5px}.token-folder .btn.small{margin:0}
+.manage-sheets-btn{width:100%;text-align:center;background:#2c4438;margin-top:11px}
+.campaign-footnote{padding:9px 2px;color:#9aaea1;font-size:11px;line-height:1.55}
+.vtt-roll-fx{border:1px solid #536d5977;border-radius:12px;padding:11px;background:#1a2e25a6;margin-top:15px}
+.vtt-roll-fx>summary{color:#d6bd92!important;font-weight:600}
+@media(max-width:840px){.workspace{grid-template-columns:54px minmax(0,1fr) 300px}.workspace.rail-hidden{grid-template-columns:0 minmax(0,1fr) 300px}}
+@media(max-width:690px){.workspace{grid-template-columns:49px minmax(0,1fr);grid-template-rows:minmax(45dvh,1fr) minmax(225px,40dvh)}.workspace.rail-hidden{grid-template-columns:0 minmax(0,1fr)}.pane{padding:12px 13px 28px}.stage-identity{display:none}}
+@media(prefers-reduced-motion:reduce){.scene-entry,.actor-folder .entry,.vtt-folder .folder-chevron,.tabs button{transition:none!important}}
 </style>
 </head>
 <body>
 <div class="workspace" id="workspace">
   <nav class="rail" id="tool-rail" aria-label="Ferramentas da mesa">
     <div class="seal" aria-hidden="true">忍</div>
-    <button class="active" data-tab="mapa" title="Mapa atual" aria-label="Mapa atual">⌖</button>
-    <button data-tab="biblioteca" data-gm-only title="Biblioteca de mapas" aria-label="Biblioteca de mapas" hidden>▧</button>
-    <button data-tab="actors" title="Personagens" aria-label="Personagens">♟</button>
+    <button class="active" data-tab="campanha" title="Campanha, mapas e personagens" aria-label="Campanha">⌖</button>
     <button data-tab="rolls" title="Rolagens e chat" aria-label="Rolagens e chat">⚄</button>
     <button data-tab="theatre" title="Modo Teatro" aria-label="Modo Teatro">◈</button>
     <span class="rail-tip" aria-hidden="true">MESA SHINOBI</span>
@@ -80,11 +142,11 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
       <div class="small-tools">
         <button id="vtt-toggle-rail" class="glass-button rail-arrow" aria-label="Recolher barra de ferramentas" title="Recolher barra de ferramentas" aria-pressed="false">❮</button>
       </div>
-      <div class="stage-identity">
+      <button type="button" class="stage-identity" id="scene-open-library" aria-label="Abrir biblioteca de mapas" title="Selecionar cenário na biblioteca de mapas">
         <span class="eyebrow" id="room-heading">Mesa Permanente</span>
-        <b id="scene-name">Nenhuma cena ativa</b>
-        <small id="scene-caption">O mestre ainda não ativou o mapa.</small>
-      </div>
+        <span class="stage-scene-line"><b id="scene-name">Nenhuma cena ativa</b><span class="scene-launch-icon" aria-hidden="true">▧</span></span>
+        <small id="scene-caption">Clique para explorar a biblioteca de mapas</small>
+      </button>
       <div class="right-tools">
         <button id="vtt-toggle-panel" class="glass-button" aria-label="Ocultar painel lateral" title="Mostrar ou ocultar painel lateral" aria-pressed="false">◧ <span> Painel</span></button>
         <button id="vtt-fullscreen" class="glass-button" title="Tela cheia" aria-label="Tela cheia">⛶</button>
@@ -102,38 +164,51 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
   <aside class="sidebar" id="side-panel">
     <div class="side-header"><span class="overline">SHINOBI · MESA VIRTUAL</span><b>Campanha</b><p id="auth-label">Conectando ao Firebase…</p></div>
     <div class="tabs" role="group" aria-label="Abas da mesa">
-      <button class="active" data-tab="mapa">Mapa</button>
-      <button data-tab="biblioteca" data-gm-only hidden>Biblioteca</button>
-      <button data-tab="actors">Atores</button>
+      <button class="active" data-tab="campanha">Campanha</button>
       <button data-tab="rolls">Rolagens</button>
       <button data-tab="theatre">Teatro</button>
     </div>
-    <section class="pane" id="pane-mapa">
-      <div class="permanent-world"><span class="world-mark" aria-hidden="true">忍</span><div><strong>Mesa Permanente</strong><p id="world-status" role="status">Conectando à campanha…</p></div></div>
-      <h3>Cena em exibição</h3>
-      <div class="current-scene-card"><div class="signal"></div><div><b id="current-scene-label">Nenhuma cena ativa</b><small id="current-scene-subtitle">O mestre pode selecionar um mapa na biblioteca.</small></div></div>
-      <p class="hint">Mapas sem grade e movimentação livre. Use a roda do mouse para aproximar, arraste o fundo para navegar e ative a régua (⌁) para medir distâncias relativas.</p>
-      <p class="hint" id="player-map-note">Os personagens são colocados no mapa pelo mestre; você pode mover seus próprios personagens.</p>
-    </section>
-    <section class="pane" id="pane-biblioteca" hidden>
-      <div id="gm-scenes" hidden>
-        <h3>Biblioteca de mapas</h3>
-        <p class="hint">Salve seus cenários aqui. Somente o mestre vê a biblioteca; os jogadores acompanham apenas o mapa que você ativar.</p>
-        <label for="scene-title-input">Nome do mapa</label><input id="scene-title-input" maxlength="80" placeholder="Ex.: Floresta da Morte">
-        <label for="scene-url">Imagem do mapa (URL HTTPS)</label><input id="scene-url" placeholder="https://.../floresta.webp">
-        <p class="hint">Não precisa configurar dimensões ou quantidade de pixels. O VTT ajusta a imagem automaticamente.</p>
-        <button id="scene-add" class="btn primary">Salvar mapa</button><button id="scene-cancel-edit" class="btn small" hidden>Cancelar edição</button>
-        <div class="scene-library" id="scene-library"></div>
+    <section class="pane" id="pane-campanha">
+      <div class="campaign-status"><span class="campaign-status-dot" aria-hidden="true"></span><div><span class="campaign-kicker">SESSÃO COMPARTILHADA</span><strong>Mesa Permanente</strong><p id="world-status" role="status">Conectando à campanha…</p></div></div>
+
+      <div class="campaign-section-label"><span>01 · CENÁRIO</span><span class="section-ornament">景</span></div>
+      <button class="current-scene-card scene-entry" type="button" id="scene-open-panel" title="Abrir biblioteca de mapas">
+        <span class="scene-thumbnail" aria-hidden="true">▧</span>
+        <span class="scene-entry-copy"><b id="current-scene-label">Nenhuma cena ativa</b><small id="current-scene-subtitle">Clique para explorar os mapas</small></span>
+        <span class="scene-open-chevron" aria-hidden="true">⌄</span>
+      </button>
+      <div id="gm-scenes" data-gm-only hidden>
+        <details id="scene-library-drawer" class="vtt-folder scene-drawer">
+          <summary><span class="folder-symbol" aria-hidden="true">▧</span><span class="folder-info"><strong>Biblioteca de mapas</strong><small>Gerenciar e escolher cenários</small></span><span id="scene-count" class="folder-count">0</span><span class="folder-chevron" aria-hidden="true">⌄</span></summary>
+          <div class="folder-content">
+            <p class="hint">Cenários privados do mestre. Os jogadores veem apenas o mapa em exibição.</p>
+            <label for="scene-title-input">Nome do cenário</label><input id="scene-title-input" maxlength="80" placeholder="Ex.: Floresta da Morte">
+            <label for="scene-url">Imagem (URL HTTPS)</label><input id="scene-url" placeholder="https://.../floresta.webp">
+            <button id="scene-add" class="btn primary">Salvar mapa</button><button id="scene-cancel-edit" class="btn small" hidden>Cancelar edição</button>
+            <div class="scene-library" id="scene-library"></div>
+          </div>
+        </details>
       </div>
-    </section>
-    <section class="pane" id="pane-actors" hidden>
-      <h3>Personagens</h3>
-      <p class="hint">No mapa tático, o mestre coloca e posiciona os tokens. No Modo Teatro, os personagens ficam fixos, com alturas normalizadas e retratos completos.</p>
-      <label for="actor-search">Buscar ficha</label><input id="actor-search" type="search" placeholder="Nome ou clã">
-      <button class="btn" type="button" id="vtt-manage-sheets" data-gm-only hidden>Gerenciar e excluir fichas na Central do Mestre</button><div id="actor-list"></div><div id="token-list"></div>
+
+      <div class="campaign-section-label"><span>02 · PERSONAGENS</span><span class="section-ornament">忍</span></div>
+      <div class="actor-filter"><label for="actor-search">Buscar personagem</label><input id="actor-search" type="search" placeholder="Nome, clã ou jogador" autocomplete="off"></div>
+      <details class="vtt-folder actor-folder" id="players-folder" open>
+        <summary><span class="folder-symbol" aria-hidden="true">♟</span><span class="folder-info"><strong>Jogadores</strong><small>Fichas dos personagens</small></span><span id="players-count" class="folder-count">0</span><span class="folder-chevron" aria-hidden="true">⌄</span></summary>
+        <div class="folder-content"><div id="actor-list"></div></div>
+      </details>
+      <details class="vtt-folder actor-folder" id="npc-folder" data-gm-only hidden>
+        <summary><span class="folder-symbol" aria-hidden="true">✦</span><span class="folder-info"><strong>NPCs do Mestre</strong><small>Personagens narrativos</small></span><span id="npc-count" class="folder-count">0</span><span class="folder-chevron" aria-hidden="true">⌄</span></summary>
+        <div class="folder-content"><div id="npc-list"></div></div>
+      </details>
+      <details class="vtt-folder token-folder" id="tokens-folder">
+        <summary><span class="folder-symbol" aria-hidden="true">⌖</span><span class="folder-info"><strong>Tokens no mapa</strong><small>Localizar, abrir ficha e administrar</small></span><span id="tokens-count" class="folder-count">0</span><span class="folder-chevron" aria-hidden="true">⌄</span></summary>
+        <div class="folder-content"><div id="token-list"></div></div>
+      </details>
+      <button class="btn manage-sheets-btn" type="button" id="vtt-manage-sheets" data-gm-only hidden>Gerenciar fichas na Central do Mestre ↗</button>
+      <p class="campaign-footnote">Arraste uma ficha da pasta para posicioná-la no mapa. No Teatro, os retratos permanecem fixos.</p>
     </section>
     <section class="pane" id="pane-rolls" hidden>
-      <div id="rolls-panel"></div><details style="margin-top:14px"><summary style="cursor:pointer;color:#e7d3b2;font-size:12px">Encontros e efeitos cinematográficos</summary><h3>Turno</h3><p id="turn-label">Turno 0</p><button id="next-turn" class="btn primary" hidden>Próximo turno</button>
+      <div id="rolls-panel"></div><details class="vtt-roll-fx" style="margin-top:14px"><summary style="cursor:pointer;color:#e7d3b2;font-size:12px">Encontros e efeitos cinematográficos</summary><h3>Turno</h3><p id="turn-label">Turno 0</p><button id="next-turn" class="btn primary" hidden>Próximo turno</button>
       <label id="effect-kind-label" for="effect-kind" hidden>Efeito visual do mestre</label><select id="effect-kind" hidden></select><label id="effect-target-label" for="effect-target" hidden>Alvo da animação</label><select id="effect-target" hidden><option value="center">Centro da tela</option><option value="selected">Personagem selecionado no mapa</option></select><p class="hint" id="effect-help" hidden></p>
       <button id="cast-effect" class="btn primary" hidden>Executar efeito para todos</button><p class="hint" id="effect-feedback" role="status"></p><details id="combat-effect-guide" style="margin-top:16px;border:1px solid #53634f;border-radius:10px;padding:10px"><summary style="cursor:pointer;color:#e9dcc4;font-size:12px">Guia dos efeitos visuais</summary><div id="effect-guide-items" style="margin-top:10px"></div></details>
       </details>
