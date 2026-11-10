@@ -1,5 +1,6 @@
 import {createTheatre} from './vtt-theatre-v17.js';
-import {createRollsPanel,makeDicePayload} from './vtt-rolls-v4.js';
+import {createRollsPanel,makeDicePayload,rollForSheet} from './vtt-rolls-v4.js';
+import {createCombatDirector} from './vtt-combat-director-v1.js?v=20261110-c1';
 import {createVisualEffects,EFFECTS} from './vtt-effects-v2.js?v=20261110-jutsus2';
 import {DEFAULT_METERS_PER_CELL,metersPerCell,pixelsToMeters,calibrateMetersPerCell,formatMeters,scaleBar} from './vtt-metrics-v1.js';
 import {initializeApp,getApps} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
@@ -12,6 +13,30 @@ const $=id=>document.getElementById(id);
 let uid='',admin=false,room='',roomData=null,tokens=[],sheets=[],scenes=[],subs=[],dragToken=null,selected=null,sceneKey='',lastRoll='',busy=false,editingSceneId='',tokenUnsub=null,tokenSceneSubscribed=null,sheetsUnsub=null,subscriptionEpoch=0,worldCollectionsReady=false,portraitSubs=new Map(),vitalSubs=new Map(),lastVitals=new Map(),vitalTimer=null,masterUid='',lastStageRosterKey='__initial__',secretRollFeeds={self:[],gm:[],blind:[]},blindProcessing=new Set();
 const stage=$('stage'),canvas=$('map'),ctx=canvas.getContext('2d');
 const visualEffects=createVisualEffects(stage);
+const combatDirector=createCombatDirector({
+  panel:$('sc-combat-director'),strip:$('sc-turn-strip'),
+  getAdmin:()=>admin,getSheets:()=>sheets,getRoomData:()=>roomData,
+  rollInitiative:f=>{
+    const rule=rollForSheet(f,'Iniciativa');
+    const payload=makeDicePayload('1d8',rule?.bonus||0,'Iniciativa',String(f.nome||f.name||'Shinobi'));
+    return {bonus:payload.bonus,roll:payload.rolls[0],score:payload.total};
+  },
+  saveCombat:async next=>{
+    if(!admin||!room)throw Error('Apenas o mestre pode controlar a iniciativa.');
+    await updateDoc(roomRef(),{combat:next,updatedAt:serverTimestamp()});
+  },
+  notify:show,portrait:f=>portrait(f)
+});
+function refreshCombatTargets(){
+  const input=$('effect-target');if(!input)return;
+  const value=input.value;
+  const opts=[new Option('Centro do cenário','center'),new Option('Token selecionado','selected')];
+  if(admin)for(const f of sheets){
+    opts.push(new Option(String(f.nome||f.name||'Personagem').slice(0,65),'sheet:'+f.id));
+  }
+  input.replaceChildren(...opts);
+  if([...input.options].some(x=>x.value===value))input.value=value;
+}
 function syncJutsuAudioControls(){
   const panel=window.SHINOBI_JUTSU_FX;
   const current=panel?.getSettings?.()||{enabled:true,volume:55};
@@ -92,7 +117,7 @@ function updateMetricDrawStatus(){
   $('metric-save').disabled=!admin||!hasLine||!Number.isFinite(known)||known<=0||known>100000;
 }
 const tokenRef=id=>doc(db,'vttRooms',room,'tokens',id);
-const stopSubs=()=>{measure.enabled=false;measure.calibrating=false;measure.start=null;measure.end=null;measure.drawnPx=0;$('metric-card').hidden=true;$('metric-status').hidden=true;$('metric-hud').hidden=true;if($('sheet-modal').classList.contains('open'))$('sheet-close').click();subscriptionEpoch++;worldCollectionsReady=false;secretRollFeeds={self:[],gm:[],blind:[]};blindProcessing.clear();if(typeof rolls!=='undefined')rolls.setPrivateEvents([]);for(const stop of portraitSubs.values())stop();portraitSubs.clear();for(const stop of vitalSubs.values())stop();vitalSubs.clear();lastVitals.clear();clearTimeout(vitalTimer);masterUid='';if(tokenUnsub){tokenUnsub();tokenUnsub=null}tokenSceneSubscribed=null;subs.forEach(u=>u());subs=[];room='';roomData=null;tokens=[];scenes=[];selected=null;editingSceneId='';lastStageRosterKey='__initial__';theatre.reset();$('room-heading').textContent='Mesa Permanente · Shinobi Chronicles';$('world-status').textContent='Aguardando conexão…';$('scene-empty').hidden=false;renderScenes();renderTokens();draw();};
+const stopSubs=()=>{measure.enabled=false;measure.calibrating=false;measure.start=null;measure.end=null;measure.drawnPx=0;$('metric-card').hidden=true;$('metric-status').hidden=true;$('metric-hud').hidden=true;if($('sheet-modal').classList.contains('open'))$('sheet-close').click();subscriptionEpoch++;worldCollectionsReady=false;secretRollFeeds={self:[],gm:[],blind:[]};blindProcessing.clear();if(typeof rolls!=='undefined')rolls.setPrivateEvents([]);for(const stop of portraitSubs.values())stop();portraitSubs.clear();for(const stop of vitalSubs.values())stop();vitalSubs.clear();lastVitals.clear();clearTimeout(vitalTimer);masterUid='';if(tokenUnsub){tokenUnsub();tokenUnsub=null}tokenSceneSubscribed=null;subs.forEach(u=>u());subs=[];room='';roomData=null;tokens=[];scenes=[];selected=null;editingSceneId='';lastStageRosterKey='__initial__';theatre.reset();combatDirector.setData(null);$('room-heading').textContent='Mesa Permanente · Shinobi Chronicles';$('world-status').textContent='Aguardando conexão…';$('scene-empty').hidden=false;renderScenes();renderTokens();draw();};
 const theatre=createTheatre({
   stage,
   notify:show,
@@ -224,6 +249,7 @@ async function resolveBlindRequest(item,epoch){
 }
 function switchTab(name){
   if(['mapa','actors','biblioteca'].includes(name))name='campanha';
+  if(name==='combate'&&!admin){show('A organização do combate é exclusiva do mestre.');return}
   for(const b of document.querySelectorAll('[data-tab]'))b.classList.toggle('active',b.dataset.tab===name);
   for(const p of document.querySelectorAll('.pane'))p.hidden=p.id!=='pane-'+name;
 }
@@ -239,7 +265,7 @@ function openScenes(){
 $('scene-open-library').onclick=openScenes;
 $('scene-open-panel').onclick=openScenes;
 function applyRole(){for(const id of ['gm-scenes','next-turn','cast-effect','effect-kind','effect-kind-label','effect-target','effect-target-label','effect-help'])$(id).hidden=!admin;for(const item of document.querySelectorAll('[data-gm-only]'))item.hidden=!admin;$('scene-open-library').setAttribute('aria-label',admin?'Abrir biblioteca de mapas':'Cena em exibição');
-$('scene-open-panel').title=admin?'Escolher mapa na biblioteca':'Cena em exibição';$('auth-label').textContent=uid?(admin?'Mestre · permissões administrativas':'Jogador · acesso restrito'):'Faça login nos Arquivos Shinobi';theatre.refresh();renderSheets();}
+$('scene-open-panel').title=admin?'Escolher mapa na biblioteca':'Cena em exibição';$('auth-label').textContent=uid?(admin?'Mestre · permissões administrativas':'Jogador · acesso restrito'):'Faça login nos Arquivos Shinobi';if(!admin&&document.querySelector('[data-tab="combate"].active'))switchTab('rolls');theatre.refresh();renderSheets();combatDirector.refresh();refreshCombatTargets();}
 onAuthStateChanged(auth,async user=>{stopSubs();if(sheetsUnsub){sheetsUnsub();sheetsUnsub=null}uid=user?.uid||'';admin=false;sheets=[];theatre.setActors([]);rolls.setUser(uid);rolls.setSheets([]);applyRole();if(!uid){show('Faça login no Shinobi Chronicles antes de entrar na mesa.');return}try{admin=user.email==='mestre_shinobi@players.shinobi-chronicles.invalid'||(await getDoc(doc(db,'admins',uid))).exists();applyRole();loadSheets();void connectWorld()}catch(e){show('Falha na autenticação: '+e.message)}});
 function loadSheets(){
   if(sheetsUnsub){sheetsUnsub();sheetsUnsub=null}
@@ -247,7 +273,7 @@ function loadSheets(){
   sheetsUnsub=onSnapshot(source,snap=>{
     sheets=snap.docs.filter(d=>d.data().tipo!=='diario').map(d=>({id:d.id,...d.data()}));
     updateTheatreDirectory();rolls.setSheets(sheets);
-    renderSheets();
+    renderSheets();combatDirector.refresh();refreshCombatTargets();
     scheduleVitalSync();
   },e=>show('Não foi possível sincronizar as fichas: '+e.message));
 }
@@ -611,7 +637,7 @@ async function connectWorld(){
     subs.push(onSnapshot(world,snap=>{
       if(epoch!==subscriptionEpoch)return;
       if(!snap.exists()){
-        roomData=null;
+        roomData=null;combatDirector.setData(null);
         $('world-status').textContent='Aguardando o mestre iniciar a campanha.';
         $('scene-name').textContent='Mesa Permanente';
         $('scene-caption').textContent='Nenhuma cena foi preparada ainda';
@@ -621,6 +647,7 @@ async function connectWorld(){
         return;
       }
       roomData=snap.data();masterUid=roomData?.masterUid||masterUid;
+      combatDirector.setData(roomData.combat);refreshCombatTargets();
       theatre.setState(roomData.theatre);
       const cast=theatre.getCast();
       updateTheatreDirectory();
@@ -725,7 +752,7 @@ function watchTokens(sceneId){
   tokenUnsub=onSnapshot(source,snap=>{
     if(room!==watchingRoom)return;
     tokens=snap.docs.map(d=>({id:d.id,...d.data()}));
-    renderTokens();draw();
+    renderTokens();draw();refreshCombatTargets();
   },err=>show('Permissão dos tokens: '+err.message));
 }
 function resetSceneEditor(){
@@ -855,9 +882,11 @@ $('cast-effect').onclick=async()=>{
   if(!admin||!room)return show('Apenas o mestre ativa efeitos da mesa.');
   const kind=effectOptions.value;
   if(!EFFECTS.some(x=>x.id===kind))return;
-  const onToken=$('effect-target').value==='selected';
-  const target=onToken?visibleTokens().find(t=>t.id===selected):null;
-  if(onToken&&!target)return show('Selecione um personagem no mapa antes de executar o efeito.');
+  const selectedTarget=$('effect-target').value;
+  const onToken=selectedTarget==='selected'||selectedTarget.startsWith('sheet:');
+  const target=selectedTarget==='selected'?visibleTokens().find(t=>t.id===selected):
+    selectedTarget.startsWith('sheet:')?visibleTokens().find(t=>t.fichaId===selectedTarget.slice(6)):null;
+  if(onToken&&!target)return show('Coloque o personagem no mapa ou selecione um token para executar o efeito nele.');
   const nonce=uid+'-'+Date.now()+'-'+Math.floor(Math.random()*1000000);
   localVfxNonces.add(nonce);
   setTimeout(()=>localVfxNonces.delete(nonce),15000);
