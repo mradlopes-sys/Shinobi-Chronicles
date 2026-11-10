@@ -4290,8 +4290,7 @@ html[data-appearance="dark"] #app .shell .hero.hero-vtt .hero-scene:after{
     document.documentElement.dataset.appearance=next;
     try{localStorage.setItem(APPEARANCE_KEY,next)}catch(error){console.warn('Preferência de aparência não pôde ser salva:',error)}
     // O iframe da Mesa Virtual acompanha o mesmo modo do site sem recarregar a cena.
-    const vttWindow=document.querySelector('#vtt-host iframe')?.contentWindow;
-    if(vttWindow)vttWindow.postMessage({scVtt:'appearance',appearance:next},location.origin);
+    syncVttTheme();
     const label=next==='dark'?'Ativar modo claro':'Ativar modo escuro';
     const button=document.querySelector('[data-action="toggle-appearance"]');
     if(button){
@@ -4686,6 +4685,23 @@ function themeStyle(){
  const deepHex='#'+deep.map(x=>x.toString(16).padStart(2,'0')).join('');
  return `style="--theme-accent:${clan.color};--theme-rgb:${rgb.join(',')};--theme-deep:${deepHex};--theme-wash:${clan.wash}" data-theme="${clan.id}"`;
 }
+  function vttThemePayload(){
+    const clan=themeClan();
+    return {
+      scVtt:'theme',
+      appearance:appearanceIsDark()?'dark':'light',
+      clan:clan?{id:clan.id,name:clan.name,color:clan.color,kanji:clan.kanji}:null
+    };
+  }
+  function syncVttTheme(){
+    const frame=document.querySelector('#vtt-host iframe');
+    if(frame?.contentWindow)frame.contentWindow.postMessage(vttThemePayload(),location.origin);
+  }
+  // A interface do iframe não herda variáveis do site. Reenviamos a paleta
+  // ao carregar a mesa e ao mudar a aparência; a ficha e o mapa não recarregam.
+  document.addEventListener('load',event=>{
+    if(event.target?.matches?.('#vtt-host iframe'))syncVttTheme();
+  },true);
   function side(){return `<aside class="sidebar">${S.view==='vtt'?'<button class="vtt-shell-toggle" type="button" data-action="toggle-vtt-sidebar" aria-label="Recolher ou expandir menu Shinobi" title="Recolher ou expandir menu Shinobi">'+(vttSidebarCollapsed?'❯':'❮')+'</button>':''}<div class="brand"><div class="brandmark">忍</div><div><div class="brand-name">Shinobi<br>Chronicles</div><div class="brand-sub">Arquivos Shinobi</div></div></div><nav aria-label="Menu principal"><div class="nav-category">NAVEGAÇÃO</div>${[['home','⌂','Início'],['clans','◈','Os Clãs'],['fichas','▤','Minhas Fichas'],...(S.user?[['quadros','▧','Mural de Konoha']]:[]),...(S.user?[['diario','巻','Diário de Missões']]:[]),['sheet','✎','Editar Ficha'],...(S.sheets.length?[['guia','☷','Guia de criação'],['biblioteca','巻','Biblioteca de técnicas']]:[]),...(canAdmin()?[['admin','♜','Administração']]:[])].map(([view,ic,label])=>`<button class="nav-item ${S.view===view?'active':''}" data-action="nav" data-view="${view}"><span class="nav-icon">${ic}</span>${label}</button>`).join('')}</nav><button class="nav-item ${S.view==='vtt'?'active':''}" data-action="nav" data-view="vtt"><span class="nav-icon">⚔</span>Mesa Virtual (VTT)</button><div class="sidebar-bottom"><div class="tiny">SHINOBI NO SHO · SISTEMA D8</div><div class="side-account">${E(S.user?.displayName|| (CONFIGURED?'Conta não conectada':'Modo demonstração'))}</div><div class="tiny">${CONFIGURED?'Dados privados no Firebase.':'Prévia local, sem salvamento na nuvem.'}</div>${S.user?'<button class="nav-item" data-action="logout"><span class="nav-icon">↪</span>Sair da conta</button>':''}</div></aside>`}
   function top(){const currentTheme=themeClan();let titles={home:'Início',clans:'Guia dos clãs',sheet:'Registro do personagem',guia:'Guia de criação',biblioteca:'Biblioteca de técnicas',fichas:'Minhas fichas',quadros:'Mural de Konoha',diario:'Diário de Missões',vtt:'Mesa Virtual',admin:'Administração','admin-gate':'Entrada do mestre',login:'Acesso shinobi'};return `<header class="topbar"><div><div class="eyebrow">SHINOBI CHRONICLES / ARQUIVO</div><div class="top-title">${titles[S.view]||'Arquivo'}</div></div><div class="top-actions">${currentTheme?`<span class="theme-chip"><span class="theme-chip-dot"></span>${E(currentTheme.name)}</span>`:''}<button type="button" class="appearance-toggle" data-action="toggle-appearance" aria-pressed="${appearanceIsDark()?'true':'false'}" aria-label="${appearanceIsDark()?'Ativar modo claro':'Ativar modo escuro'}" title="${appearanceIsDark()?'Ativar modo claro':'Ativar modo escuro'}"><span class="appearance-icon" aria-hidden="true">${appearanceIsDark()?'☀':'☾'}</span><span class="appearance-label">${appearanceIsDark()?'Modo claro':'Modo escuro'}</span></button>${S.user?`<span class="pill">${E(S.user.displayName)}</span>`:!CONFIGURED?'<span class="pill">Prévia demonstrativa</span>':'<button class="button small" data-action="nav" data-view="login">Entrar</button>'}${S.view==='sheet'?`<span id="save-status" class="pill">${E(S.saveState)}</span>`:''}</div></header>`}
   function layout(inner){return `<div class="shell ${S.view==='home'?'home-ambient':''} ${themeClan()?'themed-shell':''}" ${themeStyle()}>${side()}<main class="main">${top()}<div class="content">${inner}<footer class="footer-note">SHINOBI CHRONICLES · Sistema D8 / SNS 4.1b · Plataforma independente de fichas · Ilustrações dos clãs serão adicionadas pelo projeto.</footer></div></main></div>`}
@@ -6165,6 +6181,7 @@ function canvaUpdateArray(el,preserveFocus=false){
     const RELATIONS=['Amizade','Rivalidade','Família','Equipe','Romance','Segredo'];
     let toolPanel='';
     const CHANGELOG=[
+       {date:'10/11/2026',title:'Mesa em sumi-e com identidade de clã',body:'A Mesa Virtual ganhou tipografia japonesa, molduras de pergaminho, pinceladas de nanquim e uma identidade muito mais próxima das fichas. A cor, o nome e o selo do clã acompanham o tema pessoal do site, inclusive nos modos claro e escuro. A atualização não altera os mapas nem o sistema de combate.'},
        {date:'10/11/2026',title:'Mesa Virtual integrada ao tema do Shinobi Chronicles',body:'A Mesa Virtual agora segue a identidade do site, com painel em papel claro, detalhes de aquarela, tinta verde e vermelho envelhecido. Modo claro e modo escuro acompanham a preferência do site instantaneamente, inclusive com chat, dados, iniciativa, combate, Teatro, régua e menus redesenhados. Mapas, tokens e retratos originais não recebem filtros.'},
        {date:'10/11/2026',title:'Tokens com ações de combate e dados redesenhados',body:'Na Mesa Virtual, clique com o botão direito sobre um token para adicioná-lo ao Teatro ou à iniciativa, ou removê-lo desses sistemas. A faixa de iniciativa ficou compacta e os dados ganharam um visual de pergaminho com faces adequadas a cada tipo, animação curta e resultado separado.'},
        {date:'10/11/2026',title:'Mesa Virtual: central de combate e dados aprimorados',body:'Criamos uma aba exclusiva do mestre para selecionar várias fichas, rolar iniciativa em lote, editar valores, iniciar e avançar rodadas. A iniciativa compartilhada aparece em um carrossel com retratos no topo do mapa. Reunimos efeitos visuais e alvos nesta aba e substituímos a antiga animação dos dados por octaedros individuais com resultado e bônus.'},
@@ -6846,7 +6863,7 @@ function canvaUpdateArray(el,preserveFocus=false){
 
 
 let vttSidebarCollapsed=true;
-  function vttView(){return '<div class="shell vtt-shell '+(vttSidebarCollapsed?'sidebar-folded':'')+'">'+side()+'<main class="main vtt-main"><div id="vtt-host"><iframe title="Mesa Virtual Shinobi Chronicles" src="./vtt.html?build=20261110-theme1" style="display:block;width:100%;height:100%;border:0;background:var(--paper)" allow="fullscreen" allowfullscreen></iframe></div></main></div>'}
+  function vttView(){return '<div class="shell vtt-shell '+(vttSidebarCollapsed?'sidebar-folded':'')+(themeClan()?' themed-shell':'')+'" '+themeStyle()+'>'+side()+'<main class="main vtt-main"><div id="vtt-host"><iframe title="Mesa Virtual Shinobi Chronicles" src="./vtt.html?build=20261110-inkv2" style="display:block;width:100%;height:100%;border:0;background:var(--paper)" allow="fullscreen" allowfullscreen></iframe></div></main></div>'}
   let shinobiMotionView='';
   let vttSheetRequested=false;
   function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="margin:15vh auto;max-width:500px"><h3>Carregando os arquivos shinobi...</h3><p>Conectando ao sistema de autenticação.</p></div>';return}if(CONFIGURED&&!S.user&&!['login'].includes(S.view))S.view='login';if(!vttSheetRequested&&new URLSearchParams(location.search).has('vttSheet')&&S.user&&!S.loading){vttSheetRequested=true;const requested=new URLSearchParams(location.search).get('vttSheet');if(S.sheets.some(x=>x.id===requested)){void openSheet(requested)}else if(S.isAdmin&&S.user&&fb){void (async()=>{try{const snap=await fb.getDoc(fb.doc(fb.db,'fichas',requested));if(!snap.exists())return;S.sheet=normalize(snap.data());S.sheetId=requested;S.adminViewing=true;S.canvaMode='original';S.canvaPage=1;S.view='sheet';render()}catch(e){showToast('Não foi possível abrir a ficha: '+e.message,true)}})()}}let screen={quadros:PublicBoard.view,home,vtt:vttView,clans,sheet:canvaSheetView,guia:guideView,biblioteca:libraryView,diario:diaryView,fichas:mySheets,admin:adminView,'admin-gate':adminGate,login}[S.view]||home;$('#app').innerHTML=screen();const motionKey=S.view==='sheet'?[S.view,S.sheetId||'',S.canvaMode||'',S.canvaPage||1,S.combatMode?'combat':'normal'].join(':'):S.view;if(motionKey!==shinobiMotionView){shinobiMotionView=motionKey;if(S.view!=='vtt'&&!document.documentElement.classList.contains('vtt-sheet-context')&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches){const surface=$('#app .content');if(surface){surface.classList.remove('sc-view-arrival');void surface.offsetWidth;surface.classList.add('sc-view-arrival')}}}if(S.modal)$('#app').insertAdjacentHTML('beforeend',S.modal==='delete'?deleteModal():clanModal());if(S.view==='biblioteca')librarySearchFilter();integratedFilter();if(S.view==='quadros')PublicBoard.refreshThreads?.();if(S.view==='diario'&&S.diaryEnterAnimate)S.diaryEnterAnimate=false}
