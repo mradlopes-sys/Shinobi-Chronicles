@@ -971,7 +971,7 @@ function draw(){
   ctx.clearRect(0,0,w,h);ctx.save();
   ctx.translate(view.ox,view.oy);ctx.scale(view.zoom,view.zoom);
   if(view.image)ctx.drawImage(view.image,0,0);
-  else{ctx.fillStyle='#1a2923';ctx.fillRect(-5000,-5000,10000,10000)}
+  else{ctx.fillStyle=document.documentElement.dataset.appearance==='dark'?'#15231d':'#eeeae1';ctx.fillRect(-5000,-5000,10000,10000)}
   // Arte original em destaque, proporção natural, com transparência e sem máscaras, círculos ou molduras.
   for(const t of visibleTokens()){
     const b=spriteBounds(t);
@@ -1025,6 +1025,11 @@ function drawTokenTravel(){
   ctx.fillText(label,x,y-19);
   ctx.restore();
 }
+window.addEventListener('sc-vtt-appearance',()=>{
+  // Redesenha somente a área vazia do mapa; a arte do cenário não é alterada.
+  draw();
+  updateMetricHud();
+});
 function hit(x,y){
   const p=world(x,y);
   return [...visibleTokens()].reverse().find(t=>{
