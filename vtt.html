@@ -352,6 +352,7 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
 <link rel="stylesheet" href="./assets/vtt-shinobi-theme-v1.css?v=20261110-theme1">
 <link rel="stylesheet" href="./assets/vtt-ink-scroll-v2.css?v=20261110-brush4">
 <link rel="stylesheet" href="./assets/vtt-battle-systems-v1.css?v=20261110-map1">
+<link rel="stylesheet" href="./assets/vtt-session-tools-v1.css?v=20261111-session1">
 </head>
 <body>
 <div class="workspace" id="workspace">
@@ -363,6 +364,7 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
   </nav>
   <main class="stage-wrap" id="stage">
     <canvas id="map" aria-label="Mapa da campanha. Arraste imagens dos personagens para mover os tokens; duplo clique para abrir a ficha."></canvas>
+    <div id="sc-scene-ambience" class="sc-scene-ambience" data-preset="none" aria-hidden="true"><div class="sc-atm-shade"></div><div class="sc-atm-weather"></div><div class="sc-atm-flash"></div></div>
     <div class="scene-empty" id="scene-empty"><span class="scene-emblem" aria-hidden="true">忍</span><strong>Sua próxima cena</strong><small>O mestre pode abrir a Biblioteca de Mapas e ativar um cenário para a campanha.</small></div>
     <div class="stage-controls">
       <div class="small-tools">
@@ -415,6 +417,7 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
     </div>
     <section class="pane" id="pane-campanha" hidden>
       <div class="campaign-status"><span class="campaign-status-dot" aria-hidden="true"></span><div><span class="campaign-kicker">SESSÃO COMPARTILHADA</span><strong>Mesa Permanente</strong><p id="world-status" role="status">Conectando à campanha…</p></div></div>
+      <div id="sc-scene-director" data-gm-only hidden></div>
 
       <div class="campaign-section-label"><span>01 · CENÁRIO</span><span class="section-ornament">景</span></div>
       <button class="current-scene-card scene-entry" type="button" id="scene-open-panel" title="Abrir biblioteca de mapas">
@@ -461,6 +464,7 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
     </section>
     <section class="pane" id="pane-combate" hidden>
       <div id="sc-combat-director"></div>
+      <div id="sc-assisted-combat" data-gm-only hidden></div>
       <div id="sc-combat-status-panel" data-gm-only hidden></div>
       <div id="sc-jutsu-target-panel" data-gm-only hidden></div>
       <div id="sc-battle-shortcuts" data-gm-only hidden><kbd>I</kbd> Iniciativa · <kbd>F</kbd> Névoa · <kbd>R</kbd> Régua · <kbd>Esc</kbd> Cancelar · <kbd>↑↓←→</kbd> Mover token</div>
