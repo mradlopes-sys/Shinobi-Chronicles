@@ -327,6 +327,7 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
 </style>
 <link rel="stylesheet" href="./assets/vtt-shinobi-theme-v1.css?v=20261110-theme1">
 <link rel="stylesheet" href="./assets/vtt-ink-scroll-v2.css?v=20261110-brush4">
+<link rel="stylesheet" href="./assets/vtt-battle-systems-v1.css?v=20261110-b2a">
 </head>
 <body>
 <div class="workspace" id="workspace">
@@ -356,6 +357,7 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
       </div>
     </div>
     <section id="sc-turn-strip" hidden aria-label="Ordem de iniciativa compartilhada"></section>
+    <div id="sc-fog-indicator" hidden aria-live="polite"></div>
     <div class="stage-bottom">
       <button id="zoom-out" title="Afastar câmera" aria-label="Afastar câmera">−</button>
       <button id="reset" title="Enquadrar mapa automaticamente" aria-label="Enquadrar mapa">⌖</button>
@@ -396,6 +398,7 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
         <span class="scene-entry-copy"><b id="current-scene-label">Nenhuma cena ativa</b><small id="current-scene-subtitle">Clique para explorar os mapas</small></span>
         <span class="scene-open-chevron" aria-hidden="true">⌄</span>
       </button>
+      <div id="sc-fog-panel" data-gm-only hidden></div>
       <div id="gm-scenes" data-gm-only hidden>
         <details id="scene-library-drawer" class="vtt-folder scene-drawer">
           <summary><span class="folder-symbol" aria-hidden="true">▧</span><span class="folder-info"><strong>Biblioteca de mapas</strong><small>Gerenciar e escolher cenários</small></span><span id="scene-count" class="folder-count">0</span><span class="folder-chevron" aria-hidden="true">⌄</span></summary>
@@ -434,6 +437,9 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
     </section>
     <section class="pane" id="pane-combate" hidden>
       <div id="sc-combat-director"></div>
+      <div id="sc-combat-status-panel" data-gm-only hidden></div>
+      <div id="sc-jutsu-target-panel" data-gm-only hidden></div>
+      <div id="sc-battle-shortcuts" data-gm-only hidden><kbd>I</kbd> Iniciativa · <kbd>F</kbd> Névoa · <kbd>R</kbd> Régua · <kbd>Esc</kbd> Cancelar · <kbd>↑↓←→</kbd> Mover token</div>
       <div class="sc-combat-heading sub"><h3>Efeitos do mestre</h3><small>Ative habilidades sobre tokens e controle os efeitos da mesa.</small></div>
       <details class="vtt-roll-fx" open style="margin-top:14px"><summary style="cursor:pointer;color:#e7d3b2;font-size:12px">Efeitos visuais e áudio</summary>
       <div class="sc-jutsu-soundbar" aria-label="Áudio das técnicas da campanha">
@@ -474,6 +480,6 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
   </div>
 </div>
 <script src="./assets/shinobi-jutsu-presentation-v1.js?v=20261110-sfx3"></script>
-<script type="module" src="./assets/vtt-studio-20261110-v21.js?v=20261110-inkv3"></script>
+<script type="module" src="./assets/vtt-studio-20261110-v21.js?v=20261110-battle2a"></script>
 </body>
 </html>
