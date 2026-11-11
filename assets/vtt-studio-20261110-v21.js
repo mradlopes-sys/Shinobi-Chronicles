@@ -1,6 +1,7 @@
 import {createTheatre} from './vtt-theatre-v17.js';
 import {createRollsPanel,makeDicePayload,rollForSheet} from './vtt-rolls-v4.js?v=20261110-d2';
 import {createCombatDirector} from './vtt-combat-director-v1.js?v=20261110-c2';
+import {createBattleSystems} from './vtt-battle-systems-v1.js?v=20261110-b2a';
 import {createVisualEffects,EFFECTS} from './vtt-effects-v2.js?v=20261110-jutsus2';
 import {DEFAULT_METERS_PER_CELL,metersPerCell,pixelsToMeters,calibrateMetersPerCell,formatMeters,scaleBar} from './vtt-metrics-v1.js';
 import {initializeApp,getApps} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
@@ -25,9 +26,56 @@ const combatDirector=createCombatDirector({
     if(!admin||!room)throw Error('Apenas o mestre pode controlar a iniciativa.');
     // As regras publicadas autorizam "theatre", mas nao um campo "combat"
     // no nivel raiz do documento. Usamos atualizacao pontual no mapa permitido.
-    await updateDoc(roomRef(),{'theatre.combat':next,updatedAt:serverTimestamp()});
+    const changed=battle.applyRoundTick(next);
+    try{
+      await updateDoc(roomRef(),{
+        'theatre.combat':next,
+        ...(changed?{'theatre.conditions':changed}:{}),
+        updatedAt:serverTimestamp()
+      });
+    }catch(error){battle.setData(roomData?.theatre);throw error}
   },
   notify:message=>show(message),portrait:f=>portrait(f)
+});
+const battle=createBattleSystems({
+  getAdmin:()=>admin,getRoom:()=>room,getSceneId:()=>roomData?.activeSceneId||'',
+  getRoomData:()=>roomData,getSheets:()=>sheets,getTokens:()=>visibleTokens(),
+  getCurrentTurn:()=>combatDirector.getData(),
+  setCombatTab:name=>{
+    if($('workspace').classList.contains('panel-hidden'))$('vtt-toggle-panel').click();
+    switchTab(name);
+  },
+  focusToken:id=>{
+    const token=visibleTokens().find(t=>t.fichaId===id);
+    if(token){selected=token.id;renderTokens();draw()}
+  },
+  playEffect:async({kind,name,sourceSheetId,targetSheetId,targetToken})=>{
+    if(!admin||!room)throw Error('Apenas o mestre publica efeitos.');
+    const nonce=uid+'-'+Date.now()+'-'+Math.floor(Math.random()*1000000);
+    const payload={kind,source:'habilidade',fichaId:sourceSheetId,
+      targetFichaId:targetSheetId,jutsuName:String(name).slice(0,80),
+      sceneId:roomData?.activeSceneId||'',nonce};
+    if(targetToken)payload.target={x:targetToken.x,y:targetToken.y};
+    localVfxNonces.add(nonce);
+    setTimeout(()=>localVfxNonces.delete(nonce),15000);
+    visualEffects.play(kind,effectPoint(payload),payload.jutsuName);
+    await addDoc(collection(db,'vttRooms',room,'events'),{
+      type:'effect',uid,at:serverTimestamp(),payload
+    });
+  },
+  adjustHitPoints:async(target,mode,points)=>{
+    if(!admin||!room)throw Error('Apenas o mestre edita HP de outras fichas.');
+    const vital=healthOf(target);
+    const delta=mode==='damage'?-points:points;
+    const next=Math.max(0,Math.min(vital.max,vital.current+delta));
+    await updateDoc(doc(db,'fichas',target.id),{'recursos.vit':next});
+  },
+  saveFields:async fields=>{
+    if(!admin||!room)throw Error('Apenas o mestre altera a campanha.');
+    await updateDoc(roomRef(),{...fields,updatedAt:serverTimestamp()});
+  },
+  notify:message=>show(message),redraw:()=>draw(),getMap:()=>view.image,
+  getCell:()=>view.cell
 });
 function refreshCombatTargets(){
   const input=$('effect-target');if(!input)return;
