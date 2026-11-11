@@ -167,7 +167,7 @@ function updateMetricDrawStatus(){
   $('metric-save').disabled=!admin||!hasLine||!Number.isFinite(known)||known<=0||known>100000;
 }
 const tokenRef=id=>doc(db,'vttRooms',room,'tokens',id);
-const stopSubs=()=>{measure.enabled=false;measure.calibrating=false;measure.start=null;measure.end=null;measure.drawnPx=0;$('metric-card').hidden=true;$('metric-status').hidden=true;$('metric-hud').hidden=true;if($('sheet-modal').classList.contains('open'))$('sheet-close').click();subscriptionEpoch++;worldCollectionsReady=false;secretRollFeeds={self:[],gm:[],blind:[]};blindProcessing.clear();if(typeof rolls!=='undefined')rolls.setPrivateEvents([]);for(const stop of portraitSubs.values())stop();portraitSubs.clear();for(const stop of vitalSubs.values())stop();vitalSubs.clear();lastVitals.clear();clearTimeout(vitalTimer);masterUid='';if(tokenUnsub){tokenUnsub();tokenUnsub=null}tokenSceneSubscribed=null;subs.forEach(u=>u());subs=[];room='';roomData=null;tokens=[];scenes=[];selected=null;editingSceneId='';lastStageRosterKey='__initial__';theatre.reset();combatDirector.setData(null);$('room-heading').textContent='Mesa Permanente · Shinobi Chronicles';$('world-status').textContent='Aguardando conexão…';$('scene-empty').hidden=false;renderScenes();renderTokens();draw();};
+const stopSubs=()=>{measure.enabled=false;measure.calibrating=false;measure.start=null;measure.end=null;measure.drawnPx=0;$('metric-card').hidden=true;$('metric-status').hidden=true;$('metric-hud').hidden=true;if($('sheet-modal').classList.contains('open'))$('sheet-close').click();subscriptionEpoch++;worldCollectionsReady=false;secretRollFeeds={self:[],gm:[],blind:[]};blindProcessing.clear();if(typeof rolls!=='undefined')rolls.setPrivateEvents([]);for(const stop of portraitSubs.values())stop();portraitSubs.clear();for(const stop of vitalSubs.values())stop();vitalSubs.clear();lastVitals.clear();clearTimeout(vitalTimer);masterUid='';if(tokenUnsub){tokenUnsub();tokenUnsub=null}tokenSceneSubscribed=null;subs.forEach(u=>u());subs=[];room='';roomData=null;tokens=[];scenes=[];selected=null;editingSceneId='';lastStageRosterKey='__initial__';theatre.reset();combatDirector.setData(null);battle.setData(null);$('room-heading').textContent='Mesa Permanente · Shinobi Chronicles';$('world-status').textContent='Aguardando conexão…';$('scene-empty').hidden=false;renderScenes();renderTokens();draw();};
 const theatre=createTheatre({
   stage,
   notify:show,
@@ -322,7 +322,7 @@ function openScenes(){
 $('scene-open-library').onclick=openScenes;
 $('scene-open-panel').onclick=openScenes;
 function applyRole(){for(const id of ['gm-scenes','next-turn','cast-effect','effect-kind','effect-kind-label','effect-target','effect-target-label','effect-help'])$(id).hidden=!admin;for(const item of document.querySelectorAll('[data-gm-only]'))item.hidden=!admin;$('scene-open-library').setAttribute('aria-label',admin?'Abrir biblioteca de mapas':'Cena em exibição');
-$('scene-open-panel').title=admin?'Escolher mapa na biblioteca':'Cena em exibição';$('auth-label').textContent=uid?(admin?'Mestre · permissões administrativas':'Jogador · acesso restrito'):'Faça login nos Arquivos Shinobi';if(!admin&&document.querySelector('[data-tab="combate"].active'))switchTab('rolls');theatre.refresh();renderSheets();combatDirector.refresh();refreshCombatTargets();}
+$('scene-open-panel').title=admin?'Escolher mapa na biblioteca':'Cena em exibição';$('auth-label').textContent=uid?(admin?'Mestre · permissões administrativas':'Jogador · acesso restrito'):'Faça login nos Arquivos Shinobi';if(!admin&&document.querySelector('[data-tab="combate"].active'))switchTab('rolls');theatre.refresh();renderSheets();combatDirector.refresh();battle.render();refreshCombatTargets();}
 onAuthStateChanged(auth,async user=>{stopSubs();if(sheetsUnsub){sheetsUnsub();sheetsUnsub=null}uid=user?.uid||'';admin=false;sheets=[];theatre.setActors([]);rolls.setUser(uid);rolls.setSheets([]);applyRole();if(!uid){show('Faça login no Shinobi Chronicles antes de entrar na mesa.');return}try{admin=user.email==='mestre_shinobi@players.shinobi-chronicles.invalid'||(await getDoc(doc(db,'admins',uid))).exists();applyRole();loadSheets();void connectWorld()}catch(e){show('Falha na autenticação: '+e.message)}});
 function loadSheets(){
   if(sheetsUnsub){sheetsUnsub();sheetsUnsub=null}
@@ -330,7 +330,7 @@ function loadSheets(){
   sheetsUnsub=onSnapshot(source,snap=>{
     sheets=snap.docs.filter(d=>d.data().tipo!=='diario').map(d=>({id:d.id,...d.data()}));
     updateTheatreDirectory();rolls.setSheets(sheets);
-    renderSheets();combatDirector.refresh();refreshCombatTargets();
+    renderSheets();combatDirector.refresh();battle.render();refreshCombatTargets();
     scheduleVitalSync();
   },e=>show('Não foi possível sincronizar as fichas: '+e.message));
 }
@@ -491,6 +491,8 @@ function openActorMenu(sheet,x,y,opener=null){
   }else{
     action('Adicionar à iniciativa','⚄',()=>combatDirector.addOne(sheet.id));
   }
+  action('Condições de combate','✦',()=>battle.openForToken(sheet.id,'condition'));
+  action('Usar jutsu neste personagem','巻',()=>battle.openForToken(sheet.id,'jutsu'));
   action('Abrir ficha','▤',()=>openSheet(sheet.id,sheet.ownerUid));
   document.body.append(menu);
   const rect=menu.getBoundingClientRect();
@@ -700,7 +702,7 @@ async function connectWorld(){
     subs.push(onSnapshot(world,snap=>{
       if(epoch!==subscriptionEpoch)return;
       if(!snap.exists()){
-        roomData=null;combatDirector.setData(null);
+        roomData=null;combatDirector.setData(null);battle.setData(null);
         $('world-status').textContent='Aguardando o mestre iniciar a campanha.';
         $('scene-name').textContent='Mesa Permanente';
         $('scene-caption').textContent='Nenhuma cena foi preparada ainda';
@@ -710,7 +712,9 @@ async function connectWorld(){
         return;
       }
       roomData=snap.data();masterUid=roomData?.masterUid||masterUid;
-      combatDirector.setData(roomData.theatre?.combat||roomData.combat);refreshCombatTargets();
+      combatDirector.setData(roomData.theatre?.combat||roomData.combat);
+       battle.setData(roomData.theatre);
+       refreshCombatTargets();
       theatre.setState(roomData.theatre);
       const cast=theatre.getCast();
       updateTheatreDirectory();
@@ -815,7 +819,7 @@ function watchTokens(sceneId){
   tokenUnsub=onSnapshot(source,snap=>{
     if(room!==watchingRoom)return;
     tokens=snap.docs.map(d=>({id:d.id,...d.data()}));
-    renderTokens();draw();refreshCombatTargets();
+    renderTokens();draw();battle.render();refreshCombatTargets();
   },err=>show('Permissão dos tokens: '+err.message));
 }
 function resetSceneEditor(){
@@ -897,7 +901,7 @@ function renderScenes(){
 
 function renderTokens(){
   const root=$('token-list');root.replaceChildren();
-  const list=visibleTokens();
+  const list=visibleTokens().filter(t=>battle.tokenVisible(t));
   $('tokens-count').textContent=String(list.length);
   const h=document.createElement('h3');h.textContent='Tokens da cena · '+list.length;root.append(h);
   if(!list.length){const p=document.createElement('p');p.textContent=admin?'Arraste uma ficha da pasta Jogadores ou NPCs até o mapa para colocar um token.':'O mestre ainda não colocou personagens nesta cena.';root.append(p);return}
@@ -1021,8 +1025,9 @@ function draw(){
   // Fora dos limites da imagem, o canvas fica transparente e exibe o fundo
   // escuro da área de jogo, independentemente do modo claro/escuro.
   if(view.image)ctx.drawImage(view.image,0,0);
-  // Arte original em destaque, proporção natural, com transparência e sem máscaras, círculos ou molduras.
-  for(const t of visibleTokens()){
+  battle.paintFog(ctx,view);
+  // Tokens sob a névoa não são desenhados para os jogadores.
+  for(const t of visibleTokens().filter(t=>battle.tokenVisible(t))){
     const b=spriteBounds(t);
     if(b.image?.complete&&b.image.naturalWidth){
       ctx.save();
@@ -1033,6 +1038,7 @@ function draw(){
       ctx.save();ctx.fillStyle='#f2e4cc';ctx.textAlign='center';ctx.font='600 12px system-ui';
       ctx.fillText((t.name||'Shinobi').slice(0,18),b.x,b.y-view.cell*.3);ctx.restore();
     }
+    battle.drawTokenMarks(ctx,t,view,b);
     if(selected===t.id){
       // Apenas a seleção tem indicadores discretos nos cantos, nunca um aro permanente.
       const pad=view.cell*.07,l=b.left-pad,r=b.left+b.width+pad,top=b.top-pad,bot=b.top+b.height+pad,d=view.cell*.14;
@@ -1080,11 +1086,13 @@ window.addEventListener('sc-vtt-appearance',()=>{
   updateMetricHud();
 });
 function hit(x,y){
-  const p=world(x,y);
-  return [...visibleTokens()].reverse().find(t=>{
+  const p=world(x,y),list=visibleTokens();
+  for(let i=list.length-1;i>=0;i--){
+    const t=list[i];if(!battle.tokenVisible(t))continue;
     const b=spriteBounds(t);
-    return p.x>=b.left&&p.x<=b.left+b.width&&p.y>=b.top&&p.y<=b.top+b.height;
-  });
+    if(p.x>=b.left&&p.x<=b.left+b.width&&p.y>=b.top&&p.y<=b.top+b.height)return t;
+  }
+  return null;
 }
 function drawRuler(){
   if(!measure.enabled||!measure.start||!measure.end)return;
