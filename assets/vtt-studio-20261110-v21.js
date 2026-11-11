@@ -920,6 +920,17 @@ function renderTokens(){
       remove.title='Remove o token, não a ficha original';
       remove.onclick=async()=>{if(!confirm('Retirar o token de '+(t.name||'Shinobi')+'? A ficha original será mantida.'))return;try{await deleteDoc(tokenRef(t.id));if(selected===t.id)selected=null;show('Token retirado; ficha preservada.')}catch(e){show(e.message)}};
       line.append(remove);
+      const openMenu=document.createElement('button');
+      openMenu.type='button';openMenu.className='btn small';
+      openMenu.textContent='⋯';openMenu.title='Ações de combate e Teatro';
+      openMenu.setAttribute('aria-label','Ações de '+(t.name||'personagem'));
+      openMenu.onclick=()=>{
+        const sheet=sheets.find(f=>f.id===t.fichaId);
+        if(!sheet)return show('Ficha vinculada indisponível.');
+        const rect=openMenu.getBoundingClientRect();
+        openActorMenu(sheet,rect.left,rect.bottom+4,openMenu);
+      };
+      line.append(openMenu);
       const original=sheets.find(f=>f.id===t.fichaId);
       if(original){
         const restore=document.createElement('button');restore.className='btn small';
@@ -1278,3 +1289,44 @@ $('vtt-fullscreen').onclick=async()=>{
 };
 
 document.addEventListener('keydown',e=>{if(e.target.closest('input,textarea,select,[contenteditable]')||$('sheet-modal').classList.contains('open'))return;const t=visibleTokens().find(x=>x.id===selected);if((e.key==='c'||e.key==='C')&&t&&canMove(t)){e.preventDefault();openSheet(t.fichaId,t.ownerUid)}if(e.key==='Delete'&&admin&&t){e.preventDefault();if(confirm('Retirar token '+t.name+'?'))deleteDoc(tokenRef(t.id)).catch(err=>show(err.message))}});
+
+let nudgeInFlight=false;
+document.addEventListener('keydown',async e=>{
+  if(e.target?.closest?.('input,textarea,select,[contenteditable]')||
+     $('sheet-modal').classList.contains('open')||e.ctrlKey||e.metaKey||e.altKey)return;
+  if(e.key==='Escape'){
+    if(battle.cancel()){e.preventDefault();return}
+  }
+  const key=e.key.toLowerCase();
+  if(key==='i'&&admin&&!e.repeat){
+    e.preventDefault();switchTab('combate');
+    if($('workspace').classList.contains('panel-hidden'))$('vtt-toggle-panel').click();
+    return;
+  }
+  if(key==='f'&&admin&&!e.repeat){
+    e.preventDefault();
+    if(measure.enabled)setMetricTool('off');
+    battle.toggleFogMode();
+    return;
+  }
+  if(key==='+'||key==='='){e.preventDefault();zoom(1.1);return}
+  if(key==='-'){e.preventDefault();zoom(1/1.1);return}
+  if(key==='0'){e.preventDefault();center();return}
+  const steps={'ArrowLeft':[-1,0],'ArrowRight':[1,0],'ArrowUp':[0,-1],'ArrowDown':[0,1]};
+  if(!steps[e.key]||!room||measure.enabled||battle.isMode('reveal')||battle.isMode('target'))return;
+  const token=visibleTokens().find(t=>t.id===selected);
+  if(!token||!canMove(token)||!battle.tokenVisible(token))return;
+  e.preventDefault();
+  if(e.repeat||nudgeInFlight)return;
+  const [dx,dy]=steps[e.key],step=e.shiftKey?.25:.05;
+  const previous={x:token.x,y:token.y};
+  token.x=Math.max(0,Math.min(1000,Math.round((token.x+dx*step)*1000)/1000));
+  token.y=Math.max(0,Math.min(1000,Math.round((token.y+dy*step)*1000)/1000));
+  renderTokens();draw();
+  nudgeInFlight=true;
+  try{await updateDoc(tokenRef(token.id),{x:token.x,y:token.y})}
+  catch(error){
+    token.x=previous.x;token.y=previous.y;
+    renderTokens();draw();show('Movimento não autorizado: '+error.message);
+  }finally{nudgeInFlight=false}
+});
