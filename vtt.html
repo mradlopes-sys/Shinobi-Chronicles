@@ -330,10 +330,19 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
 .sidebar > .tabs button{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .sidebar > .tabs button:focus-visible{outline:2px solid #e9d39d;outline-offset:-2px}
 .sidebar > .tabs button[data-tab="combate"]:not([hidden]){letter-spacing:.01em}
-/* A rolagem do histórico deve continuar até o painel lateral ao chegar ao fim.
-   O documento externo já fica fixo, então não é preciso bloquear esse encadeamento. */
-.sidebar{overscroll-behavior-y:contain}
-#rolls-panel .vr-feed{overscroll-behavior-y:auto}
+/* Uma única barra de rolagem: a aba lateral inteira.
+   O histórico não captura o mouse; o VTT e o mapa permanecem fixos. */
+@media(min-width:691px){.workspace{grid-template-rows:minmax(0,1fr)}}
+.workspace > .sidebar{
+  height:100%;min-height:0;max-height:100%;
+  overflow-y:auto;overflow-x:hidden;
+  overscroll-behavior-y:contain;
+  -webkit-overflow-scrolling:touch;
+}
+#rolls-panel .vr-feed{
+  height:auto;max-height:none;overflow:visible;
+  overscroll-behavior:initial;
+}
 /* Painel lateral um pouco mais amplo para ler mensagens de vários jogadores. */
 @media(min-width:1100px){
   .workspace:not(.panel-hidden){grid-template-columns:62px minmax(0,1fr) 365px}
