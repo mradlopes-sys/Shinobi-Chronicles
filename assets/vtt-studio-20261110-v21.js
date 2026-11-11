@@ -71,10 +71,15 @@ const battle=createBattleSystems({
   },
   adjustHitPoints:async(target,mode,points)=>{
     if(!admin||!room)throw Error('Apenas o mestre edita HP de outras fichas.');
-    const vital=healthOf(target);
-    const delta=mode==='damage'?-points:points;
-    const next=Math.max(0,Math.min(vital.max,vital.current+delta));
-    await updateDoc(doc(db,'fichas',target.id),{'recursos.vit':next});
+    const ref=doc(db,'fichas',target.id);
+    await runTransaction(db,async transaction=>{
+      const snapshot=await transaction.get(ref);
+      if(!snapshot.exists())throw Error('Ficha não encontrada.');
+      const fresh=snapshot.data(),vital=healthOf(fresh);
+      const delta=mode==='damage'?-points:points;
+      const next=Math.max(0,Math.min(vital.max,vital.current+delta));
+      transaction.update(ref,{'recursos.vit':next});
+    });
   },
   saveFields:async fields=>{
     if(!admin||!room)throw Error('Apenas o mestre altera a campanha.');
@@ -952,9 +957,10 @@ function renderTokens(){
 $('next-turn').onclick=async()=>{if(admin&&room)try{await updateDoc(roomRef(),{turn:(roomData?.turn||0)+1,updatedAt:serverTimestamp()})}catch(e){show(e.message)}};
 function effectPoint(payload){
   let target=payload?.target;
-  if(!target&&payload?.fichaId){
+  if(!target&&payload?.targetFichaId)
+    target=visibleTokens().find(t=>t.fichaId===payload.targetFichaId);
+  if(!target&&!payload?.targetFichaId&&payload?.fichaId)
     target=visibleTokens().find(t=>t.fichaId===payload.fichaId);
-  }
   if(target&&Number.isFinite(target.x)&&Number.isFinite(target.y)){
     return {
       x:view.ox+(target.x+.5)*view.cell*view.zoom,
