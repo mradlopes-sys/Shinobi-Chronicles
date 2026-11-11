@@ -41,7 +41,14 @@ const combatDirector=createCombatDirector({
       }
     }catch(error){battle.setData(roomData?.theatre);throw error}
   },
-  notify:message=>show(message),portrait:f=>portrait(f)
+  notify:message=>show(message),portrait:f=>portrait(f),
+  getOnMap:id=>visibleTokens().some(t=>t.fichaId===id),
+  hasScene:()=>!!roomData?.activeSceneId,
+  onPlaceOnMap:ids=>placeSheetsOnMap(ids),
+  onOpenSheet:id=>{
+    const f=sheets.find(f=>f.id===id);
+    if(f)openSheet(f.id,f.ownerUid);
+  }
 });
 const battle=createBattleSystems({
   getAdmin:()=>admin,getRoom:()=>room,getSceneId:()=>roomData?.activeSceneId||'',
@@ -831,7 +838,7 @@ function watchTokens(sceneId){
   tokenUnsub=onSnapshot(source,snap=>{
     if(room!==watchingRoom)return;
     tokens=snap.docs.map(d=>({id:d.id,...d.data()}));
-    renderTokens();draw();battle.render();refreshCombatTargets();
+    renderTokens();draw();battle.render();combatDirector.refreshMapStatus();refreshCombatTargets();
   },err=>show('Permissão dos tokens: '+err.message));
 }
 function resetSceneEditor(){
