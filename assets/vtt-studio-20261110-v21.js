@@ -1121,10 +1121,48 @@ function drawRuler(){
   ctx.restore();
 }
 const point=e=>{const r=canvas.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}};
-canvas.onpointerdown=e=>{if(e.button!==0)return;const p=point(e);if(measure.enabled){if(!view.image)return show('Ative e carregue um cenário antes de medir.');measure.start=world(p.x,p.y);measure.end=measure.start;measure.drag=true;measure.drawnPx=0;canvas.setPointerCapture(e.pointerId);updateMetricDrawStatus();draw();return}const t=hit(p.x,p.y);selected=t?.id||null;renderTokens();draw();if(t&&!canMove(t))return;dragToken={id:e.pointerId,start:p,ox:view.ox,oy:view.oy,t,original:t?{x:t.x,y:t.y}:null};canvas.setPointerCapture(e.pointerId);canvas.classList.add('dragging')};
-canvas.onpointermove=e=>{if(measure.enabled&&measure.drag){const p=point(e);measure.end=world(p.x,p.y);measure.drawnPx=Math.hypot(measure.end.x-measure.start.x,measure.end.y-measure.start.y);updateMetricDrawStatus();draw();return}if(!dragToken||dragToken.id!==e.pointerId)return;const p=point(e);if(dragToken.t){const q=world(p.x,p.y);dragToken.t.x=Math.max(0,Math.min(1000,Math.round((q.x/view.cell-.5)*1000)/1000));dragToken.t.y=Math.max(0,Math.min(1000,Math.round((q.y/view.cell-1)*1000)/1000))}else{view.ox=dragToken.ox+p.x-dragToken.start.x;view.oy=dragToken.oy+p.y-dragToken.start.y}draw()};
-const finish=async e=>{if(measure.drag){measure.drag=false;updateMetricDrawStatus();draw();return}if(!dragToken||dragToken.id!==e.pointerId)return;const d=dragToken;dragToken=null;canvas.classList.remove('dragging');if(d.t&&room&&(d.t.x!==d.original.x||d.t.y!==d.original.y)){try{await updateDoc(tokenRef(d.t.id),{x:d.t.x,y:d.t.y})}catch(err){d.t.x=d.original.x;d.t.y=d.original.y;draw();show('Movimento recusado: '+err.message)}}};
-canvas.onpointerup=finish;canvas.onpointercancel=finish;
+let fogDrawing=false,drawRequested=false;
+function requestDraw(){
+  if(drawRequested)return;
+  drawRequested=true;
+  requestAnimationFrame(()=>{drawRequested=false;draw()});
+}
+function reflectBattleMode(){
+  stage.classList.toggle('sc-battle-target',battle.isMode('target'));
+  stage.classList.toggle('sc-battle-fog',battle.isMode('reveal'));
+}
+canvas.onpointerdown=e=>{if(e.button!==0)return;const p=point(e);
+  if(battle.isMode('target')||battle.isMode('reveal')){
+    const q=world(p.x,p.y),token=hit(p.x,p.y);
+    fogDrawing=battle.isMode('reveal');
+    if(battle.pointerDown(q.x,q.y,token)){
+      e.preventDefault();
+      if(fogDrawing)canvas.setPointerCapture(e.pointerId);
+      reflectBattleMode();
+      return;
+    }
+  }if(measure.enabled){if(!view.image)return show('Ative e carregue um cenário antes de medir.');measure.start=world(p.x,p.y);measure.end=measure.start;measure.drag=true;measure.drawnPx=0;canvas.setPointerCapture(e.pointerId);updateMetricDrawStatus();draw();return}const t=hit(p.x,p.y);selected=t?.id||null;renderTokens();draw();if(t&&!canMove(t))return;dragToken={id:e.pointerId,start:p,ox:view.ox,oy:view.oy,t,original:t?{x:t.x,y:t.y}:null};canvas.setPointerCapture(e.pointerId);canvas.classList.add('dragging')};
+canvas.onpointermove=e=>{
+  if(fogDrawing){
+    const p=point(e),q=world(p.x,p.y);
+    battle.pointerMove(q.x,q.y);
+    requestDraw();return;
+  }
+  if(measure.enabled&&measure.drag){const p=point(e);measure.end=world(p.x,p.y);measure.drawnPx=Math.hypot(measure.end.x-measure.start.x,measure.end.y-measure.start.y);updateMetricDrawStatus();draw();return}if(!dragToken||dragToken.id!==e.pointerId)return;const p=point(e);if(dragToken.t){const q=world(p.x,p.y);dragToken.t.x=Math.max(0,Math.min(1000,Math.round((q.x/view.cell-.5)*1000)/1000));dragToken.t.y=Math.max(0,Math.min(1000,Math.round((q.y/view.cell-1)*1000)/1000))}else{view.ox=dragToken.ox+p.x-dragToken.start.x;view.oy=dragToken.oy+p.y-dragToken.start.y}requestDraw()};
+const finish=async e=>{
+  if(fogDrawing){
+    fogDrawing=false;
+    const p=point(e),q=world(p.x,p.y);
+    await battle.pointerUp(q.x,q.y);
+    reflectBattleMode();
+    return;
+  }
+  if(measure.drag){measure.drag=false;updateMetricDrawStatus();draw();return}if(!dragToken||dragToken.id!==e.pointerId)return;const d=dragToken;dragToken=null;canvas.classList.remove('dragging');if(d.t&&room&&(d.t.x!==d.original.x||d.t.y!==d.original.y)){try{await updateDoc(tokenRef(d.t.id),{x:d.t.x,y:d.t.y})}catch(err){d.t.x=d.original.x;d.t.y=d.original.y;draw();show('Movimento recusado: '+err.message)}}};
+canvas.onpointerup=finish;
+canvas.onpointercancel=e=>{
+  if(fogDrawing){fogDrawing=false;battle.cancel();reflectBattleMode();return}
+  void finish(e);
+};
 canvas.ondblclick=e=>{const p=point(e),t=hit(p.x,p.y);if(t)openSheet(t.fichaId,t.ownerUid)};
 canvas.oncontextmenu=e=>{
   if(!admin||!room||measure.enabled)return;
