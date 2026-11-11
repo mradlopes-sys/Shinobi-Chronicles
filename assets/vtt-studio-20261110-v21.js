@@ -1206,9 +1206,118 @@ canvas.oncontextmenu=e=>{
   if(!sheet){show('Token sem ficha disponível: não é possível usar Teatro ou iniciativa.');return}
   openActorMenu(sheet,e.clientX,e.clientY,canvas);
 };
-canvas.ondragover=e=>{if(admin&&room){e.preventDefault();e.dataTransfer.dropEffect='copy'}};
-async function spawn(f,x,y){if(!admin||!room)return;if(!roomData?.activeSceneId)return show('Ative um mapa na Biblioteca antes de colocar personagens.');try{await addDoc(collection(db,'vttRooms',room,'tokens'),{name:String(f.nome||f.name||'Shinobi').slice(0,40),fichaId:f.id,ownerUid:f.ownerUid,x,y,color:'#a57c64',portrait:await tokenPortrait(f),sceneId:roomData?.activeSceneId||''});show('Token criado: '+(f.nome||'Shinobi'))}catch(err){show('Falha ao criar token: '+err.message)}}
-canvas.ondrop=e=>{if(!admin||!room)return;e.preventDefault();const id=e.dataTransfer.getData('text/shinobi-ficha');const f=sheets.find(x=>x.id===id);if(!f)return;const p=point(e),w=world(p.x,p.y);const x=Math.max(0,Math.min(1000,Math.round((w.x/view.cell-.5)*1000)/1000)),y=Math.max(0,Math.min(1000,Math.round((w.y/view.cell-1)*1000)/1000));void spawn(f,x,y)};
+// Arrastar as fichas da iniciativa e da biblioteca utiliza o mesmo formato.
+const canPlaceToken=()=>admin&&!!room&&!!roomData?.activeSceneId;
+const toTokenCoord=(x,y)=>({
+  x:Math.max(0,Math.min(1000,Math.round(Number(x)*1000)/1000)),
+  y:Math.max(0,Math.min(1000,Math.round(Number(y)*1000)/1000))
+});
+async function spawn(f,x,y,{silent=false}={}){
+  if(!canPlaceToken()){
+    if(!silent)show('Ative um cenário na Biblioteca antes de colocar personagens.');
+    return null;
+  }
+  try{
+    const position=toTokenCoord(x,y);
+    const created=await addDoc(collection(db,'vttRooms',room,'tokens'),{
+      name:String(f.nome||f.name||'Shinobi').slice(0,40),
+      fichaId:f.id,ownerUid:f.ownerUid,x:position.x,y:position.y,
+      color:'#a57c64',portrait:await tokenPortrait(f),
+      sceneId:roomData.activeSceneId
+    });
+    if(!silent)show('Token criado: '+(f.nome||'Shinobi'));
+    return created.id;
+  }catch(error){
+    if(!silent)show('Falha ao criar token: '+error.message);
+    throw error;
+  }
+}
+async function placeSheetsOnMap(ids,pointOnMap=null){
+  if(!canPlaceToken())return show('Ative um mapa na Biblioteca antes de posicionar os personagens.');
+  const sheetIds=[...new Set(Array.isArray(ids)?ids:[])].filter(id=>typeof id==='string').slice(0,24);
+  const available=sheetIds.map(id=>sheets.find(f=>f.id===id)).filter(Boolean);
+  if(!available.length)return show('Selecione uma ou mais fichas válidas.');
+  const existing=new Map(visibleTokens().filter(t=>t.fichaId).map(t=>[t.fichaId,t]));
+  const needsPlacement=pointOnMap?available:available.filter(f=>!existing.has(f.id));
+  const cols=Math.max(1,Math.min(4,Math.ceil(Math.sqrt(needsPlacement.length||1))));
+  const rows=Math.ceil(needsPlacement.length/cols);
+  const anchor=pointOnMap||world(stage.clientWidth/2,stage.clientHeight/2);
+  let created=0,moved=0,already=0,failed=0,firstTokenId='';
+  for(let i=0;i<available.length;i++){
+    const f=available[i],token=existing.get(f.id);
+    // Quando usamos o botão, personagens já posicionados são preservados;
+    // ao arrastar sobre o mapa, tokens existentes são deslocados até a queda.
+    if(token&&!pointOnMap){
+      already++;
+      if(!firstTokenId)firstTokenId=token.id;
+      continue;
+    }
+    const slot=needsPlacement.findIndex(item=>item.id===f.id);
+    const offsetX=(slot%cols-(cols-1)/2)*1.25;
+    const offsetY=(Math.floor(slot/cols)-(rows-1)/2)*1.4;
+    const position=toTokenCoord(
+      anchor.x/view.cell-.5+offsetX,
+      anchor.y/view.cell-1+offsetY
+    );
+    try{
+      if(token){
+        await updateDoc(tokenRef(token.id),position);
+        moved++;
+        if(!firstTokenId)firstTokenId=token.id;
+      }else{
+        const tokenId=await spawn(f,position.x,position.y,{silent:true});
+        if(tokenId){
+          created++;
+          if(!firstTokenId)firstTokenId=tokenId;
+        }else failed++;
+      }
+    }catch(error){failed++;console.warn('Posicionamento de ficha no mapa:',error)}
+  }
+  if(firstTokenId){
+    selected=firstTokenId;
+    if(available.length===1&&already===1){
+      const token=existing.get(available[0].id);
+      if(token){
+        view.ox=stage.clientWidth/2-(token.x+.5)*view.cell*view.zoom;
+        view.oy=stage.clientHeight/2-(token.y+.7)*view.cell*view.zoom;
+      }
+    }
+    renderTokens();draw();
+  }
+  const report=[
+    created?created+' criado(s)':'',moved?moved+' reposicionado(s)':'',
+    already?already+' já estavam no mapa':'',failed?failed+' falharam':''
+  ].filter(Boolean).join(' · ');
+  show((report||'Nenhum token foi alterado')+'. Dê dois cliques no token para abrir a ficha.');
+  combatDirector.refreshMapStatus();
+  return {created,moved,already,failed};
+}
+canvas.ondragover=e=>{
+  if(!canPlaceToken())return;
+  if(![...(e.dataTransfer?.types||[])].some(type=>type==='text/shinobi-ficha'||type==='text/shinobi-fichas'))return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect='copy';
+  stage.classList.add('sc-sheet-drop');
+};
+canvas.ondragleave=e=>{
+  if(!canvas.contains(e.relatedTarget))stage.classList.remove('sc-sheet-drop');
+};
+canvas.ondrop=e=>{
+  stage.classList.remove('sc-sheet-drop');
+  if(!canPlaceToken())return;
+  const rawSingle=e.dataTransfer?.getData('text/shinobi-ficha')||'';
+  const rawGroup=e.dataTransfer?.getData('text/shinobi-fichas')||'';
+  let ids=[];
+  try{
+    const group=JSON.parse(rawGroup);
+    if(Array.isArray(group))ids=group.filter(v=>typeof v==='string').slice(0,24);
+  }catch(error){/* Fichas arrastadas da aba Campanha possuem apenas um ID. */}
+  if(!ids.length&&rawSingle)ids=[rawSingle];
+  if(!ids.length)return;
+  e.preventDefault();
+  const p=point(e),w=world(p.x,p.y);
+  void placeSheetsOnMap(ids,w);
+};
 function zoom(factor){const x=stage.clientWidth/2,y=stage.clientHeight/2,p=world(x,y);view.zoom=Math.max(.07,Math.min(4,view.zoom*factor));view.ox=x-p.x*view.zoom;view.oy=y-p.y*view.zoom;draw();updateMetricHud()}
 canvas.onwheel=e=>{e.preventDefault();zoom(e.deltaY<0?1.1:.9)};
 $('zoom-in').onclick=()=>zoom(1.2);$('zoom-out').onclick=()=>zoom(.8);$('reset').onclick=center;function setMetricTool(mode){
