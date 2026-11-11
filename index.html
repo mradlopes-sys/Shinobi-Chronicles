@@ -3830,6 +3830,14 @@ html.vtt-sheet-context body{min-height:100%;background:#f4f1e9}
 html.vtt-sheet-context .cv-toolbar{margin-top:0}
 </style>
 <style>
+/* A Mesa Virtual é uma tela de aplicativo: nunca deslocar o documento pai.
+   Somente os painéis internos do VTT podem receber rolagem vertical. */
+html.sc-vtt-locked,html.sc-vtt-locked body{
+  height:100%;max-height:100%;overflow:hidden!important;
+  overscroll-behavior:none;scroll-behavior:auto!important
+}
+html.sc-vtt-locked #app{height:100dvh;max-height:100dvh;overflow:hidden}
+html.sc-vtt-locked .shell.vtt-shell{min-height:0;height:100dvh;overflow:hidden}
 .shell.vtt-shell{height:100dvh;min-height:0;overflow:hidden;grid-template-columns:252px minmax(0,1fr);transition:grid-template-columns .22s ease}
 .shell.vtt-shell.sidebar-folded{grid-template-columns:57px minmax(0,1fr)}
 .vtt-shell .sidebar{height:100dvh;overflow-x:hidden;position:relative;padding-top:15px;gap:15px;transition:padding .22s ease}
@@ -6866,10 +6874,10 @@ function canvaUpdateArray(el,preserveFocus=false){
 
 
 let vttSidebarCollapsed=true;
-  function vttView(){return '<div class="shell vtt-shell '+(vttSidebarCollapsed?'sidebar-folded':'')+(themeClan()?' themed-shell':'')+'" '+themeStyle()+'>'+side()+'<main class="main vtt-main"><div id="vtt-host"><iframe title="Mesa Virtual Shinobi Chronicles" src="./vtt.html?build=20261110-chat2" style="display:block;width:100%;height:100%;border:0;background:var(--paper)" allow="fullscreen" allowfullscreen></iframe></div></main></div>'}
+  function vttView(){return '<div class="shell vtt-shell '+(vttSidebarCollapsed?'sidebar-folded':'')+(themeClan()?' themed-shell':'')+'" '+themeStyle()+'>'+side()+'<main class="main vtt-main"><div id="vtt-host"><iframe title="Mesa Virtual Shinobi Chronicles" src="./vtt.html?build=20261110-scrollfix1" style="display:block;width:100%;height:100%;border:0;background:var(--paper)" allow="fullscreen" allowfullscreen></iframe></div></main></div>'}
   let shinobiMotionView='';
   let vttSheetRequested=false;
-  function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="margin:15vh auto;max-width:500px"><h3>Carregando os arquivos shinobi...</h3><p>Conectando ao sistema de autenticação.</p></div>';return}if(CONFIGURED&&!S.user&&!['login'].includes(S.view))S.view='login';if(!vttSheetRequested&&new URLSearchParams(location.search).has('vttSheet')&&S.user&&!S.loading){vttSheetRequested=true;const requested=new URLSearchParams(location.search).get('vttSheet');if(S.sheets.some(x=>x.id===requested)){void openSheet(requested)}else if(S.isAdmin&&S.user&&fb){void (async()=>{try{const snap=await fb.getDoc(fb.doc(fb.db,'fichas',requested));if(!snap.exists())return;S.sheet=normalize(snap.data());S.sheetId=requested;S.adminViewing=true;S.canvaMode='original';S.canvaPage=1;S.view='sheet';render()}catch(e){showToast('Não foi possível abrir a ficha: '+e.message,true)}})()}}let screen={quadros:PublicBoard.view,home,vtt:vttView,clans,sheet:canvaSheetView,guia:guideView,biblioteca:libraryView,diario:diaryView,fichas:mySheets,admin:adminView,'admin-gate':adminGate,login}[S.view]||home;$('#app').innerHTML=screen();const motionKey=S.view==='sheet'?[S.view,S.sheetId||'',S.canvaMode||'',S.canvaPage||1,S.combatMode?'combat':'normal'].join(':'):S.view;if(motionKey!==shinobiMotionView){shinobiMotionView=motionKey;if(S.view!=='vtt'&&!document.documentElement.classList.contains('vtt-sheet-context')&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches){const surface=$('#app .content');if(surface){surface.classList.remove('sc-view-arrival');void surface.offsetWidth;surface.classList.add('sc-view-arrival')}}}if(S.modal)$('#app').insertAdjacentHTML('beforeend',S.modal==='delete'?deleteModal():clanModal());if(S.view==='biblioteca')librarySearchFilter();integratedFilter();if(S.view==='quadros')PublicBoard.refreshThreads?.();if(S.view==='diario'&&S.diaryEnterAnimate)S.diaryEnterAnimate=false}
+  function render(){if(S.loading){$('#app').innerHTML='<div class="empty" style="margin:15vh auto;max-width:500px"><h3>Carregando os arquivos shinobi...</h3><p>Conectando ao sistema de autenticação.</p></div>';return}if(CONFIGURED&&!S.user&&!['login'].includes(S.view))S.view='login';if(!vttSheetRequested&&new URLSearchParams(location.search).has('vttSheet')&&S.user&&!S.loading){vttSheetRequested=true;const requested=new URLSearchParams(location.search).get('vttSheet');if(S.sheets.some(x=>x.id===requested)){void openSheet(requested)}else if(S.isAdmin&&S.user&&fb){void (async()=>{try{const snap=await fb.getDoc(fb.doc(fb.db,'fichas',requested));if(!snap.exists())return;S.sheet=normalize(snap.data());S.sheetId=requested;S.adminViewing=true;S.canvaMode='original';S.canvaPage=1;S.view='sheet';render()}catch(e){showToast('Não foi possível abrir a ficha: '+e.message,true)}})()}}const vttLocked=S.view==='vtt';document.documentElement.classList.toggle('sc-vtt-locked',vttLocked);if(vttLocked){document.documentElement.scrollTop=0;document.body.scrollTop=0}let screen={quadros:PublicBoard.view,home,vtt:vttView,clans,sheet:canvaSheetView,guia:guideView,biblioteca:libraryView,diario:diaryView,fichas:mySheets,admin:adminView,'admin-gate':adminGate,login}[S.view]||home;$('#app').innerHTML=screen();const motionKey=S.view==='sheet'?[S.view,S.sheetId||'',S.canvaMode||'',S.canvaPage||1,S.combatMode?'combat':'normal'].join(':'):S.view;if(motionKey!==shinobiMotionView){shinobiMotionView=motionKey;if(S.view!=='vtt'&&!document.documentElement.classList.contains('vtt-sheet-context')&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches){const surface=$('#app .content');if(surface){surface.classList.remove('sc-view-arrival');void surface.offsetWidth;surface.classList.add('sc-view-arrival')}}}if(S.modal)$('#app').insertAdjacentHTML('beforeend',S.modal==='delete'?deleteModal():clanModal());if(S.view==='biblioteca')librarySearchFilter();integratedFilter();if(S.view==='quadros')PublicBoard.refreshThreads?.();if(S.view==='diario'&&S.diaryEnterAnimate)S.diaryEnterAnimate=false}
 
 
   /* Os três novos efeitos são entregues em assets/audio/journal-sounds.js,
@@ -7172,7 +7180,7 @@ let vttSidebarCollapsed=true;
    const first=ownSheets()[0];S.sheet=first?.data||null;S.sheetId=first?.id||null;S.adminViewing=false;S.pendingRemote=null;
  }
  if((view==='sheet'||view==='guia'||view==='biblioteca')&&!active()){const first=ownSheets()[0];if(first){S.sheet=first.data;S.sheetId=first.id}else view='fichas'}
- S.view=view;render();window.scrollTo({top:0,behavior:'smooth'});
+ S.view=view;render();window.scrollTo({top:0,behavior:view==='vtt'?'instant':'smooth'});
 }
   function setStatus(st){S.saveState=st;const x=$('#save-status');if(x)x.textContent=st;const y=$('#save-footer');if(y)y.textContent=st}
   async function persist(){
