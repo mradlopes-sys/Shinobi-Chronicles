@@ -1,7 +1,8 @@
 import {createTheatre} from './vtt-theatre-v17.js';
-import {createRollsPanel,makeDicePayload,rollForSheet} from './vtt-rolls-v4.js?v=20261111-panel-scroll4';
+import {createRollsPanel,makeDicePayload,rollForSheet} from './vtt-rolls-v4.js?v=20261111-session5';
 import {createCombatDirector} from './vtt-combat-director-v1.js?v=20261110-map1';
 import {createBattleSystems} from './vtt-battle-systems-v1.js?v=20261110-b2f';
+import {createSessionTools} from './vtt-session-tools-v1.js?v=20261111-session1';
 import {createVisualEffects,EFFECTS} from './vtt-effects-v2.js?v=20261110-jutsus2';
 import {DEFAULT_METERS_PER_CELL,metersPerCell,pixelsToMeters,calibrateMetersPerCell,formatMeters,scaleBar} from './vtt-metrics-v1.js';
 import {initializeApp,getApps} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
@@ -185,7 +186,7 @@ function updateMetricDrawStatus(){
   $('metric-save').disabled=!admin||!hasLine||!Number.isFinite(known)||known<=0||known>100000;
 }
 const tokenRef=id=>doc(db,'vttRooms',room,'tokens',id);
-const stopSubs=()=>{measure.enabled=false;measure.calibrating=false;measure.start=null;measure.end=null;measure.drawnPx=0;$('metric-card').hidden=true;$('metric-status').hidden=true;$('metric-hud').hidden=true;if($('sheet-modal').classList.contains('open'))$('sheet-close').click();subscriptionEpoch++;worldCollectionsReady=false;secretRollFeeds={self:[],gm:[],blind:[]};blindProcessing.clear();if(typeof rolls!=='undefined')rolls.setPrivateEvents([]);for(const stop of portraitSubs.values())stop();portraitSubs.clear();for(const stop of vitalSubs.values())stop();vitalSubs.clear();lastVitals.clear();clearTimeout(vitalTimer);masterUid='';if(tokenUnsub){tokenUnsub();tokenUnsub=null}tokenSceneSubscribed=null;subs.forEach(u=>u());subs=[];room='';roomData=null;tokens=[];scenes=[];selected=null;editingSceneId='';lastStageRosterKey='__initial__';theatre.reset();combatDirector.setData(null);battle.setData(null);$('room-heading').textContent='Mesa Permanente · Shinobi Chronicles';$('world-status').textContent='Aguardando conexão…';$('scene-empty').hidden=false;renderScenes();renderTokens();draw();};
+const stopSubs=()=>{sessionTools?.reset?.();measure.enabled=false;measure.calibrating=false;measure.start=null;measure.end=null;measure.drawnPx=0;$('metric-card').hidden=true;$('metric-status').hidden=true;$('metric-hud').hidden=true;if($('sheet-modal').classList.contains('open'))$('sheet-close').click();subscriptionEpoch++;worldCollectionsReady=false;secretRollFeeds={self:[],gm:[],blind:[]};blindProcessing.clear();if(typeof rolls!=='undefined')rolls.setPrivateEvents([]);for(const stop of portraitSubs.values())stop();portraitSubs.clear();for(const stop of vitalSubs.values())stop();vitalSubs.clear();lastVitals.clear();clearTimeout(vitalTimer);masterUid='';if(tokenUnsub){tokenUnsub();tokenUnsub=null}tokenSceneSubscribed=null;subs.forEach(u=>u());subs=[];room='';roomData=null;tokens=[];scenes=[];selected=null;editingSceneId='';lastStageRosterKey='__initial__';theatre.reset();combatDirector.setData(null);battle.setData(null);$('room-heading').textContent='Mesa Permanente · Shinobi Chronicles';$('world-status').textContent='Aguardando conexão…';$('scene-empty').hidden=false;renderScenes();renderTokens();draw();};
 const theatre=createTheatre({
   stage,
   notify:show,
@@ -304,6 +305,72 @@ const rolls=createRollsPanel({
     throw Error('Categoria inválida.');
   }
 });
+// Ferramentas integradas usam as coleções de eventos que o VTT já sincroniza.
+// Os ajustes de HP/Chakra são atômicos para evitar conflitos entre ações.
+const sessionTools=createSessionTools({
+  groupPanel:$('sc-group-panel'),
+  combatPanel:$('sc-assisted-combat'),
+  scenePanel:$('sc-scene-director'),
+  stage,
+  getUid:()=>uid,getAdmin:()=>admin,getSheets:()=>sheets,
+  getSceneId:()=>roomData?.activeSceneId||'',
+  getRoomData:()=>roomData,getMasterUid:()=>roomData?.masterUid||masterUid||'',
+  notify:show,
+  send:async(type,payload)=>{
+    if(!room||!uid)throw Error('Entre na mesa antes de publicar.');
+    if(type!=='message'&&type!=='roll')throw Error('Tipo de evento não permitido.');
+    return addDoc(collection(db,'vttRooms',room,'events'),{
+      type,uid,at:serverTimestamp(),payload
+    });
+  },
+  applyResources:async(sourceId,targetId,damage,chakraCost)=>{
+    if(!admin||!room)throw Error('Somente o mestre pode alterar recursos.');
+    const sourceRef=doc(db,'fichas',sourceId),targetRef=doc(db,'fichas',targetId);
+    const dmg=Math.max(0,Math.min(999,Math.round(Number(damage)||0)));
+    const cost=Math.max(0,Math.min(999,Math.round(Number(chakraCost)||0)));
+    await runTransaction(db,async tx=>{
+      const src=await tx.get(sourceRef);
+      const dst=sourceId===targetId?src:await tx.get(targetRef);
+      if(!src.exists()||!dst.exists())throw Error('Ficha não encontrada.');
+      const updatesSource={},updatesTarget={};
+      if(cost>0){
+        const data=src.data(),max=Math.max(0,10+3*(Number(data.atributos?.ESP)||0));
+        const stored=data.recursos?.chakra;
+        const current=stored===null||stored===undefined||stored===''?
+          max:Math.max(0,Math.min(max,Math.round(Number(stored)||0)));
+        if(current<cost)throw Error('Chakra insuficiente em '+(data.nome||'atacante')+'.');
+        updatesSource['recursos.chakra']=current-cost;
+      }
+      if(dmg>0){
+        const hp=healthOf(dst.data());
+        updatesTarget['recursos.vit']=Math.max(0,hp.current-dmg);
+      }
+      if(sourceId===targetId){
+        const changes={...updatesSource,...updatesTarget};
+        if(Object.keys(changes).length)tx.update(sourceRef,changes);
+      }else{
+        if(Object.keys(updatesSource).length)tx.update(sourceRef,updatesSource);
+        if(Object.keys(updatesTarget).length)tx.update(targetRef,updatesTarget);
+      }
+    });
+  },
+  applyCondition:(targetId,condition,rounds)=>battle.addCondition(targetId,condition,rounds),
+  playEffect:async({kind,name,sourceSheetId,targetSheetId})=>{
+    if(!admin||!room)throw Error('Somente o mestre transmite efeitos.');
+    const targetToken=visibleTokens().find(t=>t.fichaId===targetSheetId);
+    const nonce=uid+'-'+Date.now()+'-'+Math.floor(Math.random()*1000000);
+    const payload={kind,source:'combate-assistido',fichaId:sourceSheetId,
+      targetFichaId:targetSheetId,jutsuName:String(name||'Ataque').slice(0,80),
+      sceneId:roomData?.activeSceneId||'',nonce};
+    if(targetToken)payload.target={x:targetToken.x,y:targetToken.y};
+    localVfxNonces.add(nonce);
+    setTimeout(()=>localVfxNonces.delete(nonce),15000);
+    visualEffects.play(kind,effectPoint(payload),payload.jutsuName);
+    await addDoc(collection(db,'vttRooms',room,'events'),{
+      type:'effect',uid,at:serverTimestamp(),payload
+    });
+  }
+});
 async function resolveBlindRequest(item,epoch){
   if(!admin||!room||epoch!==subscriptionEpoch||blindProcessing.has(item.id))return;
   blindProcessing.add(item.id);
@@ -340,7 +407,7 @@ function openScenes(){
 $('scene-open-library').onclick=openScenes;
 $('scene-open-panel').onclick=openScenes;
 function applyRole(){for(const id of ['gm-scenes','next-turn','cast-effect','effect-kind','effect-kind-label','effect-target','effect-target-label','effect-help'])$(id).hidden=!admin;for(const item of document.querySelectorAll('[data-gm-only]'))item.hidden=!admin;$('scene-open-library').setAttribute('aria-label',admin?'Abrir biblioteca de mapas':'Cena em exibição');
-$('scene-open-panel').title=admin?'Escolher mapa na biblioteca':'Cena em exibição';$('auth-label').textContent=uid?(admin?'Mestre · permissões administrativas':'Jogador · acesso restrito'):'Faça login nos Arquivos Shinobi';if(!admin&&document.querySelector('[data-tab="combate"].active'))switchTab('rolls');theatre.refresh();renderSheets();combatDirector.refresh();battle.render();refreshCombatTargets();}
+$('scene-open-panel').title=admin?'Escolher mapa na biblioteca':'Cena em exibição';$('auth-label').textContent=uid?(admin?'Mestre · permissões administrativas':'Jogador · acesso restrito'):'Faça login nos Arquivos Shinobi';if(!admin&&document.querySelector('[data-tab="combate"].active'))switchTab('rolls');theatre.refresh();renderSheets();combatDirector.refresh();battle.render();refreshCombatTargets();sessionTools.refresh();}
 onAuthStateChanged(auth,async user=>{stopSubs();if(sheetsUnsub){sheetsUnsub();sheetsUnsub=null}uid=user?.uid||'';admin=false;sheets=[];theatre.setActors([]);rolls.setUser(uid);rolls.setSheets([]);applyRole();if(!uid){show('Faça login no Shinobi Chronicles antes de entrar na mesa.');return}try{admin=user.email==='mestre_shinobi@players.shinobi-chronicles.invalid'||(await getDoc(doc(db,'admins',uid))).exists();applyRole();loadSheets();void connectWorld()}catch(e){show('Falha na autenticação: '+e.message)}});
 function loadSheets(){
   if(sheetsUnsub){sheetsUnsub();sheetsUnsub=null}
@@ -348,7 +415,7 @@ function loadSheets(){
   sheetsUnsub=onSnapshot(source,snap=>{
     sheets=snap.docs.filter(d=>d.data().tipo!=='diario').map(d=>({id:d.id,...d.data()}));
     updateTheatreDirectory();rolls.setSheets(sheets);
-    renderSheets();combatDirector.refresh();battle.render();refreshCombatTargets();
+    renderSheets();combatDirector.refresh();battle.render();refreshCombatTargets();sessionTools.refresh();
     scheduleVitalSync();
   },e=>show('Não foi possível sincronizar as fichas: '+e.message));
 }
@@ -730,7 +797,7 @@ async function connectWorld(){
         $('scene-empty').hidden=false;
         return;
       }
-      roomData=snap.data();masterUid=roomData?.masterUid||masterUid;
+      roomData=snap.data();masterUid=roomData?.masterUid||masterUid;sessionTools.refresh();
       combatDirector.setData(roomData.theatre?.combat||roomData.combat);
        battle.setData(roomData.theatre);
        refreshCombatTargets();
@@ -769,7 +836,9 @@ async function connectWorld(){
         },e=>show('Biblioteca: '+e.message)));
         subs.push(onSnapshot(query(collection(db,'vttRooms',WORLD_ID,'events'),orderBy('at','desc'),limit(100)),events=>{
           if(epoch!==subscriptionEpoch)return;
-          rolls.setEvents(events.docs.map(d=>({id:d.id,data:d.data()})));
+          const eventRows=events.docs.map(d=>({id:d.id,data:d.data()}));
+          rolls.setEvents(eventRows);
+          sessionTools.setEvents(eventRows);
           for(const change of events.docChanges()){
             if(change.type!=='added'&&change.type!=='modified')continue;
             const data=change.doc.data();
