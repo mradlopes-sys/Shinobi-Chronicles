@@ -330,9 +330,10 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
 .sidebar > .tabs button{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .sidebar > .tabs button:focus-visible{outline:2px solid #e9d39d;outline-offset:-2px}
 .sidebar > .tabs button[data-tab="combate"]:not([hidden]){letter-spacing:.01em}
-/* Rolar o histórico não pode arrastar a janela da mesa ou a página pai. */
+/* A rolagem do histórico deve continuar até o painel lateral ao chegar ao fim.
+   O documento externo já fica fixo, então não é preciso bloquear esse encadeamento. */
 .sidebar{overscroll-behavior-y:contain}
-#rolls-panel .vr-feed{overscroll-behavior-y:contain}
+#rolls-panel .vr-feed{overscroll-behavior-y:auto}
 /* Painel lateral um pouco mais amplo para ler mensagens de vários jogadores. */
 @media(min-width:1100px){
   .workspace:not(.panel-hidden){grid-template-columns:62px minmax(0,1fr) 365px}
