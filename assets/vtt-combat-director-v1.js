@@ -53,14 +53,16 @@ export function createCombatDirector({
     '<div id="sc-turn-track" class="sc-turn-track">'+list.map(e=>{
       const active=e.id===combat.activeId,upcoming=!active&&e.id===next.id;
       return '<button type="button" class="sc-turn-card'+(active?' is-active':'')+(upcoming?' is-next':'')+
-       '" data-sc-turn-id="'+esc(e.id)+'" '+(!getAdmin()?'disabled':'')+' aria-label="'+esc(e.name+', iniciativa '+e.score)+'">'+
+       '" data-sc-turn-id="'+esc(e.id)+'" '+(getAdmin()?'draggable="true" title="Arraste ao mapa ou clique para avançar o turno" ':'disabled ')+' aria-label="'+esc(e.name+', iniciativa '+e.score)+'">'+
        '<span class="sc-turn-pic">'+photo(e)+'</span><span class="sc-turn-body"><strong>'+esc(e.name)+'</strong><small>'+
        (active?'AGINDO AGORA':upcoming?'PRÓXIMO':'AGUARDANDO')+'</small></span><b class="sc-turn-score">'+e.score+'</b></button>';
     }).join('')+'</div>';
   const track=$('sc-turn-track');track.scrollLeft=previous;
   strip.querySelectorAll('[data-sc-scroll]').forEach(b=>b.onclick=()=>track.scrollBy({left:Number(b.dataset.scScroll)*240,behavior:'smooth'}));
-  strip.querySelectorAll('[data-sc-turn-id]').forEach(b=>b.onclick=()=>{
-    if(!allowed()||busy)return;void change(c=>({...c,activeId:b.dataset.scTurnId,started:true}));
+  strip.querySelectorAll('[data-sc-turn-id]').forEach(b=>{
+    b.onclick=()=>{if(!allowed()||busy)return;void change(c=>({...c,activeId:b.dataset.scTurnId,started:true}))};
+    b.ondragstart=e=>{if(!dragIds(e,[b.dataset.scTurnId]))e.preventDefault()};
+    b.ondragend=()=>b.classList.remove('dragging-to-map');
   });
   requestAnimationFrame(()=>{
    const active=track.querySelector('.is-active');if(active)
@@ -146,17 +148,26 @@ export function createCombatDirector({
   const list=order(),root=$('sc-combat-order');
   root.innerHTML=list.length?list.map((e,i)=>{
    const current=e.id===combat.activeId;
-   return '<div class="sc-combat-line'+(current?' active':'')+'">'+
+   return '<div class="sc-combat-line'+(current?' active':'')+'" draggable="true" data-sc-roster-drag="'+esc(e.id)+'" title="Arraste até o mapa">'+
     '<span class="sc-combat-rank">'+String(i+1).padStart(2,'0')+'</span>'+
     '<div class="sc-combat-pic">'+photo(e)+'</div><div class="sc-combat-person"><b>'+esc(e.name)+'</b><small>'+
     (current?'AGINDO AGORA':e.roll+' no d8 + '+e.bonus+' bônus')+'</small></div>'+
     '<label class="sc-combat-score">INI<input data-sc-score="'+esc(e.id)+'" type="number" min="-99" max="999" value="'+e.score+'" '+(busy?'disabled':'')+'></label>'+
+    '<button class="sc-combat-map-one" data-sc-order-map="'+esc(e.id)+'" title="Colocar ou localizar no mapa" aria-label="Colocar '+esc(e.name)+' no mapa">⌖</button>'+
     '<button class="sc-combat-remove" data-sc-remove="'+esc(e.id)+'" aria-label="Remover '+esc(e.name)+'" '+(busy?'disabled':'')+'>×</button></div>';
   }).join(''):'<div class="sc-combat-empty">Marque as fichas abaixo e adicione-as à ordem do combate.</div>';
   root.querySelectorAll('[data-sc-score]').forEach(input=>input.onchange=()=>{
    const id=input.dataset.scScore,score=number(input.value,-99,999);
    void change(c=>({...c,entries:c.entries.map(x=>x.id===id?{...x,score}:x)}));
   });
+  root.querySelectorAll('[data-sc-roster-drag]').forEach(row=>{
+    row.ondragstart=e=>{
+      if(e.target?.closest?.('button,input')){e.preventDefault();return}
+      if(!dragIds(e,[row.dataset.scRosterDrag]))e.preventDefault();
+    };
+    row.ondragend=()=>row.classList.remove('dragging-to-map');
+  });
+  root.querySelectorAll('[data-sc-order-map]').forEach(btn=>btn.onclick=()=>void place([btn.dataset.scOrderMap]));
   root.querySelectorAll('[data-sc-remove]').forEach(b=>b.onclick=()=>void change(c=>{
    const entries=c.entries.filter(x=>x.id!==b.dataset.scRemove);
    return {...c,entries,activeId:c.activeId===b.dataset.scRemove?'':c.activeId,started:c.started&&entries.length>0};
