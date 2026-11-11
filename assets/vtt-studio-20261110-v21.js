@@ -498,7 +498,8 @@ function openActorMenu(sheet,x,y,opener=null){
     action('Adicionar à iniciativa','⚄',()=>combatDirector.addOne(sheet.id));
   }
   action('Condições de combate','✦',()=>battle.openForToken(sheet.id,'condition'));
-  action('Usar jutsu neste personagem','巻',()=>battle.openForToken(sheet.id,'jutsu'));
+  action('Lançar jutsu deste personagem','巻',()=>battle.openForToken(sheet.id,'jutsu'));
+  action('Definir como alvo de jutsu','◎',()=>battle.openForToken(sheet.id,'target'));
   action('Abrir ficha','▤',()=>openSheet(sheet.id,sheet.ownerUid));
   document.body.append(menu);
   const rect=menu.getBoundingClientRect();
@@ -1294,7 +1295,7 @@ $('vtt-fullscreen').onclick=async()=>{
   }catch(e){show('Tela cheia indisponível: '+e.message)}
 };
 
-document.addEventListener('keydown',e=>{if(e.target.closest('input,textarea,select,[contenteditable]')||$('sheet-modal').classList.contains('open'))return;const t=visibleTokens().find(x=>x.id===selected);if((e.key==='c'||e.key==='C')&&t&&canMove(t)){e.preventDefault();openSheet(t.fichaId,t.ownerUid)}if(e.key==='Delete'&&admin&&t){e.preventDefault();if(confirm('Retirar token '+t.name+'?'))deleteDoc(tokenRef(t.id)).catch(err=>show(err.message))}});
+document.addEventListener('keydown',e=>{if(e.target?.closest?.('input,textarea,select,[contenteditable]')||$('sheet-modal').classList.contains('open'))return;const t=visibleTokens().find(x=>x.id===selected);if((e.key==='c'||e.key==='C')&&t&&canMove(t)){e.preventDefault();openSheet(t.fichaId,t.ownerUid)}if(e.key==='Delete'&&admin&&t){e.preventDefault();if(confirm('Retirar token '+t.name+'?'))deleteDoc(tokenRef(t.id)).catch(err=>show(err.message))}});
 
 let nudgeInFlight=false;
 document.addEventListener('keydown',async e=>{
