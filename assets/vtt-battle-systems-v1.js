@@ -98,9 +98,16 @@ export function createBattleSystems({
   }
   function openForToken(id,tab='condition'){
     if(!canWrite())return;
-    selectedTarget=id;setCombatTab('combate');
+    if(tab==='jutsu'){
+      selectedSource=id;
+      chosenJutsu='';
+    }else selectedTarget=id;
+    setCombatTab('combate');
     render();
-    requestAnimationFrame(()=>{const element=tab==='jutsu'?jutsuPanel:condPanel;element?.scrollIntoView({block:'nearest',behavior:'smooth'})});
+    requestAnimationFrame(()=>{
+      const element=tab==='jutsu'||tab==='target'?jutsuPanel:condPanel;
+      element?.scrollIntoView({block:'nearest',behavior:'smooth'});
+    });
   }
   function addCondition(id,condition,turns){
     const list=getConditionList(id).filter(c=>c.id!==condition);
