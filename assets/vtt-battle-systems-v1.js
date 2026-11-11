@@ -181,6 +181,7 @@ export function createBattleSystems({
       fogIndicator.hidden=!active;
       fogIndicator.textContent=getAdmin()?'☾ Névoa visual ativada':'☾ Área encoberta';
     }
+    refreshTimelineBadges();
     if(!getAdmin())return;
     const bind=(id,event,fn)=>{const el=document.getElementById(id);if(el)el.addEventListener(event,fn)};
     bind('sc-condition-target','change',e=>{selectedTarget=e.target.value;render()});
