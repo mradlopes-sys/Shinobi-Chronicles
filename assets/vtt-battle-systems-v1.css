@@ -95,3 +95,89 @@
 @media(prefers-reduced-motion:reduce){
   #sc-combat-status-panel *,#sc-jutsu-target-panel *,#sc-fog-panel *{animation:none!important;transition:none!important}
 }
+
+
+/* Fichas da iniciativa → mapa: cartões arrastáveis, ações de edição e lotes */
+html[data-appearance] #pane-combate .sc-combat-pick{
+  display:flex;align-items:center;gap:5px;padding:6px 7px;min-height:50px;
+  cursor:grab;opacity:1!important;user-select:none;
+}
+html[data-appearance] #pane-combate .sc-combat-pick.in-scene{
+  border-left:3px solid var(--vtt-pigment,var(--scb-edge))!important;
+}
+html[data-appearance] #pane-combate .sc-combat-pick.already{
+  opacity:1!important;
+}
+html[data-appearance] .sc-combat-pick-main{
+  flex:1;display:flex;align-items:center;gap:8px;min-width:0;cursor:pointer;
+  border:0;margin:0;padding:0;
+}
+html[data-appearance] .sc-combat-pick-main .sc-combat-person{
+  display:grid;min-width:0;gap:3px;
+}
+html[data-appearance] .sc-combat-pick-main input:disabled{
+  opacity:.42;cursor:not-allowed;
+}
+html[data-appearance] .sc-combat-map-status{
+  color:var(--vtt-fade,#788473)!important;font:700 8px/1.2 'DM Sans',sans-serif!important;
+  letter-spacing:.07em;text-transform:uppercase;
+}
+html[data-appearance] .sc-combat-pick.in-scene .sc-combat-map-status{
+  color:var(--vtt-display,#698265)!important;
+}
+html[data-appearance] .sc-combat-sheet-actions{
+  display:flex;align-items:center;gap:3px;flex:none;
+  padding-left:5px;border-left:1px solid var(--vtt-line,#aaa993);
+}
+html[data-appearance] .sc-combat-sheet-actions button,
+html[data-appearance] .sc-combat-map-one{
+  display:grid;place-items:center;width:29px;height:31px;
+  padding:0;border:1px solid transparent;border-radius:2px;
+  background:var(--vtt-inkwater-soft,var(--scb-paint));color:var(--vtt-display,#61765d);
+  font:700 18px/1 'Yuji Boku',serif;cursor:pointer;
+  transition:background .16s,border-color .16s,color .16s;
+}
+html[data-appearance] .sc-combat-sheet-actions button:hover,
+html[data-appearance] .sc-combat-map-one:hover{
+  border-color:var(--vtt-pigment-border,#977e65);
+  background:var(--vtt-inkwater,var(--scb-paint));
+  color:var(--vtt-ink,#f0e5d6);
+}
+html[data-appearance] .sc-combat-map-bulk{
+  display:block;width:100%;min-height:36px;padding:8px 11px;margin:8px 0;
+  border:1px solid var(--vtt-pigment-border,#967c6b);border-radius:2px;
+  background:var(--vtt-inkwater-soft,var(--scb-paint));
+  color:var(--vtt-display,#61765d);
+  font:700 11px/1.35 'DM Sans',sans-serif;cursor:pointer;
+}
+html[data-appearance] .sc-combat-map-bulk:hover:not(:disabled){
+  background:var(--vtt-inkwater,var(--scb-paint));
+}
+html[data-appearance] .sc-combat-map-bulk:disabled{
+  cursor:not-allowed;opacity:.45;
+}
+html[data-appearance] .sc-combat-line[draggable="true"],
+html[data-appearance] .sc-turn-card[draggable="true"]{
+  cursor:grab;
+}
+html[data-appearance] .sc-combat-line.dragging-to-map,
+html[data-appearance] .sc-combat-pick.dragging-to-map,
+html[data-appearance] .sc-turn-card.dragging-to-map{
+  opacity:.55!important;cursor:grabbing;
+  outline:2px dashed var(--vtt-pigment,#d1b784);
+  outline-offset:1px;
+}
+html[data-appearance] #stage.sc-sheet-drop #map{
+  outline:2px dashed color-mix(in srgb,var(--vtt-pigment,#d1b784) 75%,#e6d5b0);
+  outline-offset:-9px;cursor:copy;
+}
+@media(max-width:690px){
+  html[data-appearance] #pane-combate .sc-combat-pick{padding:6px 4px;gap:3px}
+  html[data-appearance] .sc-combat-pick-main{gap:5px}
+  html[data-appearance] .sc-combat-sheet-actions button{width:32px;height:33px}
+  html[data-appearance] .sc-combat-map-bulk{min-height:42px}
+}
+@media(prefers-reduced-motion:reduce){
+  html[data-appearance] .sc-combat-sheet-actions button,
+  html[data-appearance] .sc-combat-map-one{transition:none!important}
+}
