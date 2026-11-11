@@ -1,0 +1,97 @@
+/* Shinobi Chronicles · Combate 2.0 · Tinta e estratégia */
+#sc-combat-status-panel,#sc-jutsu-target-panel,#sc-fog-panel{
+  --scb-edge:var(--vtt-pigment-border,#9d8c6d);
+  --scb-paint:var(--vtt-inkwater,#e8e1d3);
+  --scb-light:var(--vtt-paper-light,#f9f5ed);
+  --scb-ink:var(--vtt-ink,#2e312c);
+  --scb-muted:var(--vtt-fade,#73756b);
+  --scb-strong:var(--vtt-display,#51694b);
+  --scb-line:var(--vtt-line,#c9c2af);
+  color:var(--scb-ink);
+}
+#sc-combat-status-panel,#sc-jutsu-target-panel{
+  padding:17px 14px 18px;margin:14px 0;
+  border:1px solid var(--scb-line);
+  border-top:3px solid var(--scb-edge);
+  background:linear-gradient(125deg,var(--scb-paint),var(--scb-light) 82%);
+  border-radius:3px;
+}
+#sc-fog-panel{
+  margin:18px 0 14px;padding:18px 14px 16px;
+  border:1px solid var(--scb-line);border-left:3px solid var(--scb-edge);
+  background:linear-gradient(110deg,var(--scb-paint),var(--scb-light) 90%);
+}
+.sc-battle-head{margin:0 0 15px}
+.sc-battle-head small{font:800 9px/1.4 'DM Sans',sans-serif;letter-spacing:.14em;color:var(--scb-strong)}
+.sc-battle-head h3{
+  color:var(--scb-ink)!important;margin:4px 0 7px!important;padding:0!important;
+  font:400 26px/1.14 'Caveat Brush','Yuji Boku',serif!important;
+  letter-spacing:0!important
+}
+.sc-battle-head h3::after{display:none!important}
+.sc-battle-head p{color:var(--scb-muted);font:11px/1.65 'DM Sans',sans-serif;margin:0}
+.sc-battle-field{display:grid;gap:6px;color:var(--scb-muted);font:700 10px/1.4 'DM Sans',sans-serif;margin:9px 0;min-width:0}
+.sc-battle-field select,.sc-battle-field input{
+  width:100%;min-width:0;min-height:36px;max-width:100%;box-sizing:border-box;
+  background:var(--scb-light);border:1px solid var(--scb-line);border-radius:3px;
+  color:var(--scb-ink);padding:7px 8px;font:600 11px/1.35 'DM Sans',sans-serif
+}
+.sc-battle-field :is(select,input):focus-visible{outline:2px solid var(--scb-edge);outline-offset:1px}
+.sc-battle-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(69px,85px);align-items:end;gap:8px}
+.sc-battle-fields:has(.sc-battle-field:only-child){grid-template-columns:minmax(0,1fr)}
+.sc-condition-current{display:flex;flex-wrap:wrap;gap:5px;margin:10px 0;min-height:27px}
+.sc-condition-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 7px;background:var(--scb-paint);border:1px solid var(--scb-edge);color:var(--scb-ink);font:600 10px 'DM Sans',sans-serif}
+.sc-condition-chip>span{color:var(--scb-strong);font-size:16px}
+.sc-condition-chip b{font-weight:700}
+.sc-condition-chip small{color:var(--scb-muted);font-size:9px}
+.sc-condition-chip button{
+  background:transparent;border:0;cursor:pointer;font-size:16px;
+  min-width:22px;min-height:22px;color:var(--scb-strong)
+}
+.sc-battle-empty{margin:0;color:var(--scb-muted);font:11px/1.6 'DM Sans',sans-serif}
+.sc-battle-submit,.sc-battle-secondary{
+  width:100%;min-height:36px;padding:8px 11px;margin:5px 0;
+  border:1px solid var(--scb-edge);border-radius:3px!important;
+  cursor:pointer;font:700 11px/1.3 'DM Sans',sans-serif!important;box-shadow:none!important
+}
+.sc-battle-submit{background:var(--vtt-button,#3d5643);color:var(--vtt-button-ink,#fff8ec)}
+.sc-battle-secondary{background:var(--scb-light);color:var(--scb-strong)}
+.sc-battle-secondary.active{background:var(--scb-paint);border-width:2px}
+.sc-battle-submit:hover:not(:disabled),.sc-battle-secondary:hover:not(:disabled){filter:brightness(.96)}
+.sc-battle-submit:disabled,.sc-battle-secondary:disabled{opacity:.48;cursor:not-allowed}
+.sc-battle-note{color:var(--scb-muted);font:10px/1.55 'DM Sans',sans-serif;margin:10px 0 0}
+.sc-fog-options{display:grid;gap:6px}
+#sc-fog-indicator{
+  position:absolute;top:142px;left:15px;z-index:7;
+  border-left:2px solid #d6bc91;border-radius:2px;
+  background:#13201ce9;color:#f0dfb9;padding:6px 9px;
+  font:700 9px/1.3 'DM Sans',sans-serif;letter-spacing:.06em;
+  pointer-events:none;box-shadow:0 4px 11px #0005
+}
+#sc-fog-indicator[hidden]{display:none!important}
+#stage.sc-battle-target #map{cursor:crosshair!important}
+#stage.sc-battle-fog #map{cursor:crosshair!important}
+.sc-turn-conditions{
+  position:absolute;bottom:-4px;left:25px;
+  color:#eacb8b;background:#233329eb;border:1px solid #cab387;
+  border-radius:3px;line-height:1;letter-spacing:.05em;padding:2px 3px;
+  font-size:11px;pointer-events:none;z-index:2
+}
+.sc-turn-card{position:relative}
+#sc-battle-shortcuts{
+  color:var(--vtt-fade,#91978c);padding:8px 0;
+  font:10px/1.7 'DM Sans',sans-serif;letter-spacing:.015em
+}
+#sc-battle-shortcuts kbd{
+  color:var(--vtt-display,#6d7a64);background:var(--vtt-paper-muted,#eee9dc);
+  border:1px solid var(--vtt-line,#a9a38e);border-radius:2px;
+  padding:2px 5px;font:700 9px 'DM Sans',sans-serif
+}
+@media(max-width:690px){
+  #sc-combat-status-panel,#sc-jutsu-target-panel,#sc-fog-panel{padding:12px 10px;margin:9px 0}
+  #sc-fog-indicator{top:112px;left:7px;max-width:56%;font-size:8px}
+  .sc-battle-head h3{font-size:23px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  #sc-combat-status-panel *,#sc-jutsu-target-panel *,#sc-fog-panel *{animation:none!important;transition:none!important}
+}
