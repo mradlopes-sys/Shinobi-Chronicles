@@ -181,6 +181,8 @@ export function createBattleSystems({
       fogIndicator.hidden=!active;
       fogIndicator.textContent=getAdmin()?'☾ Névoa visual ativada':'☾ Área encoberta';
     }
+    stage?.classList.toggle('sc-battle-target',mode==='target');
+    stage?.classList.toggle('sc-battle-fog',mode==='reveal');
     refreshTimelineBadges();
     if(!getAdmin())return;
     const bind=(id,event,fn)=>{const el=document.getElementById(id);if(el)el.addEventListener(event,fn)};
@@ -269,7 +271,7 @@ export function createBattleSystems({
   }
   function pointerMove(wx,wy){
     if(mode!=='reveal'||!shapeStart)return false;
-    shapeEnd=coords(wx,wy)||shapeEnd;redraw();return true;
+    shapeEnd=coords(wx,wy)||shapeEnd;return true;
   }
   async function pointerUp(wx,wy){
     if(mode!=='reveal'||!shapeStart)return false;
