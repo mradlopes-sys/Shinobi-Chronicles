@@ -232,14 +232,16 @@ export function createBattleSystems({
     const turns=safeInt(document.getElementById('sc-jutsu-rounds')?.value||duration,1,99,1);
     const condition=document.getElementById('sc-jutsu-condition')?.value||selectedCondition;
     const targetToken=getTokens().find(t=>t.fichaId===selectedTarget);
-    busy=true;render();
+    busy=true;render();let resourceChanged=false;
     try{
-      if(action==='damage'||action==='heal')await adjustHitPoints(target,action,amount);
+      if(action==='damage'||action==='heal'){
+        await adjustHitPoints(target,action,amount);resourceChanged=true;
+      }
       if(action==='condition'){
         const next=[...getConditionList(selectedTarget).filter(c=>c.id!==condition),
           {id:condition,remaining:turns}];
         const all=validConditions({...conditions,[selectedTarget]:next});
-        await saveFields({'theatre.conditions':all});conditions=all;
+        await saveFields({'theatre.conditions':all});conditions=all;resourceChanged=true;
       }
       await playEffect({
         kind:window.SHINOBI_JUTSU_FX?.classify?.(technique)||'chakra',
@@ -248,8 +250,10 @@ export function createBattleSystems({
       });
       notify(name+' → '+(target.nome||target.name)+' · '+(action==='damage'?amount+' de dano':
         action==='heal'?amount+' HP curado':action==='condition'?byId[condition]?.name||'Condição':'efeito visual')+'.');
-    }catch(e){notify('Não foi possível executar toda a ação: '+e.message)}
-    finally{busy=false;render();redraw()}
+    }catch(e){
+      notify((resourceChanged?'Efeito na ficha salvo, mas a animação não foi compartilhada: ':
+        'Não foi possível concluir a ação: ')+e.message);
+    }finally{busy=false;render();redraw()}
   }
   async function setFog(nextFog){
     if(!canWrite()||busy||!currentScene())return;
