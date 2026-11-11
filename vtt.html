@@ -324,6 +324,12 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
 @media(hover:none){.scene-card:hover,.scene-card:hover .scene-preview,
   #fx-quick [data-fx]:hover{transform:none}}
 
+/* Centro de sessão: Combate vive nas mesmas abas de Rolagens e Campanha.
+   A navegação fica sempre ao alcance do mestre enquanto o painel rola. */
+.sidebar > .tabs{position:sticky;top:0;z-index:7;isolation:isolate;box-shadow:0 9px 17px #0917108a;backdrop-filter:blur(12px)}
+.sidebar > .tabs button{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.sidebar > .tabs button:focus-visible{outline:2px solid #e9d39d;outline-offset:-2px}
+.sidebar > .tabs button[data-tab="combate"]:not([hidden]){letter-spacing:.01em}
 </style>
 <link rel="stylesheet" href="./assets/vtt-shinobi-theme-v1.css?v=20261110-theme1">
 <link rel="stylesheet" href="./assets/vtt-ink-scroll-v2.css?v=20261110-brush4">
@@ -334,7 +340,6 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
   <nav class="rail" id="tool-rail" aria-label="Ferramentas da mesa">
     <div class="seal" aria-hidden="true">忍</div>
     <button class="active" data-tab="rolls" title="Rolagens e chat" aria-label="Rolagens e chat">⚄</button>
-    <button data-tab="combate" data-gm-only hidden title="Combate: turnos e efeitos do mestre" aria-label="Combate">⚔</button>
     <button data-tab="campanha" title="Campanha, mapas e personagens" aria-label="Campanha">⌖</button>
     <span class="rail-tip" aria-hidden="true">MESA SHINOBI</span>
   </nav>
@@ -386,8 +391,9 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
   <aside class="sidebar" id="side-panel">
     <div class="side-header"><span class="overline">SHINOBI · MESA VIRTUAL</span><b>Mesa Virtual</b><p id="auth-label">Conectando ao Firebase…</p><div class="vtt-clan-mark" aria-label="Identidade visual da mesa"><span class="mark" id="vtt-clan-symbol" aria-hidden="true">忍</span><span class="clan-label" id="vtt-clan-label">ARQUIVOS SHINOBI</span></div></div>
     <div class="tabs" role="group" aria-label="Abas da mesa">
-      <button class="active" data-tab="rolls">Rolagens</button>
-      <button data-tab="campanha">Campanha</button>
+      <button class="active" data-tab="rolls" title="Chat e rolagens da sessão">Rolagens</button>
+      <button data-tab="campanha" title="Mapas, fichas e personagens">Campanha</button>
+      <button data-tab="combate" data-gm-only hidden title="Iniciativa, condições e efeitos do mestre" aria-label="Combate do mestre">Combate</button>
     </div>
     <section class="pane" id="pane-campanha" hidden>
       <div class="campaign-status"><span class="campaign-status-dot" aria-hidden="true"></span><div><span class="campaign-kicker">SESSÃO COMPARTILHADA</span><strong>Mesa Permanente</strong><p id="world-status" role="status">Conectando à campanha…</p></div></div>
