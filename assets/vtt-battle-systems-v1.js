@@ -26,7 +26,7 @@ export function createBattleSystems({
   const stage=document.getElementById('stage');
   let conditions={},fogMap={},mode='',selectedSource='',selectedTarget='',selectedCondition='atordoado';
   let chosenJutsu='',actionType='visual',power=4,duration=2,shapeStart=null,shapeEnd=null;
-  let busy=false,previewPointer=null;
+  let busy=false,previewPointer=null,lastScene='';
   const currentScene=()=>getSceneId()||'';
   const canWrite=()=>getAdmin()&&!!getRoom();
   const getRoster=()=>getSheets().filter(x=>typeof x.id==='string'&&x.id);
@@ -62,6 +62,11 @@ export function createBattleSystems({
     return out;
   }
   function setData(theatre){
+    const scene=currentScene();
+    if(scene!==lastScene){
+      lastScene=scene;
+      mode='';shapeStart=null;shapeEnd=null;
+    }
     if(!busy){
       conditions=validConditions(theatre?.conditions);
       fogMap=validFog(theatre?.fogMap);
