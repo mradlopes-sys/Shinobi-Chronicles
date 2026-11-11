@@ -2,7 +2,7 @@
 // Uses only the already-permitted theatre field of the shared room.
 export function createBattleSystems({
   getAdmin,getRoom,getSceneId,getRoomData,getSheets,getTokens,getCurrentTurn,
-  setCombatTab,focusToken,playEffect,adjustHitPoints,saveFields,notify,redraw,getMap
+  setCombatTab,focusToken,playEffect,adjustHitPoints,saveFields,notify,redraw,getMap,getCell
 }){
   const MAX_FOG=48,MAX_CONDITIONS=8,MAX_DURATION=99;
   const CONDITIONS=[
@@ -287,8 +287,9 @@ export function createBattleSystems({
     if(!fog.enabled)return true;
     const img=getMap();
     if(!img?.naturalWidth||!img?.naturalHeight)return false;
-    const x=(Number(token.x)+.5)*64/img.naturalWidth;
-    const y=(Number(token.y)+.75)*64/img.naturalHeight;
+    const cell=Math.max(1,Number(getCell())||64);
+    const x=(Number(token.x)+.5)*cell/img.naturalWidth;
+    const y=(Number(token.y)+.75)*cell/img.naturalHeight;
     return fog.reveals.some(r=>x>=r.x&&x<=r.x+r.w&&y>=r.y&&y<=r.y+r.h);
   }
   function paintFog(ctx,view){
