@@ -33,6 +33,12 @@ const combatDirector=createCombatDirector({
         ...(changed?{'theatre.conditions':changed}:{}),
         updatedAt:serverTimestamp()
       });
+      // A iniciativa é atualizada otimisticamente; manter a última rodada
+      // confirmada permite expirar condições mesmo com cliques rápidos.
+      if(roomData){
+        roomData.theatre={...(roomData.theatre||{}),combat:next,
+          ...(changed?{conditions:changed}:{})};
+      }
     }catch(error){battle.setData(roomData?.theatre);throw error}
   },
   notify:message=>show(message),portrait:f=>portrait(f)
@@ -40,7 +46,7 @@ const combatDirector=createCombatDirector({
 const battle=createBattleSystems({
   getAdmin:()=>admin,getRoom:()=>room,getSceneId:()=>roomData?.activeSceneId||'',
   getRoomData:()=>roomData,getSheets:()=>sheets,getTokens:()=>visibleTokens(),
-  getCurrentTurn:()=>combatDirector.getData(),
+  getCurrentTurn:()=>roomData?.theatre?.combat||{round:1},
   setCombatTab:name=>{
     if($('workspace').classList.contains('panel-hidden'))$('vtt-toggle-panel').click();
     switchTab(name);
