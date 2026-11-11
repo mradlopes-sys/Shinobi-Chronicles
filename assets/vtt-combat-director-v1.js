@@ -1,5 +1,8 @@
 // Shinobi Chronicles · central compartilhada de iniciativa
-export function createCombatDirector({panel,strip,getAdmin,getSheets,getRoomData,rollInitiative,saveCombat,notify,portrait}){
+export function createCombatDirector({
+ panel,strip,getAdmin,getSheets,getRoomData,rollInitiative,saveCombat,notify,portrait,
+ getOnMap=()=>false,hasScene=()=>false,onPlaceOnMap=async()=>{},onOpenSheet=()=>{}
+}){
  const cap=36,selected=new Set();let combat={entries:[],activeId:'',round:1,started:false},search='',busy=false;
  const $=id=>document.getElementById(id);
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -8,6 +11,24 @@ export function createCombatDirector({panel,strip,getAdmin,getSheets,getRoomData
  const photo=e=>validImg(e.portrait)?'<img src="'+esc(e.portrait)+'" alt="" loading="lazy">':'<span aria-hidden="true">忍</span>';
  const order=()=>combat.entries.slice().sort((a,b)=>b.score-a.score||a.order-b.order||a.name.localeCompare(b.name,'pt-BR'));
  const allowed=()=>getAdmin()&&!!getRoomData();
+ const dragIds=(event,ids)=>{
+  if(!allowed()||!event.dataTransfer)return false;
+  const valid=[...new Set(ids)].filter(id=>getSheets().some(f=>f.id===id)).slice(0,24);
+  if(!valid.length)return false;
+  event.dataTransfer.effectAllowed='copy';
+  event.dataTransfer.setData('text/shinobi-ficha',valid[0]);
+  event.dataTransfer.setData('text/shinobi-fichas',JSON.stringify(valid));
+  event.currentTarget?.classList?.add('dragging-to-map');
+  return true;
+ };
+ async function place(ids){
+  if(!allowed())return;
+  if(!hasScene()){notify('Ative um mapa na aba Campanha antes de colocar personagens.');return}
+  const valid=[...new Set(ids)].filter(id=>getSheets().some(f=>f.id===id)).slice(0,24);
+  if(!valid.length)return;
+  try{await onPlaceOnMap(valid)}
+  catch(error){notify('Não foi possível colocar as fichas no mapa: '+error.message)}
+ }
  const normalize=data=>{
   const seen=new Set(),entries=[];
   for(const e of (Array.isArray(data?.entries)?data.entries:[]).slice(0,cap)){
@@ -66,29 +87,52 @@ export function createCombatDirector({panel,strip,getAdmin,getSheets,getRoomData
  }
  function renderDirectory(){
   const root=$('sc-combat-directory');if(!root)return;
-  const used=new Set(combat.entries.map(x=>x.id));
+  const scrollTop=root.scrollTop||0,used=new Set(combat.entries.map(x=>x.id));
   const visible=getSheets().filter(f=>[f.nome,f.name,f.clanId].some(v=>String(v||'').toLowerCase().includes(search)))
    .sort((a,b)=>String(a.nome||a.name||'').localeCompare(String(b.nome||b.name||''),'pt-BR'));
   if(!visible.length){root.innerHTML='<p class="sc-combat-empty">Nenhuma ficha encontrada.</p>';return}
   root.innerHTML=visible.map(f=>{
-   const checked=selected.has(f.id),inList=used.has(f.id),name=esc(f.nome||f.name||'Shinobi');
-   const icon=portrait(f),img=validImg(icon)?'<img src="'+esc(icon)+'" alt="">':'忍';
-   return '<label class="sc-combat-pick'+(checked?' selected':'')+(inList?' already':'')+'">'+
-    '<input type="checkbox" data-sc-pick="'+esc(f.id)+'" '+(checked?'checked ':'')+(inList||busy?'disabled ':'')+'>'+
-    '<span class="sc-combat-pic">'+img+'</span><span class="sc-combat-person"><b>'+name+'</b><small>'+
-    esc(f.clanId||'Shinobi')+(inList?' · NA INICIATIVA':'')+'</small></span><span class="sc-combat-check">'+
-    (inList||checked?'✓':'+')+'</span></label>';
+    const checked=selected.has(f.id),inList=used.has(f.id),inScene=getOnMap(f.id);
+    const id=esc(f.id),name=esc(f.nome||f.name||'Shinobi');
+    const icon=portrait(f),img=validImg(icon)?'<img src="'+esc(icon)+'" alt="">':'忍';
+    return '<div class="sc-combat-pick'+(checked?' selected':'')+(inList?' already':'')+
+      (inScene?' in-scene':'')+'" data-sc-sheet-row="'+id+'" draggable="true" title="Arraste até o mapa para posicionar o token">'+
+      '<label class="sc-combat-pick-main"><input type="checkbox" data-sc-pick="'+id+'" '+
+        (checked?'checked ':'')+(inList||busy?'disabled ':'')+'>'+
+        '<span class="sc-combat-pic">'+img+'</span><span class="sc-combat-person"><b>'+name+
+        '</b><small>'+esc(f.clanId||'Shinobi')+(inList?' · INICIATIVA':'')+
+        '</small><small class="sc-combat-map-status" data-sc-token-status="'+id+'">'+
+        (inScene?'● NO MAPA':'↗ ARRASTE PARA O MAPA')+'</small></span>'+
+        '<span class="sc-combat-check">'+(inList||checked?'✓':'+')+'</span></label>'+
+      '<div class="sc-combat-sheet-actions"><button type="button" data-sc-map="'+id+
+        '" title="'+(inScene?'Localizar token no mapa':'Colocar token no mapa')+
+        '" aria-label="'+(inScene?'Localizar':'Colocar')+' '+name+' no mapa">⌖</button>'+
+        '<button type="button" data-sc-open-sheet="'+id+'" title="Abrir ficha de '+name+
+        '" aria-label="Abrir ficha de '+name+'">▤</button></div></div>';
   }).join('');
+  root.scrollTop=scrollTop;
   root.querySelectorAll('[data-sc-pick]').forEach(input=>input.onchange=()=>{
-   const id=input.dataset.scPick;if(input.checked)selected.add(id);else selected.delete(id);
-   input.closest('label').classList.toggle('selected',input.checked);
-   const icon=input.closest('label').querySelector('.sc-combat-check');if(icon)icon.textContent=input.checked?'✓':'+';
-   updateSelected();
+    const id=input.dataset.scPick;if(input.checked)selected.add(id);else selected.delete(id);
+    const row=input.closest('.sc-combat-pick');row?.classList.toggle('selected',input.checked);
+    const icon=row?.querySelector('.sc-combat-check');if(icon)icon.textContent=input.checked?'✓':'+';
+    updateSelected();
   });
+  root.querySelectorAll('[data-sc-sheet-row]').forEach(row=>{
+    row.ondragstart=e=>{
+      if(e.target?.closest?.('button,input')){e.preventDefault();return}
+      const id=row.dataset.scSheetRow;
+      if(!dragIds(e,selected.has(id)&&selected.size>1?[...selected]:[id]))e.preventDefault();
+    };
+    row.ondragend=()=>row.classList.remove('dragging-to-map');
+  });
+  root.querySelectorAll('[data-sc-map]').forEach(button=>button.onclick=()=>void place([button.dataset.scMap]));
+  root.querySelectorAll('[data-sc-open-sheet]').forEach(button=>button.onclick=()=>onOpenSheet(button.dataset.scOpenSheet));
  }
  function updateSelected(){
   if($('sc-combat-selected'))$('sc-combat-selected').textContent=selected.size+' selecionada'+(selected.size===1?'':'s');
   if($('sc-combat-add'))$('sc-combat-add').disabled=busy||!selected.size;
+  if($('sc-combat-place-selected'))$('sc-combat-place-selected').disabled=busy||!selected.size||!hasScene();
+  if($('sc-combat-place-roster'))$('sc-combat-place-roster').disabled=busy||!combat.entries.length||!hasScene();
  }
  function drawBoard(){
   if(!getAdmin())return;
@@ -192,16 +236,18 @@ export function createCombatDirector({panel,strip,getAdmin,getSheets,getRoomData
   '<button class="primary" id="sc-combat-next">Próximo turno →</button></div>'+
   '<div class="sc-combat-heading sub"><h3>Ordem de ação</h3><small>Maior iniciativa primeiro · valores editáveis</small></div>'+
   '<div class="sc-combat-order" id="sc-combat-order"></div>'+
+  '<button type="button" class="sc-combat-map-bulk" id="sc-combat-place-roster">⌖ Colocar participantes no mapa</button>'+
   '<div class="sc-combat-controls"><button id="sc-combat-reroll">⚄ Rolar novamente</button>'+
   '<button class="danger" id="sc-combat-clear">Encerrar encontro</button></div>'+
   '<div class="sc-combat-heading sub"><h3>Selecionar fichas</h3>'+
-  '<small>Jogadores e NPCs podem entrar juntos na iniciativa.</small></div>'+
+  '<small>Selecione para iniciativa ou arraste os personagens ao mapa.</small></div>'+
   '<input type="search" id="sc-combat-search" class="sc-combat-search" placeholder="Nome ou clã" aria-label="Buscar fichas">'+
   '<div class="sc-combat-controls small"><button id="sc-combat-all">Selecionar visíveis</button>'+
   '<button id="sc-combat-none">Desmarcar</button><span id="sc-combat-selected">0 selecionadas</span></div>'+
   '<div class="sc-combat-directory" id="sc-combat-directory"></div>'+
   '<button class="sc-combat-primary full" id="sc-combat-add">Adicionar selecionadas · 1d8</button>'+
-  '<p class="sc-combat-hint">Iniciativa = 1d8 + AGI + Prontidão. As fichas não são modificadas.</p>';
+  '<button type="button" class="sc-combat-map-bulk" id="sc-combat-place-selected">⌖ Colocar selecionadas no mapa</button>'+
+  '<p class="sc-combat-hint">Arraste uma ficha, ou várias selecionadas, até o mapa. Use ⌖ para posicionar e ▤ para abrir a ficha. Colocar no mapa não altera a iniciativa.</p>';
  $('sc-combat-search').oninput=e=>{search=e.target.value.trim().toLowerCase();renderDirectory()};
  $('sc-combat-all').onclick=()=>{
   for(const f of getSheets())if(!combat.entries.some(e=>e.id===f.id)&&
@@ -210,6 +256,8 @@ export function createCombatDirector({panel,strip,getAdmin,getSheets,getRoomData
  };
  $('sc-combat-none').onclick=()=>{selected.clear();drawBoard()};
  $('sc-combat-add').onclick=()=>void add();
+ $('sc-combat-place-selected').onclick=()=>void place([...selected]);
+ $('sc-combat-place-roster').onclick=()=>void place(combat.entries.map(e=>e.id));
  $('sc-combat-start').onclick=()=>void change(c=>({...c,started:!c.started}));
  $('sc-combat-next').onclick=()=>void change(c=>{
   const roster=c.entries.slice().sort((a,b)=>b.score-a.score||a.order-b.order);
@@ -239,5 +287,16 @@ export function createCombatDirector({panel,strip,getAdmin,getSheets,getRoomData
  drawStrip();drawBoard();
  return {setData(raw){if(!busy)combat=normalize(raw||{});drawStrip();drawBoard()},
   refresh(){drawStrip();drawBoard()},getData(){return combat},
+  refreshMapStatus(){
+    const root=$('sc-combat-directory');if(!root)return;
+    root.querySelectorAll('[data-sc-sheet-row]').forEach(row=>{
+      const id=row.dataset.scSheetRow,onMap=getOnMap(id);
+      row.classList.toggle('in-scene',onMap);
+      const status=row.querySelector('[data-sc-token-status]');
+      if(status)status.textContent=onMap?'● NO MAPA':'↗ ARRASTE PARA O MAPA';
+      const button=row.querySelector('[data-sc-map]');
+      if(button)button.title=onMap?'Localizar token no mapa':'Colocar token no mapa';
+    });
+  },
   hasEntry:id=>combat.entries.some(e=>e.id===id),addOne,removeOne};
 }
