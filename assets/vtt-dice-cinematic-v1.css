@@ -1,16 +1,16 @@
 /* Shinobi Chronicles · rolagem compacta em papel e nanquim (v2)
    Sem grandes placas 3D: cada dado possui geometria própria e resultado legível. */
 .vr-dice-layer.vr-dice-minimal{
- position:absolute;z-index:12;bottom:clamp(65px,17%,150px);left:50%;
- width:min(330px,calc(100% - 24px));box-sizing:border-box;
+ position:absolute;z-index:12;bottom:clamp(52px,13%,115px);left:50%;
+ width:min(270px,calc(100% - 24px));box-sizing:border-box;
  transform:translateX(-50%);text-align:left;pointer-events:none;
- filter:none;animation:sc-dice-presence 2.2s ease both
+ filter:none;animation:sc-dice-presence 1.85s ease both
 }
 .vr-dice-layer.vr-dice-minimal::before,
 .vr-dice-layer.vr-dice-minimal::after{display:none!important}
 .vr-min-tray{
  box-sizing:border-box;position:relative;overflow:hidden;
- padding:11px 13px 12px;background:rgba(23,40,31,.94);
+ padding:8px 10px 9px;background:rgba(23,40,31,.94);
  border:1px solid rgba(197,182,149,.56);border-radius:10px;
  box-shadow:0 9px 28px rgba(3,12,6,.46),inset 0 1px 0 rgba(251,240,211,.09);
  backdrop-filter:blur(13px)
@@ -21,8 +21,8 @@
 }
 .vr-min-heading{
  display:flex;gap:12px;align-items:center;justify-content:space-between;min-width:0;
- color:#ebe7d9;font:600 11px/1.35 system-ui,sans-serif;
- padding:0 1px 9px;margin-bottom:8px;border-bottom:1px solid rgba(189,186,155,.15)
+ color:#ebe7d9;font:600 10px/1.35 system-ui,sans-serif;
+ padding:0 1px 5px;margin-bottom:5px;border-bottom:1px solid rgba(189,186,155,.15)
 }
 .vr-min-heading>span{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;min-width:0}
 .vr-min-heading>small{
@@ -30,11 +30,11 @@
  border:1px solid rgba(202,178,122,.22);border-radius:4px;padding:3px 5px;
  font:700 9px/1.2 system-ui,sans-serif;letter-spacing:.03em;text-transform:uppercase
 }
-.vr-min-main{display:flex;align-items:center;justify-content:space-between;gap:9px;min-height:47px}
+.vr-min-main{display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:38px}
 .vr-min-dice{display:flex;align-items:center;gap:4px;flex:1;min-width:0;justify-content:center}
 .vr-min-die{
- width:min(52px,23%);max-width:52px;aspect-ratio:70/75;
- flex:0 1 52px;display:block;position:relative;transform-origin:50% 68%;
+ width:min(40px,23%);max-width:40px;aspect-ratio:70/75;
+ flex:0 1 40px;display:block;position:relative;transform-origin:50% 68%;
  animation:sc-die-land .59s cubic-bezier(.17,.85,.29,1.1) both;
  animation-delay:calc(var(--vr-i,0) * 95ms)
 }
@@ -47,15 +47,15 @@
 }
 .vr-min-face{
  fill:#24382e;stroke:#24382e;stroke-width:.15px;paint-order:stroke fill;
- font:700 23px/1 Georgia,serif;letter-spacing:-1px
+ font:700 20px/1 Georgia,serif;letter-spacing:-1px
 }
 .vr-min-result{
- border-left:1px solid rgba(204,190,150,.25);padding-left:12px;min-width:60px;
+ border-left:1px solid rgba(204,190,150,.25);padding-left:9px;min-width:52px;
  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
  animation:sc-dice-result .3s .56s ease-out both
 }
 .vr-min-result strong{
- color:#ffe7b7;font:600 28px/1 Georgia,serif;font-variant-numeric:tabular-nums;
+ color:#ffe7b7;font:600 24px/1 Georgia,serif;font-variant-numeric:tabular-nums;
  text-shadow:0 0 9px rgba(235,211,152,.13)
 }
 .vr-min-result small{
@@ -79,10 +79,10 @@
  100%{opacity:1;transform:none}
 }
 @media(max-width:670px){
- .vr-dice-layer.vr-dice-minimal{bottom:clamp(54px,13%,100px);width:min(280px,calc(100% - 18px))}
+ .vr-dice-layer.vr-dice-minimal{bottom:clamp(54px,13%,100px);width:min(245px,calc(100% - 18px))}
  .vr-min-tray{padding:9px 11px}
- .vr-min-die{max-width:44px;flex-basis:44px}
- .vr-min-result strong{font-size:25px}
+ .vr-min-die{max-width:37px;flex-basis:37px}
+ .vr-min-result strong{font-size:22px}
 }
 @media(prefers-reduced-motion:reduce){
  .vr-dice-layer.vr-dice-minimal,.vr-min-die,.vr-min-result{
