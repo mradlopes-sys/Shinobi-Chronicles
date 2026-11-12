@@ -19,11 +19,10 @@ html,body{background:#0c1812}
 .rail button:active,.glass-button:active,.stage-bottom button:active{transform:scale(.96)}
 .stage-wrap{isolation:isolate;background:radial-gradient(ellipse at 55% 35%,#324a39,#14241a 60%,#0c1712)}
 .stage-wrap::before{z-index:1;background:radial-gradient(ellipse at 50% 51%,transparent 51%,#07110c48 100%);opacity:.85}
-#map{transition:filter .24s ease}
-.stage-wrap.scene-loading #map{filter:brightness(.68) saturate(.83)}
-.stage-wrap.scene-loading:after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
-  background:radial-gradient(ellipse at 50% 40%,#d5b88920,transparent 65%);animation:sc-scene-wash .4s ease both}
-@keyframes sc-scene-wash{0%{opacity:0}48%{opacity:1}100%{opacity:0}}
+/* A entrada do mapa é direta: sem véu, clareamento, fumaça ou overlay de abertura. */
+#map{transition:none}
+.stage-wrap.scene-loading #map{filter:none}
+.stage-wrap.scene-loading::after{content:none!important;animation:none!important}
 .glass-button,.stage-identity,.stage-bottom{
   background:linear-gradient(135deg,#182b22ed,#14241dda);border-color:#9da38869;
   box-shadow:0 10px 28px #07100b70,inset 0 1px 0 #ffffff0d;backdrop-filter:blur(13px);
