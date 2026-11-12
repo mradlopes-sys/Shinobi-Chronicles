@@ -1386,8 +1386,8 @@ function draw(){
       ctx.stroke();ctx.restore();
     }
   }
-  // Ocultar marcadores e paredes de mestre enquanto inspeciona a visão do jogador.
-  if(!battle.isVisionPreview())battle.drawWalls(ctx,view);
+  // A prévia desenha somente os marcadores de portas disponíveis ao jogador.
+  battle.drawWalls(ctx,view);
   ctx.restore();
   drawRuler();
   drawTokenTravel();
