@@ -38,6 +38,8 @@ export function createBattleSystems({
   const walls=createWallTools({
     getAdmin,getUid,getSceneId,getRoom,getMap,getCell,getZoom,getTokens,isHidden:isTokenHidden,
     saveFields,notify,redraw,sendDoorRequest,
+    ensureFog:()=>getCurrentFog().enabled?Promise.resolve(true):
+      setFog({...getCurrentFog(),enabled:true}),
     onModeActivated:()=>{mode='';shapeStart=null;shapeEnd=null;brushPoints=[];render()}
   });
   const getConditionList=id=>Array.isArray(conditions[id])?conditions[id]:[];
