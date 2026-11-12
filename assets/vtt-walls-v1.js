@@ -52,9 +52,9 @@ function normalizeScene(value){
 }
 export function createWallTools({
   getAdmin,getUid,getSceneId,getRoom,getMap,getCell,getZoom,getTokens,isHidden,
-  saveFields,notify,redraw,onModeActivated
+  saveFields,notify,redraw,onModeActivated,sendDoorRequest
 }){
-  let data={},mode='',kind='solid',selected='',pending=null,busy=false,snap=true,revision=0;
+  let data={},mode='',kind='solid',selected='',pending=null,busy=false,snap=true,revision=0,doorBusy=false;
   const current=()=>getSceneId()||'';
   const scene=()=>data[current()]||{walls:[],vision:false,range:10};
   const img=()=>getMap();
@@ -252,6 +252,85 @@ export function createWallTools({
     }
     return false;
   }
+
+  // Portas: o mestre aciona livremente; jogadores precisam estar junto a um token próprio
+  // e não podem operar portas secretas fechadas nem portas trancadas.
+  const centerDoor=w=>({x:(w.x1+w.x2)/2,y:(w.y1+w.y2)/2});
+  function ownerAtDoor(wall){
+    const cell=Math.max(1,Number(getCell())||64),mid=centerDoor(wall);
+    return getTokens().filter(t=>t.ownerUid===getUid()&&!isHidden(t.id)).find(t=>{
+      const eye=eyeOf(t),distance=Math.hypot(eye.x-mid.x,eye.y-mid.y);
+      if(distance>cell*1.75)return false;
+      return !mapSegments().some(other=>other.id!==wall.id&&other.type!=='ethereal'&&
+        activeFor(other,eye.x,eye.y)&&
+        intersects({x:eye.x,y:eye.y},mid,{x:other.x1,y:other.y1},{x:other.x2,y:other.y2}));
+    })||null;
+  }
+  function usableDoor(wall){
+    if(!isDoor(wall))return false;
+    if(getAdmin())return true;
+    if(wall.type==='secret'&&wall.state!=='open')return false;
+    return wall.state!=='locked'&&!!ownerAtDoor(wall);
+  }
+  function doorAt(x,y){
+    if(!img()?.naturalWidth)return null;
+    const threshold=14/Math.max(.3,Number(getZoom())||1);
+    let closest=null,distance=threshold;
+    for(const wall of mapSegments()){
+      if(!usableDoor(wall))continue;
+      const mid=centerDoor(wall),d=Math.hypot(x-mid.x,y-mid.y);
+      if(d<distance){distance=d;closest=wall}
+    }
+    return closest;
+  }
+  function doorHint(x,y){
+    const door=doorAt(x,y);
+    if(!door)return '';
+    if(door.state==='locked')return 'Porta trancada · o mestre pode destrancá-la';
+    return door.state==='open'?'Clique para fechar a porta':'Clique para abrir a porta';
+  }
+  async function toggleDoorAt(x,y){
+    const target=doorAt(x,y);if(!target||doorBusy)return false;
+    if(target.state==='locked'){notify('Esta porta está trancada.');return true}
+    const state=target.state==='open'?'closed':'open';
+    doorBusy=true;
+    try{
+      if(getAdmin()){
+        const result=await saveScene({...scene(),walls:scene().walls.map(w=>
+          w.id===target.id?{...w,state}:w)});
+        if(result)notify(state==='open'?'Porta aberta.':'Porta fechada.');
+      }else{
+        if(typeof sendDoorRequest!=='function')throw Error('Interações não disponíveis.');
+        const own=ownerAtDoor(target);
+        if(!own)return false;
+        await sendDoorRequest({sceneId:current(),wallId:target.id,tokenId:own.id,state});
+        notify('Interação enviada ao mestre: '+(state==='open'?'abrir':'fechar')+' porta.');
+      }
+    }catch(e){notify('Não foi possível interagir com a porta: '+e.message)}
+    finally{doorBusy=false;redraw()}
+    return true;
+  }
+  function drawDoorHandles(ctx,view){
+    const z=Math.max(.15,Number(view?.zoom)||1);
+    ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';
+    for(const door of mapSegments()){
+      if(!usableDoor(door))continue;
+      const mid=centerDoor(door),radius=7/z;
+      ctx.beginPath();ctx.arc(mid.x,mid.y,radius,0,Math.PI*2);
+      ctx.fillStyle=door.state==='open'?'#527e69':door.state==='locked'?'#825451':'#bd9c66';
+      ctx.strokeStyle='#fff0cd';ctx.lineWidth=1.4/z;ctx.shadowColor='#050b07aa';ctx.shadowBlur=4/z;
+      ctx.fill();ctx.stroke();ctx.shadowBlur=0;
+      ctx.strokeStyle='#fff6e1';ctx.lineWidth=1.5/z;ctx.beginPath();
+      if(door.state==='open'){
+        ctx.moveTo(mid.x-2/z,mid.y);ctx.lineTo(mid.x+2/z,mid.y);
+      }else{
+        ctx.moveTo(mid.x-2/z,mid.y-2/z);ctx.lineTo(mid.x+2/z,mid.y+2/z);
+        ctx.moveTo(mid.x+2/z,mid.y-2/z);ctx.lineTo(mid.x-2/z,mid.y+2/z);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
   function blocksVision(wall,ox,oy,cell){
     if(!activeFor(wall,ox,oy))return false;
     if(wall.type==='invisible')return false;
@@ -336,7 +415,7 @@ export function createWallTools({
     return revision+':'+current()+':'+scene().range+':'+ownedEyes().map(e=>e.x.toFixed(2)+','+e.y.toFixed(2)).join('|');
   }
   function draw(ctx,view){
-    if(!getAdmin()||!isEditing())return;
+    if(!getAdmin()||!isEditing()){drawDoorHandles(ctx,view);return}
     const {w,h}=pixels();if(!w||!h)return;
     const scale=Math.max(.12,view?.zoom||1);
     ctx.save();ctx.lineCap='round';
@@ -373,8 +452,10 @@ export function createWallTools({
       }
     }
     ctx.restore();
+    drawDoorHandles(ctx,view);
   }
   return {setData,panelHTML,bind,refreshUI,pointerDown,pointerMove,pointerUp,cancel,
     active,activeDraw:()=>mode==='wall-draw',activeSelect:()=>mode==='wall-select',
-    draw,moveBlocked,visibleAtWorld,cutVision,signature,visionActive,visionSettings};
+    draw,moveBlocked,visibleAtWorld,cutVision,signature,visionActive,visionSettings,
+    doorAt,doorHint,toggleDoorAt};
 }
