@@ -1,13 +1,12 @@
 // Shinobi Chronicles — extensões da mesa (teste coletivo, combate assistido e cena).
 // Usa somente eventos "message"/"roll"/"effect" já existentes: nenhuma coleção nova.
-import {SKILL_DEFS,makeDicePayload,rollForSheet} from './vtt-rolls-v4.js?v=20261111-session5';
+import {makeDicePayload,rollForSheet} from './vtt-rolls-v4.js?v=20261111-session5';
 const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const safeN=(value,min,max)=>Math.max(min,Math.min(max,Number.isFinite(Number(value))?Math.round(Number(value)):min));
 const safeId=s=>typeof s==='string'&&/^[A-Za-z0-9_-]{6,30}$/.test(s);
-const SYS_GROUP='@SC:G:',SYS_END='@SC:GE:',SYS_ROLL='@SC:GR:',SYS_SCENE='@SC:A:',SYS_FX='@SC:FX:';
+const SYS_SCENE='@SC:A:',SYS_FX='@SC:FX:';
 const PRESETS={none:'Sem efeito',rain:'Chuva',storm:'Tempestade',mist:'Névoa',night:'Noite',chakra:'Chakra'};
 const CUES={shake:'Tremor',flash:'Relâmpago',pulse:'Pulso de chakra',transition:'Transição'};
-const TESTS=[...SKILL_DEFS.map(([key])=>[key,key]),['CC','Combate corporal'],['CD','Combate à distância'],['ESQ','Esquiva'],['LM','Ler movimento'],['Iniciativa','Iniciativa'],['Livre','Livre · 2d8']];
 const CND=[['','Sem condição'],['atordoado','Atordoado'],['imobilizado','Imobilizado'],['envenenado','Envenenado'],['inconsciente','Inconsciente'],['queimando','Queimando'],['sangrando','Sangrando'],['cego','Cego']];
 const stamp=d=>d?.at?.toMillis?.()||((d?.at?.seconds||0)*1000)||0;
 function payloadFromText(text,prefix){
@@ -19,16 +18,14 @@ function makeOptions(values,selected=''){
   return values.map(([value,name])=>'<option value="'+escapeHTML(value)+'"'+(value===selected?' selected':'')+'>'+escapeHTML(name)+'</option>').join('');
 }
 export function createSessionTools({
-  groupPanel,combatPanel,scenePanel,stage,getUid,getAdmin,getSheets,getSceneId,getRoomData,getMasterUid,
+  combatPanel,scenePanel,stage,getUid,getAdmin,getSheets,getSceneId,getRoomData,getMasterUid,
   send,applyResources,applyCondition,playEffect,notify
 }){
-  let publicEvents=[],busyGroup=false,busyCombat=false,busyScene=false;
+  let publicEvents=[],busyCombat=false,busyScene=false;
   let selectedMode='none',lastAmbienceKey='',previousScene='',lastComparison=null;
-  const pending=new Set(),sheetChoice=new Map(),seenCues=new Set();
+  const seenCues=new Set();
   const $=id=>document.getElementById(id);
   const roster=()=>getSheets().filter(f=>typeof f?.id==='string'&&f.id);
-  const labelFor=k=>TESTS.find(x=>x[0]===k)?.[1]||'Teste';
-  const nameOf=id=>roster().find(x=>x.id===id)?.nome||roster().find(x=>x.id===id)?.name||'Shinobi';
   const authorized=d=>{const master=getMasterUid();return !master||d.uid===master;};
   const canEdit=()=>getAdmin()&&!!getUid()&&!!getRoomData();
   const addNote=async (prefix,data)=>{
@@ -36,135 +33,6 @@ export function createSessionTools({
     if(text.length>395)throw Error('Solicitação longa demais. Selecione menos participantes.');
     await send('message',{text,character:'Mestre'});
   };
-
-  // Testes coletivos: adições independentes ao feed, nunca sobrescrevem rolagens de outros.
-  groupPanel.innerHTML='<section class="sc-tool-card" aria-label="Testes coletivos">'+
-    '<div class="sc-tool-head"><strong>Testes coletivos</strong><small>RESPOSTAS EM TEMPO REAL</small></div>'+
-    '<div id="sc-group-master" hidden><p>Solicite o mesmo teste a vários shinobi. Cada ficha responde uma única vez.</p>'+
-    '<label class="sc-tool-field">Tipo de teste<select id="sc-group-test">'+makeOptions(TESTS,'Prontidão')+'</select></label>'+
-    '<label class="sc-tool-field">Participantes<select id="sc-group-scope"><option value="all">Todas as fichas dos jogadores</option><option value="specific">Escolher fichas</option></select></label>'+
-    '<div class="sc-tool-list" id="sc-group-sheets" hidden></div>'+
-    '<div class="sc-tool-actions"><button type="button" class="sc-tool-btn" id="sc-group-send">⚄ Solicitar teste</button></div></div>'+
-    '<div id="sc-group-requests" aria-live="polite"></div>'+
-    '<p class="sc-tool-hint">Os resultados aparecem no chat e neste resumo. Os testes são independentes das rolagens livres.</p>'+
-    '</section>';
-  $('sc-group-scope').onchange=()=>{$('sc-group-sheets').hidden=$('sc-group-scope').value!=='specific'};
-  function refreshGroupRoster(){
-    const box=$('sc-group-sheets'),selected=new Set([...box.querySelectorAll('[data-group-sheet]:checked')].map(x=>x.dataset.groupSheet));
-    const list=roster().filter(f=>!getMasterUid()||f.ownerUid!==getMasterUid());
-    const key=list.map(f=>f.id+':'+(f.nome||'')).join('|');
-    if(box.dataset.rosterKey===key)return;
-    box.dataset.rosterKey=key;
-    box.innerHTML=list.slice(0,80).map(f=>'<label class="sc-tool-person"><input type="checkbox" data-group-sheet="'+escapeHTML(f.id)+'"'+(selected.has(f.id)?' checked':'')+'><span>'+escapeHTML(f.nome||f.name||'Shinobi')+'</span></label>').join('')||
-    '<p class="sc-tool-hint">Sem fichas de jogadores.</p>';
-  }
-  function requests(){
-    const endIds=new Set(),found=[];
-    for(const event of publicEvents){
-      const d=event.data||{},t=d.payload?.text;
-      if(d.type!=='message'||!authorized(d))continue;
-      const ended=payloadFromText(t,SYS_END);
-      if(ended&&safeId(ended.i)){endIds.add(ended.i);continue}
-      const g=payloadFromText(t,SYS_GROUP);
-      if(!g||!safeId(g.i)||!TESTS.some(x=>x[0]===g.k)||
-          !(g.s==='*'||Array.isArray(g.s))||endIds.has(g.i))continue;
-      if(Date.now()-safeN(g.t,0,Number.MAX_SAFE_INTEGER)>30*60*1000)continue;
-      found.push({...g,at:stamp(d)});
-    }
-    return found.slice(0,8);
-  }
-  function groupResults(group){
-    const result=new Map();
-    for(const event of publicEvents){
-      const d=event.data||{},p=d.payload||{};
-      if(d.type!=='roll'||typeof p.label!=='string'||!p.label.startsWith(SYS_ROLL+group.i+':'))continue;
-      const id=p.label.slice((SYS_ROLL+group.i+':').length);
-      if(!id||(group.s!=='*'&&!group.s.includes(id))||result.has(id))continue;
-      const value=Number(p.total);
-      if(!Number.isFinite(value))continue;
-      result.set(id,{value,character:String(p.character||'Shinobi'),uid:d.uid||'',at:stamp(d)});
-    }
-    return result;
-  }
-  function groupHTML(){
-    const reqs=requests();
-    if(!reqs.length)return '<p class="sc-tool-hint">Nenhum teste coletivo pendente.</p>';
-    return reqs.map(g=>{
-      const results=groupResults(g);
-      const eligible=roster().filter(f=>f.ownerUid===getUid()&&(g.s==='*'||g.s.includes(f.id)));
-      const available=eligible.filter(f=>!results.has(f.id));
-      const selected=sheetChoice.get(g.i);
-      const chosen=available.some(f=>f.id===selected)?selected:available[0]?.id||'';
-      if(chosen)sheetChoice.set(g.i,chosen);
-      let rows='';
-      if(getAdmin()){
-        const expected=g.s==='*'?roster().filter(f=>!getMasterUid()||f.ownerUid!==getMasterUid()).map(f=>f.id):g.s;
-        rows='<div class="sc-group-status">'+expected.slice(0,36).map(id=>{
-          const result=results.get(id);
-          return '<span class="'+(result?'ready':'')+'">'+escapeHTML(nameOf(id))+': '+(result?result.value:'aguardando')+'</span>';
-        }).join('')+'</div>'+
-          '<p class="sc-tool-hint">'+results.size+' resposta(s) recebida(s)'+(g.s==='*'?'':(' de '+expected.length))+'.</p>'+
-          '<button type="button" class="sc-tool-btn secondary" data-sc-group-close="'+escapeHTML(g.i)+'">Encerrar teste</button>';
-      }else if(eligible.length){
-        rows='<p class="sc-tool-hint">'+(available.length?'Selecione sua ficha e responda.':'Suas fichas já responderam.')+'</p>'+
-          (available.length?'<select data-sc-group-sheet="'+escapeHTML(g.i)+'">'+available.map(f=>
-            '<option value="'+escapeHTML(f.id)+'"'+(f.id===chosen?' selected':'')+'>'+escapeHTML(f.nome||f.name||'Shinobi')+'</option>').join('')+'</select>'+
-            '<button type="button" class="sc-tool-btn" data-sc-group-answer="'+escapeHTML(g.i)+'"'+(pending.has(g.i)?' disabled':'')+'>⚄ Rolar agora</button>':'');
-      }else rows='<p class="sc-tool-hint">Solicitação enviada a outras fichas.</p>';
-      return '<article class="sc-group-entry"><div class="sc-tool-head"><strong>'+escapeHTML(labelFor(g.k))+
-        '</strong><small>COLETIVO</small></div>'+rows+'</article>';
-    }).join('');
-  }
-  function renderGroup(){
-    $('sc-group-master').hidden=!canEdit();
-    if(canEdit())refreshGroupRoster();
-    const root=$('sc-group-requests'),scroll=document.getElementById('side-panel')?.scrollTop||0;
-    root.innerHTML=groupHTML();
-    root.querySelectorAll('[data-sc-group-sheet]').forEach(el=>el.onchange=()=>sheetChoice.set(el.dataset.scGroupSheet,el.value));
-    root.querySelectorAll('[data-sc-group-answer]').forEach(el=>el.onclick=()=>void submitAnswer(el.dataset.scGroupAnswer));
-    root.querySelectorAll('[data-sc-group-close]').forEach(el=>el.onclick=()=>void closeRequest(el.dataset.scGroupClose));
-    // Não altera a posição do painel nem transfere foco ao re-renderizar eventos.
-    if(document.getElementById('side-panel')?.scrollTop!==scroll)document.getElementById('side-panel').scrollTop=scroll;
-  }
-  $('sc-group-send').onclick=async()=>{
-    if(!canEdit()||busyGroup)return;
-    const key=$('sc-group-test').value;
-    if(!TESTS.some(([k])=>k===key))return;
-    const specific=$('sc-group-scope').value==='specific';
-    const ids=[...$('sc-group-sheets').querySelectorAll('[data-group-sheet]:checked')].map(el=>el.dataset.groupSheet).slice(0,15);
-    if(specific&&!ids.length)return notify('Escolha pelo menos uma ficha.');
-    busyGroup=true;$('sc-group-send').disabled=true;
-    try{
-      await addNote(SYS_GROUP,{i:makeId(),k:key,s:specific?ids:'*',t:Date.now()});
-      notify('Teste coletivo solicitado à mesa.');
-    }catch(error){notify('Não foi possível solicitar: '+error.message)}
-    finally{busyGroup=false;$('sc-group-send').disabled=false}
-  };
-  async function closeRequest(id){
-    if(!canEdit()||!safeId(id))return;
-    try{await addNote(SYS_END,{i:id});notify('Teste coletivo encerrado.')}
-    catch(error){notify('Erro ao encerrar: '+error.message)}
-  }
-  async function submitAnswer(id){
-    const group=requests().find(g=>g.i===id);
-    if(!group||pending.has(id)||!getUid())return;
-    const already=groupResults(group);
-    const sheetId=sheetChoice.get(id);
-    const sheet=roster().find(f=>f.id===sheetId&&f.ownerUid===getUid()&&
-      (group.s==='*'||group.s.includes(f.id)));
-    if(!sheet||already.has(sheet.id))return notify('Esta ficha já respondeu ou não participa do teste.');
-    const base=group.k==='Livre'?{dice:'2d8',bonus:0}:rollForSheet(sheet,group.k);
-    if(!base||base.error)return notify(base?.error||'Esse teste não está disponível na ficha.');
-    pending.add(id);renderGroup();
-    try{
-      const label=SYS_ROLL+id+':'+sheet.id;
-      if(label.length>80)throw Error('Identificador de ficha muito longo.');
-      const payload=makeDicePayload(base.dice,base.bonus,label,sheet.nome||sheet.name||'Shinobi');
-      await send('roll',payload);
-      notify('Resultado de '+(sheet.nome||'Shinobi')+' enviado ao teste coletivo.');
-    }catch(e){notify('Erro ao enviar a rolagem: '+e.message)}
-    finally{pending.delete(id);renderGroup()}
-  }
 
   // Confronto assistido: automatiza cálculos conhecidos da ficha, mas não supõe dano
   // pelo sistema de regras. HP, Chakra e condições exigem confirmação do mestre.
@@ -340,11 +208,11 @@ export function createSessionTools({
       if((p.sc||'')===scene&&Math.abs(Date.now()-(stamp(d)||p.t||0))<7500)playCue(p.fx);
     }
   }
-  function setEvents(data){publicEvents=Array.isArray(data)?data:[];renderGroup();syncScene()}
-  function refresh(){renderGroup();refreshCombatRoster();syncScene()}
+  function setEvents(data){publicEvents=Array.isArray(data)?data:[];syncScene()}
+  function refresh(){refreshCombatRoster();syncScene()}
   function reset(){
-    publicEvents=[];pending.clear();seenCues.clear();lastAmbienceKey='';previousScene='';
-    useAmbience(null);renderGroup();refreshCombatRoster();
+    publicEvents=[];seenCues.clear();lastAmbienceKey='';previousScene='';
+    useAmbience(null);refreshCombatRoster();
   }
   refresh();
   return {setEvents,refresh,reset};
