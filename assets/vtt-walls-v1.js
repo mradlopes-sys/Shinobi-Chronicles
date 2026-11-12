@@ -51,7 +51,7 @@ function normalizeScene(value){
     vision:value?.vision===true,range:clamp(Math.round(n(value?.range)||10),2,30)};
 }
 export function createWallTools({
-  getAdmin,getUid,getSceneId,getRoom,getMap,getCell,getZoom,getTokens,
+  getAdmin,getUid,getSceneId,getRoom,getMap,getCell,getZoom,getTokens,isHidden,
   saveFields,notify,redraw,onModeActivated
 }){
   let data={},mode='',kind='solid',selected='',pending=null,busy=false,snap=true;
@@ -260,7 +260,7 @@ export function createWallTools({
   function ownedEyes(){
     const user=getUid();
     if(!user)return[];
-    return getTokens().filter(t=>t.ownerUid===user).slice(0,6).map(eyeOf);
+    return getTokens().filter(t=>t.ownerUid===user&&!isHidden(t.id)).slice(0,6).map(eyeOf);
   }
   function visionActive(){return scene().vision&&scene().walls.length>0}
   function visionSettings(){return scene()}
