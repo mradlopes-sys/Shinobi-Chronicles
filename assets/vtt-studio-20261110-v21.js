@@ -1,7 +1,7 @@
 import {createTheatre} from './vtt-theatre-v17.js';
 import {createRollsPanel,makeDicePayload,rollForSheet} from './vtt-rolls-v4.js?v=20261111-chat-medium5';
 import {createCombatDirector} from './vtt-combat-director-v1.js?v=20261111-hidden1';
-import {createBattleSystems} from './vtt-battle-systems-v1.js?v=20261111-fog3';
+import {createBattleSystems} from './vtt-battle-systems-v1.js?v=20261112-walls1';
 import {createGMQuickPanel} from './vtt-gm-quick-panel-v1.js?v=20261111-gm1';
 import {createSessionTools} from './vtt-session-tools-v1.js?v=20261111-no-smoke1';
 import {createVisualEffects,EFFECTS} from './vtt-effects-v2.js?v=20261110-jutsus2';
@@ -57,7 +57,7 @@ const combatDirector=createCombatDirector({
   }
 });
 const battle=createBattleSystems({
-  getAdmin:()=>admin,getRoom:()=>room,getSceneId:()=>roomData?.activeSceneId||'',
+  getAdmin:()=>admin,getUid:()=>uid,getRoom:()=>room,getSceneId:()=>roomData?.activeSceneId||'',
   getRoomData:()=>roomData,getSheets:()=>sheets,getTokens:()=>visibleTokens(),
   getCurrentTurn:()=>roomData?.theatre?.combat||{round:1},
   setCombatTab:name=>{
@@ -99,7 +99,7 @@ const battle=createBattleSystems({
     await updateDoc(roomRef(),{...fields,updatedAt:serverTimestamp()});
   },
   notify:message=>show(message),redraw:()=>draw(),getMap:()=>view.image,
-  getCell:()=>view.cell
+  getCell:()=>view.cell,getZoom:()=>view.zoom
 });
 function refreshCombatTargets(){
   const input=$('effect-target');if(!input)return;
@@ -1217,6 +1217,7 @@ function draw(){
       ctx.stroke();ctx.restore();
     }
   }
+  battle.drawWalls(ctx,view);
   ctx.restore();
   drawRuler();
   drawTokenTravel();
@@ -1297,11 +1298,12 @@ function requestDraw(){
 function reflectBattleMode(){
   stage.classList.toggle('sc-battle-target',battle.isMode('target'));
   stage.classList.toggle('sc-battle-fog',['reveal','brush-reveal','brush-cover'].some(kind=>battle.isMode(kind)));
+  stage.classList.toggle('sc-battle-walls',battle.isMode('wall-draw')||battle.isMode('wall-select'));
 }
 canvas.onpointerdown=e=>{if(e.button!==0)return;const p=point(e);
-  if(battle.isMode('target')||['reveal','brush-reveal','brush-cover'].some(kind=>battle.isMode(kind))){
+  if(battle.isMode('target')||['reveal','brush-reveal','brush-cover','wall-draw','wall-select'].some(kind=>battle.isMode(kind))){
     const q=world(p.x,p.y),token=hit(p.x,p.y);
-    fogDrawing=['reveal','brush-reveal','brush-cover'].some(kind=>battle.isMode(kind));
+    fogDrawing=['reveal','brush-reveal','brush-cover','wall-draw','wall-select'].some(kind=>battle.isMode(kind));
     if(battle.pointerDown(q.x,q.y,token)){
       e.preventDefault();
       if(fogDrawing)canvas.setPointerCapture(e.pointerId);
@@ -1315,7 +1317,18 @@ canvas.onpointermove=e=>{
     battle.pointerMove(q.x,q.y);
     requestDraw();return;
   }
-  if(measure.enabled&&measure.drag){const p=point(e);measure.end=world(p.x,p.y);measure.drawnPx=Math.hypot(measure.end.x-measure.start.x,measure.end.y-measure.start.y);updateMetricDrawStatus();draw();return}if(!dragToken||dragToken.id!==e.pointerId)return;const p=point(e);if(dragToken.t){const q=world(p.x,p.y);dragToken.t.x=Math.max(0,Math.min(1000,Math.round((q.x/view.cell-.5)*1000)/1000));dragToken.t.y=Math.max(0,Math.min(1000,Math.round((q.y/view.cell-1)*1000)/1000))}else{view.ox=dragToken.ox+p.x-dragToken.start.x;view.oy=dragToken.oy+p.y-dragToken.start.y}requestDraw()};
+  if(measure.enabled&&measure.drag){const p=point(e);measure.end=world(p.x,p.y);measure.drawnPx=Math.hypot(measure.end.x-measure.start.x,measure.end.y-measure.start.y);updateMetricDrawStatus();draw();return}if(!dragToken||dragToken.id!==e.pointerId)return;const p=point(e);if(dragToken.t){
+    const q=world(p.x,p.y),token=dragToken.t;
+    const nx=Math.max(0,Math.min(1000,Math.round((q.x/view.cell-.5)*1000)/1000));
+    const ny=Math.max(0,Math.min(1000,Math.round((q.y/view.cell-1)*1000)/1000));
+    const cell=view.cell;
+    const ax=(token.x+.5)*cell,ay=(token.y+.75)*cell;
+    const bx=(nx+.5)*cell,by=(ny+.75)*cell;
+    // O mestre pode atravessar paredes segurando Shift para preparar a cena.
+    if((admin&&e.shiftKey)||!battle.blocksMovement(ax,ay,bx,by)){
+      token.x=nx;token.y=ny;
+    }
+  }else{view.ox=dragToken.ox+p.x-dragToken.start.x;view.oy=dragToken.oy+p.y-dragToken.start.y}requestDraw()};
 const finish=async e=>{
   if(fogDrawing){
     fogDrawing=false;
