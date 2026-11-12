@@ -7,7 +7,7 @@ const safeN=(value,min,max)=>Math.max(min,Math.min(max,Number.isFinite(Number(va
 const safeId=s=>typeof s==='string'&&/^[A-Za-z0-9_-]{6,30}$/.test(s);
 const SYS_SCENE='@SC:A:',SYS_FX='@SC:FX:';
 const PRESETS={none:'Sem efeito',rain:'Chuva',storm:'Tempestade',mist:'Névoa',night:'Noite',chakra:'Chakra'};
-const CUES={shake:'Tremor',flash:'Relâmpago',pulse:'Pulso de chakra',transition:'Transição'};
+const CUES={shake:'Tremor',flash:'Relâmpago',pulse:'Pulso de chakra',transition:'Corte suave'};
 const CND=[['','Sem condição'],['atordoado','Atordoado'],['imobilizado','Imobilizado'],['envenenado','Envenenado'],['inconsciente','Inconsciente'],['queimando','Queimando'],['sangrando','Sangrando'],['cego','Cego']];
 const stamp=d=>d?.at?.toMillis?.()||((d?.at?.seconds||0)*1000)||0;
 function payloadFromText(text,prefix){
@@ -180,7 +180,7 @@ export function createSessionTools({
       const data={i:makeId(),p:preset,n:safeN($('sc-scene-strength').value,15,100),sc:getSceneId()||'',t:Date.now()};
       await addNote(SYS_SCENE,data);
       lastAmbienceKey=data.i;
-      useAmbience(data);playCue('transition');
+      useAmbience(data);
       notify('Atmosfera '+PRESETS[preset]+' compartilhada.');
     }catch(error){notify('Não foi possível publicar a atmosfera: '+error.message)}
     finally{busyScene=false;$('sc-scene-apply').disabled=false}
@@ -200,7 +200,7 @@ export function createSessionTools({
     if(!ambience)return;
     const scene=getSceneId()||'';
     if(previousScene!==scene){
-      if(previousScene&&scene)playCue('transition');
+      // Abrir/trocar mapa não adiciona fumaça nem transição automática.
       lastAmbienceKey='';previousScene=scene;
     }
     const newest=publicEvents.find(event=>{
@@ -210,7 +210,7 @@ export function createSessionTools({
     });
     const state=newest?payloadFromText(newest.data.payload.text,SYS_SCENE):null;
     const key=state?.i||'none|'+scene;
-    if(key!==lastAmbienceKey){lastAmbienceKey=key;useAmbience(state);if(state)playCue('transition')}
+    if(key!==lastAmbienceKey){lastAmbienceKey=key;useAmbience(state)}
     for(const event of publicEvents){
       const d=event.data||{},p=payloadFromText(d.payload?.text,SYS_FX);
       if(d.type!=='message'||!authorized(d)||!p||!safeId(p.i)||!Object.hasOwn(CUES,p.fx)||seenCues.has(p.i))continue;
