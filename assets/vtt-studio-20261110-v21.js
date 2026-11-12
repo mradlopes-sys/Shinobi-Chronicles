@@ -12,6 +12,7 @@ import {getFirestore,doc,getDoc,addDoc,setDoc,collection,onSnapshot,serverTimest
 const cfg={apiKey:'AIzaSyCdTZejzKXYyyAnYgak7ADEsDhfsdFgvVo',authDomain:'shinobi-chronicles-b9635.firebaseapp.com',projectId:'shinobi-chronicles-b9635',appId:'1:1000505549378:web:e1cbf459451b617f3503db'};
 const app=getApps()[0]||initializeApp(cfg),auth=getAuth(app),db=getFirestore(app);
 const WORLD_ID='shinobi-chronicles';
+const activeDoorEvents=new Set(),pendingDoorEvents=new Map();
 const $=id=>document.getElementById(id);
 let uid='',admin=false,room='',roomData=null,tokens=[],sheets=[],scenes=[],subs=[],dragToken=null,selected=null,sceneKey='',lastRoll='',busy=false,editingSceneId='',tokenUnsub=null,tokenSceneSubscribed=null,sheetsUnsub=null,subscriptionEpoch=0,worldCollectionsReady=false,portraitSubs=new Map(),vitalSubs=new Map(),lastVitals=new Map(),vitalTimer=null,masterUid='',lastStageRosterKey='__initial__',secretRollFeeds={self:[],gm:[],blind:[]},blindProcessing=new Set();
 const stage=$('stage'),canvas=$('map'),ctx=canvas.getContext('2d');
@@ -99,7 +100,14 @@ const battle=createBattleSystems({
     await updateDoc(roomRef(),{...fields,updatedAt:serverTimestamp()});
   },
   notify:message=>show(message),redraw:()=>draw(),getMap:()=>view.image,
-  getCell:()=>view.cell,getZoom:()=>view.zoom
+  getCell:()=>view.cell,getZoom:()=>view.zoom,
+  sendDoorRequest:async({sceneId,wallId,tokenId,state})=>{
+    if(!room||!uid||!sceneId||roomData?.activeSceneId!==sceneId)
+      throw Error('A cena mudou ou você saiu da mesa.');
+    await addDoc(collection(db,'vttRooms',room,'events'),{
+      type:'door',uid,at:serverTimestamp(),payload:{sceneId,wallId,tokenId,state}
+    });
+  }
 });
 function refreshCombatTargets(){
   const input=$('effect-target');if(!input)return;
@@ -897,6 +905,10 @@ async function connectWorld(){
           for(const change of events.docChanges()){
             if(change.type!=='added'&&change.type!=='modified')continue;
             const data=change.doc.data();
+            if(data.type==='door'){
+              if(admin)void resolveDoorEvent(change.doc,epoch);
+              continue;
+            }
             if(data.type!=='effect')continue;
             if(data.payload?.sceneId&&data.payload.sceneId!==roomData?.activeSceneId)continue;
             const stamp=data.at?.toMillis?.();
