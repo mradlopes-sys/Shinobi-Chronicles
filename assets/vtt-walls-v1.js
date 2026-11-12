@@ -293,8 +293,10 @@ export function createWallTools({
         const radiusDistance=distSeg(eye.x,eye.y,wall.x1,wall.y1,wall.x2,wall.y2);
         if(radiusDistance>radius+cell)continue;
         for(const p of [[wall.x1,wall.y1],[wall.x2,wall.y2]]){
-          const a=Math.atan2(p[1]-eye.y,p[0]-eye.x);
-          angles.push(a-.00014,a,a+.00014);
+          const angle=Math.atan2(p[1]-eye.y,p[0]-eye.x);
+          const full=Math.PI*2;
+          const angleNorm=v=>((v%full)+full)%full;
+          angles.push(angleNorm(angle-.00014),angleNorm(angle),angleNorm(angle+.00014));
         }
       }
       angles.sort((a,b)=>a-b);
