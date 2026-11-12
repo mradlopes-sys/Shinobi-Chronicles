@@ -1,8 +1,8 @@
 import {createTheatre} from './vtt-theatre-v17.js';
-import {createRollsPanel,makeDicePayload,rollForSheet} from './vtt-rolls-v4.js?v=20261111-session5';
+import {createRollsPanel,makeDicePayload,rollForSheet} from './vtt-rolls-v4.js?v=20261112-no-group1';
 import {createCombatDirector} from './vtt-combat-director-v1.js?v=20261110-map1';
 import {createBattleSystems} from './vtt-battle-systems-v1.js?v=20261110-b2f';
-import {createSessionTools} from './vtt-session-tools-v1.js?v=20261111-session3';
+import {createSessionTools} from './vtt-session-tools-v1.js?v=20261112-no-group1';
 import {createVisualEffects,EFFECTS} from './vtt-effects-v2.js?v=20261110-jutsus2';
 import {DEFAULT_METERS_PER_CELL,metersPerCell,pixelsToMeters,calibrateMetersPerCell,formatMeters,scaleBar} from './vtt-metrics-v1.js';
 import {initializeApp,getApps} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
@@ -308,7 +308,6 @@ const rolls=createRollsPanel({
 // Ferramentas integradas usam as coleções de eventos que o VTT já sincroniza.
 // Os ajustes de HP/Chakra são atômicos para evitar conflitos entre ações.
 const sessionTools=createSessionTools({
-  groupPanel:$('sc-group-panel'),
   combatPanel:$('sc-assisted-combat'),
   scenePanel:$('sc-scene-director'),
   stage,
