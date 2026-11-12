@@ -1,6 +1,7 @@
 // Shinobi Chronicles — extensões da mesa (teste coletivo, combate assistido e cena).
 // Usa somente eventos "message"/"roll"/"effect" já existentes: nenhuma coleção nova.
 import {makeDicePayload,rollForSheet} from './vtt-rolls-v4.js?v=20261111-session5';
+import {createCinematicSceneFX} from './vtt-cinematic-scene-v2.js?v=20261113-cine1';
 const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const safeN=(value,min,max)=>Math.max(min,Math.min(max,Number.isFinite(Number(value))?Math.round(Number(value)):min));
 const safeId=s=>typeof s==='string'&&/^[A-Za-z0-9_-]{6,30}$/.test(s);
@@ -125,9 +126,10 @@ export function createSessionTools({
   // Diretor de cena. O último evento por cenário define a atmosfera dos clientes.
   // As transições são cosméticas e não alteram mapas, tokens ou fichas.
   const ambience=document.getElementById('sc-scene-ambience');
+  const sceneFX=createCinematicSceneFX({stage,host:ambience});
   scenePanel.innerHTML='<section class="sc-tool-card" aria-label="Diretor cinematográfico">'+
     '<div class="sc-tool-head"><strong>Diretor de cenas</strong><small>TINTA · CLIMA · CHAKRA</small></div>'+
-    '<p>Altere a atmosfera da cena para todos os jogadores sem recarregar o mapa.</p>'+
+    '<p>Pré-visualize chuva, luz e chakra na mesa. Clique em Aplicar para compartilhar com os jogadores.</p>'+
     '<div class="sc-scene-preset-grid" id="sc-scene-presets">'+Object.entries(PRESETS).map(([id,title])=>
       '<button type="button" class="sc-scene-preset" data-sc-preset="'+id+'" aria-pressed="'+(id==='none')+'">'+escapeHTML(title)+'</button>').join('')+'</div>'+
     '<label class="sc-tool-field" for="sc-scene-strength">Intensidade <output id="sc-scene-strength-out">60%</output></label>'+
@@ -140,26 +142,34 @@ export function createSessionTools({
     '<p class="sc-tool-hint" id="sc-scene-current">Atmosfera: sem efeito</p></section>';
   const presetButtons=[...scenePanel.querySelectorAll('[data-sc-preset]')];
   presetButtons.forEach(button=>button.onclick=()=>{
+    if(!canEdit())return;
     selectedMode=button.dataset.scPreset;
     presetButtons.forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
+    sceneFX.setAtmosphere(selectedMode,Number($('sc-scene-strength').value));
+    $('sc-scene-current').textContent='Prévia local: '+PRESETS[selectedMode];
   });
-  $('sc-scene-strength').oninput=()=>$('sc-scene-strength-out').textContent=$('sc-scene-strength').value+'%';
+  $('sc-scene-strength').oninput=()=>{
+    const value=Number($('sc-scene-strength').value);
+    $('sc-scene-strength-out').textContent=value+'%';
+    if(canEdit()){
+      sceneFX.setAtmosphere(selectedMode,value);
+      $('sc-scene-current').textContent='Prévia local: '+PRESETS[selectedMode];
+    }
+  };
   function useAmbience(state){
     if(!ambience)return;
     const preset=Object.hasOwn(PRESETS,state?.p)?state.p:'none';
-    const strength=safeN(state?.n,15,100)/100;
-    ambience.dataset.preset=preset;
-    ambience.style.setProperty('--sc-atm-strength',String(strength));
+    const amount=safeN(state?.n??60,15,100);
+    sceneFX.setAtmosphere(preset,amount);
     selectedMode=preset;
+    $('sc-scene-strength').value=amount;
+    $('sc-scene-strength-out').textContent=amount+'%';
     presetButtons.forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.scPreset===preset)));
     $('sc-scene-current').textContent='Atmosfera: '+PRESETS[preset];
   }
   function playCue(kind){
     if(!ambience||!Object.hasOwn(CUES,kind))return;
-    const classes={shake:'sc-scene-shake',flash:'sc-atm-lightning',pulse:'sc-atm-pulse',transition:'sc-scene-transition'};
-    const klass=classes[kind],node=kind==='shake'?stage:ambience;
-    node.classList.remove(klass);void node.offsetWidth;node.classList.add(klass);
-    setTimeout(()=>node.classList.remove(klass),1250);
+    sceneFX.cue(kind);
     if(kind==='pulse'&&window.SHINOBI_JUTSU_FX?.getSettings?.().enabled)
       window.SHINOBI_JUTSU_FX?.audio?.('chakra','Pulso de chakra');
   }
@@ -169,6 +179,7 @@ export function createSessionTools({
     try{
       const data={i:makeId(),p:preset,n:safeN($('sc-scene-strength').value,15,100),sc:getSceneId()||'',t:Date.now()};
       await addNote(SYS_SCENE,data);
+      lastAmbienceKey=data.i;
       useAmbience(data);playCue('transition');
       notify('Atmosfera '+PRESETS[preset]+' compartilhada.');
     }catch(error){notify('Não foi possível publicar a atmosfera: '+error.message)}
@@ -212,7 +223,7 @@ export function createSessionTools({
   function refresh(){refreshCombatRoster();syncScene()}
   function reset(){
     publicEvents=[];seenCues.clear();lastAmbienceKey='';previousScene='';
-    useAmbience(null);refreshCombatRoster();
+    sceneFX.reset();useAmbience(null);refreshCombatRoster();
   }
   refresh();
   return {setEvents,refresh,reset};
