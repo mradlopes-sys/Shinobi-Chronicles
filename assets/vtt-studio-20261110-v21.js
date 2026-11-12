@@ -979,7 +979,7 @@ async function resolveDoorEvent(entry,epoch){
      !['open','closed'].includes(req.state))return;
   const stamp=record.at?.toMillis?.();
   if(!stamp||Math.abs(Date.now()-stamp)>30000||req.sceneId!==roomData?.activeSceneId)return;
-  if(!view.image?.naturalWidth){pendingDoorEvents.set(id,entry);return}
+  if(!view.image?.naturalWidth||sceneKey!==roomData?.scene){pendingDoorEvents.set(id,entry);return}
   pendingDoorEvents.delete(id);activeDoorEvents.add(id);
   const w=view.image.naturalWidth,h=view.image.naturalHeight,cell=automaticMapCell(view.image);
   try{
