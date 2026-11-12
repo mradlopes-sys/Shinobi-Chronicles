@@ -6,7 +6,7 @@ export const WALL_PRESETS=[
   {id:'window',name:'Janela',color:'#80c9de',movement:true,vision:'near'},
   {id:'door',name:'Porta',color:'#b08dde',movement:true,vision:'block'},
   {id:'secret',name:'Porta secreta',color:'#d38c92',movement:true,vision:'block'},
-  {id:'invisible',name:'Barreira invisível',color:'#79c7ad',movement:true,vision:'none'},
+  {id:'invisible',name:'Parede invisível',color:'#79c7ad',movement:true,vision:'none'},
   {id:'ethereal',name:'Parede ilusória',color:'#bc9cde',movement:false,vision:'block'},
   {id:'terrain',name:'Terreno / obstáculo',color:'#bdad77',movement:true,vision:'limited'}
 ];
