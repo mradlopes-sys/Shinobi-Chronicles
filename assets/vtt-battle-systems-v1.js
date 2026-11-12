@@ -394,7 +394,8 @@ export function createBattleSystems({
   // The fog mask is composited separately, avoiding destination-out on the real
   // map canvas (which would destroy map pixels and token transparency).
   function buildFogMask(fog,w,h){
-    const cw=Math.max(1,Math.round(Math.min(1500,w))),ch=Math.max(1,Math.round(h*cw/w));
+    const ratio=Math.min(1,1500/w,1500/h);
+    const cw=Math.max(1,Math.round(w*ratio)),ch=Math.max(1,Math.round(h*ratio));
     if(!fogCanvas)fogCanvas=document.createElement('canvas');
     if(fogCanvas.width!==cw||fogCanvas.height!==ch){fogCanvas.width=cw;fogCanvas.height=ch}
     const c=fogCanvas.getContext('2d',{alpha:true});
