@@ -343,11 +343,35 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
   height:auto;max-height:none;overflow:visible;
   overscroll-behavior:initial;
 }
-/* Painel lateral um pouco mais amplo para ler mensagens de vários jogadores. */
+/* Rolagens: chat realmente amplo sem comprometer a rolagem ÚNICA da aba.
+   O mestre vê mensagens e resultados; os dados continuam logo abaixo. */
 @media(min-width:1100px){
-  .workspace:not(.panel-hidden){grid-template-columns:62px minmax(0,1fr) 365px}
-  .workspace.rail-hidden:not(.panel-hidden){grid-template-columns:0 minmax(0,1fr) 365px}
+  .workspace:not(.panel-hidden){grid-template-columns:62px minmax(0,1fr) 470px}
+  .workspace.rail-hidden:not(.panel-hidden){grid-template-columns:0 minmax(0,1fr) 470px}
 }
+@media(min-width:841px) and (max-width:1099px){
+  .workspace:not(.panel-hidden){grid-template-columns:54px minmax(0,1fr) 390px}
+  .workspace.rail-hidden:not(.panel-hidden){grid-template-columns:0 minmax(0,1fr) 390px}
+}
+/* Na aba Rolagens a identidade da mesa ocupa só uma faixa discreta,
+   devolvendo a altura útil ao histórico do chat. Nas outras abas permanece igual. */
+html[data-appearance] .workspace > .sidebar:has(#pane-rolls:not([hidden])) > .side-header{
+  padding:9px 13px 8px!important;margin:0 0 5px!important;min-height:0!important
+}
+html[data-appearance] .workspace > .sidebar:has(#pane-rolls:not([hidden])) > .side-header :is(.overline,.vtt-clan-mark){
+  display:none!important
+}
+html[data-appearance] .workspace > .sidebar:has(#pane-rolls:not([hidden])) > .side-header::before,
+html[data-appearance] .workspace > .sidebar:has(#pane-rolls:not([hidden])) > .side-header::after{
+  display:none!important
+}
+html[data-appearance] .workspace > .sidebar:has(#pane-rolls:not([hidden])) > .side-header b{
+  font-size:22px!important;line-height:1.1!important;margin:0!important
+}
+html[data-appearance] .workspace > .sidebar:has(#pane-rolls:not([hidden])) > .side-header p{
+  margin:2px 0 0!important;font-size:10px!important;line-height:1.25!important
+}
+
 </style>
 <link rel="stylesheet" href="./assets/vtt-shinobi-theme-v1.css?v=20261110-theme1">
 <link rel="stylesheet" href="./assets/vtt-ink-scroll-v2.css?v=20261110-brush4">
