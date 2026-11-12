@@ -1119,6 +1119,9 @@ function watchTokens(sceneId){
   tokenUnsub=onSnapshot(source,snap=>{
     if(room!==watchingRoom)return;
     tokens=snap.docs.map(d=>({id:d.id,...d.data()}));
+    const preview=battle.getVisionPreview();
+    if(preview&&!visibleTokens().some(t=>t.id===preview.tokenId&&t.ownerUid===preview.uid))
+      battle.clearVisionPreview();
     renderTokens();draw();battle.render();combatDirector.refreshMapStatus();combatDirector.refresh();refreshCombatTargets();gmQuick.refresh();
   },err=>show('Permissão dos tokens: '+err.message));
 }
@@ -1227,6 +1230,12 @@ function renderTokens(){
         renderTokens();gmQuick.refresh();draw();
       };
       line.append(toggle);
+      if(t.ownerUid&&t.ownerUid!==uid){
+        const inspect=document.createElement('button');inspect.className='btn small';
+        inspect.textContent='◉ Visão';inspect.title='Ver a cena como este jogador';
+        inspect.onclick=()=>{if(battle.setVisionPreview(t)){selected=t.id;renderTokens()}};
+        line.append(inspect);
+      }
       const remove=document.createElement('button');remove.className='btn small';remove.textContent='Retirar';
       remove.title='Remove o token, não a ficha original';
       remove.onclick=async()=>{if(!confirm('Retirar o token de '+(t.name||'Shinobi')+'? A ficha original será mantida.'))return;try{await deleteDoc(tokenRef(t.id));if(selected===t.id)selected=null;show('Token retirado; ficha preservada.')}catch(e){show(e.message)}};
@@ -1313,13 +1322,14 @@ function loadMap(url){
   view.image=null;
   if(!safeUrl(url)){
     stage.classList.remove('scene-loading');view.cell=64;center();
-    updateMetricHud();return;
+    refreshStageWallTools();updateMetricHud();return;
   }
   stage.classList.add('scene-loading');
   const img=new Image();
   img.onload=()=>{
     if(sceneKey!==url)return;
     view.image=img;view.cell=automaticMapCell(img);center();
+    refreshStageWallTools();
     for(const event of pendingDoorEvents.values())void resolveDoorEvent(event,subscriptionEpoch);
     pendingDoorEvents.clear();
     updateMetricHud();
@@ -1328,7 +1338,7 @@ function loadMap(url){
   img.onerror=()=>{
     if(sceneKey!==url)return;
     stage.classList.remove('scene-loading');
-    $('scene-empty').hidden=false;updateMetricHud();
+    $('scene-empty').hidden=false;refreshStageWallTools();updateMetricHud();
     show('Não foi possível carregar a imagem da cena. Confira a URL HTTPS.');
   };
   img.src=url;draw();
