@@ -4,7 +4,7 @@ export function createBattleSystems({
   getAdmin,getRoom,getSceneId,getRoomData,getSheets,getTokens,getCurrentTurn,
   setCombatTab,focusToken,playEffect,adjustHitPoints,saveFields,notify,redraw,getMap,getCell
 }){
-  const MAX_FOG=48,MAX_CONDITIONS=8,MAX_DURATION=99;
+  const MAX_FOG=48,MAX_STROKES=100,MAX_POINTS=100,MAX_CONDITIONS=8,MAX_DURATION=99;
   const CONDITIONS=[
     {id:'atordoado',name:'Atordoado',icon:'✦'},
     {id:'envenenado',name:'Envenenado',icon:'☠'},
@@ -24,13 +24,15 @@ export function createBattleSystems({
   const fogPanel=document.getElementById('sc-fog-panel');
   const fogIndicator=document.getElementById('sc-fog-indicator');
   const stage=document.getElementById('stage');
-  let conditions={},fogMap={},mode='',selectedSource='',selectedTarget='',selectedCondition='atordoado';
+  let conditions={},fogMap={},hiddenTokens=[],mode='',selectedSource='',selectedTarget='',selectedCondition='atordoado';
   let chosenJutsu='',actionType='visual',power=4,duration=2,shapeStart=null,shapeEnd=null;
+  let brushPoints=[],brushSize=3,visibilityBusy=false,fogCanvas=null,fogCacheKey='';
   let busy=false,previewPointer=null,lastScene='';
   const currentScene=()=>getSceneId()||'';
   const canWrite=()=>getAdmin()&&!!getRoom();
   const getRoster=()=>getSheets().filter(x=>typeof x.id==='string'&&x.id);
-  const getCurrentFog=()=>fogMap[currentScene()]||{enabled:false,reveals:[]};
+  const getCurrentFog=()=>fogMap[currentScene()]||{enabled:false,reveals:[],strokes:[]};
+  const isTokenHidden=id=>hiddenTokens.includes(id);
   const getConditionList=id=>Array.isArray(conditions[id])?conditions[id]:[];
   const condNames=id=>getConditionList(id).map(x=>byId[x.id]?.name||'').filter(Boolean).join(', ');
   function validConditions(obj){
@@ -47,17 +49,27 @@ export function createBattleSystems({
     }
     return out;
   }
+  const norm=n=>Math.max(0,Math.min(1,Number(n)||0));
   function validFog(obj){
     const out={};if(!obj||typeof obj!=='object'||Array.isArray(obj))return out;
     for(const [scene,val] of Object.entries(obj).slice(0,90)){
-      if(!scene||scene.length>120||!val||typeof val!=='object')continue;
+      if(typeof scene!=='string'||!scene||scene.length>120||!val||typeof val!=='object')continue;
       const reveals=(Array.isArray(val.reveals)?val.reveals:[]).slice(0,MAX_FOG)
-        .filter(r=>[r.x,r.y,r.w,r.h].every(v=>Number.isFinite(Number(v))))
-        .map(r=>({
-          x:Math.max(0,Math.min(1,Number(r.x))),y:Math.max(0,Math.min(1,Number(r.y))),
-          w:Math.max(0,Math.min(1,Number(r.w))),h:Math.max(0,Math.min(1,Number(r.h)))
-        })).filter(r=>r.w>.002&&r.h>.002);
-      out[scene]={enabled:val.enabled===true,reveals};
+        .filter(r=>r&&[r.x,r.y,r.w,r.h].every(v=>Number.isFinite(Number(v))))
+        .map(r=>({x:norm(r.x),y:norm(r.y),w:norm(r.w),h:norm(r.h)}))
+        .filter(r=>r.w>.002&&r.h>.002);
+      const strokes=(Array.isArray(val.strokes)?val.strokes:[]).slice(-MAX_STROKES).map(v=>{
+        if(!v||!['reveal','cover'].includes(v.op))return null;
+        if(v.type==='rect'&&[v.x,v.y,v.w,v.h].every(n=>Number.isFinite(Number(n))))
+          return {type:'rect',op:v.op,x:norm(v.x),y:norm(v.y),w:norm(v.w),h:norm(v.h)};
+        if(v.type==='brush'&&Array.isArray(v.points)){
+          const points=v.points.slice(0,MAX_POINTS).filter(p=>Array.isArray(p)&&p.length===2&&p.every(n=>Number.isFinite(Number(n))))
+            .map(p=>[norm(p[0]),norm(p[1])]);
+          if(points.length)return {type:'brush',op:v.op,r:Math.max(.006,Math.min(.12,Number(v.r)||.03)),points};
+        }
+        return null;
+      }).filter(Boolean);
+      out[scene]={enabled:val.enabled===true,reveals,strokes};
     }
     return out;
   }
@@ -70,7 +82,9 @@ export function createBattleSystems({
     if(!busy){
       conditions=validConditions(theatre?.conditions);
       fogMap=validFog(theatre?.fogMap);
+      fogCacheKey='';
     }
+    hiddenTokens=Array.isArray(theatre?.hiddenTokens)?[...new Set(theatre.hiddenTokens.filter(x=>typeof x==='string'&&x.length<150))].slice(0,250):[];
     render();redraw();
   }
   function roundTick(before,next){
@@ -92,6 +106,17 @@ export function createBattleSystems({
     catch(e){conditions=before;notify('Não foi possível salvar as condições: '+e.message);return false}
     finally{busy=false;render();redraw()}
   }
+
+  async function setTokenHidden(id,hide){
+    if(!canWrite()||visibilityBusy||!getTokens().some(t=>t.id===id))return false;
+    const before=hiddenTokens.slice();
+    const next=hide?[...new Set([...before,id])].slice(-250):before.filter(x=>x!==id);
+    hiddenTokens=next;visibilityBusy=true;redraw();
+    try{await saveFields({'theatre.hiddenTokens':next});return true}
+    catch(error){hiddenTokens=before;notify('Não foi possível alterar a visibilidade: '+error.message);return false}
+    finally{visibilityBusy=false;redraw()}
+  }
+  async function toggleTokenHidden(id){return setTokenHidden(id,!isTokenHidden(id))}
   function chooseTarget(id){
     selectedTarget=id;render();
     if(id)focusToken(id);
@@ -174,15 +199,20 @@ export function createBattleSystems({
   function fogHTML(){
     if(!getAdmin())return '';
     const fog=getCurrentFog();
+    const count=(fog.reveals?.length||0)+(fog.strokes?.length||0);
+    const active=mode==='reveal'||mode==='brush-reveal'||mode==='brush-cover';
     return '<div class="sc-battle-head"><small>CONTROLE DO MESTRE · EXPLORAÇÃO</small><h3>Névoa de guerra</h3>'+
-      '<p>Oculte visualmente o mapa dos jogadores e revele regiões retangulares conforme explorarem.</p></div>'+
+      '<p>Revele corredores com o pincel ou marque cômodos com um retângulo. Reoculte áreas sem apagar o restante da exploração.</p></div>'+
       '<div class="sc-fog-options"><button id="sc-fog-toggle" type="button" class="sc-battle-submit">'+
-        (fog.enabled?'☾ Desativar névoa':'☾ Ocultar todo o mapa')+'</button>'+
-      '<button id="sc-fog-reveal" type="button" class="sc-battle-secondary'+(mode==='reveal'?' active':'')+'"'+(!fog.enabled?' disabled':'')+'>'+
-        (mode==='reveal'?'Arraste no mapa · ESC cancela':'▤ Revelar região')+'</button>'+
-      '<button id="sc-fog-clear" type="button" class="sc-battle-secondary"'+(!fog.enabled||fog.reveals.length===0?' disabled':'')+'>↶ Reocultar regiões</button></div>'+
-      '<p class="sc-battle-note">'+(fog.enabled?'Névoa ligada · '+fog.reveals.length+' região(ões) revelada(s).':'Névoa desligada para esta cena.')+
-      ' A ocultação é visual, não criptográfica: o navegador ainda recebe o mapa.</p>';
+        (fog.enabled?'☾ Desativar névoa':'☾ Encobrir mapa')+'</button>'+
+      '<button id="sc-fog-reveal" type="button" class="sc-battle-secondary'+(mode==='reveal'?' active':'')+'"'+(!fog.enabled?' disabled':'')+'>▤ Retângulo</button>'+
+      '<button id="sc-fog-brush-reveal" type="button" class="sc-battle-secondary'+(mode==='brush-reveal'?' active':'')+'"'+(!fog.enabled?' disabled':'')+'>✎ Pincel revelar</button>'+
+      '<button id="sc-fog-brush-cover" type="button" class="sc-battle-secondary'+(mode==='brush-cover'?' active':'')+'"'+(!fog.enabled?' disabled':'')+'>◼ Pincel ocultar</button></div>'+
+      '<label class="sc-fog-brush-size">Tamanho do pincel <input id="sc-fog-brush-size" type="range" min="1" max="10" step="1" value="'+brushSize+'"><b>'+brushSize+'%</b></label>'+
+      '<div class="sc-fog-options secondary"><button id="sc-fog-undo" type="button" class="sc-battle-secondary"'+(!count?' disabled':'')+'>↶ Desfazer última área</button>'+
+      '<button id="sc-fog-clear" type="button" class="sc-battle-secondary"'+(!count?' disabled':'')+'>✕ Reocultar tudo</button></div>'+
+      '<p class="sc-battle-note">'+(fog.enabled?'Névoa ativa · '+count+' marca(s) aplicadas. '+(active?'Arraste sobre o mapa. Esc cancela.':'Escolha uma ferramenta para pintar.'):'Névoa desligada.')+
+      ' Ocultação visual: o navegador ainda recebe o arquivo do mapa.</p>';
   }
   function render(){
     if(condPanel&&getAdmin())condPanel.innerHTML=conditionsHTML();
@@ -194,7 +224,7 @@ export function createBattleSystems({
       fogIndicator.textContent=getAdmin()?'☾ Névoa visual ativada':'☾ Área encoberta';
     }
     stage?.classList.toggle('sc-battle-target',mode==='target');
-    stage?.classList.toggle('sc-battle-fog',mode==='reveal');
+    stage?.classList.toggle('sc-battle-fog',['reveal','brush-reveal','brush-cover'].includes(mode));
     refreshTimelineBadges();
     if(!getAdmin())return;
     const bind=(id,event,fn)=>{const el=document.getElementById(id);if(el)el.addEventListener(event,fn)};
@@ -217,9 +247,20 @@ export function createBattleSystems({
     bind('sc-jutsu-condition','change',e=>{selectedCondition=e.target.value});
     bind('sc-jutsu-map-target','click',()=>{mode=mode==='target'?'':'target';render();redraw()});
     bind('sc-jutsu-cast','click',()=>void cast());
-    bind('sc-fog-toggle','click',()=>void setFog({enabled:!getCurrentFog().enabled,reveals:[]}));
-    bind('sc-fog-reveal','click',()=>{mode=mode==='reveal'?'':'reveal';render();redraw()});
-    bind('sc-fog-clear','click',()=>void setFog({...getCurrentFog(),reveals:[]}));
+    bind('sc-fog-toggle','click',()=>void setFog({...getCurrentFog(),enabled:!getCurrentFog().enabled}));
+    for(const [id,kind] of [['sc-fog-reveal','reveal'],['sc-fog-brush-reveal','brush-reveal'],['sc-fog-brush-cover','brush-cover']]){
+      bind(id,'click',()=>{mode=mode===kind?'':kind;shapeStart=null;brushPoints=[];render();redraw()});
+    }
+    bind('sc-fog-brush-size','input',event=>{
+      brushSize=safeInt(event.target.value,1,10,3);
+      const caption=event.target.parentElement?.querySelector('b');if(caption)caption.textContent=brushSize+'%';
+    });
+    bind('sc-fog-clear','click',()=>void setFog({...getCurrentFog(),reveals:[],strokes:[]}));
+    bind('sc-fog-undo','click',()=>{
+      const fog=getCurrentFog();
+      if(fog.strokes?.length)void setFog({...fog,strokes:fog.strokes.slice(0,-1)});
+      else if(fog.reveals?.length)void setFog({...fog,reveals:fog.reveals.slice(0,-1)});
+    });
   }
   async function cast(){
     if(!canWrite()||busy||!chosenJutsu||!selectedSource||!selectedTarget)return;
@@ -259,17 +300,17 @@ export function createBattleSystems({
     if(!canWrite()||busy||!currentScene())return;
     const prev=fogMap;
     const next=validFog({...fogMap,[currentScene()]:nextFog});
-    busy=true;fogMap=next;render();redraw();
+    busy=true;fogMap=next;fogCacheKey='';render();redraw();
     try{await saveFields({'theatre.fogMap':next});return true}
-    catch(error){fogMap=prev;notify('Falha ao salvar a névoa: '+error.message);return false}
+    catch(error){fogMap=prev;fogCacheKey='';notify('Falha ao salvar a névoa: '+error.message);return false}
     finally{busy=false;render();redraw()}
   }
   function toggleFogMode(){
     if(!getAdmin()||!currentScene())return false;
     if(!getCurrentFog().enabled){notify('Ative a névoa na aba Campanha antes de revelar áreas.');return false}
-    mode=mode==='reveal'?'':'reveal';render();redraw();return true;
+    mode=mode==='reveal'?'':'reveal';shapeStart=null;brushPoints=[];render();redraw();return true;
   }
-  function cancel(){if(!mode&&!shapeStart)return false;mode='';shapeStart=null;shapeEnd=null;render();redraw();return true}
+  function cancel(){if(!mode&&!shapeStart&&!brushPoints.length)return false;mode='';shapeStart=null;shapeEnd=null;brushPoints=[];render();redraw();return true}
   // Coordinates are normalized to the map, never browser pixels.
   function coords(wx,wy){
     const img=getMap();if(!img?.naturalWidth||!img?.naturalHeight)return null;
@@ -281,24 +322,42 @@ export function createBattleSystems({
       else notify('Clique diretamente em um token para escolher o alvo.');
       return true;
     }
-    if(mode!=='reveal')return false;
+    if(!['reveal','brush-reveal','brush-cover'].includes(mode))return false;
     const p=coords(wx,wy);if(!p)return true;
-    shapeStart=p;shapeEnd=p;redraw();return true;
+    shapeStart=p;shapeEnd=p;
+    brushPoints=mode==='reveal'?[]:[[p.x,p.y]];
+    redraw();return true;
   }
   function pointerMove(wx,wy){
-    if(mode!=='reveal'||!shapeStart)return false;
-    shapeEnd=coords(wx,wy)||shapeEnd;return true;
+    if(!shapeStart||!['reveal','brush-reveal','brush-cover'].includes(mode))return false;
+    const p=coords(wx,wy);if(!p)return true;
+    shapeEnd=p;
+    if(mode!=='reveal'&&brushPoints.length<MAX_POINTS){
+      const last=brushPoints[brushPoints.length-1];
+      if(!last||Math.hypot(last[0]-p.x,last[1]-p.y)>.0016)brushPoints.push([p.x,p.y]);
+    }
+    return true;
   }
   async function pointerUp(wx,wy){
-    if(mode!=='reveal'||!shapeStart)return false;
-    shapeEnd=coords(wx,wy)||shapeEnd;
-    const a=shapeStart,b=shapeEnd;
-    const box={x:Math.min(a.x,b.x),y:Math.min(a.y,b.y),w:Math.abs(a.x-b.x),h:Math.abs(a.y-b.y)};
-    shapeStart=null;shapeEnd=null;
-    if(box.w<.002||box.h<.002){notify('Arraste um retângulo para revelar a região.');redraw();return true}
-    const current=getCurrentFog();
-    if(current.reveals.length>=MAX_FOG){notify('Limite de regiões atingido. Reoculte e redesenhe a cena.');redraw();return true}
-    await setFog({...current,enabled:true,reveals:[...current.reveals,box]});return true;
+    if(!shapeStart||!['reveal','brush-reveal','brush-cover'].includes(mode))return false;
+    const p=coords(wx,wy)||shapeEnd||shapeStart;
+    const old=shapeStart,kind=mode;
+    const points=brushPoints.slice();
+    shapeStart=null;shapeEnd=null;brushPoints=[];
+    const fog=getCurrentFog();
+    const strokes=[...(fog.strokes||[])];
+    if(strokes.length>=MAX_STROKES){notify('Limite de áreas atingido. Use desfazer ou reocultar tudo.');redraw();return true}
+    if(kind==='reveal'){
+      const item={type:'rect',op:'reveal',x:Math.min(old.x,p.x),y:Math.min(old.y,p.y),
+        w:Math.abs(old.x-p.x),h:Math.abs(old.y-p.y)};
+      if(item.w<.002||item.h<.002){notify('Arraste para marcar uma área do mapa.');redraw();return true}
+      strokes.push(item);
+    }else{
+      const final=points[points.length-1];
+      if(points.length<MAX_POINTS&&(!final||Math.hypot(final[0]-p.x,final[1]-p.y)>.001))points.push([p.x,p.y]);
+      strokes.push({type:'brush',op:kind==='brush-cover'?'cover':'reveal',r:brushSize/100,points});
+    }
+    await setFog({...fog,enabled:true,strokes});return true;
   }
   function tokenVisible(token){
     if(getAdmin())return true;
