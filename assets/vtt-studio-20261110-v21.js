@@ -963,6 +963,55 @@ async function connectWorld(){
     show('Mesa Permanente: '+e.message+'. Confira as regras do Firebase.');
   }
 }
+// Pedidos de abertura/fechamento são validados pelo mestre, inclusive
+// propriedade do token, proximidade, parede intermediária e trinco.
+function doorLineCrosses(ax,ay,bx,by,w){
+  const vx=bx-ax,vy=by-ay,sx=w.x2-w.x1,sy=w.y2-w.y1;
+  const cross=(x,y,u,v)=>x*v-y*u,den=cross(vx,vy,sx,sy);
+  if(Math.abs(den)<1e-8)return false;
+  const tx=w.x1-ax,ty=w.y1-ay,t=cross(tx,ty,sx,sy)/den,u=cross(tx,ty,vx,vy)/den;
+  return t>.0001&&t<.9999&&u>=-.00001&&u<=1.00001;
+}
+async function resolveDoorEvent(entry,epoch){
+  const id=entry.id,record=entry.data(),req=record.payload||{};
+  if(!admin||epoch!==subscriptionEpoch||activeDoorEvents.has(id))return;
+  if(record.type!=='door'||!record.uid||!req.sceneId||!req.wallId||!req.tokenId||
+     !['open','closed'].includes(req.state))return;
+  const stamp=record.at?.toMillis?.();
+  if(!stamp||Math.abs(Date.now()-stamp)>30000||req.sceneId!==roomData?.activeSceneId)return;
+  if(!view.image?.naturalWidth){pendingDoorEvents.set(id,entry);return}
+  pendingDoorEvents.delete(id);activeDoorEvents.add(id);
+  const w=view.image.naturalWidth,h=view.image.naturalHeight,cell=automaticMapCell(view.image);
+  try{
+    await runTransaction(db,async tx=>{
+      const roomSnap=await tx.get(roomRef()),tokenSnap=await tx.get(tokenRef(req.tokenId));
+      if(!roomSnap.exists()||!tokenSnap.exists())return;
+      const state=roomSnap.data(),token=tokenSnap.data();
+      if(state.activeSceneId!==req.sceneId||token.sceneId!==req.sceneId||token.ownerUid!==record.uid)return;
+      const wallsMap=state.theatre?.wallsMap||{},config=wallsMap[req.sceneId];
+      if(!config||!Array.isArray(config.walls))return;
+      const door=config.walls.find(wall=>wall.id===req.wallId);
+      if(!door||!['door','secret'].includes(door.type)||door.state==='locked'||
+         (door.type==='secret'&&door.state!=='open')||door.state===req.state)return;
+      const a={x:(Number(token.x)+.5)*cell,y:(Number(token.y)+.75)*cell};
+      const b={x:(Number(door.x1)+Number(door.x2))*w/2,y:(Number(door.y1)+Number(door.y2))*h/2};
+      if(!Number.isFinite(a.x+a.y+b.x+b.y)||Math.hypot(b.x-a.x,b.y-a.y)>cell*1.75)return;
+      const blocked=config.walls.some(wall=>{
+        if(wall.id===door.id||wall.type==='ethereal'||
+           (['door','secret'].includes(wall.type)&&wall.state==='open'))return false;
+        const other={x1:Number(wall.x1)*w,y1:Number(wall.y1)*h,
+          x2:Number(wall.x2)*w,y2:Number(wall.y2)*h};
+        const side=(other.x2-other.x1)*(a.y-other.y1)-(other.y2-other.y1)*(a.x-other.x1);
+        if((wall.dir==='left'&&side<0)||(wall.dir==='right'&&side>0))return false;
+        return doorLineCrosses(a.x,a.y,b.x,b.y,other);
+      });
+      if(blocked)return;
+      const walls=config.walls.map(wall=>wall.id===door.id?{...wall,state:req.state}:wall);
+      tx.update(roomRef(),{'theatre.wallsMap':{...wallsMap,[req.sceneId]:{...config,walls}},
+        updatedAt:serverTimestamp()});
+    });
+  }catch(error){show('Interação com porta: '+error.message)}
+}
 function watchTokens(sceneId){
   if(!room||tokenSceneSubscribed===sceneId)return;
   if(tokenUnsub){tokenUnsub();tokenUnsub=null}
