@@ -292,7 +292,8 @@ export function createWallTools({
       const dx=x-eye.x,dy=y-eye.y,dist=Math.hypot(dx,dy);
       if(dist<.05)return true;
       if(dist>radius)return false;
-      return rayDistance(eye.x,eye.y,dx/dist,dy/dist,dist,segments,cell)>=dist-.5;
+      const nearby=segments.filter(w=>distSeg(eye.x,eye.y,w.x1,w.y1,w.x2,w.y2)<=dist+1);
+      return rayDistance(eye.x,eye.y,dx/dist,dy/dist,dist,nearby,cell)>=dist-.5;
     });
   }
   function cutVision(maskCtx,cw,ch,w,h){
@@ -305,12 +306,11 @@ export function createWallTools({
     maskCtx.fillStyle='#fff';
     maskCtx.setTransform(cw/w,0,0,ch/h,0,0);
     for(const eye of eyes){
+      const nearby=segments.filter(w=>distSeg(eye.x,eye.y,w.x1,w.y1,w.x2,w.y2)<=radius+cell);
       const angles=[];
-      const sample=96;
+      const sample=72;
       for(let i=0;i<sample;i++)angles.push(i*Math.PI*2/sample);
-      for(const wall of segments){
-        const radiusDistance=distSeg(eye.x,eye.y,wall.x1,wall.y1,wall.x2,wall.y2);
-        if(radiusDistance>radius+cell)continue;
+      for(const wall of nearby){
         for(const p of [[wall.x1,wall.y1],[wall.x2,wall.y2]]){
           const angle=Math.atan2(p[1]-eye.y,p[0]-eye.x);
           const full=Math.PI*2;
@@ -322,7 +322,7 @@ export function createWallTools({
       maskCtx.beginPath();
       for(let i=0;i<angles.length;i++){
         const angle=angles[i],dx=Math.cos(angle),dy=Math.sin(angle);
-        const dist=rayDistance(eye.x,eye.y,dx,dy,radius,segments,cell);
+        const dist=rayDistance(eye.x,eye.y,dx,dy,radius,nearby,cell);
         const x=eye.x+dx*dist,y=eye.y+dy*dist;
         if(i===0)maskCtx.moveTo(x,y);
         else maskCtx.lineTo(x,y);
