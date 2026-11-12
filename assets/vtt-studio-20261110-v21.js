@@ -1,7 +1,8 @@
 import {createTheatre} from './vtt-theatre-v17.js';
 import {createRollsPanel,makeDicePayload,rollForSheet} from './vtt-rolls-v4.js?v=20261111-chat-medium5';
 import {createCombatDirector} from './vtt-combat-director-v1.js?v=20261110-map1';
-import {createBattleSystems} from './vtt-battle-systems-v1.js?v=20261110-b2f';
+import {createBattleSystems} from './vtt-battle-systems-v1.js?v=20261111-fog3';
+import {createGMQuickPanel} from './vtt-gm-quick-panel-v1.js?v=20261111-gm1';
 import {createSessionTools} from './vtt-session-tools-v1.js?v=20261111-no-smoke1';
 import {createVisualEffects,EFFECTS} from './vtt-effects-v2.js?v=20261110-jutsus2';
 import {DEFAULT_METERS_PER_CELL,metersPerCell,pixelsToMeters,calibrateMetersPerCell,formatMeters,scaleBar} from './vtt-metrics-v1.js';
@@ -186,7 +187,7 @@ function updateMetricDrawStatus(){
   $('metric-save').disabled=!admin||!hasLine||!Number.isFinite(known)||known<=0||known>100000;
 }
 const tokenRef=id=>doc(db,'vttRooms',room,'tokens',id);
-const stopSubs=()=>{sessionTools?.reset?.();measure.enabled=false;measure.calibrating=false;measure.start=null;measure.end=null;measure.drawnPx=0;$('metric-card').hidden=true;$('metric-status').hidden=true;$('metric-hud').hidden=true;if($('sheet-modal').classList.contains('open'))$('sheet-close').click();subscriptionEpoch++;worldCollectionsReady=false;secretRollFeeds={self:[],gm:[],blind:[]};blindProcessing.clear();if(typeof rolls!=='undefined')rolls.setPrivateEvents([]);for(const stop of portraitSubs.values())stop();portraitSubs.clear();for(const stop of vitalSubs.values())stop();vitalSubs.clear();lastVitals.clear();clearTimeout(vitalTimer);masterUid='';if(tokenUnsub){tokenUnsub();tokenUnsub=null}tokenSceneSubscribed=null;subs.forEach(u=>u());subs=[];room='';roomData=null;tokens=[];scenes=[];selected=null;editingSceneId='';lastStageRosterKey='__initial__';theatre.reset();combatDirector.setData(null);battle.setData(null);$('room-heading').textContent='Mesa Permanente · Shinobi Chronicles';$('world-status').textContent='Aguardando conexão…';$('scene-empty').hidden=false;renderScenes();renderTokens();draw();};
+const stopSubs=()=>{gmQuick?.reset?.();sessionTools?.reset?.();measure.enabled=false;measure.calibrating=false;measure.start=null;measure.end=null;measure.drawnPx=0;$('metric-card').hidden=true;$('metric-status').hidden=true;$('metric-hud').hidden=true;if($('sheet-modal').classList.contains('open'))$('sheet-close').click();subscriptionEpoch++;worldCollectionsReady=false;secretRollFeeds={self:[],gm:[],blind:[]};blindProcessing.clear();if(typeof rolls!=='undefined')rolls.setPrivateEvents([]);for(const stop of portraitSubs.values())stop();portraitSubs.clear();for(const stop of vitalSubs.values())stop();vitalSubs.clear();lastVitals.clear();clearTimeout(vitalTimer);masterUid='';if(tokenUnsub){tokenUnsub();tokenUnsub=null}tokenSceneSubscribed=null;subs.forEach(u=>u());subs=[];room='';roomData=null;tokens=[];scenes=[];selected=null;editingSceneId='';lastStageRosterKey='__initial__';theatre.reset();combatDirector.setData(null);battle.setData(null);$('room-heading').textContent='Mesa Permanente · Shinobi Chronicles';$('world-status').textContent='Aguardando conexão…';$('scene-empty').hidden=false;renderScenes();renderTokens();draw();};
 const theatre=createTheatre({
   stage,
   notify:show,
@@ -370,6 +371,56 @@ const sessionTools=createSessionTools({
     });
   }
 });
+// Controle rápido reutiliza fichas e operações existentes, sem coleções novas.
+const gmQuick=createGMQuickPanel({
+ panel:$('sc-gm-quick-panel'),getAdmin:()=>admin,
+ getSceneId:()=>roomData?.activeSceneId||'',
+ getTokens:()=>visibleTokens(),getSheets:()=>sheets,
+ getCombat:()=>combatDirector.getData(),
+ getConditions:id=>battle.shortStatus(id),
+ getTokenHidden:id=>battle.isTokenHidden(id),
+ getFogVisible:token=>battle.isRevealed(token),
+ notify:show,
+ onHide:async tokenId=>{
+   if(!admin||!room)throw Error('Apenas o mestre pode ocultar tokens.');
+   const ok=await battle.toggleTokenHidden(tokenId);
+   if(!ok)throw Error('A visibilidade não pôde ser salva.');
+   renderTokens();draw();gmQuick.refresh();
+ },
+ onFocus:tokenId=>{
+   const token=visibleTokens().find(t=>t.id===tokenId);if(!token)return;
+   selected=token.id;
+   view.ox=stage.clientWidth/2-(token.x+.5)*view.cell*view.zoom;
+   view.oy=stage.clientHeight/2-(token.y+.5)*view.cell*view.zoom;
+   renderTokens();draw();
+ },
+ onSheet:id=>{
+   const f=sheets.find(f=>f.id===id);if(f)openSheet(f.id,f.ownerUid);
+ },
+ onCondition:id=>battle.openForToken(id,'condition'),
+ onInitiative:id=>combatDirector.addOne(id),
+ onAdjust:async(id,pool,amount)=>{
+   if(!admin||!room||!['vit','chakra'].includes(pool))throw Error('Operação não autorizada.');
+   if(!Number.isInteger(amount)||Math.abs(amount)<1||Math.abs(amount)>999)throw Error('Passo inválido.');
+   const ref=doc(db,'fichas',id);
+   return runTransaction(db,async transaction=>{
+     const snap=await transaction.get(ref);
+     if(!snap.exists())throw Error('Ficha não encontrada.');
+     const f=snap.data();
+     let max,current;
+     if(pool==='vit'){const vital=healthOf(f);max=vital.max;current=vital.current}
+     else{
+       max=Math.max(0,Math.min(100000,10+3*(Number(f.atributos?.ESP)||0)));
+       const raw=f.recursos?.chakra;
+       current=raw===null||raw===undefined||raw===''?max:
+         Math.max(0,Math.min(max,Math.round(Number(raw)||0)));
+     }
+     const next=Math.max(0,Math.min(max,current+amount));
+     transaction.update(ref,{['recursos.'+pool]:next});
+     return {current:next,max};
+   });
+ }
+});
 async function resolveBlindRequest(item,epoch){
   if(!admin||!room||epoch!==subscriptionEpoch||blindProcessing.has(item.id))return;
   blindProcessing.add(item.id);
@@ -406,7 +457,7 @@ function openScenes(){
 $('scene-open-library').onclick=openScenes;
 $('scene-open-panel').onclick=openScenes;
 function applyRole(){for(const id of ['gm-scenes','next-turn','cast-effect','effect-kind','effect-kind-label','effect-target','effect-target-label','effect-help'])$(id).hidden=!admin;for(const item of document.querySelectorAll('[data-gm-only]'))item.hidden=!admin;$('scene-open-library').setAttribute('aria-label',admin?'Abrir biblioteca de mapas':'Cena em exibição');
-$('scene-open-panel').title=admin?'Escolher mapa na biblioteca':'Cena em exibição';$('auth-label').textContent=uid?(admin?'Mestre · permissões administrativas':'Jogador · acesso restrito'):'Faça login nos Arquivos Shinobi';if(!admin&&document.querySelector('[data-tab="combate"].active'))switchTab('rolls');theatre.refresh();renderSheets();combatDirector.refresh();battle.render();refreshCombatTargets();sessionTools.refresh();}
+$('scene-open-panel').title=admin?'Escolher mapa na biblioteca':'Cena em exibição';$('auth-label').textContent=uid?(admin?'Mestre · permissões administrativas':'Jogador · acesso restrito'):'Faça login nos Arquivos Shinobi';if(!admin&&document.querySelector('[data-tab="combate"].active'))switchTab('rolls');theatre.refresh();renderSheets();combatDirector.refresh();battle.render();refreshCombatTargets();sessionTools.refresh();gmQuick.refresh();gmQuick.refresh();}
 onAuthStateChanged(auth,async user=>{stopSubs();if(sheetsUnsub){sheetsUnsub();sheetsUnsub=null}uid=user?.uid||'';admin=false;sheets=[];theatre.setActors([]);rolls.setUser(uid);rolls.setSheets([]);applyRole();if(!uid){show('Faça login no Shinobi Chronicles antes de entrar na mesa.');return}try{admin=user.email==='mestre_shinobi@players.shinobi-chronicles.invalid'||(await getDoc(doc(db,'admins',uid))).exists();applyRole();loadSheets();void connectWorld()}catch(e){show('Falha na autenticação: '+e.message)}});
 function loadSheets(){
   if(sheetsUnsub){sheetsUnsub();sheetsUnsub=null}
@@ -414,7 +465,7 @@ function loadSheets(){
   sheetsUnsub=onSnapshot(source,snap=>{
     sheets=snap.docs.filter(d=>d.data().tipo!=='diario').map(d=>({id:d.id,...d.data()}));
     updateTheatreDirectory();rolls.setSheets(sheets);
-    renderSheets();combatDirector.refresh();battle.render();refreshCombatTargets();sessionTools.refresh();
+    renderSheets();combatDirector.refresh();battle.render();refreshCombatTargets();sessionTools.refresh();gmQuick.refresh();
     scheduleVitalSync();
   },e=>show('Não foi possível sincronizar as fichas: '+e.message));
 }
@@ -799,7 +850,7 @@ async function connectWorld(){
       roomData=snap.data();masterUid=roomData?.masterUid||masterUid;sessionTools.refresh();
       combatDirector.setData(roomData.theatre?.combat||roomData.combat);
        battle.setData(roomData.theatre);
-       refreshCombatTargets();
+       refreshCombatTargets();gmQuick.refresh();renderTokens();
       theatre.setState(roomData.theatre);
       const cast=theatre.getCast();
       updateTheatreDirectory();
@@ -906,7 +957,7 @@ function watchTokens(sceneId){
   tokenUnsub=onSnapshot(source,snap=>{
     if(room!==watchingRoom)return;
     tokens=snap.docs.map(d=>({id:d.id,...d.data()}));
-    renderTokens();draw();battle.render();combatDirector.refreshMapStatus();refreshCombatTargets();
+    renderTokens();draw();battle.render();combatDirector.refreshMapStatus();refreshCombatTargets();gmQuick.refresh();
   },err=>show('Permissão dos tokens: '+err.message));
 }
 function resetSceneEditor(){
@@ -1003,6 +1054,17 @@ function renderTokens(){
       open.onclick=()=>openSheet(t.fichaId,t.ownerUid);line.append(open);
     }
     if(admin){
+      const toggle=document.createElement('button');toggle.className='btn small';
+      const hidden=battle.isTokenHidden(t.id);
+      toggle.textContent=hidden?'◉ Revelar':'◌ Ocultar';
+      toggle.title=hidden?'Tornar este token visível aos jogadores':'Ocultar este token dos jogadores';
+      toggle.onclick=async()=>{
+        toggle.disabled=true;
+        const ok=await battle.toggleTokenHidden(t.id);
+        if(!ok)show('Não foi possível alterar a visibilidade do token.');
+        renderTokens();gmQuick.refresh();draw();
+      };
+      line.append(toggle);
       const remove=document.createElement('button');remove.className='btn small';remove.textContent='Retirar';
       remove.title='Remove o token, não a ficha original';
       remove.onclick=async()=>{if(!confirm('Retirar o token de '+(t.name||'Shinobi')+'? A ficha original será mantida.'))return;try{await deleteDoc(tokenRef(t.id));if(selected===t.id)selected=null;show('Token retirado; ficha preservada.')}catch(e){show(e.message)}};
@@ -1228,12 +1290,12 @@ function requestDraw(){
 }
 function reflectBattleMode(){
   stage.classList.toggle('sc-battle-target',battle.isMode('target'));
-  stage.classList.toggle('sc-battle-fog',battle.isMode('reveal'));
+  stage.classList.toggle('sc-battle-fog',['reveal','brush-reveal','brush-cover'].some(kind=>battle.isMode(kind)));
 }
 canvas.onpointerdown=e=>{if(e.button!==0)return;const p=point(e);
-  if(battle.isMode('target')||battle.isMode('reveal')){
+  if(battle.isMode('target')||['reveal','brush-reveal','brush-cover'].some(kind=>battle.isMode(kind))){
     const q=world(p.x,p.y),token=hit(p.x,p.y);
-    fogDrawing=battle.isMode('reveal');
+    fogDrawing=['reveal','brush-reveal','brush-cover'].some(kind=>battle.isMode(kind));
     if(battle.pointerDown(q.x,q.y,token)){
       e.preventDefault();
       if(fogDrawing)canvas.setPointerCapture(e.pointerId);
