@@ -373,8 +373,7 @@ export function createBattleSystems({
     for(let i=1;i<points.length;i++)if(segmentDistance(points[i-1],points[i])<=radius)return true;
     return false;
   }
-  function tokenVisible(token){
-    if(getAdmin())return true;
+  function isRevealed(token){
     if(isTokenHidden(token.id))return false;
     const fog=getCurrentFog();
     if(!fog.enabled)return true;
@@ -391,6 +390,7 @@ export function createBattleSystems({
     }
     return visible;
   }
+  function tokenVisible(token){return getAdmin()||isRevealed(token)}
   // The fog mask is composited separately, avoiding destination-out on the real
   // map canvas (which would destroy map pixels and token transparency).
   function buildFogMask(fog,w,h){
@@ -495,5 +495,5 @@ export function createBattleSystems({
   return {setData,render,paintFog,tokenVisible,drawTokenMarks,refreshTimelineBadges,
     addCondition,removeCondition,openForToken,setTarget:chooseTarget,
     pointerDown,pointerMove,pointerUp,cancel,toggleFogMode,isMode,shortStatus,
-    getCurrentFog,applyRoundTick,getConditionList,setTokenHidden,toggleTokenHidden,isTokenHidden};
+    getCurrentFog,applyRoundTick,getConditionList,setTokenHidden,toggleTokenHidden,isTokenHidden,isRevealed};
 }
