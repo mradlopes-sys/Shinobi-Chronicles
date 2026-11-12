@@ -295,9 +295,9 @@ export function createWallTools({
   // Portas: o mestre aciona livremente; jogadores precisam estar junto a um token próprio
   // e não podem operar portas secretas fechadas nem portas trancadas.
   const centerDoor=w=>({x:(w.x1+w.x2)/2,y:(w.y1+w.y2)/2});
-  function ownerAtDoor(wall){
+  function ownerAtDoor(wall,ownerUid=getUid()){
     const cell=Math.max(1,Number(getCell())||64),mid=centerDoor(wall);
-    return getTokens().filter(t=>t.ownerUid===getUid()&&!isHidden(t.id)).find(t=>{
+    return getTokens().filter(t=>t.ownerUid===ownerUid&&!isHidden(t.id)).find(t=>{
       const eye=eyeOf(t),distance=Math.hypot(eye.x-mid.x,eye.y-mid.y);
       if(distance>cell*1.75)return false;
       return !mapSegments().some(other=>other.id!==wall.id&&other.type!=='ethereal'&&
@@ -305,11 +305,11 @@ export function createWallTools({
         intersects({x:eye.x,y:eye.y},mid,{x:other.x1,y:other.y1},{x:other.x2,y:other.y2}));
     })||null;
   }
-  function usableDoor(wall){
+  function usableDoor(wall,viewerUid='',asPlayer=false){
     if(!isDoor(wall))return false;
-    if(getAdmin())return true;
+    if(getAdmin()&&!asPlayer)return true;
     if(wall.type==='secret'&&wall.state!=='open')return false;
-    return wall.state!=='locked'&&!!ownerAtDoor(wall);
+    return wall.state!=='locked'&&!!ownerAtDoor(wall,viewerUid||getUid());
   }
   function doorAt(x,y){
     if(!img()?.naturalWidth)return null;
@@ -351,11 +351,11 @@ export function createWallTools({
     finally{doorBusy=false;redraw()}
     return true;
   }
-  function drawDoorHandles(ctx,view){
+  function drawDoorHandles(ctx,view,viewerUid=''){
     const z=Math.max(.15,Number(view?.zoom)||1);
     ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';
     for(const door of mapSegments()){
-      if(!usableDoor(door))continue;
+      if(!usableDoor(door,viewerUid,!!viewerUid))continue;
       const mid=centerDoor(door),radius=7/z;
       ctx.beginPath();ctx.arc(mid.x,mid.y,radius,0,Math.PI*2);
       ctx.fillStyle=door.state==='open'?'#527e69':door.state==='locked'?'#825451':'#bd9c66';
@@ -455,7 +455,8 @@ export function createWallTools({
     if(!visionActive())return 'none';
     return revision+':'+current()+':'+scene().range+':'+ownerUid+':'+ownedEyes(ownerUid).map(e=>e.x.toFixed(2)+','+e.y.toFixed(2)).join('|');
   }
-  function draw(ctx,view){
+  function draw(ctx,view,viewerUid=''){
+    if(viewerUid){drawDoorHandles(ctx,view,viewerUid);return}
     if(!getAdmin()||!isEditing()){drawDoorHandles(ctx,view);return}
     const {w,h}=pixels();if(!w||!h)return;
     const scale=Math.max(.12,view?.zoom||1);
