@@ -359,36 +359,107 @@ export function createBattleSystems({
     }
     await setFog({...fog,enabled:true,strokes});return true;
   }
+  function brushHits(stroke,px,py,w,h){
+    const points=stroke.points||[];
+    if(!points.length)return false;
+    const radius=Math.max(1,stroke.r*Math.min(w,h));
+    const segmentDistance=(a,b)=>{
+      const ax=a[0]*w,ay=a[1]*h,bx=b[0]*w,by=b[1]*h;
+      const dx=bx-ax,dy=by-ay,l2=dx*dx+dy*dy;
+      const t=l2?Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/l2)):0;
+      return Math.hypot(px-ax-t*dx,py-ay-t*dy);
+    };
+    if(points.length===1)return Math.hypot(px-points[0][0]*w,py-points[0][1]*h)<=radius;
+    for(let i=1;i<points.length;i++)if(segmentDistance(points[i-1],points[i])<=radius)return true;
+    return false;
+  }
   function tokenVisible(token){
     if(getAdmin())return true;
+    if(isTokenHidden(token.id))return false;
     const fog=getCurrentFog();
     if(!fog.enabled)return true;
     const img=getMap();
     if(!img?.naturalWidth||!img?.naturalHeight)return false;
-    const cell=Math.max(1,Number(getCell())||64);
-    const x=(Number(token.x)+.5)*cell/img.naturalWidth;
-    const y=(Number(token.y)+.75)*cell/img.naturalHeight;
-    return fog.reveals.some(r=>x>=r.x&&x<=r.x+r.w&&y>=r.y&&y<=r.y+r.h);
+    const cell=Math.max(1,Number(getCell())||64),w=img.naturalWidth,h=img.naturalHeight;
+    const px=(Number(token.x)+.5)*cell,py=(Number(token.y)+.75)*cell;
+    let visible=fog.reveals.some(r=>px>=r.x*w&&px<=(r.x+r.w)*w&&py>=r.y*h&&py<=(r.y+r.h)*h);
+    for(const op of fog.strokes||[]){
+      const inside=op.type==='rect'?
+        (px>=op.x*w&&px<=(op.x+op.w)*w&&py>=op.y*h&&py<=(op.y+op.h)*h):
+        brushHits(op,px,py,w,h);
+      if(inside)visible=op.op==='reveal';
+    }
+    return visible;
+  }
+  // The fog mask is composited separately, avoiding destination-out on the real
+  // map canvas (which would destroy map pixels and token transparency).
+  function buildFogMask(fog,w,h){
+    const cw=Math.max(1,Math.round(Math.min(1500,w))),ch=Math.max(1,Math.round(h*cw/w));
+    if(!fogCanvas)fogCanvas=document.createElement('canvas');
+    if(fogCanvas.width!==cw||fogCanvas.height!==ch){fogCanvas.width=cw;fogCanvas.height=ch}
+    const c=fogCanvas.getContext('2d',{alpha:true});
+    if(!c)return;
+    c.clearRect(0,0,cw,ch);
+    const color=getAdmin()?'rgba(13,23,22,.48)':'rgba(5,12,16,.985)';
+    c.fillStyle=color;c.fillRect(0,0,cw,ch);
+    const use=(op)=>{
+      c.save();
+      c.globalCompositeOperation=op.op==='cover'?'source-over':'destination-out';
+      c.fillStyle=op.op==='cover'?color:'#fff';
+      c.strokeStyle=op.op==='cover'?color:'#fff';
+      if(op.type==='rect'){
+        c.fillRect(op.x*cw,op.y*ch,op.w*cw,op.h*ch);
+      }else if(op.type==='brush'&&op.points?.length){
+        const pts=op.points;
+        const radius=Math.max(1,op.r*Math.min(cw,ch));
+        c.lineWidth=radius*2;c.lineCap='round';c.lineJoin='round';
+        c.beginPath();
+        c.moveTo(pts[0][0]*cw,pts[0][1]*ch);
+        for(let i=1;i<pts.length;i++)c.lineTo(pts[i][0]*cw,pts[i][1]*ch);
+        c.stroke();
+        c.beginPath();c.arc(pts[0][0]*cw,pts[0][1]*ch,radius,0,Math.PI*2);c.fill();
+      }
+      c.restore();
+    };
+    for(const r of fog.reveals)use({...r,op:'reveal',type:'rect'});
+    for(const op of fog.strokes||[])use(op);
   }
   function paintFog(ctx,view){
-    const fog=getCurrentFog(),img=getMap();if(!fog.enabled||!img?.naturalWidth)return;
+    const fog=getCurrentFog(),img=getMap();
+    if(!fog.enabled||!img?.naturalWidth||!img?.naturalHeight)return;
     const w=img.naturalWidth,h=img.naturalHeight;
-    ctx.save();
-    ctx.fillStyle=getAdmin()?'rgba(12,19,14,.46)':'rgba(7,12,9,.99)';
-    ctx.beginPath();ctx.rect(0,0,w,h);
-    for(const r of fog.reveals)ctx.rect(r.x*w,r.y*h,r.w*w,r.h*h);
-    ctx.fill('evenodd');
-    if(getAdmin()){
-      ctx.lineWidth=1.5/Math.max(.15,view.zoom);ctx.strokeStyle='#e9d4a280';
-      ctx.setLineDash([5,6]);
-      for(const r of fog.reveals)ctx.strokeRect(r.x*w,r.y*h,r.w*w,r.h*h);
-      ctx.setLineDash([]);
+    const signature=[currentScene(),w,h,getAdmin()?'master':'player',JSON.stringify(fog)].join('|');
+    if(!fogCanvas||fogCacheKey!==signature){
+      buildFogMask(fog,w,h);fogCacheKey=signature;
     }
-    if(getAdmin()&&shapeStart&&shapeEnd){
-      const x=Math.min(shapeStart.x,shapeEnd.x)*w,y=Math.min(shapeStart.y,shapeEnd.y)*h;
-      const width=Math.abs(shapeStart.x-shapeEnd.x)*w,height=Math.abs(shapeStart.y-shapeEnd.y)*h;
-      ctx.strokeStyle='#f7e1a9';ctx.lineWidth=2/Math.max(.15,view.zoom);
-      ctx.strokeRect(x,y,width,height);
+    ctx.save();
+    if(fogCanvas)ctx.drawImage(fogCanvas,0,0,w,h);
+    if(getAdmin()){
+      const scale=Math.max(.15,view.zoom);
+      ctx.strokeStyle='rgba(222,199,147,.55)';
+      ctx.lineWidth=1.4/scale;ctx.setLineDash([5/scale,6/scale]);
+      for(const r of fog.reveals)ctx.strokeRect(r.x*w,r.y*h,r.w*w,r.h*h);
+      for(const op of fog.strokes||[])if(op.type==='rect'){
+        ctx.strokeStyle=op.op==='cover'?'rgba(223,125,116,.6)':'rgba(221,202,160,.62)';
+        ctx.strokeRect(op.x*w,op.y*h,op.w*w,op.h*h);
+      }
+      ctx.setLineDash([]);
+      if(shapeStart){
+        if(mode==='reveal'&&shapeEnd){
+          const x=Math.min(shapeStart.x,shapeEnd.x)*w,y=Math.min(shapeStart.y,shapeEnd.y)*h;
+          ctx.strokeStyle='rgba(244,219,166,.95)';ctx.lineWidth=2/scale;
+          ctx.strokeRect(x,y,Math.abs(shapeStart.x-shapeEnd.x)*w,Math.abs(shapeStart.y-shapeEnd.y)*h);
+        }else if(brushPoints.length){
+          const radius=brushSize/100*Math.min(w,h);
+          ctx.strokeStyle=mode==='brush-cover'?'rgba(255,136,128,.94)':'rgba(169,247,198,.92)';
+          ctx.lineWidth=radius*2;ctx.lineCap='round';ctx.lineJoin='round';
+          ctx.globalAlpha=.48;
+          ctx.beginPath();ctx.moveTo(brushPoints[0][0]*w,brushPoints[0][1]*h);
+          for(let i=1;i<brushPoints.length;i++)ctx.lineTo(brushPoints[i][0]*w,brushPoints[i][1]*h);
+          ctx.stroke();
+          ctx.globalAlpha=1;
+        }
+      }
     }
     ctx.restore();
   }
@@ -424,5 +495,5 @@ export function createBattleSystems({
   return {setData,render,paintFog,tokenVisible,drawTokenMarks,refreshTimelineBadges,
     addCondition,removeCondition,openForToken,setTarget:chooseTarget,
     pointerDown,pointerMove,pointerUp,cancel,toggleFogMode,isMode,shortStatus,
-    getCurrentFog,applyRoundTick};
+    getCurrentFog,applyRoundTick,getConditionList,setTokenHidden,toggleTokenHidden,isTokenHidden};
 }
