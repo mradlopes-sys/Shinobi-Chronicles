@@ -54,7 +54,7 @@ export function createWallTools({
   getAdmin,getUid,getSceneId,getRoom,getMap,getCell,getZoom,getTokens,isHidden,
   saveFields,notify,redraw,onModeActivated
 }){
-  let data={},mode='',kind='solid',selected='',pending=null,busy=false,snap=true;
+  let data={},mode='',kind='solid',selected='',pending=null,busy=false,snap=true,revision=0;
   const current=()=>getSceneId()||'';
   const scene=()=>data[current()]||{walls:[],vision:false,range:10};
   const img=()=>getMap();
@@ -70,7 +70,7 @@ export function createWallTools({
         for(const [key,v] of Object.entries(raw).slice(0,80))
           if(key&&key.length<=120)next[key]=normalizeScene(v);
       }
-      data=next;
+      data=next;revision++;
       if(selected&&!scene().walls.some(w=>w.id===selected))selected='';
     }
   }
@@ -90,10 +90,10 @@ export function createWallTools({
   async function saveScene(next){
     if(!getAdmin()||!getRoom()||!current()||busy)return false;
     const before=data,nextData={...data,[current()]:normalizeScene(next)};
-    busy=true;data=nextData;redraw();
+    busy=true;data=nextData;revision++;redraw();
     try{
       await saveFields({'theatre.wallsMap':nextData});return true;
-    }catch(error){data=before;notify('Não foi possível salvar paredes: '+error.message);return false}
+    }catch(error){data=before;revision++;notify('Não foi possível salvar paredes: '+error.message);return false}
     finally{busy=false;redraw()}
   }
   function panelHTML(){
@@ -333,7 +333,7 @@ export function createWallTools({
   }
   function signature(){
     if(!visionActive())return 'none';
-    return current()+':'+scene().range+':'+ownedEyes().map(e=>e.x.toFixed(2)+','+e.y.toFixed(2)).join('|');
+    return revision+':'+current()+':'+scene().range+':'+ownedEyes().map(e=>e.x.toFixed(2)+','+e.y.toFixed(2)).join('|');
   }
   function draw(ctx,view){
     if(!getAdmin()||!isEditing())return;
