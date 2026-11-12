@@ -3,7 +3,8 @@ import {createWallTools} from './vtt-walls-v1.js?v=20261112-walls5';
 // Uses only the already-permitted theatre field of the shared room.
 export function createBattleSystems({
   getAdmin,getUid,getRoom,getSceneId,getRoomData,getSheets,getTokens,getCurrentTurn,
-  setCombatTab,focusToken,playEffect,adjustHitPoints,saveFields,notify,redraw,getMap,getCell,getZoom
+  setCombatTab,focusToken,playEffect,adjustHitPoints,saveFields,notify,redraw,getMap,getCell,getZoom,
+  sendDoorRequest
 }){
   const MAX_FOG=48,MAX_STROKES=100,MAX_POINTS=100,MAX_CONDITIONS=8,MAX_DURATION=99;
   const CONDITIONS=[
@@ -36,7 +37,7 @@ export function createBattleSystems({
   const isTokenHidden=id=>hiddenTokens.includes(id);
   const walls=createWallTools({
     getAdmin,getUid,getSceneId,getRoom,getMap,getCell,getZoom,getTokens,isHidden:isTokenHidden,
-    saveFields,notify,redraw,
+    saveFields,notify,redraw,sendDoorRequest,
     onModeActivated:()=>{mode='';shapeStart=null;shapeEnd=null;brushPoints=[];render()}
   });
   const getConditionList=id=>Array.isArray(conditions[id])?conditions[id]:[];
@@ -219,6 +220,7 @@ export function createBattleSystems({
       '<div class="sc-fog-options secondary"><button id="sc-fog-undo" type="button" class="sc-battle-secondary"'+(!count?' disabled':'')+'>↶ Desfazer última área</button>'+
       '<button id="sc-fog-clear" type="button" class="sc-battle-secondary"'+(!count?' disabled':'')+'>✕ Reocultar tudo</button></div>'+
       '<p class="sc-battle-note">'+(fog.enabled?'Névoa ativa · '+count+' marca(s) aplicadas. '+(active?'Arraste sobre o mapa. Esc cancela.':'Escolha uma ferramenta para pintar.'):'Névoa desligada.')+
+      ' '+(walls.visionActive()?'Visão dinâmica ligada: paredes prevalecem sobre revelações manuais.':'')+
       ' Ocultação visual: o navegador ainda recebe o arquivo do mapa.</p>';
   }
   function render(){
@@ -401,7 +403,9 @@ export function createBattleSystems({
       if(inside){visible=op.op==='reveal';lastPaint=op.op}
     }
     if(lastPaint==='cover')return false;
-    return visible||(walls.visionActive()&&walls.visibleAtWorld(px,py));
+    // Revelações manuais nunca atravessam paredes com visão dinâmica ativa.
+    if(walls.visionActive())return walls.visibleAtWorld(px,py);
+    return visible;
   }
   function tokenVisible(token){return getAdmin()||isRevealed(token)}
   // The fog mask is composited separately, avoiding destination-out on the real
@@ -435,9 +439,15 @@ export function createBattleSystems({
       }
       c.restore();
     };
-    if(!getAdmin())walls.cutVision(c,cw,ch,w,h);
-    for(const r of fog.reveals)use({...r,op:'reveal',type:'rect'});
-    for(const op of fog.strokes||[])use(op);
+    if(!getAdmin()&&walls.visionActive()){
+      // A geometria dos segmentos define o campo de visão; revelações do pincel
+      // não perfuram paredes. O mestre ainda pode cobrir áreas específicas.
+      walls.cutVision(c,cw,ch,w,h);
+      for(const op of fog.strokes||[])if(op.op==='cover')use(op);
+    }else{
+      for(const r of fog.reveals)use({...r,op:'reveal',type:'rect'});
+      for(const op of fog.strokes||[])use(op);
+    }
   }
   function paintFog(ctx,view){
     const fog=getCurrentFog(),img=getMap();
@@ -511,5 +521,6 @@ export function createBattleSystems({
     addCondition,removeCondition,openForToken,setTarget:chooseTarget,
     pointerDown,pointerMove,pointerUp,cancel,toggleFogMode,isMode,shortStatus,
     getCurrentFog,applyRoundTick,getConditionList,setTokenHidden,toggleTokenHidden,isTokenHidden,isRevealed,
-    drawWalls:(ctx,view)=>walls.draw(ctx,view),blocksMovement:walls.moveBlocked};
+    drawWalls:(ctx,view)=>walls.draw(ctx,view),blocksMovement:walls.moveBlocked,
+    doorHint:walls.doorHint,toggleDoorAt:walls.toggleDoorAt};
 }
