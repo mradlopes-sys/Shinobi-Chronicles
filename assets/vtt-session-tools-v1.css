@@ -9,7 +9,7 @@
 .sc-tool-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px}
 .sc-tool-fields>*{min-width:0}
 .sc-tool-card label.sc-tool-field{display:block;margin:7px 0;font:600 10px/1.45 'DM Sans',sans-serif;color:var(--vtt-fade,#afc3b0)}
-.sc-tool-card :is(input:not([type=checkbox]),select){width:100%;min-width:0;min-height:35px;margin:4px 0 0;padding:6px 7px;border:1px solid var(--vtt-line,#5b725d);border-radius:5px;background:var(--vtt-paper,#14241d);color:var(--vtt-ink,#f0e9d5);font:500 11px 'DM Sans',sans-serif}
+.sc-tool-card :is(input[type=number],input[type=search],select){width:100%;min-width:0;min-height:35px;margin:4px 0 0;padding:6px 7px;border:1px solid var(--vtt-line,#5b725d);border-radius:5px;background:var(--vtt-paper,#14241d);color:var(--vtt-ink,#f0e9d5);font:500 11px 'DM Sans',sans-serif}
 .sc-tool-card input[type=checkbox]{width:auto;accent-color:var(--vtt-pigment,#cbb083);height:15px;margin:0}
 .sc-tool-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:34px;padding:7px 11px;border:1px solid var(--vtt-pigment,#ac976a);border-radius:5px;background:var(--vtt-button,#52664c);color:var(--vtt-button-ink,#fff0d5);font:700 11px/1.25 'DM Sans',sans-serif;cursor:pointer}
 .sc-tool-btn.secondary{background:transparent;color:var(--vtt-display,#dfc28e);border-color:var(--vtt-line,#5b725d)}
