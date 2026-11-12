@@ -1,5 +1,5 @@
 import {createTheatre} from './vtt-theatre-v17.js';
-import {createRollsPanel,makeDicePayload,rollForSheet} from './vtt-rolls-v4.js?v=20261111-chat-large3';
+import {createRollsPanel,makeDicePayload,rollForSheet} from './vtt-rolls-v4.js?v=20261111-chat-full4';
 import {createCombatDirector} from './vtt-combat-director-v1.js?v=20261110-map1';
 import {createBattleSystems} from './vtt-battle-systems-v1.js?v=20261110-b2f';
 import {createSessionTools} from './vtt-session-tools-v1.js?v=20261111-cinematic2';
