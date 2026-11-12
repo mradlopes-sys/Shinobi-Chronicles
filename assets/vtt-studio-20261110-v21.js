@@ -112,6 +112,99 @@ const battle=createBattleSystems({
     });
   }
 });
+
+const wallHtmlEscape=value=>String(value??'').replace(/[&<>"']/g,char=>({
+  '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+}[char]));
+function refreshStageWallTools(){
+  const dock=$('sc-map-wall-dock'),menu=$('sc-map-wall-popover'),button=$('sc-map-walls-toggle');
+  if(!dock||!button||!menu)return;
+  const hasScene=!!roomData?.activeSceneId;
+  dock.hidden=!admin||!hasScene;
+  if(!admin||!hasScene){menu.hidden=true;return}
+  const state=battle.wallQuickState(),ready=!!view.image?.naturalWidth;
+  button.disabled=!ready;
+  button.classList.toggle('active',battle.isWallEditing());
+  button.textContent=battle.isWallEditing()?'▤ Editando paredes':'▤ Paredes';
+  button.setAttribute('aria-expanded',String(wallDockOpen));
+  menu.hidden=!wallDockOpen;
+  if(!wallDockOpen)return;
+  const chosen=state.selectedWall,kind=state.presets.find(p=>p.id===chosen?.type);
+  menu.innerHTML=
+    '<h3>Arquitetura do mapa</h3>'+
+    '<p>Clique numa linha para selecioná-la. Arraste suas pontas ou o segmento inteiro.</p>'+
+    '<div class="sc-map-wall-actions">'+
+    '<button type="button" data-sc-wall-action="select" class="'+(state.mode==='wall-select'?'active':'')+'">⌖ Selecionar</button>'+
+    '<button type="button" data-sc-wall-action="draw" class="'+(state.mode==='wall-draw'?'active':'')+'">✎ Desenhar</button>'+
+    '</div>'+
+    '<label class="sc-wall-mini-kind">Tipo da nova parede<select data-sc-wall-field="kind">'+
+      state.presets.map(p=>'<option value="'+p.id+'"'+(p.id===state.kind?' selected':'')+'>'+wallHtmlEscape(p.name)+'</option>').join('')+
+    '</select></label>'+
+    '<label class="sc-wall-mini-snap"><input type="checkbox" data-sc-wall-field="snap"'+(state.snap?' checked':'')+'> Alinhar à meia célula</label>'+
+    (chosen?
+      '<div class="sc-wall-mini-selection"><strong>Selecionada · '+wallHtmlEscape(kind?.name||'Parede')+'</strong>'+
+      '<label class="sc-wall-mini-state">Alterar tipo<select data-sc-wall-field="selected-type">'+
+      state.presets.map(p=>'<option value="'+p.id+'"'+(p.id===chosen.type?' selected':'')+'>'+wallHtmlEscape(p.name)+'</option>').join('')+
+      '</select></label>'+
+      ((chosen.type==='door'||chosen.type==='secret')?
+        '<label class="sc-wall-mini-state">Estado da porta<select data-sc-wall-field="door-state">'+
+        [['closed','Fechada'],['open','Aberta'],['locked','Trancada']].map(([id,name])=>
+          '<option value="'+id+'"'+(id===chosen.state?' selected':'')+'>'+name+'</option>').join('')+'</select></label>':'')+
+      '<button type="button" class="sc-wall-mini-delete" data-sc-wall-action="delete">✕ Apagar parede · Del</button></div>':
+      '<p>'+state.count+' parede(s) nesta cena. Selecione uma para editar ou excluir.</p>')+
+    '<div class="sc-map-wall-actions">'+
+    '<button type="button" data-sc-wall-action="off">✓ Concluir</button>'+
+    '<button type="button" data-sc-wall-action="panel">Abrir ajustes completos</button></div>';
+}
+function refreshVisionInspector(){
+  const bar=$('sc-vision-inspector');if(!bar)return;
+  const preview=battle.getVisionPreview(),enabled=admin&&!!preview;
+  bar.hidden=!enabled;
+  stage.classList.toggle('sc-player-vision',!!enabled);
+  if(enabled){
+    const detail=!preview.fogActive?'Névoa desativada nesta cena':
+      preview.visionActive?'Visão dinâmica e paredes':'Névoa manual da cena';
+    $('sc-vision-inspector-label').textContent=preview.name+' · '+detail;
+  }
+}
+$('sc-map-walls-toggle').onclick=()=>{
+  if(!admin||!roomData?.activeSceneId||!view.image?.naturalWidth)return;
+  wallDockOpen=!wallDockOpen;
+  if(wallDockOpen){
+    battle.clearVisionPreview();
+    if(measure.enabled)setMetricTool('off');
+    battle.setWallMode('select');
+  }else battle.setWallMode('off');
+  refreshStageWallTools();
+};
+$('sc-map-wall-dock').addEventListener('click',event=>{
+  const action=event.target.closest?.('[data-sc-wall-action]')?.dataset.scWallAction;
+  if(!action||!admin)return;
+  if(action==='select'||action==='draw'){
+    battle.clearVisionPreview();
+    if(measure.enabled)setMetricTool('off');
+    battle.setWallMode(action==='select'?'select':'draw',battle.wallQuickState().kind);
+  }else if(action==='delete')void battle.deleteSelectedWall();
+  else if(action==='off'){battle.setWallMode('off');wallDockOpen=false}
+  else if(action==='panel'){
+    battle.setWallMode('select');wallDockOpen=false;
+    if($('workspace').classList.contains('panel-hidden'))$('vtt-toggle-panel').click();
+    switchTab('campanha');
+    $('sc-fog-panel')?.scrollIntoView?.({block:'start',behavior:'smooth'});
+  }
+  refreshStageWallTools();
+});
+$('sc-map-wall-dock').addEventListener('change',event=>{
+  if(!admin)return;
+  const field=event.target?.dataset?.scWallField,value=event.target?.value;
+  if(field==='kind'){battle.setWallMode('draw',value)}
+  else if(field==='snap')battle.setWallSnap(event.target.checked);
+  else if(field==='selected-type')void battle.changeWall({type:value});
+  else if(field==='door-state')void battle.changeWall({state:value});
+  refreshStageWallTools();
+});
+$('sc-vision-stop').onclick=()=>{battle.clearVisionPreview();renderTokens()};
+
 function refreshCombatTargets(){
   const input=$('effect-target');if(!input)return;
   const value=input.value;
