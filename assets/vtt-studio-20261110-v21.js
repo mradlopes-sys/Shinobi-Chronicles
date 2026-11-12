@@ -1,6 +1,6 @@
 import {createTheatre} from './vtt-theatre-v17.js';
 import {createRollsPanel,makeDicePayload,rollForSheet} from './vtt-rolls-v4.js?v=20261111-chat-medium5';
-import {createCombatDirector} from './vtt-combat-director-v1.js?v=20261110-map1';
+import {createCombatDirector} from './vtt-combat-director-v1.js?v=20261111-hidden1';
 import {createBattleSystems} from './vtt-battle-systems-v1.js?v=20261111-fog3';
 import {createGMQuickPanel} from './vtt-gm-quick-panel-v1.js?v=20261111-gm1';
 import {createSessionTools} from './vtt-session-tools-v1.js?v=20261111-no-smoke1';
@@ -45,6 +45,10 @@ const combatDirector=createCombatDirector({
   },
   notify:message=>show(message),portrait:f=>portrait(f),
   getOnMap:id=>visibleTokens().some(t=>t.fichaId===id),
+  getVisibleSheet:id=>{
+    const onMap=visibleTokens().filter(t=>t.fichaId===id);
+    return !onMap.length||onMap.some(t=>battle.isRevealed(t));
+  },
   hasScene:()=>!!roomData?.activeSceneId,
   onPlaceOnMap:ids=>placeSheetsOnMap(ids),
   onOpenSheet:id=>{
@@ -850,6 +854,7 @@ async function connectWorld(){
       roomData=snap.data();masterUid=roomData?.masterUid||masterUid;sessionTools.refresh();
       combatDirector.setData(roomData.theatre?.combat||roomData.combat);
        battle.setData(roomData.theatre);
+       combatDirector.refresh();
        refreshCombatTargets();gmQuick.refresh();renderTokens();
       theatre.setState(roomData.theatre);
       const cast=theatre.getCast();
@@ -957,7 +962,7 @@ function watchTokens(sceneId){
   tokenUnsub=onSnapshot(source,snap=>{
     if(room!==watchingRoom)return;
     tokens=snap.docs.map(d=>({id:d.id,...d.data()}));
-    renderTokens();draw();battle.render();combatDirector.refreshMapStatus();refreshCombatTargets();gmQuick.refresh();
+    renderTokens();draw();battle.render();combatDirector.refreshMapStatus();combatDirector.refresh();refreshCombatTargets();gmQuick.refresh();
   },err=>show('Permissão dos tokens: '+err.message));
 }
 function resetSceneEditor(){
@@ -1192,11 +1197,12 @@ function draw(){
     const b=spriteBounds(t);
     if(b.image?.complete&&b.image.naturalWidth){
       ctx.save();
+      if(admin&&battle.isTokenHidden(t.id))ctx.globalAlpha=.48;
       ctx.shadowColor='rgba(0,0,0,.42)';ctx.shadowBlur=9;ctx.shadowOffsetY=5;
       ctx.drawImage(b.image,b.left,b.top,b.width,b.height);
       ctx.restore();
     }else if(!t.portrait){
-      ctx.save();ctx.fillStyle='#f2e4cc';ctx.textAlign='center';ctx.font='600 12px system-ui';
+      ctx.save();if(admin&&battle.isTokenHidden(t.id))ctx.globalAlpha=.48;ctx.fillStyle='#f2e4cc';ctx.textAlign='center';ctx.font='600 12px system-ui';
       ctx.fillText((t.name||'Shinobi').slice(0,18),b.x,b.y-view.cell*.3);ctx.restore();
     }
     battle.drawTokenMarks(ctx,t,view,b);
