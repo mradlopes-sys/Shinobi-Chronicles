@@ -34,34 +34,71 @@
 .sc-scene-preset{min-width:0;border:1px solid var(--vtt-line,#536655);border-radius:5px;background:var(--vtt-paper,#18271e);color:var(--vtt-ink,#e6e1d4);padding:9px 3px;font:700 10px 'DM Sans',sans-serif}
 .sc-scene-preset[aria-pressed=true]{border-color:var(--vtt-pigment,#e0bd88);background:var(--vtt-inkwater,#445743);color:var(--vtt-display,#ffe2ab)}
 .sc-tool-card input[type=range]{width:100%;accent-color:var(--vtt-pigment,#dfbd82);height:18px;margin:5px 0}
-.sc-scene-ambience{position:absolute;inset:0;z-index:5;pointer-events:none;overflow:hidden;--sc-atm-strength:.6;opacity:1;transition:opacity .7s ease}
-.sc-scene-ambience .sc-atm-shade,.sc-scene-ambience .sc-atm-weather,.sc-scene-ambience .sc-atm-flash{position:absolute;inset:-14%;pointer-events:none}
-.sc-scene-ambience .sc-atm-shade{opacity:calc(var(--sc-atm-strength)*.75);transition:opacity .8s;background:radial-gradient(ellipse at 52% 32%,transparent 27%,#040c13d9 120%)}
-.sc-scene-ambience[data-preset=none] .sc-atm-shade,.sc-scene-ambience[data-preset=clear] .sc-atm-shade{opacity:0}
-.sc-scene-ambience[data-preset=night] .sc-atm-shade{background:linear-gradient(#081226bb,#111b35aa);opacity:calc(var(--sc-atm-strength)*.65)}
-.sc-scene-ambience[data-preset=mist] .sc-atm-shade{background:linear-gradient(130deg,#b7cec832,#98aaa526);opacity:calc(var(--sc-atm-strength)*.8)}
-.sc-scene-ambience[data-preset=rain] .sc-atm-shade,.sc-scene-ambience[data-preset=storm] .sc-atm-shade{background:linear-gradient(#1b2c3f88,#0e192b66);opacity:calc(var(--sc-atm-strength)*.7)}
-.sc-scene-ambience[data-preset=chakra] .sc-atm-shade{background:radial-gradient(ellipse at 50% 55%,#40b9bf28,transparent 73%);opacity:var(--sc-atm-strength);animation:sc-chakra-breathe 2.9s ease-in-out infinite alternate}
-.sc-scene-ambience[data-preset=rain] .sc-atm-weather,.sc-scene-ambience[data-preset=storm] .sc-atm-weather{
-background:repeating-linear-gradient(104deg,transparent 0 16px,#c8d9da36 17px,#c8d9da36 18px,transparent 19px 29px);
-background-size:190px 200px;opacity:calc(var(--sc-atm-strength)*.53);animation:sc-atm-rain .48s linear infinite
+/* Diretor de cenas v2 — luz, volume e movimento orgânico. Canvas desenha
+   partículas; CSS cuida somente da tonalidade, preservando o mapa original. */
+.sc-scene-ambience{
+ position:absolute;inset:0;z-index:5;overflow:hidden;pointer-events:none;
+ contain:layout paint;isolation:isolate;--sc-atm-strength:.6
 }
-.sc-scene-ambience[data-preset=storm] .sc-atm-weather{animation-duration:.31s;opacity:calc(var(--sc-atm-strength)*.8)}
-.sc-scene-ambience[data-preset=mist] .sc-atm-weather{
-background:radial-gradient(ellipse 60% 18% at 40% 25%,#b5d0c660,transparent),radial-gradient(ellipse 90% 25% at 70% 72%,#a0b4ad60,transparent);
-filter:blur(22px);opacity:var(--sc-atm-strength);animation:sc-atm-mist 14s ease-in-out infinite alternate
+.sc-scene-ambience *{pointer-events:none!important}
+.sc-scene-ambience .sc-atm-shade{
+ position:absolute;z-index:1;inset:0;
+ opacity:0;transition:opacity 1.45s ease,background-color 1.45s ease;
+ will-change:opacity;
 }
-.sc-scene-ambience.sc-atm-pulse .sc-atm-flash{background:radial-gradient(circle at 50% 50%,#4fe6e59e,transparent 65%);animation:sc-atm-flash 1.2s ease both}
-.sc-scene-ambience.sc-atm-lightning .sc-atm-flash{background:#dce8ffcb;animation:sc-atm-lightning .8s ease both}
-.stage-wrap.sc-scene-shake #map{animation:sc-stage-shake .7s ease-out both}
-.sc-scene-ambience.sc-scene-transition::after{content:'';position:absolute;inset:0;background:linear-gradient(92deg,#111d19d9,#d1c29f4d,#111d19a5);animation:sc-ink-wipe .95s ease both}
-@keyframes sc-atm-rain{to{background-position:-90px 210px}}
-@keyframes sc-atm-mist{from{transform:translateX(-4%) scale(1)}to{transform:translateX(5%) scale(1.12)}}
-@keyframes sc-chakra-breathe{to{opacity:.15;filter:hue-rotate(35deg)}}
-@keyframes sc-atm-flash{0%,100%{opacity:0}20%{opacity:.78}60%{opacity:.22}}
-@keyframes sc-atm-lightning{0%,35%,55%,100%{opacity:0}8%,45%{opacity:.7}}
-@keyframes sc-stage-shake{0%,100%{transform:none}15%{transform:translate(3px,2px)}35%{transform:translate(-4px,0)}60%{transform:translate(3px,-2px)}80%{transform:translate(-1px,1px)}}
-@keyframes sc-ink-wipe{0%,100%{opacity:0;clip-path:inset(0 100% 0 0)}42%{opacity:1;clip-path:inset(0 0 0 0)}75%{opacity:.5;clip-path:inset(0 0 0 0)}}
+.sc-scene-ambience .sc-atm-weather,.sc-scene-ambience .sc-atm-flash{display:none!important}
+.sc-scene-ambience .sc-scene-fx-canvas{
+ position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
+ pointer-events:none;transform:translateZ(0)
+}
+.sc-scene-ambience[data-preset=rain] .sc-atm-shade{
+ opacity:calc(var(--sc-atm-strength)*.3);
+ background:radial-gradient(ellipse 100% 70% at 65% -10%,#819bad38,transparent 85%),
+ linear-gradient(165deg,#203d4b58,#26394b25 45%,#091f2e70)
+}
+.sc-scene-ambience[data-preset=storm] .sc-atm-shade{
+ opacity:calc(var(--sc-atm-strength)*.55);
+ background:radial-gradient(ellipse 90% 65% at 25% 0%,#738c9a51,transparent 82%),
+ linear-gradient(120deg,#1c2b4088,#121b2e66 60%,#091420a6)
+}
+.sc-scene-ambience[data-preset=mist] .sc-atm-shade{
+ opacity:calc(var(--sc-atm-strength)*.26);
+ background:linear-gradient(112deg,#afc9be52,#d3d9c139 47%,#8daaa54a)
+}
+.sc-scene-ambience[data-preset=night] .sc-atm-shade{
+ opacity:calc(var(--sc-atm-strength)*.72);
+ background:radial-gradient(ellipse 80% 90% at 60% 42%,#34456138,transparent 76%),
+ linear-gradient(165deg,#0b173ab5,#0a1b3288 35%,#06102ee2)
+}
+.sc-scene-ambience[data-preset=chakra] .sc-atm-shade{
+ opacity:calc(var(--sc-atm-strength)*.3);
+ background:radial-gradient(ellipse 55% 48% at 51% 56%,#65d1bd48,transparent 78%),
+ radial-gradient(ellipse at 51% 50%,transparent 30%,#0f686020)
+}
+.stage-wrap.sc-scene-shake #map{transform-origin:center;animation:sc-stage-impact-v2 .72s cubic-bezier(.18,.69,.19,1) both}
+@keyframes sc-stage-impact-v2{
+ 0%,100%{transform:translate3d(0,0,0)}
+ 14%{transform:translate3d(2px,-1px,0)}
+ 29%{transform:translate3d(-3px,2px,0)}
+ 43%{transform:translate3d(2px,1px,0)}
+ 61%{transform:translate3d(-1px,-1px,0)}
+ 79%{transform:translate3d(1px,0,0)}
+}
+.sc-scene-preset{transition:border-color .17s ease,background-color .17s ease,transform .17s ease}
+.sc-scene-preset:hover{transform:translateY(-1px);border-color:var(--vtt-pigment,#c5aa78)}
+.sc-scene-preset::before{display:block;font:400 19px/1.1 'Yuji Boku',Georgia,serif;margin:0 auto 5px;color:var(--vtt-display,#c8a87b)}
+.sc-scene-preset[data-sc-preset=none]::before{content:'○'}
+.sc-scene-preset[data-sc-preset=rain]::before{content:'〃'}
+.sc-scene-preset[data-sc-preset=storm]::before{content:'ϟ'}
+.sc-scene-preset[data-sc-preset=mist]::before{content:'≋'}
+.sc-scene-preset[data-sc-preset=night]::before{content:'☾'}
+.sc-scene-preset[data-sc-preset=chakra]::before{content:'✧'}
+.sc-scene-preset[aria-pressed=true]{box-shadow:inset 0 -2px var(--vtt-pigment,#bfa879)}
+@media(prefers-reduced-motion:reduce){
+ .stage-wrap.sc-scene-shake #map{animation:none!important}
+ .sc-scene-preset{transition:none!important}
+ .sc-scene-ambience .sc-atm-shade{transition:none!important}
+}
 @media(max-width:690px){.sc-tool-fields{grid-template-columns:1fr}.sc-scene-preset-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(prefers-reduced-motion:reduce){
 .sc-scene-ambience .sc-atm-weather,.sc-scene-ambience.sc-atm-pulse .sc-atm-flash,.sc-scene-ambience.sc-atm-lightning .sc-atm-flash,
