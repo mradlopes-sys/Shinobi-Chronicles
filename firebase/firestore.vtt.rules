@@ -269,6 +269,23 @@ service cloud.firestore {
               && request.resource.data.payload.targetUid is string
               && request.resource.data.payload.skill is string
               && request.resource.data.payload.skill.size() <= 70)
+            // Jogadores pedem abertura/fechamento; apenas o mestre edita
+            // a geometria real da cena após checar alcance e propriedade.
+            || (request.resource.data.type == 'door'
+              && request.resource.data.at is timestamp
+              && request.resource.data.payload.keys().hasOnly(['sceneId','wallId','tokenId','state'])
+              && request.resource.data.payload.sceneId is string
+              && request.resource.data.payload.sceneId.size() > 0
+              && request.resource.data.payload.sceneId.size() <= 120
+              && request.resource.data.payload.sceneId ==
+                get(/databases/$(database)/documents/vttRooms/$(roomId)).data.activeSceneId
+              && request.resource.data.payload.wallId is string
+              && request.resource.data.payload.wallId.size() >= 5
+              && request.resource.data.payload.wallId.size() <= 32
+              && request.resource.data.payload.tokenId is string
+              && request.resource.data.payload.tokenId.size() > 0
+              && request.resource.data.payload.tokenId.size() <= 120
+              && request.resource.data.payload.state in ['open','closed'])
             || (request.resource.data.type == 'effect'
               && (isAdmin() || (
                 request.resource.data.payload.get('source', '') == 'jutsu'
