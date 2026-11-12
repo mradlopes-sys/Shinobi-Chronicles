@@ -282,6 +282,8 @@ export function createSessionTools({
     const strength=safeN(state?.n,15,100)/100;
     ambience.dataset.preset=preset;
     ambience.style.setProperty('--sc-atm-strength',String(strength));
+    selectedMode=preset;
+    presetButtons.forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.scPreset===preset)));
     $('sc-scene-current').textContent='Atmosfera: '+PRESETS[preset];
   }
   function playCue(kind){
@@ -318,7 +320,10 @@ export function createSessionTools({
     scenePanel.hidden=!canEdit();
     if(!ambience)return;
     const scene=getSceneId()||'';
-    if(previousScene!==scene){lastAmbienceKey='';previousScene=scene}
+    if(previousScene!==scene){
+      if(previousScene&&scene)playCue('transition');
+      lastAmbienceKey='';previousScene=scene;
+    }
     const newest=publicEvents.find(event=>{
       const d=event.data||{},p=payloadFromText(d.payload?.text,SYS_SCENE);
       return d.type==='message'&&authorized(d)&&p&&(p.sc||'')===scene&&
