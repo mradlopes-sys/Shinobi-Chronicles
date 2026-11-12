@@ -209,30 +209,17 @@ export function createCinematicSceneFX({stage,host}){
     ctx.stroke();
     ctx.restore();
   }
+  // Corte suave acionado manualmente. Nada de manchas circulares ou fumaça.
+  // Ao abrir mapa ou alterar clima não executamos esta passagem automaticamente.
   function paintTransition(now){
     const start=cues.get('transition');
     if(!start)return;
-    const a=clamp((now-start)/1070,0,1);
-    if(a>=1){cues.delete('transition');return}
-    const enter=ease(clamp(a/.44,0,1));
-    const leave=1-ease(clamp((a-.38)/.62,0,1));
-    const alpha=Math.min(enter,leave)*.78;
-    if(alpha<.003)return;
-    ctx.save();ctx.globalAlpha=alpha;
-    const spread=Math.max(width,height);
-    const centerX=width*(.24+.36*ease(a)),centerY=height*.54;
-    for(let i=0;i<8;i++){
-      const angle=i*2.399;
-      const x=centerX+Math.cos(angle)*spread*(.05+.065*i);
-      const y=centerY+Math.sin(angle)*height*(.11+.022*i);
-      const radius=spread*(.13+.05*(i%3)+.17*enter);
-      const g=ctx.createRadialGradient(x,y,radius*.07,x,y,radius);
-      g.addColorStop(0,rgba(15,30,25,.83));
-      g.addColorStop(.48,rgba(29,44,34,.72));
-      g.addColorStop(.78,rgba(39,57,43,.35));
-      g.addColorStop(1,rgba(39,57,43,0));
-      ctx.fillStyle=g;ctx.fillRect(x-radius,y-radius,radius*2,radius*2);
-    }
+    const progress=clamp((now-start)/620,0,1);
+    if(progress>=1){cues.delete('transition');return}
+    const opacity=Math.sin(Math.PI*progress)*.22;
+    ctx.save();
+    ctx.fillStyle=rgba(8,17,19,opacity);
+    ctx.fillRect(0,0,width,height);
     ctx.restore();
   }
   function drawPulse(now){
