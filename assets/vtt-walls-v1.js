@@ -345,5 +345,6 @@ export function createWallTools({
     ctx.restore();
   }
   return {setData,panelHTML,bind,refreshUI,pointerDown,pointerMove,pointerUp,cancel,
-    active,draw,moveBlocked,visibleAtWorld,cutVision,signature,visionActive,visionSettings};
+    active,activeDraw:()=>mode==='wall-draw',activeSelect:()=>mode==='wall-select',
+    draw,moveBlocked,visibleAtWorld,cutVision,signature,visionActive,visionSettings};
 }
