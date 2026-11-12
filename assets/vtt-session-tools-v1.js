@@ -195,8 +195,8 @@ export function createSessionTools({
       const target=$(elId),prev=target.value;
       target.innerHTML=people.map(f=>'<option value="'+escapeHTML(f.id)+'">'+escapeHTML(f.nome||f.name||'Shinobi')+'</option>').join('');
       if(people.some(f=>f.id===prev))target.value=prev;
+      else if(elId==='sc-smart-defender'&&people.length>1)target.selectedIndex=1;
     }
-    if(people.length>1&&!$('sc-smart-defender').value)$('sc-smart-defender').selectedIndex=1;
   }
   $('sc-smart-roll').onclick=async()=>{
     if(!canEdit()||busyCombat)return;
