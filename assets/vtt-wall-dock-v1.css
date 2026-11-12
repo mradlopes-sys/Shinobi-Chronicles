@@ -1,0 +1,73 @@
+/* Shinobi Chronicles · Controles rápidos de paredes e inspeção do mestre */
+.sc-map-wall-dock{
+  position:absolute;right:17px;bottom:17px;z-index:12;pointer-events:auto;
+  color:var(--vtt-ink,#ede6d5);font-family:'DM Sans',sans-serif
+}
+.sc-map-wall-dock[hidden],.sc-map-wall-popover[hidden],.sc-vision-inspector[hidden]{display:none!important}
+#sc-map-walls-toggle{
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  border:1px solid #9c906f99;border-radius:9px;min-height:38px;padding:8px 14px;
+  background:linear-gradient(150deg,#2f4136eb,#17251ff2);color:#f2e5ce;
+  box-shadow:0 9px 24px #07130b77;backdrop-filter:blur(12px);
+  font:700 12px/1.2 'DM Sans',sans-serif;cursor:pointer;letter-spacing:.025em
+}
+#sc-map-walls-toggle:hover,#sc-map-walls-toggle.active{border-color:#e3c28f;background:#455543f4}
+.sc-map-wall-popover{
+  position:absolute;right:0;bottom:calc(100% + 9px);width:min(260px,calc(100vw - 75px));
+  max-height:min(62dvh,500px);overflow:auto;overscroll-behavior:contain;z-index:2;
+  display:grid;gap:11px;padding:13px;border:1px solid var(--vtt-pigment-border,#97805e);
+  border-radius:10px;background:linear-gradient(150deg,var(--vtt-paper,#24332b),var(--vtt-paper-muted,#1a2921));
+  box-shadow:0 14px 36px #09140ec9;color:var(--vtt-ink,#f0e5d3);
+  backdrop-filter:blur(20px)
+}
+.sc-map-wall-popover h3{margin:0;color:var(--vtt-display,#e9c99b);font:400 24px/1 'Caveat Brush','Yuji Boku',serif}
+.sc-map-wall-popover p{margin:0;color:var(--vtt-fade,#b9c5b5);font:500 10px/1.5 'DM Sans',sans-serif}
+.sc-map-wall-popover .sc-map-wall-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.sc-map-wall-popover button{
+  border:1px solid var(--vtt-line,#65705d);border-radius:6px;
+  min-height:34px;padding:7px 8px;color:var(--vtt-ink,#ede6d5);
+  background:var(--vtt-paper-light,#324439);font:600 11px/1.3 'DM Sans',sans-serif;
+  cursor:pointer;text-align:center
+}
+.sc-map-wall-popover button:hover,.sc-map-wall-popover button.active{
+  border-color:var(--vtt-pigment,#d7ba8a);background:var(--vtt-inkwater-soft,#435541)
+}
+.sc-map-wall-popover button:disabled{opacity:.45;cursor:not-allowed}
+.sc-map-wall-popover .sc-wall-mini-kind,.sc-map-wall-popover .sc-wall-mini-state{
+  display:grid;gap:5px;font:600 10px/1.4 'DM Sans',sans-serif;
+  color:var(--vtt-fade,#b6bfac)
+}
+.sc-map-wall-popover select{
+  min-width:0;width:100%;padding:9px;border-radius:5px;outline-offset:2px;
+  border:1px solid var(--vtt-line,#65705d);
+  background:var(--vtt-paper-light,#324439);color:var(--vtt-ink,#ede6d5);
+  font:600 11px 'DM Sans',sans-serif
+}
+.sc-map-wall-popover .sc-wall-mini-selection{
+  border-top:1px solid var(--vtt-line,#65705d);padding-top:10px;display:grid;gap:8px
+}
+.sc-map-wall-popover .sc-wall-mini-selection strong{font-size:11px;color:var(--vtt-display,#dfc89b)}
+.sc-map-wall-popover .sc-wall-mini-snap{display:flex;align-items:center;gap:7px;font:500 10px 'DM Sans',sans-serif}
+.sc-map-wall-popover .sc-wall-mini-snap input{accent-color:var(--vtt-pigment,#d4b887)}
+.sc-map-wall-popover .sc-wall-mini-delete{border-color:#9f6f64;color:#f1c5b8}
+.sc-vision-inspector{
+  position:absolute;top:76px;left:50%;transform:translateX(-50%);z-index:13;
+  display:flex;align-items:center;gap:10px;max-width:calc(100% - 24px);
+  border:1px solid #b7a477aa;border-radius:9px;padding:8px 10px;
+  background:linear-gradient(125deg,#172520f0,#28382cf2);
+  box-shadow:0 10px 22px #07110aa8;color:#f4e6ca;pointer-events:auto
+}
+.sc-vision-inspector .sc-vision-glyph{color:#e4c58c;font-size:22px}
+.sc-vision-inspector .sc-vision-text{display:grid;gap:2px;min-width:0}
+.sc-vision-inspector strong{font:600 12px/1.2 'DM Sans',sans-serif;white-space:nowrap}
+.sc-vision-inspector small{font:500 10px/1.2 'DM Sans',sans-serif;color:#b9c7b6;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.sc-vision-inspector button{border:1px solid #8d866c;border-radius:5px;background:#3b493c;color:#f0e4d1;
+  padding:6px 8px;font:600 10px 'DM Sans',sans-serif;cursor:pointer;white-space:nowrap}
+.sc-vision-inspector button:hover{border-color:#edce9b}
+#stage.sc-battle-walls #map{cursor:crosshair!important}
+@media(max-width:690px){
+  .sc-map-wall-dock{right:8px;bottom:8px}
+  .sc-vision-inspector{top:51px;padding:6px;gap:6px}
+  .sc-vision-inspector small{max-width:100px}
+  #sc-map-walls-toggle{padding:8px 10px}
+}
