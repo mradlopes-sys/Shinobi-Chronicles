@@ -545,7 +545,7 @@ export function createBattleSystems({
     addCondition,removeCondition,openForToken,setTarget:chooseTarget,
     pointerDown,pointerMove,pointerUp,cancel,toggleFogMode,isMode,shortStatus,
     getCurrentFog,applyRoundTick,getConditionList,setTokenHidden,toggleTokenHidden,isTokenHidden,isRevealed,
-    drawWalls:(ctx,view)=>walls.draw(ctx,view),blocksMovement:walls.moveBlocked,
+    drawWalls:(ctx,view)=>walls.draw(ctx,view,visionPreviewUid),blocksMovement:walls.moveBlocked,
     doorHint:walls.doorHint,toggleDoorAt:walls.toggleDoorAt,
     wallQuickState:walls.quickState,setWallMode:walls.setQuickMode,
     setWallSnap:walls.setSnap,changeWall:walls.changeSelectedQuick,
