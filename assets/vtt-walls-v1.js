@@ -52,9 +52,9 @@ function normalizeScene(value){
 }
 export function createWallTools({
   getAdmin,getUid,getSceneId,getRoom,getMap,getCell,getZoom,getTokens,isHidden,
-  saveFields,notify,redraw,onModeActivated,sendDoorRequest
+  saveFields,notify,redraw,onModeActivated,sendDoorRequest,ensureFog
 }){
-  let data={},mode='',kind='solid',selected='',pending=null,busy=false,snap=true,revision=0,doorBusy=false;
+  let data={},mode='',kind='solid',selected='',pending=null,busy=false,snap=true,revision=0,doorBusy=false,lastDoorAction=0;
   const current=()=>getSceneId()||'';
   const scene=()=>data[current()]||{walls:[],vision:false,range:10};
   const img=()=>getMap();
@@ -141,7 +141,12 @@ export function createWallTools({
     bindClick('sc-wall-select',()=>{mode=mode==='wall-select'?'':'wall-select';pending=null;onModeActivated();refreshUI();redraw()});
     bindClick('sc-wall-stop',()=>{cancel();refreshUI()});
     bindChange('sc-wall-snap',e=>{snap=e.target.checked});
-    bindChange('sc-wall-vision',e=>void update({vision:e.target.checked}));
+    bindChange('sc-wall-vision',async e=>{
+      const enabled=e.target.checked;
+      const ok=await saveScene({...scene(),vision:enabled});
+      if(ok&&enabled)await ensureFog?.();
+      refreshUI();
+    });
     bindChange('sc-wall-range',e=>void update({range:Number(e.target.value)}));
     bindChange('sc-wall-edit-type',e=>void changeSelected({type:e.target.value}));
     bindChange('sc-wall-door-state',e=>void changeSelected({state:e.target.value}));
@@ -223,8 +228,10 @@ export function createWallTools({
     if(Math.hypot((start.x-end.x)*w,(start.y-end.y)*h)<8){redraw();return true}
     if(scene().walls.length>=maxWalls){notify('Limite de paredes deste mapa atingido.');return true}
     const wall={id:uid(),type:kind,x1:start.x,y1:start.y,x2:end.x,y2:end.y,state:'closed',dir:'both'};
-    const ok=await saveScene({...scene(),walls:[...scene().walls,wall]});
-    if(ok){selected=wall.id;refreshUI()}
+    const firstWall=scene().walls.length===0;
+    const ok=await saveScene({...scene(),walls:[...scene().walls,wall],
+      vision:firstWall?true:scene().vision});
+    if(ok){selected=wall.id;refreshUI();if(firstWall)await ensureFog?.()}
     return true;
   }
   function cancel(){
@@ -291,6 +298,8 @@ export function createWallTools({
   }
   async function toggleDoorAt(x,y){
     const target=doorAt(x,y);if(!target||doorBusy)return false;
+    if(Date.now()-lastDoorAction<700)return true;
+    lastDoorAction=Date.now();
     if(target.state==='locked'){notify('Esta porta está trancada.');return true}
     const state=target.state==='open'?'closed':'open';
     doorBusy=true;
