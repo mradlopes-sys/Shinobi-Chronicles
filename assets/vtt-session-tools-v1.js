@@ -1,7 +1,7 @@
 // Shinobi Chronicles — extensões da mesa (teste coletivo, combate assistido e cena).
 // Usa somente eventos "message"/"roll"/"effect" já existentes: nenhuma coleção nova.
 import {makeDicePayload,rollForSheet} from './vtt-rolls-v4.js?v=20261111-session5';
-import {createCinematicSceneFX} from './vtt-cinematic-scene-v2.js?v=20261113-cine1';
+import {createCinematicSceneFX} from './vtt-cinematic-scene-v2.js?v=20261111-cinematic2';
 const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const safeN=(value,min,max)=>Math.max(min,Math.min(max,Number.isFinite(Number(value))?Math.round(Number(value)):min));
 const safeId=s=>typeof s==='string'&&/^[A-Za-z0-9_-]{6,30}$/.test(s);
