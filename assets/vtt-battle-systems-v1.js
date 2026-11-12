@@ -392,13 +392,15 @@ export function createBattleSystems({
     if(!img?.naturalWidth||!img?.naturalHeight)return false;
     const cell=Math.max(1,Number(getCell())||64),w=img.naturalWidth,h=img.naturalHeight;
     const px=(Number(token.x)+.5)*cell,py=(Number(token.y)+.75)*cell;
+    let lastPaint=null;
     let visible=fog.reveals.some(r=>px>=r.x*w&&px<=(r.x+r.w)*w&&py>=r.y*h&&py<=(r.y+r.h)*h);
     for(const op of fog.strokes||[]){
       const inside=op.type==='rect'?
         (px>=op.x*w&&px<=(op.x+op.w)*w&&py>=op.y*h&&py<=(op.y+op.h)*h):
         brushHits(op,px,py,w,h);
-      if(inside)visible=op.op==='reveal';
+      if(inside){visible=op.op==='reveal';lastPaint=op.op}
     }
+    if(lastPaint==='cover')return false;
     return visible||(walls.visionActive()&&walls.visibleAtWorld(px,py));
   }
   function tokenVisible(token){return getAdmin()||isRevealed(token)}
@@ -433,9 +435,9 @@ export function createBattleSystems({
       }
       c.restore();
     };
+    if(!getAdmin())walls.cutVision(c,cw,ch,w,h);
     for(const r of fog.reveals)use({...r,op:'reveal',type:'rect'});
     for(const op of fog.strokes||[])use(op);
-    if(!getAdmin())walls.cutVision(c,cw,ch,w,h);
   }
   function paintFog(ctx,view){
     const fog=getCurrentFog(),img=getMap();
