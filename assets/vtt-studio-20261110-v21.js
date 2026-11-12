@@ -1224,6 +1224,8 @@ function loadMap(url){
   img.onload=()=>{
     if(sceneKey!==url)return;
     view.image=img;view.cell=automaticMapCell(img);center();
+    for(const event of pendingDoorEvents.values())void resolveDoorEvent(event,subscriptionEpoch);
+    pendingDoorEvents.clear();
     updateMetricHud();
     setTimeout(()=>{if(sceneKey===url)stage.classList.remove('scene-loading')},230);
   };
@@ -1362,6 +1364,13 @@ function reflectBattleMode(){
   stage.classList.toggle('sc-battle-walls',battle.isMode('wall-draw')||battle.isMode('wall-select'));
 }
 canvas.onpointerdown=e=>{if(e.button!==0)return;const p=point(e);
+  if(!measure.enabled&&!['target','reveal','brush-reveal','brush-cover','wall-draw','wall-select']
+      .some(kind=>battle.isMode(kind))){
+    const q=world(p.x,p.y);
+    if(battle.doorHint(q.x,q.y)){
+      e.preventDefault();void battle.toggleDoorAt(q.x,q.y);return;
+    }
+  }
   if(battle.isMode('target')||['reveal','brush-reveal','brush-cover','wall-draw','wall-select'].some(kind=>battle.isMode(kind))){
     const q=world(p.x,p.y),token=hit(p.x,p.y);
     fogDrawing=['reveal','brush-reveal','brush-cover','wall-draw','wall-select'].some(kind=>battle.isMode(kind));
@@ -1373,6 +1382,10 @@ canvas.onpointerdown=e=>{if(e.button!==0)return;const p=point(e);
     }
   }if(measure.enabled){if(!view.image)return show('Ative e carregue um cenário antes de medir.');measure.start=world(p.x,p.y);measure.end=measure.start;measure.drag=true;measure.drawnPx=0;canvas.setPointerCapture(e.pointerId);updateMetricDrawStatus();draw();return}const t=hit(p.x,p.y);selected=t?.id||null;renderTokens();draw();if(t&&!canMove(t))return;dragToken={id:e.pointerId,start:p,ox:view.ox,oy:view.oy,t,original:t?{x:t.x,y:t.y}:null};canvas.setPointerCapture(e.pointerId);canvas.classList.add('dragging')};
 canvas.onpointermove=e=>{
+  if(!fogDrawing&&!dragToken&&!measure.enabled){
+    const p=point(e),q=world(p.x,p.y),hint=battle.doorHint(q.x,q.y);
+    canvas.style.cursor=hint?'pointer':'';canvas.title=hint;
+  }
   if(fogDrawing){
     const p=point(e),q=world(p.x,p.y);
     battle.pointerMove(q.x,q.y);
@@ -1659,8 +1672,14 @@ document.addEventListener('keydown',async e=>{
   if(e.repeat||nudgeInFlight)return;
   const [dx,dy]=steps[e.key],step=e.shiftKey?.25:.05;
   const previous={x:token.x,y:token.y};
-  token.x=Math.max(0,Math.min(1000,Math.round((token.x+dx*step)*1000)/1000));
-  token.y=Math.max(0,Math.min(1000,Math.round((token.y+dy*step)*1000)/1000));
+  const nx=Math.max(0,Math.min(1000,Math.round((token.x+dx*step)*1000)/1000));
+  const ny=Math.max(0,Math.min(1000,Math.round((token.y+dy*step)*1000)/1000));
+  const cell=view.cell;
+  if(!(admin&&e.shiftKey)&&battle.blocksMovement(
+    (token.x+.5)*cell,(token.y+.75)*cell,(nx+.5)*cell,(ny+.75)*cell)){
+    show('Uma parede ou porta fechada bloqueia esse movimento.');return;
+  }
+  token.x=nx;token.y=ny;
   renderTokens();draw();
   nudgeInFlight=true;
   try{await updateDoc(tokenRef(token.id),{x:token.x,y:token.y})}
