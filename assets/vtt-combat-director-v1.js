@@ -1,7 +1,7 @@
 // Shinobi Chronicles · central compartilhada de iniciativa
 export function createCombatDirector({
  panel,strip,getAdmin,getSheets,getRoomData,rollInitiative,saveCombat,notify,portrait,
- getOnMap=()=>false,hasScene=()=>false,onPlaceOnMap=async()=>{},onOpenSheet=()=>{}
+ getOnMap=()=>false,hasScene=()=>false,onPlaceOnMap=async()=>{},onOpenSheet=()=>{},getVisibleSheet=()=>true
 }){
  const cap=36,selected=new Set();let combat={entries:[],activeId:'',round:1,started:false},search='',busy=false;
  const $=id=>document.getElementById(id);
@@ -43,7 +43,8 @@ export function createCombatDirector({
  };
  const stripEmpty=()=>{strip.hidden=true;strip.replaceChildren()};
  function drawStrip(){
-  const list=order();if(!list.length){stripEmpty();return}strip.hidden=false;
+  const list=order().filter(entry=>getAdmin()||getVisibleSheet(entry.id));
+  if(!list.length){stripEmpty();return}strip.hidden=false;
   const index=Math.max(0,list.findIndex(x=>x.id===combat.activeId)),next=list[(index+1)%list.length];
   const trackBefore=$('sc-turn-track'),previous=trackBefore?.scrollLeft||0;
   strip.innerHTML='<div class="sc-turn-header"><div><small>INICIATIVA · '+(combat.started?'EM COMBATE':'PREPARAÇÃO')+
