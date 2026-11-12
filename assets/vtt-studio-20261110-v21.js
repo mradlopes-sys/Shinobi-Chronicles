@@ -1375,7 +1375,7 @@ function draw(){
       ctx.fillText((t.name||'Shinobi').slice(0,18),b.x,b.y-view.cell*.3);ctx.restore();
     }
     battle.drawTokenMarks(ctx,t,view,b);
-    if(selected===t.id){
+    if(selected===t.id&&!battle.isVisionPreview()){
       // Apenas a seleção tem indicadores discretos nos cantos, nunca um aro permanente.
       const pad=view.cell*.07,l=b.left-pad,r=b.left+b.width+pad,top=b.top-pad,bot=b.top+b.height+pad,d=view.cell*.14;
       ctx.save();ctx.strokeStyle='#f7dca5';ctx.lineWidth=2/view.zoom;ctx.beginPath();
