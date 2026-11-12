@@ -1,8 +1,9 @@
 // Shinobi Chronicles · Combat 2.0, Jutsu targeting and visual fog
+import {createWallTools} from './vtt-walls-v1.js?v=20261112-walls1';
 // Uses only the already-permitted theatre field of the shared room.
 export function createBattleSystems({
-  getAdmin,getRoom,getSceneId,getRoomData,getSheets,getTokens,getCurrentTurn,
-  setCombatTab,focusToken,playEffect,adjustHitPoints,saveFields,notify,redraw,getMap,getCell
+  getAdmin,getUid,getRoom,getSceneId,getRoomData,getSheets,getTokens,getCurrentTurn,
+  setCombatTab,focusToken,playEffect,adjustHitPoints,saveFields,notify,redraw,getMap,getCell,getZoom
 }){
   const MAX_FOG=48,MAX_STROKES=100,MAX_POINTS=100,MAX_CONDITIONS=8,MAX_DURATION=99;
   const CONDITIONS=[
@@ -33,6 +34,11 @@ export function createBattleSystems({
   const getRoster=()=>getSheets().filter(x=>typeof x.id==='string'&&x.id);
   const getCurrentFog=()=>fogMap[currentScene()]||{enabled:false,reveals:[],strokes:[]};
   const isTokenHidden=id=>hiddenTokens.includes(id);
+  const walls=createWallTools({
+    getAdmin,getUid,getSceneId,getRoom,getMap,getCell,getZoom,getTokens,isHidden:isTokenHidden,
+    saveFields,notify,redraw,
+    onModeActivated:()=>{mode='';shapeStart=null;shapeEnd=null;brushPoints=[];render()}
+  });
   const getConditionList=id=>Array.isArray(conditions[id])?conditions[id]:[];
   const condNames=id=>getConditionList(id).map(x=>byId[x.id]?.name||'').filter(Boolean).join(', ');
   function validConditions(obj){
@@ -77,7 +83,7 @@ export function createBattleSystems({
     const scene=currentScene();
     if(scene!==lastScene){
       lastScene=scene;
-      mode='';shapeStart=null;shapeEnd=null;
+      mode='';shapeStart=null;shapeEnd=null;walls.cancel();
     }
     if(!busy){
       conditions=validConditions(theatre?.conditions);
@@ -85,6 +91,7 @@ export function createBattleSystems({
       fogCacheKey='';
     }
     hiddenTokens=Array.isArray(theatre?.hiddenTokens)?[...new Set(theatre.hiddenTokens.filter(x=>typeof x==='string'&&x.length<150))].slice(0,250):[];
+    walls.setData(theatre?.wallsMap);
     render();redraw();
   }
   function roundTick(before,next){
@@ -217,7 +224,7 @@ export function createBattleSystems({
   function render(){
     if(condPanel&&getAdmin())condPanel.innerHTML=conditionsHTML();
     if(jutsuPanel&&getAdmin())jutsuPanel.innerHTML=jutsuHTML();
-    if(fogPanel&&getAdmin())fogPanel.innerHTML=fogHTML();
+    if(fogPanel&&getAdmin()){fogPanel.innerHTML=fogHTML()+'<div id="sc-walls-container">'+walls.panelHTML()+'</div>';walls.bind()}
     const active=!!getCurrentFog().enabled&&!!currentScene();
     if(fogIndicator){
       fogIndicator.hidden=!active;
@@ -225,6 +232,7 @@ export function createBattleSystems({
     }
     stage?.classList.toggle('sc-battle-target',mode==='target');
     stage?.classList.toggle('sc-battle-fog',['reveal','brush-reveal','brush-cover'].includes(mode));
+    stage?.classList.toggle('sc-battle-walls',walls.active());
     refreshTimelineBadges();
     if(!getAdmin())return;
     const bind=(id,event,fn)=>{const el=document.getElementById(id);if(el)el.addEventListener(event,fn)};
@@ -245,11 +253,11 @@ export function createBattleSystems({
     bind('sc-jutsu-value','change',e=>{power=safeInt(e.target.value,1,999,1)});
     bind('sc-jutsu-rounds','change',e=>{duration=safeInt(e.target.value,1,MAX_DURATION,1)});
     bind('sc-jutsu-condition','change',e=>{selectedCondition=e.target.value});
-    bind('sc-jutsu-map-target','click',()=>{mode=mode==='target'?'':'target';render();redraw()});
+    bind('sc-jutsu-map-target','click',()=>{walls.cancel();mode=mode==='target'?'':'target';render();redraw()});
     bind('sc-jutsu-cast','click',()=>void cast());
     bind('sc-fog-toggle','click',()=>void setFog({...getCurrentFog(),enabled:!getCurrentFog().enabled}));
     for(const [id,kind] of [['sc-fog-reveal','reveal'],['sc-fog-brush-reveal','brush-reveal'],['sc-fog-brush-cover','brush-cover']]){
-      bind(id,'click',()=>{mode=mode===kind?'':kind;shapeStart=null;brushPoints=[];render();redraw()});
+      bind(id,'click',()=>{walls.cancel();mode=mode===kind?'':kind;shapeStart=null;brushPoints=[];render();redraw()});
     }
     bind('sc-fog-brush-size','input',event=>{
       brushSize=safeInt(event.target.value,1,10,3);
@@ -308,15 +316,16 @@ export function createBattleSystems({
   function toggleFogMode(){
     if(!getAdmin()||!currentScene())return false;
     if(!getCurrentFog().enabled){notify('Ative a névoa na aba Campanha antes de revelar áreas.');return false}
-    mode=mode==='reveal'?'':'reveal';shapeStart=null;brushPoints=[];render();redraw();return true;
+    walls.cancel();mode=mode==='reveal'?'':'reveal';shapeStart=null;brushPoints=[];render();redraw();return true;
   }
-  function cancel(){if(!mode&&!shapeStart&&!brushPoints.length)return false;mode='';shapeStart=null;shapeEnd=null;brushPoints=[];render();redraw();return true}
+  function cancel(){const active=!!mode||!!shapeStart||!!brushPoints.length||walls.active();if(!active)return false;mode='';shapeStart=null;shapeEnd=null;brushPoints=[];walls.cancel();render();redraw();return true}
   // Coordinates are normalized to the map, never browser pixels.
   function coords(wx,wy){
     const img=getMap();if(!img?.naturalWidth||!img?.naturalHeight)return null;
     return {x:Math.max(0,Math.min(1,wx/img.naturalWidth)),y:Math.max(0,Math.min(1,wy/img.naturalHeight))};
   }
   function pointerDown(wx,wy,token){
+    if(walls.active())return walls.pointerDown(wx,wy);
     if(mode==='target'){
       if(token?.fichaId){selectedTarget=token.fichaId;mode='';render();focusToken(token.fichaId);redraw()}
       else notify('Clique diretamente em um token para escolher o alvo.');
@@ -329,6 +338,7 @@ export function createBattleSystems({
     redraw();return true;
   }
   function pointerMove(wx,wy){
+    if(walls.active())return walls.pointerMove(wx,wy);
     if(!shapeStart||!['reveal','brush-reveal','brush-cover'].includes(mode))return false;
     const p=coords(wx,wy);if(!p)return true;
     shapeEnd=p;
@@ -339,6 +349,7 @@ export function createBattleSystems({
     return true;
   }
   async function pointerUp(wx,wy){
+    if(walls.active())return walls.pointerUp(wx,wy);
     if(!shapeStart||!['reveal','brush-reveal','brush-cover'].includes(mode))return false;
     const p=coords(wx,wy)||shapeEnd||shapeStart;
     const old=shapeStart,kind=mode;
@@ -388,7 +399,7 @@ export function createBattleSystems({
         brushHits(op,px,py,w,h);
       if(inside)visible=op.op==='reveal';
     }
-    return visible;
+    return visible||(walls.visionActive()&&walls.visibleAtWorld(px,py));
   }
   function tokenVisible(token){return getAdmin()||isRevealed(token)}
   // The fog mask is composited separately, avoiding destination-out on the real
@@ -424,12 +435,13 @@ export function createBattleSystems({
     };
     for(const r of fog.reveals)use({...r,op:'reveal',type:'rect'});
     for(const op of fog.strokes||[])use(op);
+    if(!getAdmin())walls.cutVision(c,cw,ch,w,h);
   }
   function paintFog(ctx,view){
     const fog=getCurrentFog(),img=getMap();
     if(!fog.enabled||!img?.naturalWidth||!img?.naturalHeight)return;
     const w=img.naturalWidth,h=img.naturalHeight;
-    const signature=[currentScene(),w,h,getAdmin()?'master':'player',JSON.stringify(fog)].join('|');
+    const signature=[currentScene(),w,h,getAdmin()?'master':'player',JSON.stringify(fog),walls.signature()].join('|');
     if(!fogCanvas||fogCacheKey!==signature){
       buildFogMask(fog,w,h);fogCacheKey=signature;
     }
@@ -490,11 +502,12 @@ export function createBattleSystems({
       badge.title=condNames(card.dataset.scTurnId);
     });
   }
-  function isMode(kind){return mode===kind}
+  function isMode(kind){return mode===kind||(kind==='wall-draw'&&walls.activeDraw())||(kind==='wall-select'&&walls.activeSelect())}
   function shortStatus(id){return condNames(id)}
   render();
   return {setData,render,paintFog,tokenVisible,drawTokenMarks,refreshTimelineBadges,
     addCondition,removeCondition,openForToken,setTarget:chooseTarget,
     pointerDown,pointerMove,pointerUp,cancel,toggleFogMode,isMode,shortStatus,
-    getCurrentFog,applyRoundTick,getConditionList,setTokenHidden,toggleTokenHidden,isTokenHidden,isRevealed};
+    getCurrentFog,applyRoundTick,getConditionList,setTokenHidden,toggleTokenHidden,isTokenHidden,isRevealed,
+    drawWalls:(ctx,view)=>walls.draw(ctx,view),blocksMovement:walls.moveBlocked};
 }
