@@ -101,7 +101,7 @@ export function createWallTools({
     const cfg=scene(),chosen=cfg.walls.find(w=>w.id===selected);
     return '<section class="sc-wall-panel" aria-label="Camada de paredes">'+
       '<div class="sc-battle-head"><small>CAMADA DO MESTRE · VISÃO E COLISÃO</small><h3>Arquitetura da cena</h3>'+
-      '<p>Desenhe paredes e janelas arrastando no mapa. Selecione uma linha para editar ou apagar. Jogadores não veem as linhas.</p></div>'+
+      '<p>Arraste para criar segmentos; selecione uma linha e arraste suas pontas para corrigir o traçado. Jogadores não veem as linhas.</p></div>'+
       '<div class="sc-wall-presets">'+WALL_PRESETS.map(x=>
         '<button type="button" data-wall-kind="'+x.id+'" class="sc-wall-preset'+(mode==='wall-draw'&&kind===x.id?' active':'')+
         '" title="'+esc(x.name)+'"><span style="--wall-color:'+x.color+'"></span>'+esc(x.name)+'</button>').join('')+'</div>'+
@@ -186,7 +186,15 @@ export function createWallTools({
     const p=editPoint(x,y);
     if(!p)return true;
     if(mode==='wall-select'){
-      selected=nearby(x,y)?.id||'';refreshUI();redraw();return true;
+      const chosen=nearby(x,y);selected=chosen?.id||'';
+      pending=null;
+      if(chosen){
+        const size=pixels(),v=wPix(chosen,size.w,size.h);
+        const max=11/Math.max(.2,Number(getZoom())||1);
+        const a=Math.hypot(x-v.x1,y-v.y1),b=Math.hypot(x-v.x2,y-v.y2);
+        if(Math.min(a,b)<=max)pending={edit:chosen.id,endpoint:a<=b?'a':'b',start:p,end:p};
+      }
+      refreshUI();redraw();return true;
     }
     pending={start:p,end:p};redraw();return true;
   }
@@ -197,6 +205,17 @@ export function createWallTools({
   }
   async function pointerUp(x,y){
     if(!isEditing())return false;
+    if(mode==='wall-select'){
+      if(!pending?.edit)return true;
+      pending.end=editPoint(x,y)||pending.end;
+      const {edit,endpoint,start,end}=pending;
+      pending=null;
+      const size=pixels();
+      if(Math.hypot((start.x-end.x)*size.w,(start.y-end.y)*size.h)<5){redraw();return true}
+      const updated=scene().walls.map(w=>w.id===edit?
+        {...w,...(endpoint==='a'?{x1:end.x,y1:end.y}:{x2:end.x,y2:end.y})}:w);
+      await saveScene({...scene(),walls:updated});refreshUI();return true;
+    }
     if(mode!=='wall-draw'||!pending)return true;
     pending.end=editPoint(x,y)||pending.end;
     const {start,end}=pending;pending=null;
@@ -341,8 +360,17 @@ export function createWallTools({
     }
     if(pending){
       ctx.strokeStyle='#fff0ce';ctx.lineWidth=3/scale;ctx.setLineDash([8/scale,4/scale]);
-      ctx.beginPath();ctx.moveTo(pending.start.x*w,pending.start.y*h);
-      ctx.lineTo(pending.end.x*w,pending.end.y*h);ctx.stroke();
+      if(pending.edit){
+        const current=scene().walls.find(v=>v.id===pending.edit);
+        if(current){
+          const opposite=pending.endpoint==='a'?[current.x2,current.y2]:[current.x1,current.y1];
+          ctx.beginPath();ctx.moveTo(opposite[0]*w,opposite[1]*h);
+          ctx.lineTo(pending.end.x*w,pending.end.y*h);ctx.stroke();
+        }
+      }else{
+        ctx.beginPath();ctx.moveTo(pending.start.x*w,pending.start.y*h);
+        ctx.lineTo(pending.end.x*w,pending.end.y*h);ctx.stroke();
+      }
     }
     ctx.restore();
   }
