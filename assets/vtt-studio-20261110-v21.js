@@ -103,7 +103,7 @@ const battle=createBattleSystems({
   notify:message=>show(message),redraw:()=>draw(),getMap:()=>view.image,
   getCell:()=>view.cell,getZoom:()=>view.zoom,
   onWallUiChange:()=>refreshStageWallTools(),
-  onVisionPreviewChange:()=>refreshVisionInspector(),
+  onVisionPreviewChange:()=>{refreshVisionInspector();renderTokens()},
   sendDoorRequest:async({sceneId,wallId,tokenId,state})=>{
     if(!room||!uid||!sceneId||roomData?.activeSceneId!==sceneId)
       throw Error('A cena mudou ou você saiu da mesa.');
