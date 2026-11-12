@@ -88,7 +88,7 @@ export function createCinematicSceneFX({stage,host}){
       ctx.moveTo(p.x,p.y);
       ctx.lineTo(p.x-(p.len*(storm?.65:.37)),p.y+p.len*(.45+z*.45));
       ctx.stroke();
-      if(z>.81&&p.y>height*.22&&p.y<height*.88&&(Math.floor((t*.06+p.phase||p.x)/20)%17===0)){
+      if(z>.81&&p.y>height*.22&&p.y<height*.88&&(Math.floor(p.x*.19+p.y*.11+t*.003)%31===0)){
         ctx.fillStyle=rgba(206,227,235,opacity*.12);
         ctx.fillRect(p.x,p.y,1,1);
       }
@@ -158,7 +158,7 @@ export function createCinematicSceneFX({stage,host}){
       const angle=p.angle+(reduceQuery.matches?0:t*.00012*p.speed);
       const orbit=span*p.radius;
       const x=cx+Math.cos(angle)*orbit+Math.sin(t*.00022+p.phase)*15;
-      const y=cy+Math.sin(angle*1.28+p.phase)*orbit*.64-(reduceQuery.matches?0:t*.005*p.speed%35);
+      const y=cy+Math.sin(angle*1.28+p.phase)*orbit*.64-(reduceQuery.matches?0:Math.sin(t*.0008*p.speed+p.phase)*span*.032);
       const alpha=opacity*(.14+.29*p.glow)*(0.75+.25*Math.sin(t*.0018+p.phase));
       const rad=Math.max(.7,p.size);
       ctx.fillStyle=rgba(106,240,217,alpha);
@@ -267,7 +267,7 @@ export function createCinematicSceneFX({stage,host}){
       else if(kind==='chakra')drawChakra(now,alpha);
     };
     if(oldPreset!==preset&&progress<1)paint(oldPreset,oldStrength*(1-blend));
-    paint(preset,strength*(oldPreset===preset?1:blend));
+    paint(preset,oldPreset===preset?oldStrength+(strength-oldStrength)*blend:strength*blend);
     if(preset==='storm'&&!reduceQuery.matches&&now>nextLightning){
       lightning=boltPoints();nextLightning=now+rand(6500,12800);
     }
@@ -280,10 +280,15 @@ export function createCinematicSceneFX({stage,host}){
     if(!width||!height)resize();
     if(!width||!height){running=false;return}
     if(lastFrame===0)lastFrame=now;
-    const dt=clamp((now-lastFrame)/1000,0,.05);
+    const dt=clamp((now-(lastPaint||lastFrame))/1000,0,.075);
     lastFrame=now;
-    if(now-lastPaint>=28||reduceQuery.matches){
-      draw(now,reduceQuery.matches?0:dt);
+    if(reduceQuery.matches){
+      draw(now,0);
+      lastPaint=now;
+      running=false;return;
+    }
+    if(now-lastPaint>=29){
+      draw(now,dt);
       lastPaint=now;
     }
     const animating=preset!=='none'||oldPreset!==preset&&(now-changeAt<1650)||
