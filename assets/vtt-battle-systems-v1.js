@@ -211,7 +211,7 @@ export function createBattleSystems({
     const count=(fog.reveals?.length||0)+(fog.strokes?.length||0);
     const active=mode==='reveal'||mode==='brush-reveal'||mode==='brush-cover';
     return '<div class="sc-battle-head"><small>CONTROLE DO MESTRE · EXPLORAÇÃO</small><h3>Névoa de guerra</h3>'+
-      '<p>Revele corredores com o pincel ou marque cômodos com um retângulo. Reoculte áreas sem apagar o restante da exploração.</p></div>'+
+      '<p>A névoa só liga quando você clicar em Encobrir mapa. Criar paredes, editar portas e ativar a visão dinâmica não encobrem áreas automaticamente.</p></div>'+
       '<div class="sc-fog-options"><button id="sc-fog-toggle" type="button" class="sc-battle-submit">'+
         (fog.enabled?'☾ Desativar névoa':'☾ Encobrir mapa')+'</button>'+
       '<button id="sc-fog-reveal" type="button" class="sc-battle-secondary'+(mode==='reveal'?' active':'')+'"'+(!fog.enabled?' disabled':'')+'>▤ Retângulo</button>'+
