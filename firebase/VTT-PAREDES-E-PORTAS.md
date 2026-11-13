@@ -45,3 +45,13 @@ A névoa, as paredes e o bloqueio de movimento são principalmente controles de 
 - Nenhuma operação de parede, porta, desenho, configuração de alcance ou visão automática ativa a névoa.
 - O pincel e a ferramenta de retângulo não podem ligar a névoa implicitamente, inclusive após trocas de modo.
 - A configuração da névoa pertence à cena e permanece desligada até o comando explícito do mestre. Cenas com névoa já ligada não são alteradas automaticamente, evitando modificar escolhas anteriores do mestre.
+
+## Visão dinâmica estilo Foundry (2026-11-12)
+- A opção **Ambiente → Paredes → Visão dinâmica dos personagens** habilita a visão por alcance e por linha de visão, **independentemente** da configuração da névoa manual. Ela permanece desligada até o mestre marcar a opção. Não é ativada pela primeira parede.
+- Paredes sólidas e portas fechadas bloqueiam o raio; portas abertas permitem visão; janelas respeitam a regra de observação próxima; paredes invisíveis não bloqueiam a luz; obstáculos de terreno usam a regra de dois cruzamentos.
+- Ao ativar a visão dinâmica, os jogadores só enxergam as áreas que seus tokens alcançam. A área que sai do campo de visão fica sombreada, enquanto regiões já observadas nesta sessão ficam mais suaves, como uma memória visual local.
+- **Memória de exploração somente no navegador:** não é persistida no Firebase e pode ser reiniciada ao atualizar/abrir em outro dispositivo. Esse histórico é visual, não uma mudança na névoa manual do mestre.
+- O mestre continua com o mapa totalmente visível. Fora da edição das paredes, um clique simples num token ativa **uma prévia local da visão daquele token**. A prévia acompanha o token ao arrastá-lo e respeita a posição das portas e obstáculos. Pressionar **Esc**, clicar na área vazia ou usar o ✓ da barra do mapa devolve o panorama completo.
+- A inspeção não altera o Firebase, não força a perspectiva nos jogadores, não ativa névoa nem mostra controles de portas secretas para o token inspecionado.
+- **Ambiente → Névoa** permanece um sistema manual separado; só o comando **Encobrir mapa** modifica o estado habilitado/desabilitado da névoa. Coberturas manuais continuam prevalecendo sobre a visão dinâmica, mas pincéis de revelação não atravessam paredes.
+- A visão é calculada no cliente e mantém as limitações de segurança já descritas: a imagem completa ainda é disponibilizada aos navegadores.
