@@ -1,5 +1,5 @@
 // Shinobi Chronicles · Combat 2.0, Jutsu targeting and visual fog
-import {createWallTools} from './vtt-walls-v1.js?v=20261112-manual-fog1';
+import {createWallTools} from './vtt-walls-v1.js?v=20261112-vision2';
 // Uses only the already-permitted theatre field of the shared room.
 export function createBattleSystems({
   getAdmin,getUid,getRoom,getSceneId,getRoomData,getSheets,getTokens,getCurrentTurn,
