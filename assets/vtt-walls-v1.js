@@ -138,7 +138,7 @@ export function createWallTools({
       kind=button.dataset.wallKind;mode='wall-draw';pending=null;selected='';
       onModeActivated();redraw();refreshUI();
     };
-    bindClick('sc-wall-select',()=>{mode=mode==='wall-select'?'':'wall-select';pending=null;onModeActivated();refreshUI();redraw()});
+    bindClick('sc-wall-select',()=>{selectMode(mode!=='wall-select')});
     bindClick('sc-wall-stop',()=>{cancel();refreshUI()});
     bindChange('sc-wall-snap',e=>{snap=e.target.checked});
     bindChange('sc-wall-vision',async e=>{
@@ -174,9 +174,20 @@ export function createWallTools({
     if(await saveScene({...scene(),walls:a}))refreshUI();
   }
   async function removeSelected(){
-    if(!selected)return;const id=selected;selected='';
-    await saveScene({...scene(),walls:scene().walls.filter(w=>w.id!==id)});refreshUI();
+    if(!getAdmin()||!isEditing()||!selected)return false;
+    const id=selected,next=scene().walls.filter(w=>w.id!==id);
+    if(await saveScene({...scene(),walls:next})){selected='';refreshUI();return true}
+    refreshUI();return false;
   }
+  function selectMode(enabled=true){
+    if(!getAdmin()||!current()||!img()?.naturalWidth)return false;
+    mode=enabled?'wall-select':'';pending=null;
+    if(!enabled)selected='';
+    if(enabled)onModeActivated?.();
+    refreshUI();redraw();return true;
+  }
+  const isSelected=()=>isEditing()&&!!selected;
+  const wallMode=()=>mode;
   function nearby(x,y){
     const {w,h}=pixels();if(!w||!h)return null;
     let choice=null,distance=18/Math.max(.25,Number(getZoom())||1);
@@ -197,7 +208,7 @@ export function createWallTools({
         const size=pixels(),v=wPix(chosen,size.w,size.h);
         const max=11/Math.max(.2,Number(getZoom())||1);
         const a=Math.hypot(x-v.x1,y-v.y1),b=Math.hypot(x-v.x2,y-v.y2);
-        if(Math.min(a,b)<=max)pending={edit:chosen.id,endpoint:a<=b?'a':'b',start:p,end:p};
+        pending={edit:chosen.id,endpoint:Math.min(a,b)<=max?(a<=b?'a':'b'):'body',start:p,end:p};
       }
       refreshUI();redraw();return true;
     }
@@ -217,8 +228,14 @@ export function createWallTools({
       pending=null;
       const size=pixels();
       if(Math.hypot((start.x-end.x)*size.w,(start.y-end.y)*size.h)<5){redraw();return true}
-      const updated=scene().walls.map(w=>w.id===edit?
-        {...w,...(endpoint==='a'?{x1:end.x,y1:end.y}:{x2:end.x,y2:end.y})}:w);
+      const updated=scene().walls.map(w=>{
+        if(w.id!==edit)return w;
+        if(endpoint==='a')return {...w,x1:end.x,y1:end.y};
+        if(endpoint==='b')return {...w,x2:end.x,y2:end.y};
+        const dx=clamp(end.x-start.x,-Math.min(w.x1,w.x2),1-Math.max(w.x1,w.x2));
+        const dy=clamp(end.y-start.y,-Math.min(w.y1,w.y2),1-Math.max(w.y1,w.y2));
+        return {...w,x1:w.x1+dx,y1:w.y1+dy,x2:w.x2+dx,y2:w.y2+dy};
+      });
       await saveScene({...scene(),walls:updated});refreshUI();return true;
     }
     if(mode!=='wall-draw'||!pending)return true;
@@ -429,7 +446,17 @@ export function createWallTools({
     const scale=Math.max(.12,view?.zoom||1);
     ctx.save();ctx.lineCap='round';
     for(const v of scene().walls){
-      const q=wPix(v,w,h),def=WALL_PRESETS.find(x=>x.id===v.type);
+      let display=v;
+      if(pending?.edit===v.id){
+        if(pending.endpoint==='a')display={...v,x1:pending.end.x,y1:pending.end.y};
+        else if(pending.endpoint==='b')display={...v,x2:pending.end.x,y2:pending.end.y};
+        else {
+          const dx=clamp(pending.end.x-pending.start.x,-Math.min(v.x1,v.x2),1-Math.max(v.x1,v.x2));
+          const dy=clamp(pending.end.y-pending.start.y,-Math.min(v.y1,v.y2),1-Math.max(v.y1,v.y2));
+          display={...v,x1:v.x1+dx,y1:v.y1+dy,x2:v.x2+dx,y2:v.y2+dy};
+        }
+      }
+      const q=wPix(display,w,h),def=WALL_PRESETS.find(x=>x.id===v.type);
       ctx.strokeStyle=v.id===selected?'#fff1c1':def?.color||'#d8bd8f';
       ctx.lineWidth=(v.id===selected?4:2.8)/scale;
       ctx.setLineDash(v.type==='secret'?[3/scale,5/scale]:v.type==='ethereal'?[7/scale,5/scale]:[]);
@@ -448,14 +475,7 @@ export function createWallTools({
     }
     if(pending){
       ctx.strokeStyle='#fff0ce';ctx.lineWidth=3/scale;ctx.setLineDash([8/scale,4/scale]);
-      if(pending.edit){
-        const current=scene().walls.find(v=>v.id===pending.edit);
-        if(current){
-          const opposite=pending.endpoint==='a'?[current.x2,current.y2]:[current.x1,current.y1];
-          ctx.beginPath();ctx.moveTo(opposite[0]*w,opposite[1]*h);
-          ctx.lineTo(pending.end.x*w,pending.end.y*h);ctx.stroke();
-        }
-      }else{
+      if(!pending.edit){
         ctx.beginPath();ctx.moveTo(pending.start.x*w,pending.start.y*h);
         ctx.lineTo(pending.end.x*w,pending.end.y*h);ctx.stroke();
       }
@@ -464,6 +484,7 @@ export function createWallTools({
     drawDoorHandles(ctx,view);
   }
   return {setData,panelHTML,bind,refreshUI,pointerDown,pointerMove,pointerUp,cancel,
+    selectMode,isSelected,wallMode,deleteSelected:removeSelected,
     active,activeDraw:()=>mode==='wall-draw',activeSelect:()=>mode==='wall-select',
     draw,moveBlocked,visibleAtWorld,cutVision,signature,visionActive,visionSettings,
     doorAt,doorHint,toggleDoorAt};
