@@ -355,6 +355,57 @@ html[data-appearance] .actor-context-menu .actor-menu-action.actor-menu-vision .
 html[data-appearance] .actor-context-menu .actor-menu-action.actor-menu-vision:hover{
   background:var(--vtt-blend-strong);
 }
+/* Tamanho visual de cada token: controles compactos dentro do menu direito.
+   Proporção da imagem preservada e sem interferir no chat/painéis. */
+html[data-appearance] .actor-context-menu{
+  max-height:calc(100dvh - 20px);
+  overflow-y:auto;
+  overscroll-behavior:contain;
+}
+html[data-appearance] .actor-context-menu .sc-token-scale-editor{
+  display:grid;gap:8px;
+  margin:6px 4px 10px;padding:11px 10px;
+  border:1px solid var(--vtt-line);
+  border-left:3px solid var(--vtt-pigment);
+  border-radius:5px;
+  background:var(--vtt-paper-muted);
+  color:var(--vtt-ink);
+}
+html[data-appearance] .actor-context-menu .sc-token-scale-head{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+}
+html[data-appearance] .actor-context-menu .sc-token-scale-head strong{
+  font:700 11px/1.3 'DM Sans',sans-serif;
+  color:var(--vtt-ink);
+}
+html[data-appearance] .actor-context-menu .sc-token-scale-head output{
+  font:700 12px/1.2 'DM Sans',sans-serif;
+  color:var(--vtt-display);font-variant-numeric:tabular-nums;
+}
+html[data-appearance] .actor-context-menu .sc-token-scale-controls{
+  display:flex;align-items:center;gap:6px;min-width:0;
+}
+html[data-appearance] .actor-context-menu .sc-token-scale-controls input[type="range"]{
+  flex:1;min-width:52px;width:auto;height:20px;padding:0;
+  background:transparent;border:0;box-shadow:none;
+  accent-color:var(--vtt-display);cursor:pointer;
+}
+html[data-appearance] .actor-context-menu .sc-token-scale-controls button{
+  flex:none;display:grid;place-items:center;
+  min-width:26px;height:28px;padding:0 5px;margin:0;
+  border:1px solid var(--vtt-line);border-radius:4px;
+  background:var(--vtt-paper-light);color:var(--vtt-ink);
+  font:700 17px/1 'DM Sans',sans-serif;
+}
+html[data-appearance] .actor-context-menu .sc-token-scale-controls button.sc-token-scale-reset{
+  min-width:42px;font-size:10px;
+}
+html[data-appearance] .actor-context-menu .sc-token-scale-controls button:hover:not(:disabled){
+  border-color:var(--vtt-display);background:var(--vtt-blend);
+}
+html[data-appearance] .actor-context-menu .sc-token-scale-controls :is(button,input):focus-visible{
+  outline:2px solid var(--vtt-display);outline-offset:2px;
+}
 /* Keyboard focus and responsive workspaces. No chat height overrides here. */
 html[data-appearance] :is(.sc-environment-switch button,.sc-wall-preset,#sc-open-environment,.rail button):focus-visible{
   outline:2px solid var(--vtt-display);outline-offset:2px
