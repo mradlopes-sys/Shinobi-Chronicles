@@ -52,7 +52,7 @@ function normalizeScene(value){
 }
 export function createWallTools({
   getAdmin,getUid,getSceneId,getRoom,getMap,getCell,getZoom,getTokens,isHidden,
-  saveFields,notify,redraw,onModeActivated,onModeChanged,sendDoorRequest,ensureFog
+  saveFields,notify,redraw,onModeActivated,onModeChanged,sendDoorRequest
 }){
   let data={},mode='',kind='solid',selected='',pending=null,busy=false,snap=true,revision=0,doorBusy=false,lastDoorAction=0,history=[],advancedOpen=false;
   const current=()=>getSceneId()||'';
@@ -132,7 +132,7 @@ export function createWallTools({
         '> Visão automática dos personagens</label>'+
       '<label>Alcance <select id="sc-wall-range">'+[4,6,8,10,12,16,20,25,30].map(v=>
         '<option value="'+v+'"'+(cfg.range===v?' selected':'')+'>'+v+' células</option>').join('')+'</select></label></div>'+
-      '<p class="sc-battle-note">Ative a névoa de guerra para usar visão automática. Janelas permitem enxergar de perto; portas abertas liberam visão e movimento.</p>'+
+      '<p class="sc-battle-note">Paredes e visão não ativam a névoa sozinhas. Para ocultar áreas, use Ambiente → Névoa e ative manualmente. Janelas permitem enxergar de perto; portas abertas liberam visão e movimento.</p>'+
       (chosen?
         '<div class="sc-wall-selected"><strong>Segmento selecionado</strong><small>'+esc(typeName(chosen.type))+
         '</small><label>Tipo <select id="sc-wall-edit-type">'+WALL_PRESETS.map(x=>
@@ -165,7 +165,6 @@ export function createWallTools({
     bindChange('sc-wall-vision',async e=>{
       const enabled=e.target.checked;
       const ok=await saveScene({...scene(),vision:enabled});
-      if(ok&&enabled)await ensureFog?.();
       refreshUI();
     });
     bindChange('sc-wall-range',e=>void update({range:Number(e.target.value)}));
@@ -262,10 +261,10 @@ export function createWallTools({
     if(Math.hypot((start.x-end.x)*w,(start.y-end.y)*h)<8){redraw();return true}
     if(scene().walls.length>=maxWalls){notify('Limite de paredes deste mapa atingido.');return true}
     const wall={id:uid(),type:kind,x1:start.x,y1:start.y,x2:end.x,y2:end.y,state:'closed',dir:'both'};
-    const firstWall=scene().walls.length===0;
-    const ok=await saveScene({...scene(),walls:[...scene().walls,wall],
-      vision:firstWall?true:scene().vision});
-    if(ok){selected=wall.id;refreshUI();if(firstWall)await ensureFog?.()}
+    // Desenhar ou editar uma parede nunca altera a névoa nem liga a visão.
+    // Só a opção explícita do mestre pode ativar essas funcionalidades.
+    const ok=await saveScene({...scene(),walls:[...scene().walls,wall]});
+    if(ok){selected=wall.id;refreshUI()}
     return true;
   }
   function cancel(){
