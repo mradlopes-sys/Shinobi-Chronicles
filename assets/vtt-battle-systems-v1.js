@@ -98,6 +98,7 @@ export function createBattleSystems({
     }
     hiddenTokens=Array.isArray(theatre?.hiddenTokens)?[...new Set(theatre.hiddenTokens.filter(x=>typeof x==='string'&&x.length<150))].slice(0,250):[];
     walls.setData(theatre?.wallsMap);
+    if(previewTokenId&&!walls.visionActive())previewTokenId='';
     render();redraw();
   }
   function roundTick(before,next){
@@ -416,7 +417,7 @@ export function createBattleSystems({
     if(!previewTokenId)return false;
     previewTokenId='';fogCacheKey='';render();redraw();return true;
   }
-  const getVisionPreview=()=>previewTokenId?
+  const getVisionPreview=()=>previewTokenId&&walls.visionActive()?
     getTokens().find(t=>t.id===previewTokenId)||null:null;
   function manuallyCovered(fog,px,py,w,h){
     // Coberturas manuais do mestre continuam prevalecendo sobre a visão dinâmica.
@@ -501,7 +502,7 @@ export function createBattleSystems({
     if(getAdmin()||!walls.visionActive())return null;
     const ratio=Math.min(1,1500/w,1500/h),
       cw=Math.max(1,Math.round(w*ratio)),ch=Math.max(1,Math.round(h*ratio));
-    const key=getUid()+':'+currentScene()+':'+w+'x'+h;
+    const key=getUid()+':'+currentScene()+':'+String(getRoomData()?.scene||'').slice(0,220)+':'+w+'x'+h;
     let memory=exploredMaps.get(key);
     if(!memory){
       const canvas=document.createElement('canvas');canvas.width=cw;canvas.height=ch;
