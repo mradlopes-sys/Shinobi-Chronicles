@@ -360,14 +360,17 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
 <link rel="stylesheet" href="./assets/vtt-gm-quick-panel-v1.css?v=20261111-gm1">
 <link rel="stylesheet" href="./assets/vtt-walls-v1.css?v=20261112-walls1">
 <link rel="stylesheet" href="./assets/vtt-session-tools-v1.css?v=20261111-cinematic2">
+<link rel="stylesheet" href="./assets/vtt-workspace-20261112-v1.css?v=20261112-workspace1">
 </head>
 <body>
 <div class="workspace" id="workspace">
-  <nav class="rail" id="tool-rail" aria-label="Ferramentas da mesa">
+  <nav class="rail" id="tool-rail" aria-label="Áreas da mesa">
     <div class="seal" aria-hidden="true">忍</div>
-    <button class="active" data-tab="rolls" title="Rolagens e chat" aria-label="Rolagens e chat">⚄</button>
-    <button data-tab="campanha" title="Campanha, mapas e personagens" aria-label="Campanha">⌖</button>
-    <span class="rail-tip" aria-hidden="true">MESA SHINOBI</span>
+    <button class="active" data-tab="rolls" title="Chat e dados" aria-label="Abrir chat e dados"><span class="rail-icon" aria-hidden="true">⚄</span><span class="rail-name">Chat</span></button>
+    <button data-tab="campanha" title="Mapas, fichas e personagens" aria-label="Abrir personagens e mapas"><span class="rail-icon" aria-hidden="true">巻</span><span class="rail-name">Elenco</span></button>
+    <button data-tab="combate" data-gm-only hidden title="Iniciativa e efeitos" aria-label="Abrir combate"><span class="rail-icon" aria-hidden="true">⚔</span><span class="rail-name">Combate</span></button>
+    <button data-tab="ambiente" data-gm-only hidden title="Editar paredes e névoa de guerra" aria-label="Abrir ambiente"><span class="rail-icon" aria-hidden="true">▥</span><span class="rail-name">Ambiente</span></button>
+    <span class="rail-tip" aria-hidden="true">SHINOBI · MESA</span>
   </nav>
   <main class="stage-wrap" id="stage">
     <canvas id="map" aria-label="Mapa da campanha. Arraste imagens dos personagens para mover os tokens; duplo clique para abrir a ficha."></canvas>
@@ -395,6 +398,8 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
       <button id="reset" title="Enquadrar mapa automaticamente" aria-label="Enquadrar mapa">⌖</button>
       <button id="zoom-in" title="Aproximar câmera" aria-label="Aproximar câmera">+</button>
       <span class="tool-divider" aria-hidden="true"></span>
+      <span id="sc-tool-active-label" class="sc-tool-active-label" hidden></span>
+      <button id="sc-tool-exit" type="button" class="sc-tool-exit" title="Finalizar ferramenta (Esc)" aria-label="Finalizar ferramenta" hidden>✓</button>
       <button id="tool-ruler" class="measure-icon" title="Medir em metros (R)" aria-label="Régua em metros (atalho R)" aria-pressed="false">↔</button>
       <button id="tool-calibrate" class="measure-icon" data-gm-only hidden title="Calibrar metros da cena" aria-label="Calibrar a escala do cenário" aria-pressed="false">⚙</button>
     </div>
@@ -418,9 +423,10 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
   <aside class="sidebar" id="side-panel">
     <div class="side-header"><span class="overline">SHINOBI · MESA VIRTUAL</span><b>Mesa Virtual</b><p id="auth-label">Conectando ao Firebase…</p><div class="vtt-clan-mark" aria-label="Identidade visual da mesa"><span class="mark" id="vtt-clan-symbol" aria-hidden="true">忍</span><span class="clan-label" id="vtt-clan-label">ARQUIVOS SHINOBI</span></div></div>
     <div class="tabs" role="group" aria-label="Abas da mesa">
-      <button class="active" data-tab="rolls" title="Chat e rolagens da sessão">Rolagens</button>
-      <button data-tab="campanha" title="Mapas, fichas e personagens">Campanha</button>
+      <button class="active" data-tab="rolls" title="Chat e rolagens da sessão">Chat</button>
+      <button data-tab="campanha" title="Mapas, fichas e personagens">Elenco</button>
       <button data-tab="combate" data-gm-only hidden title="Iniciativa, condições e efeitos do mestre" aria-label="Combate do mestre">Combate</button>
+      <button data-tab="ambiente" data-gm-only hidden title="Paredes, visão e névoa de guerra" aria-label="Ambiente do mestre">Ambiente</button>
     </div>
     <section class="pane" id="pane-campanha" hidden>
       <div class="campaign-status"><span class="campaign-status-dot" aria-hidden="true"></span><div><span class="campaign-kicker">SESSÃO COMPARTILHADA</span><strong>Mesa Permanente</strong><p id="world-status" role="status">Conectando à campanha…</p></div></div>
@@ -432,7 +438,7 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
         <span class="scene-entry-copy"><b id="current-scene-label">Nenhuma cena ativa</b><small id="current-scene-subtitle">Clique para explorar os mapas</small></span>
         <span class="scene-open-chevron" aria-hidden="true">⌄</span>
       </button>
-      <div id="sc-fog-panel" data-gm-only hidden></div>
+      <button type="button" id="sc-open-environment" class="sc-environment-link" data-gm-only hidden><span aria-hidden="true">▥</span><span><strong>Preparar ambiente</strong><small>Paredes, portas e névoa de guerra</small></span><span aria-hidden="true">›</span></button>
       <div id="gm-scenes" data-gm-only hidden>
         <details id="scene-library-drawer" class="vtt-folder scene-drawer">
           <summary><span class="folder-symbol" aria-hidden="true">▧</span><span class="folder-info"><strong>Biblioteca de mapas</strong><small>Gerenciar e escolher cenários</small></span><span id="scene-count" class="folder-count">0</span><span class="folder-chevron" aria-hidden="true">⌄</span></summary>
@@ -468,6 +474,19 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
     </section>
     <section class="pane" id="pane-rolls">
       <div id="rolls-panel"></div>
+    </section>
+    <section class="pane sc-pane-environment" id="pane-ambiente" hidden>
+      <header class="sc-environment-header">
+        <span class="sc-environment-eyebrow">PREPARAÇÃO DO MESTRE</span>
+        <h2>Arquitetura da cena</h2>
+        <p>Prepare paredes, portas e campos de visão diretamente no mapa. As linhas de construção não aparecem para os jogadores.</p>
+      </header>
+      <div class="sc-environment-switch" role="group" aria-label="Ferramentas de ambiente">
+        <button type="button" data-env-view="walls" class="active" aria-pressed="true"><span aria-hidden="true">▥</span>Paredes</button>
+        <button type="button" data-env-view="fog" aria-pressed="false"><span aria-hidden="true">◉</span>Névoa</button>
+      </div>
+      <div id="sc-fog-panel" data-gm-only hidden></div>
+      <div class="sc-environment-footer"><strong>Sobre o mapa</strong><span>Clique para selecionar e arraste para editar. Pressione <kbd>Esc</kbd> para sair da ferramenta.</span></div>
     </section>
     <section class="pane" id="pane-combate" hidden>
       <div id="sc-gm-quick-panel" data-gm-only hidden></div>
