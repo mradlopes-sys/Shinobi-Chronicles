@@ -29,6 +29,9 @@ export function createBattleSystems({
   let conditions={},fogMap={},hiddenTokens=[],mode='',selectedSource='',selectedTarget='',selectedCondition='atordoado';
   let chosenJutsu='',actionType='visual',power=4,duration=2,shapeStart=null,shapeEnd=null;
   let brushPoints=[],brushSize=3,visibilityBusy=false,fogCanvas=null,fogCacheKey='';
+  // Histórico de exploração local por jogador e cena; não grava no Firestore.
+  const exploredMaps=new Map();
+  let previewTokenId='';
   let busy=false,previewPointer=null,lastScene='';
   const currentScene=()=>getSceneId()||'';
   const canWrite=()=>getAdmin()&&!!getRoom();
@@ -86,6 +89,7 @@ export function createBattleSystems({
     if(scene!==lastScene){
       lastScene=scene;
       mode='';shapeStart=null;shapeEnd=null;walls.cancel();
+      previewTokenId='';fogCacheKey='';
     }
     if(!busy){
       conditions=validConditions(theatre?.conditions);
@@ -232,10 +236,13 @@ export function createBattleSystems({
         '<div class="sc-env-walls-content"><div id="sc-walls-container">'+walls.panelHTML()+'</div></div>';
       walls.bind();
     }
-    const active=!!getCurrentFog().enabled&&!!currentScene();
+    const active=!!currentScene()&&(getCurrentFog().enabled||
+      (walls.visionActive()&&(!getAdmin()||!!previewTokenId)));
     if(fogIndicator){
       fogIndicator.hidden=!active;
-      fogIndicator.textContent=getAdmin()?'☾ Névoa visual ativada':'☾ Área encoberta';
+      fogIndicator.textContent=getAdmin()?
+        (previewTokenId?'◉ Prévia de visão · somente mestre':'☾ Névoa manual ativa'):
+        (walls.visionActive()?'◉ Visão dinâmica':'☾ Área encoberta');
     }
     stage?.classList.toggle('sc-battle-target',mode==='target');
     stage?.classList.toggle('sc-battle-fog',['reveal','brush-reveal','brush-cover'].includes(mode));
@@ -398,30 +405,56 @@ export function createBattleSystems({
     for(let i=1;i<points.length;i++)if(segmentDistance(points[i-1],points[i])<=radius)return true;
     return false;
   }
+  const dynamicView=()=>walls.visionActive()&&(!getAdmin()||!!previewTokenId);
+  function setVisionPreview(tokenId){
+    if(!getAdmin()||!walls.visionActive()||!currentScene()||!tokenId||
+       !getTokens().some(t=>t.id===tokenId))return false;
+    if(walls.active())walls.cancel();
+    previewTokenId=tokenId;fogCacheKey='';render();redraw();return true;
+  }
+  function clearVisionPreview(){
+    if(!previewTokenId)return false;
+    previewTokenId='';fogCacheKey='';render();redraw();return true;
+  }
+  const getVisionPreview=()=>previewTokenId?
+    getTokens().find(t=>t.id===previewTokenId)||null:null;
+  function manuallyCovered(fog,px,py,w,h){
+    // Coberturas manuais do mestre continuam prevalecendo sobre a visão dinâmica.
+    let last=null;
+    for(const op of fog.strokes||[]){
+      const inside=op.type==='rect'?
+        (px>=op.x*w&&px<=(op.x+op.w)*w&&py>=op.y*h&&py<=(op.y+op.h)*h):
+        brushHits(op,px,py,w,h);
+      if(inside)last=op.op;
+    }
+    return last==='cover';
+  }
   function isRevealed(token){
     if(isTokenHidden(token.id))return false;
-    const fog=getCurrentFog();
-    if(!fog.enabled)return true;
+    const fog=getCurrentFog(),dynamic=dynamicView();
+    if(!fog.enabled&&!dynamic)return true;
     const img=getMap();
     if(!img?.naturalWidth||!img?.naturalHeight)return false;
     const cell=Math.max(1,Number(getCell())||64),w=img.naturalWidth,h=img.naturalHeight;
     const px=(Number(token.x)+.5)*cell,py=(Number(token.y)+.75)*cell;
-    let lastPaint=null;
+    if(dynamic){
+      // O token inspecionado pelo mestre permanece selecionável.
+      if(getAdmin()&&previewTokenId===token.id)return true;
+      return walls.visibleAtWorld(px,py,previewTokenId)&&
+        (!fog.enabled||!manuallyCovered(fog,px,py,w,h));
+    }
     let visible=fog.reveals.some(r=>px>=r.x*w&&px<=(r.x+r.w)*w&&py>=r.y*h&&py<=(r.y+r.h)*h);
     for(const op of fog.strokes||[]){
       const inside=op.type==='rect'?
         (px>=op.x*w&&px<=(op.x+op.w)*w&&py>=op.y*h&&py<=(op.y+op.h)*h):
         brushHits(op,px,py,w,h);
-      if(inside){visible=op.op==='reveal';lastPaint=op.op}
+      if(inside)visible=op.op==='reveal';
     }
-    if(lastPaint==='cover')return false;
-    // Revelações manuais nunca atravessam paredes com visão dinâmica ativa.
-    if(walls.visionActive())return walls.visibleAtWorld(px,py);
     return visible;
   }
-  function tokenVisible(token){return getAdmin()||isRevealed(token)}
-  // The fog mask is composited separately, avoiding destination-out on the real
-  // map canvas (which would destroy map pixels and token transparency).
+  function tokenVisible(token){return (getAdmin()&&!previewTokenId)||isRevealed(token)}
+  // Máscaras pequenas, sobrepostas na transformação original do mapa:
+  // nenhuma pintura destrói pixels do cenário nem precisa salvar uma nova cena.
   function buildFogMask(fog,w,h){
     const ratio=Math.min(1,1500/w,1500/h);
     const cw=Math.max(1,Math.round(w*ratio)),ch=Math.max(1,Math.round(h*ratio));
@@ -430,13 +463,16 @@ export function createBattleSystems({
     const c=fogCanvas.getContext('2d',{alpha:true});
     if(!c)return;
     c.clearRect(0,0,cw,ch);
-    const color=getAdmin()?'rgba(13,23,22,.48)':'rgba(5,12,16,.985)';
+    const dynamic=dynamicView();
+    const color=dynamic?
+      (getAdmin()?'rgba(5,12,15,.91)':'rgba(5,12,16,.70)'):
+      (getAdmin()?'rgba(13,23,22,.48)':'rgba(5,12,16,.985)');
     c.fillStyle=color;c.fillRect(0,0,cw,ch);
     const use=(op)=>{
       c.save();
       c.globalCompositeOperation=op.op==='cover'?'source-over':'destination-out';
-      c.fillStyle=op.op==='cover'?color:'#fff';
-      c.strokeStyle=op.op==='cover'?color:'#fff';
+      c.fillStyle=op.op==='cover'?'rgba(5,12,16,.985)':'#fff';
+      c.strokeStyle=op.op==='cover'?'rgba(5,12,16,.985)':'#fff';
       if(op.type==='rect'){
         c.fillRect(op.x*cw,op.y*ch,op.w*cw,op.h*ch);
       }else if(op.type==='brush'&&op.points?.length){
@@ -451,27 +487,54 @@ export function createBattleSystems({
       }
       c.restore();
     };
-    if(!getAdmin()&&walls.visionActive()){
-      // A geometria dos segmentos define o campo de visão; revelações do pincel
-      // não perfuram paredes. O mestre ainda pode cobrir áreas específicas.
-      walls.cutVision(c,cw,ch,w,h);
-      for(const op of fog.strokes||[])if(op.op==='cover')use(op);
+    if(dynamic){
+      walls.cutVision(c,cw,ch,w,h,previewTokenId);
+      if(fog.enabled)for(const op of fog.strokes||[])if(op.op==='cover')use(op);
     }else{
       for(const r of fog.reveals)use({...r,op:'reveal',type:'rect'});
       for(const op of fog.strokes||[])use(op);
     }
   }
+  function exploredMask(w,h){
+    // Apenas jogadores guardam no navegador a memória visual desta sessão.
+    // Prévia do mestre mostra linha de visão, não finge conhecer a exploração do jogador.
+    if(getAdmin()||!walls.visionActive())return null;
+    const ratio=Math.min(1,1500/w,1500/h),
+      cw=Math.max(1,Math.round(w*ratio)),ch=Math.max(1,Math.round(h*ratio));
+    const key=getUid()+':'+currentScene()+':'+w+'x'+h;
+    let memory=exploredMaps.get(key);
+    if(!memory){
+      const canvas=document.createElement('canvas');canvas.width=cw;canvas.height=ch;
+      const context=canvas.getContext('2d',{alpha:true});
+      if(!context)return null;
+      context.fillStyle='rgba(4,12,15,.96)';context.fillRect(0,0,cw,ch);
+      memory={canvas,context,signature:''};
+      exploredMaps.set(key,memory);
+      if(exploredMaps.size>8)exploredMaps.delete(exploredMaps.keys().next().value);
+    }
+    const signature=walls.signature();
+    if(memory.signature!==signature){
+      walls.cutVision(memory.context,cw,ch,w,h);
+      memory.signature=signature;
+    }
+    return memory.canvas;
+  }
   function paintFog(ctx,view){
-    const fog=getCurrentFog(),img=getMap();
-    if(!fog.enabled||!img?.naturalWidth||!img?.naturalHeight)return;
+    const fog=getCurrentFog(),img=getMap(),dynamic=dynamicView();
+    if((!fog.enabled&&!dynamic)||!img?.naturalWidth||!img?.naturalHeight)return;
     const w=img.naturalWidth,h=img.naturalHeight;
-    const signature=[currentScene(),w,h,getAdmin()?'master':'player',JSON.stringify(fog),walls.signature()].join('|');
+    const signature=[currentScene(),w,h,getAdmin()?'master':'player',previewTokenId,
+      JSON.stringify(fog),walls.signature(previewTokenId)].join('|');
     if(!fogCanvas||fogCacheKey!==signature){
       buildFogMask(fog,w,h);fogCacheKey=signature;
     }
     ctx.save();
+    if(dynamic&&!getAdmin()){
+      const memory=exploredMask(w,h);
+      if(memory)ctx.drawImage(memory,0,0,w,h);
+    }
     if(fogCanvas)ctx.drawImage(fogCanvas,0,0,w,h);
-    if(getAdmin()){
+    if(getAdmin()&&!previewTokenId){
       const scale=Math.max(.15,view.zoom);
       ctx.strokeStyle='rgba(222,199,147,.55)';
       ctx.lineWidth=1.4/scale;ctx.setLineDash([5/scale,6/scale]);
@@ -493,8 +556,7 @@ export function createBattleSystems({
           ctx.globalAlpha=.48;
           ctx.beginPath();ctx.moveTo(brushPoints[0][0]*w,brushPoints[0][1]*h);
           for(let i=1;i<brushPoints.length;i++)ctx.lineTo(brushPoints[i][0]*w,brushPoints[i][1]*h);
-          ctx.stroke();
-          ctx.globalAlpha=1;
+          ctx.stroke();ctx.globalAlpha=1;
         }
       }
     }
@@ -535,6 +597,7 @@ export function createBattleSystems({
     getCurrentFog,applyRoundTick,getConditionList,setTokenHidden,toggleTokenHidden,isTokenHidden,isRevealed,
     drawWalls:(ctx,view)=>walls.draw(ctx,view),blocksMovement:walls.moveBlocked,
     doorHint:walls.doorHint,toggleDoorAt:walls.toggleDoorAt,
+    setVisionPreview,clearVisionPreview,getVisionPreview,visionDynamicEnabled:walls.visionActive,
     enterWallEdit:()=>walls.selectMode(true),exitWallEdit:()=>walls.selectMode(false),
     isWallEditing:()=>walls.active(),isWallSelected:walls.isSelected,
     deleteSelectedWall:walls.deleteSelected,undoWallEdit:walls.undoEdit,wallMode:walls.wallMode};
