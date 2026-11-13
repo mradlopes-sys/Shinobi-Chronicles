@@ -11,11 +11,11 @@
 
 ## Como montar uma cena
 1. Como mestre, entre no VTT, abra **Campanha** e selecione um mapa.
-2. Em **Névoa de guerra → Arquitetura da cena**, selecione **Parede sólida** e arraste segmentos sobre as divisórias.
+2. Abra **Ambiente → Paredes** pela barra lateral. O modo de seleção ativa ao entrar. Selecione **Parede sólida** e arraste segmentos sobre as divisórias.
 3. **Não trace parede sólida por cima da abertura da porta.** Use um segmento do tipo **Porta** no vão entre as paredes.
 4. Posicione tokens pertencentes aos jogadores. A visão é calculada a partir dos próprios tokens, sem expor o restante da cena.
 5. Escolha o alcance da visão. Ao mudar a configuração, todos os jogadores recebem a atualização pela mesa compartilhada.
-6. Selecione uma parede para mudar tipo, direção ou estado, ou para remover. O mestre pode clicar diretamente no marcador da porta para abri-la/fechá-la.
+6. Para editar uma parede existente, clique nela e arraste o centro da linha para movê-la ou suas pontas para redimensionar. Use **Del** para removê-la e **Ctrl+Z** para desfazer. O mestre pode clicar diretamente no marcador da porta para abri-la/fechá-la.
 7. O jogador que tiver um token próprio a até **1,75 célula** da porta, sem outra parede no caminho, verá o marcador e poderá clicar nele. A mudança é efetuada pelo mestre conectado e sincronizada com todos.
 
 ## Regras do Firebase — publicação necessária
@@ -33,3 +33,10 @@ O jogador **não** recebe autorização para editar `theatre.wallsMap` nem para 
 
 ## Limitação de segurança
 A névoa, as paredes e o bloqueio de movimento são principalmente controles de interface. O navegador ainda recebe a imagem/URL do mapa e dados da cena compartilhada; portanto, isso **não é uma barreira antifraude** contra inspeção de rede ou manipulação deliberada do cliente. Para sigilo real, servir mapas recortados por jogador e validar movimento com lógica confiável no servidor exige uma arquitetura adicional.
+
+## Interface simplificada do VTT
+- O menu lateral principal agora separa **Chat**, **Elenco**, **Combate** e **Ambiente**. A aba de **Ambiente** concentra paredes e névoa, sem atrapalhar o chat nem o resto da campanha.
+- A edição de paredes ocorre sobre o mapa, sem janelas flutuantes. Três tipos frequentes ficam visíveis primeiro (sólida, porta e janela). Paredes especiais ficam em **Mais tipos de parede**.
+- No modo de edição de paredes, **Del** remove somente a parede selecionada e **Ctrl+Z** desfaz a última alteração de parede. Para encerrar a edição, use **Esc**, **✓ Sair da edição** ou o controle ✓ ao lado das ferramentas do mapa.
+- O menu **Ambiente → Névoa** concentra encobrimento, retângulo e pincéis. A tecla **F** abre as ferramentas de névoa do mestre e alterna a seleção de áreas.
+- Os estilos respeitam o tema claro/escuro e a cor do clã configurada no site. O espaço e a altura do chat não foram alterados.
