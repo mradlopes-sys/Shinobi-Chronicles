@@ -1,10 +1,10 @@
 // Shinobi Chronicles · Combat 2.0, Jutsu targeting and visual fog
-import {createWallTools} from './vtt-walls-v1.js?v=20261112-wall-dock2';
+import {createWallTools} from './vtt-walls-v1.js?v=20261112-doors2';
 // Uses only the already-permitted theatre field of the shared room.
 export function createBattleSystems({
   getAdmin,getUid,getRoom,getSceneId,getRoomData,getSheets,getTokens,getCurrentTurn,
   setCombatTab,focusToken,playEffect,adjustHitPoints,saveFields,notify,redraw,getMap,getCell,getZoom,
-  sendDoorRequest,onWallUiChange,onVisionPreviewChange
+  sendDoorRequest
 }){
   const MAX_FOG=48,MAX_STROKES=100,MAX_POINTS=100,MAX_CONDITIONS=8,MAX_DURATION=99;
   const CONDITIONS=[
@@ -30,7 +30,6 @@ export function createBattleSystems({
   let chosenJutsu='',actionType='visual',power=4,duration=2,shapeStart=null,shapeEnd=null;
   let brushPoints=[],brushSize=3,visibilityBusy=false,fogCanvas=null,fogCacheKey='';
   let busy=false,previewPointer=null,lastScene='';
-  let visionPreviewUid='',visionPreviewTokenId='',visionPreviewName='';
   const currentScene=()=>getSceneId()||'';
   const canWrite=()=>getAdmin()&&!!getRoom();
   const getRoster=()=>getSheets().filter(x=>typeof x.id==='string'&&x.id);
@@ -38,7 +37,7 @@ export function createBattleSystems({
   const isTokenHidden=id=>hiddenTokens.includes(id);
   const walls=createWallTools({
     getAdmin,getUid,getSceneId,getRoom,getMap,getCell,getZoom,getTokens,isHidden:isTokenHidden,
-    saveFields,notify,redraw,sendDoorRequest,onUiChange:onWallUiChange,
+    saveFields,notify,redraw,sendDoorRequest,
     ensureFog:()=>getCurrentFog().enabled?Promise.resolve(true):
       setFog({...getCurrentFog(),enabled:true}),
     onModeActivated:()=>{mode='';shapeStart=null;shapeEnd=null;brushPoints=[];render()}
@@ -88,8 +87,6 @@ export function createBattleSystems({
     if(scene!==lastScene){
       lastScene=scene;
       mode='';shapeStart=null;shapeEnd=null;walls.cancel();
-      visionPreviewUid='';visionPreviewTokenId='';visionPreviewName='';
-      onVisionPreviewChange?.();
     }
     if(!busy){
       conditions=validConditions(theatre?.conditions);
@@ -409,29 +406,10 @@ export function createBattleSystems({
     }
     if(lastPaint==='cover')return false;
     // Revelações manuais nunca atravessam paredes com visão dinâmica ativa.
-    if(walls.visionActive())return walls.visibleAtWorld(px,py,visionPreviewUid||getUid());
+    if(walls.visionActive())return walls.visibleAtWorld(px,py);
     return visible;
   }
-  function tokenVisible(token){return (getAdmin()&&!visionPreviewUid)||isRevealed(token)}
-  function setVisionPreview(token){
-    if(!getAdmin()||!token?.ownerUid||!currentScene())return false;
-    if(walls.active())walls.cancel();
-    mode='';shapeStart=null;shapeEnd=null;brushPoints=[];
-    visionPreviewUid=token.ownerUid;visionPreviewTokenId=token.id;
-    visionPreviewName=String(token.name||'Shinobi').slice(0,70);
-    fogCacheKey='';render();onVisionPreviewChange?.();redraw();
-    return true;
-  }
-  function clearVisionPreview(){
-    if(!visionPreviewUid)return false;
-    visionPreviewUid='';visionPreviewTokenId='';visionPreviewName='';
-    fogCacheKey='';render();onVisionPreviewChange?.();redraw();return true;
-  }
-  const isVisionPreview=()=>!!visionPreviewUid;
-  const getVisionPreview=()=>visionPreviewUid?{
-    uid:visionPreviewUid,tokenId:visionPreviewTokenId,name:visionPreviewName,
-    fogActive:getCurrentFog().enabled,visionActive:walls.visionActive()
-  }:null;
+  function tokenVisible(token){return getAdmin()||isRevealed(token)}
   // The fog mask is composited separately, avoiding destination-out on the real
   // map canvas (which would destroy map pixels and token transparency).
   function buildFogMask(fog,w,h){
@@ -442,7 +420,7 @@ export function createBattleSystems({
     const c=fogCanvas.getContext('2d',{alpha:true});
     if(!c)return;
     c.clearRect(0,0,cw,ch);
-    const color=getAdmin()&&!visionPreviewUid?'rgba(13,23,22,.48)':'rgba(5,12,16,.985)';
+    const color=getAdmin()?'rgba(13,23,22,.48)':'rgba(5,12,16,.985)';
     c.fillStyle=color;c.fillRect(0,0,cw,ch);
     const use=(op)=>{
       c.save();
@@ -463,10 +441,10 @@ export function createBattleSystems({
       }
       c.restore();
     };
-    if((!getAdmin()||visionPreviewUid)&&walls.visionActive()){
+    if(!getAdmin()&&walls.visionActive()){
       // A geometria dos segmentos define o campo de visão; revelações do pincel
       // não perfuram paredes. O mestre ainda pode cobrir áreas específicas.
-      walls.cutVision(c,cw,ch,w,h,visionPreviewUid||getUid());
+      walls.cutVision(c,cw,ch,w,h);
       for(const op of fog.strokes||[])if(op.op==='cover')use(op);
     }else{
       for(const r of fog.reveals)use({...r,op:'reveal',type:'rect'});
@@ -477,13 +455,13 @@ export function createBattleSystems({
     const fog=getCurrentFog(),img=getMap();
     if(!fog.enabled||!img?.naturalWidth||!img?.naturalHeight)return;
     const w=img.naturalWidth,h=img.naturalHeight;
-    const signature=[currentScene(),w,h,getAdmin()&&!visionPreviewUid?'master':'player',visionPreviewUid,JSON.stringify(fog),walls.signature(visionPreviewUid||getUid())].join('|');
+    const signature=[currentScene(),w,h,getAdmin()?'master':'player',JSON.stringify(fog),walls.signature()].join('|');
     if(!fogCanvas||fogCacheKey!==signature){
       buildFogMask(fog,w,h);fogCacheKey=signature;
     }
     ctx.save();
     if(fogCanvas)ctx.drawImage(fogCanvas,0,0,w,h);
-    if(getAdmin()&&!visionPreviewUid){
+    if(getAdmin()){
       const scale=Math.max(.15,view.zoom);
       ctx.strokeStyle='rgba(222,199,147,.55)';
       ctx.lineWidth=1.4/scale;ctx.setLineDash([5/scale,6/scale]);
@@ -545,10 +523,6 @@ export function createBattleSystems({
     addCondition,removeCondition,openForToken,setTarget:chooseTarget,
     pointerDown,pointerMove,pointerUp,cancel,toggleFogMode,isMode,shortStatus,
     getCurrentFog,applyRoundTick,getConditionList,setTokenHidden,toggleTokenHidden,isTokenHidden,isRevealed,
-    drawWalls:(ctx,view)=>walls.draw(ctx,view,visionPreviewUid),blocksMovement:walls.moveBlocked,
-    doorHint:walls.doorHint,toggleDoorAt:walls.toggleDoorAt,
-    wallQuickState:walls.quickState,setWallMode:walls.setQuickMode,
-    setWallSnap:walls.setSnap,changeWall:walls.changeSelectedQuick,
-    deleteSelectedWall:walls.deleteSelected,isWallEditing:walls.active,
-    setVisionPreview,clearVisionPreview,isVisionPreview,getVisionPreview};
+    drawWalls:(ctx,view)=>walls.draw(ctx,view),blocksMovement:walls.moveBlocked,
+    doorHint:walls.doorHint,toggleDoorAt:walls.toggleDoorAt};
 }
