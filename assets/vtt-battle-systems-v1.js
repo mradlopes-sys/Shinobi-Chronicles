@@ -532,5 +532,5 @@ export function createBattleSystems({
     doorHint:walls.doorHint,toggleDoorAt:walls.toggleDoorAt,
     enterWallEdit:()=>walls.selectMode(true),exitWallEdit:()=>walls.selectMode(false),
     isWallEditing:()=>walls.active(),isWallSelected:walls.isSelected,
-    deleteSelectedWall:walls.deleteSelected,wallMode:walls.wallMode};
+    deleteSelectedWall:walls.deleteSelected,undoWallEdit:walls.undoEdit,wallMode:walls.wallMode};
 }
