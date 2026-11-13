@@ -38,8 +38,6 @@ export function createBattleSystems({
   const walls=createWallTools({
     getAdmin,getUid,getSceneId,getRoom,getMap,getCell,getZoom,getTokens,isHidden:isTokenHidden,
     saveFields,notify,redraw,sendDoorRequest,
-    ensureFog:()=>getCurrentFog().enabled?Promise.resolve(true):
-      setFog({...getCurrentFog(),enabled:true}),
     onModeActivated:()=>{mode='';shapeStart=null;shapeEnd=null;brushPoints=[];render()},
     onModeChanged:()=>{stage?.classList.toggle('sc-battle-walls',walls.active())}
   });
@@ -264,7 +262,11 @@ export function createBattleSystems({
     bind('sc-jutsu-condition','change',e=>{selectedCondition=e.target.value});
     bind('sc-jutsu-map-target','click',()=>{walls.cancel();mode=mode==='target'?'':'target';render();redraw()});
     bind('sc-jutsu-cast','click',()=>void cast());
-    bind('sc-fog-toggle','click',()=>void setFog({...getCurrentFog(),enabled:!getCurrentFog().enabled}));
+    bind('sc-fog-toggle','click',()=>{
+      const next=!getCurrentFog().enabled;
+      if(!next){mode='';shapeStart=null;shapeEnd=null;brushPoints=[]}
+      void setFog({...getCurrentFog(),enabled:next});
+    });
     for(const [id,kind] of [['sc-fog-reveal','reveal'],['sc-fog-brush-reveal','brush-reveal'],['sc-fog-brush-cover','brush-cover']]){
       bind(id,'click',()=>{walls.cancel();mode=mode===kind?'':kind;shapeStart=null;brushPoints=[];render();redraw()});
     }
@@ -341,6 +343,7 @@ export function createBattleSystems({
       return true;
     }
     if(!['reveal','brush-reveal','brush-cover'].includes(mode))return false;
+    if(!getCurrentFog().enabled){mode='';render();return true}
     const p=coords(wx,wy);if(!p)return true;
     shapeStart=p;shapeEnd=p;
     brushPoints=mode==='reveal'?[]:[[p.x,p.y]];
@@ -360,6 +363,7 @@ export function createBattleSystems({
   async function pointerUp(wx,wy){
     if(walls.active())return walls.pointerUp(wx,wy);
     if(!shapeStart||!['reveal','brush-reveal','brush-cover'].includes(mode))return false;
+    if(!getCurrentFog().enabled){shapeStart=null;shapeEnd=null;brushPoints=[];mode='';render();redraw();return true}
     const p=coords(wx,wy)||shapeEnd||shapeStart;
     const old=shapeStart,kind=mode;
     const points=brushPoints.slice();
@@ -377,7 +381,8 @@ export function createBattleSystems({
       if(points.length<MAX_POINTS&&(!final||Math.hypot(final[0]-p.x,final[1]-p.y)>.001))points.push([p.x,p.y]);
       strokes.push({type:'brush',op:kind==='brush-cover'?'cover':'reveal',r:brushSize/100,points});
     }
-    await setFog({...fog,enabled:true,strokes});return true;
+    // Pintar áreas não liga a névoa implicitamente: apenas o botão do mestre faz isso.
+    await setFog({...fog,strokes});return true;
   }
   function brushHits(stroke,px,py,w,h){
     const points=stroke.points||[];
