@@ -13,6 +13,7 @@ const cfg={apiKey:'AIzaSyCdTZejzKXYyyAnYgak7ADEsDhfsdFgvVo',authDomain:'shinobi-
 const app=getApps()[0]||initializeApp(cfg),auth=getAuth(app),db=getFirestore(app);
 const WORLD_ID='shinobi-chronicles';
 const activeDoorEvents=new Set(),pendingDoorEvents=new Map();
+let activeEnvironmentView='walls';
 const $=id=>document.getElementById(id);
 let uid='',admin=false,room='',roomData=null,tokens=[],sheets=[],scenes=[],subs=[],dragToken=null,selected=null,sceneKey='',lastRoll='',busy=false,editingSceneId='',tokenUnsub=null,tokenSceneSubscribed=null,sheetsUnsub=null,subscriptionEpoch=0,worldCollectionsReady=false,portraitSubs=new Map(),vitalSubs=new Map(),lastVitals=new Map(),vitalTimer=null,masterUid='',lastStageRosterKey='__initial__',secretRollFeeds={self:[],gm:[],blind:[]},blindProcessing=new Set();
 const stage=$('stage'),canvas=$('map'),ctx=canvas.getContext('2d');
@@ -451,13 +452,43 @@ async function resolveBlindRequest(item,epoch){
   }catch(error){show('Rolagem cega pendente: '+error.message)}
   finally{blindProcessing.delete(item.id)}
 }
+function setEnvironmentView(which,activate=true){
+  if(!admin)return;
+  activeEnvironmentView=which==='fog'?'fog':'walls';
+  const pane=$('pane-ambiente');if(!pane)return;
+  pane.dataset.envView=activeEnvironmentView;
+  pane.querySelectorAll('[data-env-view]').forEach(button=>{
+    const active=button.dataset.envView===activeEnvironmentView;
+    button.classList.toggle('active',active);
+    button.setAttribute('aria-pressed',String(active));
+  });
+  if(activeEnvironmentView==='walls'&&activate){
+    if(measure.enabled)setMetricTool('off');
+    battle.enterWallEdit();
+  }else battle.cancel();
+  updateStageToolStatus();
+}
 function switchTab(name){
   if(['mapa','actors','biblioteca'].includes(name))name='campanha';
-  if(name==='combate'&&!admin){show('A organização do combate é exclusiva do mestre.');return}
-  for(const b of document.querySelectorAll('[data-tab]'))b.classList.toggle('active',b.dataset.tab===name);
+  if((name==='combate'||name==='ambiente')&&!admin){
+    show('Esta ferramenta é exclusiva do mestre.');return;
+  }
+  const leavingEnvironment=!document.querySelector('#pane-ambiente[hidden]')&&name!=='ambiente';
+  for(const b of document.querySelectorAll('[data-tab]')){
+    const isActive=b.dataset.tab===name;
+    b.classList.toggle('active',isActive);
+    b.setAttribute('aria-current',isActive?'page':'false');
+  }
   for(const p of document.querySelectorAll('.pane'))p.hidden=p.id!=='pane-'+name;
+  if(name==='ambiente')setEnvironmentView(activeEnvironmentView,true);
+  else if(leavingEnvironment)battle.cancel();
+  const workspace=$('workspace');
+  if(workspace?.classList.contains('panel-hidden'))$('vtt-toggle-panel').click();
+  updateStageToolStatus();
 }
 document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
+document.querySelectorAll('[data-env-view]').forEach(b=>b.onclick=()=>setEnvironmentView(b.dataset.envView));
+$('sc-open-environment').onclick=()=>{activeEnvironmentView='walls';switchTab('ambiente')};
 function openScenes(){
   switchTab('campanha');
   if(!admin){show('A biblioteca é exclusiva do mestre. Você acompanha a cena ativa.');return}
@@ -469,7 +500,7 @@ function openScenes(){
 $('scene-open-library').onclick=openScenes;
 $('scene-open-panel').onclick=openScenes;
 function applyRole(){for(const id of ['gm-scenes','next-turn','cast-effect','effect-kind','effect-kind-label','effect-target','effect-target-label','effect-help'])$(id).hidden=!admin;for(const item of document.querySelectorAll('[data-gm-only]'))item.hidden=!admin;$('scene-open-library').setAttribute('aria-label',admin?'Abrir biblioteca de mapas':'Cena em exibição');
-$('scene-open-panel').title=admin?'Escolher mapa na biblioteca':'Cena em exibição';$('auth-label').textContent=uid?(admin?'Mestre · permissões administrativas':'Jogador · acesso restrito'):'Faça login nos Arquivos Shinobi';if(!admin&&document.querySelector('[data-tab="combate"].active'))switchTab('rolls');theatre.refresh();renderSheets();combatDirector.refresh();battle.render();refreshCombatTargets();sessionTools.refresh();gmQuick.refresh();gmQuick.refresh();}
+$('scene-open-panel').title=admin?'Escolher mapa na biblioteca':'Cena em exibição';$('auth-label').textContent=uid?(admin?'Mestre · permissões administrativas':'Jogador · acesso restrito'):'Faça login nos Arquivos Shinobi';if(!admin&&(document.querySelector('[data-tab="combate"].active')||document.querySelector('[data-tab="ambiente"].active')))switchTab('rolls');theatre.refresh();renderSheets();combatDirector.refresh();battle.render();refreshCombatTargets();sessionTools.refresh();gmQuick.refresh();gmQuick.refresh();}
 onAuthStateChanged(auth,async user=>{stopSubs();if(sheetsUnsub){sheetsUnsub();sheetsUnsub=null}uid=user?.uid||'';admin=false;sheets=[];theatre.setActors([]);rolls.setUser(uid);rolls.setSheets([]);applyRole();if(!uid){show('Faça login no Shinobi Chronicles antes de entrar na mesa.');return}try{admin=user.email==='mestre_shinobi@players.shinobi-chronicles.invalid'||(await getDoc(doc(db,'admins',uid))).exists();applyRole();loadSheets();void connectWorld()}catch(e){show('Falha na autenticação: '+e.message)}});
 function loadSheets(){
   if(sheetsUnsub){sheetsUnsub();sheetsUnsub=null}
@@ -1224,6 +1255,7 @@ function loadMap(url){
   img.onload=()=>{
     if(sceneKey!==url)return;
     view.image=img;view.cell=automaticMapCell(img);center();
+    if(admin&&!$('pane-ambiente').hidden&&activeEnvironmentView==='walls')battle.enterWallEdit();
     for(const event of pendingDoorEvents.values())void resolveDoorEvent(event,subscriptionEpoch);
     pendingDoorEvents.clear();
     updateMetricHud();
@@ -1358,10 +1390,29 @@ function requestDraw(){
   drawRequested=true;
   requestAnimationFrame(()=>{drawRequested=false;draw()});
 }
+function updateStageToolStatus(){
+  const label=$('sc-tool-active-label'),exit=$('sc-tool-exit');if(!label||!exit)return;
+  const text=battle.isMode('wall-select')?'Editando paredes':
+    battle.isMode('wall-draw')?'Desenhando paredes':
+    battle.isMode('reveal')?'Revelando área':
+    battle.isMode('brush-reveal')?'Pincel revelar':
+    battle.isMode('brush-cover')?'Pincel ocultar':
+    battle.isMode('target')?'Selecionar alvo':
+    measure.enabled?'Régua':'';
+  label.hidden=!text;exit.hidden=!text;label.textContent=text;
+}
+$('sc-tool-exit').onclick=()=>{
+  if(measure.enabled)setMetricTool('off');
+  battle.cancel();updateStageToolStatus();
+};
+new MutationObserver(()=>updateStageToolStatus())
+  .observe(stage,{attributes:true,attributeFilter:['class']});
+
 function reflectBattleMode(){
   stage.classList.toggle('sc-battle-target',battle.isMode('target'));
   stage.classList.toggle('sc-battle-fog',['reveal','brush-reveal','brush-cover'].some(kind=>battle.isMode(kind)));
   stage.classList.toggle('sc-battle-walls',battle.isMode('wall-draw')||battle.isMode('wall-select'));
+  updateStageToolStatus();
 }
 canvas.onpointerdown=e=>{if(e.button!==0)return;const p=point(e);
   if(!measure.enabled&&!['target','reveal','brush-reveal','brush-cover','wall-draw','wall-select']
@@ -1640,14 +1691,31 @@ $('vtt-fullscreen').onclick=async()=>{
   }catch(e){show('Tela cheia indisponível: '+e.message)}
 };
 
-document.addEventListener('keydown',e=>{if(e.target?.closest?.('input,textarea,select,[contenteditable]')||$('sheet-modal').classList.contains('open'))return;const t=visibleTokens().find(x=>x.id===selected);if((e.key==='c'||e.key==='C')&&t&&canMove(t)){e.preventDefault();openSheet(t.fichaId,t.ownerUid)}if(e.key==='Delete'&&admin&&t){e.preventDefault();if(confirm('Retirar token '+t.name+'?'))deleteDoc(tokenRef(t.id)).catch(err=>show(err.message))}});
+document.addEventListener('keydown',e=>{
+  if(e.target?.closest?.('input,textarea,select,[contenteditable]')||
+     $('sheet-modal').classList.contains('open'))return;
+  if(e.key==='Delete'&&admin&&battle.isWallEditing()){
+    e.preventDefault();e.stopImmediatePropagation();
+    if(battle.isWallSelected())void battle.deleteSelectedWall();
+    else show('Clique numa parede para selecioná-la antes de pressionar Del.');
+    return;
+  }
+  const t=visibleTokens().find(x=>x.id===selected);
+  if((e.key==='c'||e.key==='C')&&t&&canMove(t)){
+    e.preventDefault();openSheet(t.fichaId,t.ownerUid);
+  }
+  if(e.key==='Delete'&&admin&&t){
+    e.preventDefault();
+    if(confirm('Retirar token '+t.name+'?'))deleteDoc(tokenRef(t.id)).catch(err=>show(err.message));
+  }
+});
 
 let nudgeInFlight=false;
 document.addEventListener('keydown',async e=>{
   if(e.target?.closest?.('input,textarea,select,[contenteditable]')||
      $('sheet-modal').classList.contains('open')||e.ctrlKey||e.metaKey||e.altKey)return;
   if(e.key==='Escape'){
-    if(battle.cancel()){e.preventDefault();return}
+    if(battle.cancel()){updateStageToolStatus();e.preventDefault();return}
   }
   const key=e.key.toLowerCase();
   if(key==='i'&&admin&&!e.repeat){
@@ -1658,14 +1726,18 @@ document.addEventListener('keydown',async e=>{
   if(key==='f'&&admin&&!e.repeat){
     e.preventDefault();
     if(measure.enabled)setMetricTool('off');
+    if(activeEnvironmentView!=='fog'||$('pane-ambiente').hidden){
+      activeEnvironmentView='fog';switchTab('ambiente');
+    }
     battle.toggleFogMode();
+    updateStageToolStatus();
     return;
   }
   if(key==='+'||key==='='){e.preventDefault();zoom(1.1);return}
   if(key==='-'){e.preventDefault();zoom(1/1.1);return}
   if(key==='0'){e.preventDefault();center();return}
   const steps={'ArrowLeft':[-1,0],'ArrowRight':[1,0],'ArrowUp':[0,-1],'ArrowDown':[0,1]};
-  if(!steps[e.key]||!room||measure.enabled||battle.isMode('reveal')||battle.isMode('target'))return;
+  if(!steps[e.key]||!room||measure.enabled||battle.isWallEditing()||battle.isMode('reveal')||battle.isMode('brush-reveal')||battle.isMode('brush-cover')||battle.isMode('target'))return;
   const token=visibleTokens().find(t=>t.id===selected);
   if(!token||!canMove(token)||!battle.tokenVisible(token))return;
   e.preventDefault();
