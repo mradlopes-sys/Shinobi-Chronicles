@@ -40,7 +40,8 @@ export function createBattleSystems({
     saveFields,notify,redraw,sendDoorRequest,
     ensureFog:()=>getCurrentFog().enabled?Promise.resolve(true):
       setFog({...getCurrentFog(),enabled:true}),
-    onModeActivated:()=>{mode='';shapeStart=null;shapeEnd=null;brushPoints=[];render()}
+    onModeActivated:()=>{mode='';shapeStart=null;shapeEnd=null;brushPoints=[];render()},
+    onModeChanged:()=>{stage?.classList.toggle('sc-battle-walls',walls.active())}
   });
   const getConditionList=id=>Array.isArray(conditions[id])?conditions[id]:[];
   const condNames=id=>getConditionList(id).map(x=>byId[x.id]?.name||'').filter(Boolean).join(', ');
