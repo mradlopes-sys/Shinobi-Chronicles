@@ -1,0 +1,349 @@
+/* Shinobi Chronicles — Mesa Virtual · navegação e hierarquia de trabalho.
+   Uma mesa de tinta e papel com o mapa como protagonista; sem dock flutuante.
+   Mantém intactos os componentes de chat, tokens, rolagens e suas dimensões. */
+html[data-appearance] {
+  --sc-layout-hairline:color-mix(in srgb,var(--vtt-line) 74%,transparent);
+  --sc-layout-gold:var(--vtt-display);
+  --sc-layout-focus:var(--vtt-pigment);
+  --sc-layout-quiet:var(--vtt-fade);
+}
+html[data-appearance] .workspace{
+  background:var(--vtt-paper);
+}
+html[data-appearance] .workspace .stage-wrap{
+  background:radial-gradient(ellipse 88% 80% at 50% 45%,#263b30 0%,#131f1b 72%,#0c1513 100%);
+}
+html[data-appearance] .stage-wrap::before{
+  background:linear-gradient(90deg,rgba(4,13,11,.20),transparent 12%,transparent 88%,rgba(4,13,11,.26)),
+    radial-gradient(ellipse at center,transparent 63%,rgba(4,11,9,.22) 100%);
+}
+/* Navigation: the same four locations for every session; labels remove guesswork. */
+html[data-appearance] .workspace .rail{
+  background:linear-gradient(165deg,#1e2d26,#101b17 80%);
+  border-right:1px solid #91a58a30;
+  padding:15px 4px 12px;
+  align-items:center;
+  gap:7px;
+}
+html[data-appearance] .rail .seal{
+  width:43px;height:43px;min-height:43px;margin:0 0 14px;
+  border:1px solid #b9a27e48;border-radius:5px;
+  background:linear-gradient(145deg,#364b3b,#1b2d23);
+  color:#e0c696;box-shadow:inset 0 1px 0 #fff3d51b;
+}
+html[data-appearance] .rail button[data-tab]{
+  display:flex;flex-direction:column;gap:3px;align-items:center;justify-content:center;
+  width:54px;height:55px;min-height:55px;padding:5px 1px;
+  border:1px solid transparent;border-radius:6px;
+  color:#b3c1b1;background:transparent;
+  box-shadow:none;transition:background .14s,border-color .14s,color .14s;
+}
+html[data-appearance] .rail button[data-tab][hidden]{display:none!important}
+html[data-appearance] .rail button[data-tab] .rail-icon{
+  font:400 22px/1 'Yuji Boku','Noto Serif JP',serif;
+  text-shadow:none;letter-spacing:0;
+}
+html[data-appearance] .rail button[data-tab] .rail-name{
+  font:700 9px/1.1 'DM Sans',sans-serif;
+  letter-spacing:.005em;text-transform:none;
+}
+html[data-appearance] .rail button[data-tab].active{
+  background:linear-gradient(135deg,#485d46,#314537);
+  border-color:#c7b08b68;color:#fff0d1;
+  box-shadow:inset 3px 0 0 #d4ba89;
+}
+html[data-appearance] .rail button[data-tab]:hover:not(.active){
+  background:#2d4235;border-color:#8f9d7f48;color:#f2e5ce;
+}
+html[data-appearance] .rail .rail-tip{color:#829486;font-size:8px;opacity:.8}
+html[data-appearance] .workspace .sidebar{
+  background:linear-gradient(145deg,var(--vtt-paper-light),var(--vtt-paper) 31%);
+  border-left:1px solid var(--sc-layout-hairline);
+  box-shadow:-11px 0 23px #07110b12;
+  scrollbar-color:var(--vtt-line) transparent;
+}
+html[data-appearance] .side-header{
+  min-height:0;padding:15px 18px 12px!important;
+  border-bottom:1px solid var(--sc-layout-hairline);
+  margin-bottom:12px;
+}
+html[data-appearance] .side-header::before{opacity:.1;pointer-events:none}
+html[data-appearance] .side-header::after{opacity:.8}
+html[data-appearance] .side-header .overline{
+  font:700 9px/1.3 'DM Sans',sans-serif!important;
+  letter-spacing:.14em;
+}
+html[data-appearance] .side-header b{
+  display:block;margin:4px 0!important;
+  font:400 30px/1.03 'Caveat Brush','Yuji Boku',serif!important;
+  color:var(--vtt-ink);
+}
+html[data-appearance] .side-header #auth-label{
+  font:500 10px/1.4 'DM Sans',sans-serif!important;
+  color:var(--sc-layout-quiet);
+}
+html[data-appearance] .vtt-clan-mark{
+  margin-top:8px;padding:6px 8px;
+  border-color:var(--sc-layout-hairline);
+  background:var(--vtt-blend);
+}
+html[data-appearance] .vtt-clan-mark .mark{font-size:17px}
+html[data-appearance] .vtt-clan-mark .clan-label{
+  font:700 9px/1.2 'DM Sans',sans-serif!important;
+  letter-spacing:.09em;
+}
+/* The rail is primary navigation at desktop sizes: no duplicate bar competing with the content.
+   When the rail is closed or in mobile layout, the sidebar tabs are available. */
+@media(min-width:841px){
+  html[data-appearance] .workspace:not(.rail-hidden) .sidebar>.tabs{display:none!important}
+}
+html[data-appearance] .tabs{
+  display:flex;gap:3px;padding:4px;margin:0 12px 10px;
+  background:var(--vtt-paper-muted);
+  border:1px solid var(--sc-layout-hairline);
+  border-radius:6px;
+}
+html[data-appearance] .tabs button{
+  min-width:0;flex:1;min-height:34px;padding:8px 3px;
+  border-radius:4px!important;
+  font:700 10px/1.2 'DM Sans',sans-serif!important;
+  letter-spacing:0!important;
+  color:var(--vtt-fade);white-space:nowrap;
+}
+html[data-appearance] .tabs button.active{
+  color:var(--vtt-ink);background:var(--vtt-blend)!important;
+  box-shadow:inset 0 -2px var(--vtt-pigment)!important;
+}
+html[data-appearance] .tabs button.active::after{display:none!important}
+html[data-appearance] .pane{padding:16px 17px 32px}
+html[data-appearance] .pane[hidden]{display:none!important}
+html[data-appearance] .stage-controls{top:12px;left:12px;right:12px}
+html[data-appearance] .glass-button,
+html[data-appearance] .stage-identity{
+  border:1px solid #87958265;border-radius:6px;
+  background:linear-gradient(125deg,#17241de8,#203126e8);
+  backdrop-filter:blur(13px);
+  color:#f0e9d9;box-shadow:0 6px 18px #07110b4b;
+}
+html[data-appearance] .glass-button:hover,
+html[data-appearance] .stage-identity:hover{
+  border-color:#c5ad86b0;background:#2b4233ed;
+}
+html[data-appearance] .stage-identity{
+  min-width:0;padding:7px 11px;max-width:min(355px,40vw);
+}
+html[data-appearance] .stage-identity .eyebrow{
+  color:#d3bb95;font:700 8px/1.5 'DM Sans',sans-serif;
+  letter-spacing:.12em;
+}
+html[data-appearance] .stage-identity b{
+  color:#fcf0d8;font-size:19px!important;line-height:1.14!important;
+  overflow:hidden;text-overflow:ellipsis;
+}
+html[data-appearance] .stage-identity small{
+  color:#b6c4b3;font:500 9px 'DM Sans',sans-serif
+}
+html[data-appearance] .stage-bottom{
+  gap:3px;padding:4px;left:12px;bottom:12px;
+  background:#14251de9;border:1px solid #75846c80;
+  border-radius:7px;box-shadow:0 8px 25px #06110a60;
+  backdrop-filter:blur(12px);
+}
+html[data-appearance] .stage-bottom button{
+  color:#eee6d6;border-radius:5px!important;min-width:35px;height:35px;
+  background:transparent;
+}
+html[data-appearance] .stage-bottom button:hover{background:#46604a}
+html[data-appearance] .stage-bottom button.active{color:#fff0d1;background:#6c6545}
+html[data-appearance] .stage-bottom :is(button,span)[hidden]{display:none!important}
+html[data-appearance] .stage-bottom .tool-divider{background:#7f92827a}
+html[data-appearance] .sc-tool-active-label{
+  max-width:138px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  padding:0 6px 0 9px;border-left:1px solid #81917d50;
+  color:#e3c99e;font:700 10px/1.2 'DM Sans',sans-serif;
+  align-self:center;
+}
+html[data-appearance] .stage-bottom .sc-tool-exit{
+  min-width:30px;height:30px;padding:0;
+  background:#526a53a0;border:1px solid #9cb4967a;
+  color:#ffefce;font-size:14px;
+}
+html[data-appearance] #sc-fog-indicator{
+  left:13px;top:110px;border-radius:4px;
+  padding:5px 8px;
+  background:#182921db;
+  box-shadow:none;opacity:.85;
+}
+html[data-appearance] .status{border-radius:5px;box-shadow:0 9px 24px #07110b60}
+/* Dedicated scene workshop. Two tool families, never a wall-of-controls. */
+html[data-appearance] .sc-pane-environment{
+  padding:13px 15px 28px;
+}
+html[data-appearance] .sc-environment-header{
+  padding:4px 1px 12px;border-bottom:1px solid var(--sc-layout-hairline);
+}
+html[data-appearance] .sc-environment-eyebrow{
+  display:block;font:700 9px 'DM Sans',sans-serif;
+  letter-spacing:.18em;color:var(--sc-layout-gold);
+}
+html[data-appearance] .sc-environment-header h2{
+  margin:5px 0 5px;font:400 30px/1.05 'Caveat Brush','Yuji Boku',serif;
+  letter-spacing:0;color:var(--vtt-ink);
+}
+html[data-appearance] .sc-environment-header p{
+  margin:0;color:var(--vtt-fade);
+  font:500 11px/1.6 'DM Sans',sans-serif;
+}
+html[data-appearance] .sc-environment-switch{
+  display:grid;grid-template-columns:1fr 1fr;gap:5px;
+  margin:13px 0 12px;padding:4px;
+  border:1px solid var(--sc-layout-hairline);
+  border-radius:6px;background:var(--vtt-paper-muted);
+}
+html[data-appearance] .sc-environment-switch button{
+  min-height:39px;display:flex;align-items:center;justify-content:center;gap:8px;
+  border:1px solid transparent;border-radius:4px;
+  background:transparent;color:var(--vtt-fade);
+  font:700 12px 'DM Sans',sans-serif;
+}
+html[data-appearance] .sc-environment-switch button>span{
+  font:18px/1 'Yuji Boku',serif;
+}
+html[data-appearance] .sc-environment-switch button:hover{
+  color:var(--vtt-ink);background:var(--vtt-blend)
+}
+html[data-appearance] .sc-environment-switch button.active{
+  color:var(--vtt-ink);
+  background:var(--vtt-paper-light);
+  border-color:var(--vtt-line);
+  box-shadow:0 2px 5px #00000012,inset 0 -2px var(--vtt-pigment);
+}
+html[data-appearance] .sc-pane-environment[data-env-view="walls"] .sc-env-fog-content,
+html[data-appearance] .sc-pane-environment[data-env-view="fog"] .sc-env-walls-content{display:none!important}
+html[data-appearance] .sc-pane-environment #sc-fog-panel{
+  padding:0;margin:0;border:none;background:transparent;box-shadow:none;
+}
+html[data-appearance] .sc-pane-environment .sc-wall-panel{
+  margin:0;padding:0;background:transparent;border:0;border-radius:0;box-shadow:none;
+}
+html[data-appearance] .sc-pane-environment .sc-wall-panel .sc-battle-head,
+html[data-appearance] .sc-pane-environment .sc-env-fog-content>.sc-battle-head{
+  margin:0 0 12px;
+}
+html[data-appearance] .sc-pane-environment .sc-battle-head small{display:none}
+html[data-appearance] .sc-pane-environment .sc-battle-head h3{
+  margin:2px 0 6px!important;color:var(--vtt-ink)!important;
+  font:400 23px/1.1 'Caveat Brush','Yuji Boku',serif!important
+}
+html[data-appearance] .sc-pane-environment .sc-battle-head p{
+  font:500 10px/1.55 'DM Sans',sans-serif;
+  color:var(--vtt-fade)
+}
+html[data-appearance] .sc-pane-environment .sc-wall-presets{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:7px;margin:11px 0;
+}
+html[data-appearance] .sc-pane-environment .sc-wall-preset{
+  min-height:45px;padding:9px;gap:8px;
+  background:var(--vtt-paper-light);
+  border:1px solid var(--vtt-line);border-radius:5px;
+  color:var(--vtt-ink);
+  font:700 11px/1.25 'DM Sans',sans-serif;
+  transition:background .12s,border-color .12s;
+}
+html[data-appearance] .sc-pane-environment .sc-wall-preset>span{width:18px;height:5px}
+html[data-appearance] .sc-pane-environment .sc-wall-preset:hover,
+html[data-appearance] .sc-pane-environment .sc-wall-preset.active{
+  border-color:var(--vtt-display);
+  background:var(--vtt-blend);
+}
+html[data-appearance] .sc-pane-environment .sc-wall-tools{
+  gap:7px;margin:9px 0;
+}
+html[data-appearance] .sc-pane-environment .sc-wall-tools button{
+  min-height:39px;border-radius:4px!important;
+}
+html[data-appearance] .sc-pane-environment .sc-wall-toggle{
+  padding:8px 0;margin:4px 0 7px;font-size:11px;
+}
+html[data-appearance] .sc-pane-environment .sc-wall-options,
+html[data-appearance] .sc-pane-environment .sc-wall-selected{
+  margin:11px 0;padding:11px;
+  background:var(--vtt-paper-muted);border:1px solid var(--vtt-line);
+  border-radius:5px;
+}
+html[data-appearance] .sc-pane-environment .sc-wall-selected{
+  border-left:3px solid var(--vtt-pigment);
+}
+html[data-appearance] .sc-pane-environment .sc-wall-selected strong{
+  color:var(--vtt-display);font:400 23px 'Caveat Brush',serif
+}
+html[data-appearance] .sc-pane-environment .sc-wall-selected label{font-size:11px}
+html[data-appearance] .sc-pane-environment .sc-fog-options{gap:8px}
+html[data-appearance] .sc-pane-environment .sc-fog-options button{
+  min-height:40px;margin:0;border-radius:4px!important;
+}
+html[data-appearance] .sc-pane-environment .sc-fog-options.secondary{
+  grid-template-columns:1fr 1fr;gap:7px;margin-top:12px;
+}
+html[data-appearance] .sc-pane-environment .sc-battle-note{
+  color:var(--vtt-fade);font:500 10px/1.6 'DM Sans',sans-serif
+}
+html[data-appearance] .sc-environment-footer{
+  display:grid;gap:4px;padding:12px 2px 0;margin:15px 0 0;
+  border-top:1px solid var(--sc-layout-hairline);
+  font:500 10px/1.5 'DM Sans',sans-serif;color:var(--vtt-fade)
+}
+html[data-appearance] .sc-environment-footer strong{
+  font:700 10px 'DM Sans',sans-serif;color:var(--vtt-display)
+}
+html[data-appearance] .sc-environment-footer kbd{
+  padding:2px 4px;border:1px solid var(--vtt-line);border-radius:3px;
+  background:var(--vtt-paper-muted);font:700 10px 'DM Sans',sans-serif
+}
+html[data-appearance] #sc-open-environment{
+  display:flex;align-items:center;gap:10px;width:100%;
+  margin:5px 0 10px;padding:11px 12px;
+  border:1px solid var(--vtt-line);border-left:3px solid var(--vtt-pigment);
+  border-radius:5px;background:var(--vtt-paper-muted);color:var(--vtt-ink);
+  text-align:left;
+}
+html[data-appearance] #sc-open-environment[hidden]{display:none!important}
+html[data-appearance] #sc-open-environment:hover{border-color:var(--vtt-display);background:var(--vtt-blend)}
+html[data-appearance] #sc-open-environment>span:first-child{
+  font:24px 'Yuji Boku',serif;color:var(--vtt-display);
+}
+html[data-appearance] #sc-open-environment>span:nth-child(2){flex:1;min-width:0;display:grid;gap:3px}
+html[data-appearance] #sc-open-environment strong{
+  font:700 12px 'DM Sans',sans-serif;color:var(--vtt-ink)
+}
+html[data-appearance] #sc-open-environment small{
+  font:500 10px 'DM Sans',sans-serif;color:var(--vtt-fade)
+}
+/* Keyboard focus and responsive workspaces. No chat height overrides here. */
+html[data-appearance] :is(.sc-environment-switch button,.sc-wall-preset,#sc-open-environment,.rail button):focus-visible{
+  outline:2px solid var(--vtt-display);outline-offset:2px
+}
+@media(max-width:840px){
+  html[data-appearance] .rail button[data-tab]{width:44px;height:52px;min-height:52px}
+  html[data-appearance] .rail button[data-tab] .rail-name{font-size:8px}
+  html[data-appearance] .rail .seal{width:38px;height:38px;min-height:38px}
+  html[data-appearance] .side-header{padding:11px 13px!important;margin-bottom:6px}
+  html[data-appearance] .vtt-clan-mark{margin-top:5px}
+}
+@media(max-width:690px){
+  html[data-appearance] .rail button[data-tab]{width:40px;height:49px;min-height:49px}
+  html[data-appearance] .rail button[data-tab] .rail-icon{font-size:19px}
+  html[data-appearance] .rail button[data-tab] .rail-name{font-size:7.5px}
+  html[data-appearance] .tabs{margin:0 8px 5px;padding:3px}
+  html[data-appearance] .tabs button{font-size:9px!important;padding:5px 1px;min-height:31px}
+  html[data-appearance] .sc-pane-environment{padding:10px 11px 20px}
+  html[data-appearance] .sc-environment-header h2{font-size:26px}
+  html[data-appearance] .stage-bottom{left:7px;bottom:8px}
+  html[data-appearance] .sc-tool-active-label{max-width:100px;font-size:9px}
+  html[data-appearance] .sc-environment-footer{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+  html[data-appearance] .rail button[data-tab],
+  html[data-appearance] .sc-wall-preset{transition:none!important}
+}
