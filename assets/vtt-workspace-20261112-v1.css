@@ -252,6 +252,28 @@ html[data-appearance] .sc-pane-environment .sc-wall-preset{
   transition:background .12s,border-color .12s;
 }
 html[data-appearance] .sc-pane-environment .sc-wall-preset>span{width:18px;height:5px}
+html[data-appearance] .sc-pane-environment .sc-wall-presets.main [data-wall-kind="solid"]{
+  grid-column:1 / -1;min-height:43px;
+}
+html[data-appearance] .sc-pane-environment .sc-wall-advanced{
+  margin:-2px 0 10px;border:1px solid var(--sc-layout-hairline);
+  border-radius:5px;background:var(--vtt-paper-muted);
+}
+html[data-appearance] .sc-pane-environment .sc-wall-advanced>summary{
+  display:flex;justify-content:space-between;align-items:center;gap:8px;
+  padding:10px 11px;cursor:pointer;list-style:none;
+  font:700 10px/1.2 'DM Sans',sans-serif;color:var(--vtt-fade);
+}
+html[data-appearance] .sc-pane-environment .sc-wall-advanced>summary::-webkit-details-marker{display:none}
+html[data-appearance] .sc-pane-environment .sc-wall-advanced>summary:hover{color:var(--vtt-display)}
+html[data-appearance] .sc-pane-environment .sc-wall-advanced>summary span{
+  transition:transform .15s;
+}
+html[data-appearance] .sc-pane-environment .sc-wall-advanced[open]>summary span{transform:rotate(180deg)}
+html[data-appearance] .sc-pane-environment .sc-wall-advanced .sc-wall-presets{
+  margin:0;padding:0 7px 8px;
+}
+
 html[data-appearance] .sc-pane-environment .sc-wall-preset:hover,
 html[data-appearance] .sc-pane-environment .sc-wall-preset.active{
   border-color:var(--vtt-display);
