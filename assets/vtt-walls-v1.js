@@ -54,7 +54,7 @@ export function createWallTools({
   getAdmin,getUid,getSceneId,getRoom,getMap,getCell,getZoom,getTokens,isHidden,
   saveFields,notify,redraw,onModeActivated,onModeChanged,sendDoorRequest,ensureFog
 }){
-  let data={},mode='',kind='solid',selected='',pending=null,busy=false,snap=true,revision=0,doorBusy=false,lastDoorAction=0;
+  let data={},mode='',kind='solid',selected='',pending=null,busy=false,snap=true,revision=0,doorBusy=false,lastDoorAction=0,history=[];
   const current=()=>getSceneId()||'';
   const scene=()=>data[current()]||{walls:[],vision:false,range:10};
   const img=()=>getMap();
@@ -64,7 +64,7 @@ export function createWallTools({
   const isEditing=()=>mode==='wall-select'||mode==='wall-draw';
   let lastScene='';
   function setData(raw){
-    if(current()!==lastScene){lastScene=current();mode='';pending=null;selected=''}
+    if(current()!==lastScene){lastScene=current();mode='';pending=null;selected='';history=[]}
     if(!busy){
       const next={};if(raw&&typeof raw==='object'&&!Array.isArray(raw)){
         for(const [key,v] of Object.entries(raw).slice(0,80))
@@ -87,14 +87,28 @@ export function createWallTools({
     return {x:norm(px/w),y:norm(py/h)};
   }
   const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,9);
-  async function saveScene(next){
+  async function saveScene(next,{recordHistory=true}={}){
     if(!getAdmin()||!getRoom()||!current()||busy)return false;
-    const before=data,nextData={...data,[current()]:normalizeScene(next)};
+    const target=current(),before=data,prior=scene();
+    const nextData={...data,[target]:normalizeScene(next)};
     busy=true;data=nextData;revision++;redraw();
     try{
-      await saveFields({'theatre.wallsMap':nextData});return true;
+      await saveFields({'theatre.wallsMap':nextData});
+      if(recordHistory){history.push({sceneId:target,data:structuredClone(prior)});history=history.slice(-20)}
+      return true;
     }catch(error){data=before;revision++;notify('Não foi possível salvar paredes: '+error.message);return false}
     finally{busy=false;redraw()}
+  }
+  async function undoEdit(){
+    if(!getAdmin()||busy||!history.length)return false;
+    const prior=history[history.length-1];
+    if(prior.sceneId!==current())return false;
+    const ok=await saveScene(prior.data,{recordHistory:false});
+    if(ok){
+      history.pop();selected='';refreshUI();
+      notify('Última alteração das paredes desfeita.');
+    }
+    return ok;
   }
   function panelHTML(){
     if(!getAdmin()||!current())return '';
@@ -124,8 +138,8 @@ export function createWallTools({
         '<label>Direção <select id="sc-wall-direction">'+[['both','Ambos os lados'],['left','Lado esquerdo'],['right','Lado direito']].map(([v,t])=>
           '<option value="'+v+'"'+(chosen.dir===v?' selected':'')+'>'+t+'</option>').join('')+'</select></label>'+
         '<button id="sc-wall-delete" type="button" class="sc-battle-secondary">✕ Remover segmento</button></div>':'')+
-      '<div class="sc-wall-tools"><button id="sc-wall-undo" type="button" class="sc-battle-secondary"'+(!cfg.walls.length?' disabled':'')+
-        '>↶ Desfazer última parede</button><button id="sc-wall-clear" type="button" class="sc-battle-secondary"'+(!cfg.walls.length?' disabled':'')+
+      '<div class="sc-wall-tools"><button id="sc-wall-undo" type="button" class="sc-battle-secondary"'+(!history.length?' disabled':'')+
+        '>↶ Desfazer alteração</button><button id="sc-wall-clear" type="button" class="sc-battle-secondary"'+(!cfg.walls.length?' disabled':'')+
         '>Limpar paredes</button></div>'+
       '<p class="sc-battle-note">'+cfg.walls.length+' segmento(s) nesta cena. As paredes são vinculadas ao mapa ativo.</p></section>';
   }
@@ -152,11 +166,7 @@ export function createWallTools({
     bindChange('sc-wall-door-state',e=>void changeSelected({state:e.target.value}));
     bindChange('sc-wall-direction',e=>void changeSelected({dir:e.target.value}));
     bindClick('sc-wall-delete',()=>void removeSelected());
-    bindClick('sc-wall-undo',async()=>{
-      const a=scene().walls;if(!a.length)return;
-      if(selected===a[a.length-1].id)selected='';
-      await saveScene({...scene(),walls:a.slice(0,-1)});refreshUI();
-    });
+    bindClick('sc-wall-undo',()=>void undoEdit());
     bindClick('sc-wall-clear',async()=>{
       if(!window.confirm('Apagar todas as paredes desta cena?'))return;
       selected='';await saveScene({...scene(),walls:[]});refreshUI();
@@ -484,7 +494,7 @@ export function createWallTools({
     drawDoorHandles(ctx,view);
   }
   return {setData,panelHTML,bind,refreshUI,pointerDown,pointerMove,pointerUp,cancel,
-    selectMode,isSelected,wallMode,deleteSelected:removeSelected,
+    selectMode,isSelected,wallMode,deleteSelected:removeSelected,undoEdit,
     active,activeDraw:()=>mode==='wall-draw',activeSelect:()=>mode==='wall-select',
     draw,moveBlocked,visibleAtWorld,cutVision,signature,visionActive,visionSettings,
     doorAt,doorHint,toggleDoorAt};
