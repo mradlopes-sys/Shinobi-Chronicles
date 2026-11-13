@@ -94,7 +94,7 @@ export function createWallTools({
     busy=true;data=nextData;revision++;redraw();
     try{
       await saveFields({'theatre.wallsMap':nextData});
-      if(recordHistory){history.push({sceneId:target,data:structuredClone(prior)});history=history.slice(-20)}
+      if(recordHistory){history.push({sceneId:target,data:JSON.parse(JSON.stringify(prior))});history=history.slice(-20)}
       return true;
     }catch(error){data=before;revision++;notify('Não foi possível salvar paredes: '+error.message);return false}
     finally{busy=false;redraw()}
