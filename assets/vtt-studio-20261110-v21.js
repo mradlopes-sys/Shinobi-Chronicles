@@ -1,7 +1,7 @@
 import {createTheatre} from './vtt-theatre-v17.js';
 import {createRollsPanel,makeDicePayload,rollForSheet} from './vtt-rolls-v4.js?v=20261111-chat-medium5';
 import {createCombatDirector} from './vtt-combat-director-v1.js?v=20261111-hidden1';
-import {createBattleSystems} from './vtt-battle-systems-v1.js?v=20261112-wall-dock2';
+import {createBattleSystems} from './vtt-battle-systems-v1.js?v=20261112-doors2';
 import {createGMQuickPanel} from './vtt-gm-quick-panel-v1.js?v=20261111-gm1';
 import {createSessionTools} from './vtt-session-tools-v1.js?v=20261111-no-smoke1';
 import {createVisualEffects,EFFECTS} from './vtt-effects-v2.js?v=20261110-jutsus2';
@@ -16,7 +16,6 @@ const activeDoorEvents=new Set(),pendingDoorEvents=new Map();
 const $=id=>document.getElementById(id);
 let uid='',admin=false,room='',roomData=null,tokens=[],sheets=[],scenes=[],subs=[],dragToken=null,selected=null,sceneKey='',lastRoll='',busy=false,editingSceneId='',tokenUnsub=null,tokenSceneSubscribed=null,sheetsUnsub=null,subscriptionEpoch=0,worldCollectionsReady=false,portraitSubs=new Map(),vitalSubs=new Map(),lastVitals=new Map(),vitalTimer=null,masterUid='',lastStageRosterKey='__initial__',secretRollFeeds={self:[],gm:[],blind:[]},blindProcessing=new Set();
 const stage=$('stage'),canvas=$('map'),ctx=canvas.getContext('2d');
-let wallDockOpen=false;
 const visualEffects=createVisualEffects(stage);
 const combatDirector=createCombatDirector({
   panel:$('sc-combat-director'),strip:$('sc-turn-strip'),
@@ -102,8 +101,6 @@ const battle=createBattleSystems({
   },
   notify:message=>show(message),redraw:()=>draw(),getMap:()=>view.image,
   getCell:()=>view.cell,getZoom:()=>view.zoom,
-  onWallUiChange:()=>refreshStageWallTools(),
-  onVisionPreviewChange:()=>{refreshVisionInspector();renderTokens()},
   sendDoorRequest:async({sceneId,wallId,tokenId,state})=>{
     if(!room||!uid||!sceneId||roomData?.activeSceneId!==sceneId)
       throw Error('A cena mudou ou você saiu da mesa.');
@@ -112,99 +109,6 @@ const battle=createBattleSystems({
     });
   }
 });
-
-const wallHtmlEscape=value=>String(value??'').replace(/[&<>"']/g,char=>({
-  '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-}[char]));
-function refreshStageWallTools(){
-  const dock=$('sc-map-wall-dock'),menu=$('sc-map-wall-popover'),button=$('sc-map-walls-toggle');
-  if(!dock||!button||!menu)return;
-  const hasScene=!!roomData?.activeSceneId;
-  dock.hidden=!admin||!hasScene;
-  if(!admin||!hasScene){menu.hidden=true;return}
-  const state=battle.wallQuickState(),ready=!!view.image?.naturalWidth;
-  button.disabled=!ready;
-  button.classList.toggle('active',battle.isWallEditing());
-  button.textContent=battle.isWallEditing()?'▤ Editando paredes':'▤ Paredes';
-  button.setAttribute('aria-expanded',String(wallDockOpen));
-  menu.hidden=!wallDockOpen;
-  if(!wallDockOpen)return;
-  const chosen=state.selectedWall,kind=state.presets.find(p=>p.id===chosen?.type);
-  menu.innerHTML=
-    '<h3>Arquitetura do mapa</h3>'+
-    '<p>Clique numa linha para selecioná-la. Arraste suas pontas ou o segmento inteiro.</p>'+
-    '<div class="sc-map-wall-actions">'+
-    '<button type="button" data-sc-wall-action="select" class="'+(state.mode==='wall-select'?'active':'')+'">⌖ Selecionar</button>'+
-    '<button type="button" data-sc-wall-action="draw" class="'+(state.mode==='wall-draw'?'active':'')+'">✎ Desenhar</button>'+
-    '</div>'+
-    '<label class="sc-wall-mini-kind">Tipo da nova parede<select data-sc-wall-field="kind">'+
-      state.presets.map(p=>'<option value="'+p.id+'"'+(p.id===state.kind?' selected':'')+'>'+wallHtmlEscape(p.name)+'</option>').join('')+
-    '</select></label>'+
-    '<label class="sc-wall-mini-snap"><input type="checkbox" data-sc-wall-field="snap"'+(state.snap?' checked':'')+'> Alinhar à meia célula</label>'+
-    (chosen?
-      '<div class="sc-wall-mini-selection"><strong>Selecionada · '+wallHtmlEscape(kind?.name||'Parede')+'</strong>'+
-      '<label class="sc-wall-mini-state">Alterar tipo<select data-sc-wall-field="selected-type">'+
-      state.presets.map(p=>'<option value="'+p.id+'"'+(p.id===chosen.type?' selected':'')+'>'+wallHtmlEscape(p.name)+'</option>').join('')+
-      '</select></label>'+
-      ((chosen.type==='door'||chosen.type==='secret')?
-        '<label class="sc-wall-mini-state">Estado da porta<select data-sc-wall-field="door-state">'+
-        [['closed','Fechada'],['open','Aberta'],['locked','Trancada']].map(([id,name])=>
-          '<option value="'+id+'"'+(id===chosen.state?' selected':'')+'>'+name+'</option>').join('')+'</select></label>':'')+
-      '<button type="button" class="sc-wall-mini-delete" data-sc-wall-action="delete">✕ Apagar parede · Del</button></div>':
-      '<p>'+state.count+' parede(s) nesta cena. Selecione uma para editar ou excluir.</p>')+
-    '<div class="sc-map-wall-actions">'+
-    '<button type="button" data-sc-wall-action="off">✓ Concluir</button>'+
-    '<button type="button" data-sc-wall-action="panel">Abrir ajustes completos</button></div>';
-}
-function refreshVisionInspector(){
-  const bar=$('sc-vision-inspector');if(!bar)return;
-  const preview=battle.getVisionPreview(),enabled=admin&&!!preview;
-  bar.hidden=!enabled;
-  stage.classList.toggle('sc-player-vision',!!enabled);
-  if(enabled){
-    const detail=!preview.fogActive?'Névoa desativada nesta cena':
-      preview.visionActive?'Visão dinâmica e paredes':'Névoa manual da cena';
-    $('sc-vision-inspector-label').textContent=preview.name+' · '+detail;
-  }
-}
-$('sc-map-walls-toggle').onclick=()=>{
-  if(!admin||!roomData?.activeSceneId||!view.image?.naturalWidth)return;
-  wallDockOpen=!wallDockOpen;
-  if(wallDockOpen){
-    battle.clearVisionPreview();
-    if(measure.enabled)setMetricTool('off');
-    battle.setWallMode('select');
-  }else battle.setWallMode('off');
-  refreshStageWallTools();
-};
-$('sc-map-wall-dock').addEventListener('click',event=>{
-  const action=event.target.closest?.('[data-sc-wall-action]')?.dataset.scWallAction;
-  if(!action||!admin)return;
-  if(action==='select'||action==='draw'){
-    battle.clearVisionPreview();
-    if(measure.enabled)setMetricTool('off');
-    battle.setWallMode(action==='select'?'select':'draw',battle.wallQuickState().kind);
-  }else if(action==='delete')void battle.deleteSelectedWall();
-  else if(action==='off'){battle.setWallMode('off');wallDockOpen=false}
-  else if(action==='panel'){
-    battle.setWallMode('select');wallDockOpen=false;
-    if($('workspace').classList.contains('panel-hidden'))$('vtt-toggle-panel').click();
-    switchTab('campanha');
-    $('sc-fog-panel')?.scrollIntoView?.({block:'start',behavior:'smooth'});
-  }
-  refreshStageWallTools();
-});
-$('sc-map-wall-dock').addEventListener('change',event=>{
-  if(!admin)return;
-  const field=event.target?.dataset?.scWallField,value=event.target?.value;
-  if(field==='kind'){battle.setWallMode('draw',value)}
-  else if(field==='snap')battle.setWallSnap(event.target.checked);
-  else if(field==='selected-type')void battle.changeWall({type:value});
-  else if(field==='door-state')void battle.changeWall({state:value});
-  refreshStageWallTools();
-});
-$('sc-vision-stop').onclick=()=>{battle.clearVisionPreview();renderTokens()};
-
 function refreshCombatTargets(){
   const input=$('effect-target');if(!input)return;
   const value=input.value;
@@ -1119,9 +1023,6 @@ function watchTokens(sceneId){
   tokenUnsub=onSnapshot(source,snap=>{
     if(room!==watchingRoom)return;
     tokens=snap.docs.map(d=>({id:d.id,...d.data()}));
-    const preview=battle.getVisionPreview();
-    if(preview&&!visibleTokens().some(t=>t.id===preview.tokenId&&t.ownerUid===preview.uid))
-      battle.clearVisionPreview();
     renderTokens();draw();battle.render();combatDirector.refreshMapStatus();combatDirector.refresh();refreshCombatTargets();gmQuick.refresh();
   },err=>show('Permissão dos tokens: '+err.message));
 }
@@ -1230,12 +1131,6 @@ function renderTokens(){
         renderTokens();gmQuick.refresh();draw();
       };
       line.append(toggle);
-      if(t.ownerUid&&t.ownerUid!==uid){
-        const inspect=document.createElement('button');inspect.className='btn small';
-        inspect.textContent='◉ Visão';inspect.title='Ver a cena como este jogador';
-        inspect.onclick=()=>{if(battle.setVisionPreview(t)){selected=t.id;renderTokens()}};
-        line.append(inspect);
-      }
       const remove=document.createElement('button');remove.className='btn small';remove.textContent='Retirar';
       remove.title='Remove o token, não a ficha original';
       remove.onclick=async()=>{if(!confirm('Retirar o token de '+(t.name||'Shinobi')+'? A ficha original será mantida.'))return;try{await deleteDoc(tokenRef(t.id));if(selected===t.id)selected=null;show('Token retirado; ficha preservada.')}catch(e){show(e.message)}};
@@ -1322,14 +1217,13 @@ function loadMap(url){
   view.image=null;
   if(!safeUrl(url)){
     stage.classList.remove('scene-loading');view.cell=64;center();
-    refreshStageWallTools();updateMetricHud();return;
+    updateMetricHud();return;
   }
   stage.classList.add('scene-loading');
   const img=new Image();
   img.onload=()=>{
     if(sceneKey!==url)return;
     view.image=img;view.cell=automaticMapCell(img);center();
-    refreshStageWallTools();
     for(const event of pendingDoorEvents.values())void resolveDoorEvent(event,subscriptionEpoch);
     pendingDoorEvents.clear();
     updateMetricHud();
@@ -1338,7 +1232,7 @@ function loadMap(url){
   img.onerror=()=>{
     if(sceneKey!==url)return;
     stage.classList.remove('scene-loading');
-    $('scene-empty').hidden=false;refreshStageWallTools();updateMetricHud();
+    $('scene-empty').hidden=false;updateMetricHud();
     show('Não foi possível carregar a imagem da cena. Confira a URL HTTPS.');
   };
   img.src=url;draw();
@@ -1375,7 +1269,7 @@ function draw(){
       ctx.fillText((t.name||'Shinobi').slice(0,18),b.x,b.y-view.cell*.3);ctx.restore();
     }
     battle.drawTokenMarks(ctx,t,view,b);
-    if(selected===t.id&&!battle.isVisionPreview()){
+    if(selected===t.id){
       // Apenas a seleção tem indicadores discretos nos cantos, nunca um aro permanente.
       const pad=view.cell*.07,l=b.left-pad,r=b.left+b.width+pad,top=b.top-pad,bot=b.top+b.height+pad,d=view.cell*.14;
       ctx.save();ctx.strokeStyle='#f7dca5';ctx.lineWidth=2/view.zoom;ctx.beginPath();
@@ -1386,7 +1280,6 @@ function draw(){
       ctx.stroke();ctx.restore();
     }
   }
-  // A prévia desenha somente os marcadores de portas disponíveis ao jogador.
   battle.drawWalls(ctx,view);
   ctx.restore();
   drawRuler();
@@ -1471,7 +1364,7 @@ function reflectBattleMode(){
   stage.classList.toggle('sc-battle-walls',battle.isMode('wall-draw')||battle.isMode('wall-select'));
 }
 canvas.onpointerdown=e=>{if(e.button!==0)return;const p=point(e);
-  if(!battle.isVisionPreview()&&!measure.enabled&&!['target','reveal','brush-reveal','brush-cover','wall-draw','wall-select']
+  if(!measure.enabled&&!['target','reveal','brush-reveal','brush-cover','wall-draw','wall-select']
       .some(kind=>battle.isMode(kind))){
     const q=world(p.x,p.y);
     if(battle.doorHint(q.x,q.y)){
@@ -1489,7 +1382,7 @@ canvas.onpointerdown=e=>{if(e.button!==0)return;const p=point(e);
     }
   }if(measure.enabled){if(!view.image)return show('Ative e carregue um cenário antes de medir.');measure.start=world(p.x,p.y);measure.end=measure.start;measure.drag=true;measure.drawnPx=0;canvas.setPointerCapture(e.pointerId);updateMetricDrawStatus();draw();return}const t=hit(p.x,p.y);selected=t?.id||null;renderTokens();draw();if(t&&!canMove(t))return;dragToken={id:e.pointerId,start:p,ox:view.ox,oy:view.oy,t,original:t?{x:t.x,y:t.y}:null};canvas.setPointerCapture(e.pointerId);canvas.classList.add('dragging')};
 canvas.onpointermove=e=>{
-  if(!battle.isVisionPreview()&&!fogDrawing&&!dragToken&&!measure.enabled){
+  if(!fogDrawing&&!dragToken&&!measure.enabled){
     const p=point(e),q=world(p.x,p.y),hint=battle.doorHint(q.x,q.y);
     canvas.style.cursor=hint?'pointer':'';canvas.title=hint;
   }
@@ -1518,21 +1411,7 @@ const finish=async e=>{
     reflectBattleMode();
     return;
   }
-  if(measure.drag){measure.drag=false;updateMetricDrawStatus();draw();return}
-  if(!dragToken||dragToken.id!==e.pointerId)return;
-  const d=dragToken;dragToken=null;canvas.classList.remove('dragging');
-  const movedToken=!!d.t&&(d.t.x!==d.original.x||d.t.y!==d.original.y);
-  const movedPointer=Math.hypot(e.clientX-(canvas.getBoundingClientRect().left+d.start.x),
-    e.clientY-(canvas.getBoundingClientRect().top+d.start.y))>5;
-  if(admin&&!movedToken&&!movedPointer&&!battle.isWallEditing()){
-    if(d.t?.ownerUid&&d.t.ownerUid!==uid){
-      const prev=battle.getVisionPreview();
-      if(prev?.tokenId===d.t.id)battle.clearVisionPreview();
-      else battle.setVisionPreview(d.t);
-      renderTokens();
-    }else if(!d.t&&battle.clearVisionPreview())renderTokens();
-  }
-  if(movedToken&&room){try{await updateDoc(tokenRef(d.t.id),{x:d.t.x,y:d.t.y})}catch(err){d.t.x=d.original.x;d.t.y=d.original.y;draw();show('Movimento recusado: '+err.message)}}};
+  if(measure.drag){measure.drag=false;updateMetricDrawStatus();draw();return}if(!dragToken||dragToken.id!==e.pointerId)return;const d=dragToken;dragToken=null;canvas.classList.remove('dragging');if(d.t&&room&&(d.t.x!==d.original.x||d.t.y!==d.original.y)){try{await updateDoc(tokenRef(d.t.id),{x:d.t.x,y:d.t.y})}catch(err){d.t.x=d.original.x;d.t.y=d.original.y;draw();show('Movimento recusado: '+err.message)}}};
 canvas.onpointerup=finish;
 canvas.onpointercancel=e=>{
   if(fogDrawing){fogDrawing=false;battle.cancel();reflectBattleMode();return}
@@ -1761,23 +1640,14 @@ $('vtt-fullscreen').onclick=async()=>{
   }catch(e){show('Tela cheia indisponível: '+e.message)}
 };
 
-document.addEventListener('keydown',e=>{
-  if(e.target?.closest?.('input,textarea,select,[contenteditable]')||$('sheet-modal').classList.contains('open'))return;
-  if(e.key==='Delete'&&admin&&battle.isWallEditing()){
-    e.preventDefault();e.stopImmediatePropagation();
-    void battle.deleteSelectedWall().then(ok=>{if(!ok)show('Selecione uma parede para apagar com Del.')});
-    return;
-  }
-  const t=visibleTokens().find(x=>x.id===selected);if((e.key==='c'||e.key==='C')&&t&&canMove(t)){e.preventDefault();openSheet(t.fichaId,t.ownerUid)}if(e.key==='Delete'&&admin&&t){e.preventDefault();if(confirm('Retirar token '+t.name+'?'))deleteDoc(tokenRef(t.id)).catch(err=>show(err.message))}});
+document.addEventListener('keydown',e=>{if(e.target?.closest?.('input,textarea,select,[contenteditable]')||$('sheet-modal').classList.contains('open'))return;const t=visibleTokens().find(x=>x.id===selected);if((e.key==='c'||e.key==='C')&&t&&canMove(t)){e.preventDefault();openSheet(t.fichaId,t.ownerUid)}if(e.key==='Delete'&&admin&&t){e.preventDefault();if(confirm('Retirar token '+t.name+'?'))deleteDoc(tokenRef(t.id)).catch(err=>show(err.message))}});
 
 let nudgeInFlight=false;
 document.addEventListener('keydown',async e=>{
   if(e.target?.closest?.('input,textarea,select,[contenteditable]')||
      $('sheet-modal').classList.contains('open')||e.ctrlKey||e.metaKey||e.altKey)return;
   if(e.key==='Escape'){
-    if(battle.clearVisionPreview()){e.preventDefault();return}
-    if(battle.cancel()){wallDockOpen=false;refreshStageWallTools();e.preventDefault();return}
-    if(wallDockOpen){wallDockOpen=false;refreshStageWallTools();e.preventDefault();return}
+    if(battle.cancel()){e.preventDefault();return}
   }
   const key=e.key.toLowerCase();
   if(key==='i'&&admin&&!e.repeat){
@@ -1795,7 +1665,7 @@ document.addEventListener('keydown',async e=>{
   if(key==='-'){e.preventDefault();zoom(1/1.1);return}
   if(key==='0'){e.preventDefault();center();return}
   const steps={'ArrowLeft':[-1,0],'ArrowRight':[1,0],'ArrowUp':[0,-1],'ArrowDown':[0,1]};
-  if(!steps[e.key]||!room||measure.enabled||battle.isWallEditing()||battle.isVisionPreview()||battle.isMode('reveal')||battle.isMode('target'))return;
+  if(!steps[e.key]||!room||measure.enabled||battle.isMode('reveal')||battle.isMode('target'))return;
   const token=visibleTokens().find(t=>t.id===selected);
   if(!token||!canMove(token)||!battle.tokenVisible(token))return;
   e.preventDefault();
