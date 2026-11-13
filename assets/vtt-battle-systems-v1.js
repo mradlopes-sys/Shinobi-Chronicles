@@ -228,7 +228,11 @@ export function createBattleSystems({
   function render(){
     if(condPanel&&getAdmin())condPanel.innerHTML=conditionsHTML();
     if(jutsuPanel&&getAdmin())jutsuPanel.innerHTML=jutsuHTML();
-    if(fogPanel&&getAdmin()){fogPanel.innerHTML=fogHTML()+'<div id="sc-walls-container">'+walls.panelHTML()+'</div>';walls.bind()}
+    if(fogPanel&&getAdmin()){
+      fogPanel.innerHTML='<div class="sc-env-fog-content">'+fogHTML()+'</div>'+
+        '<div class="sc-env-walls-content"><div id="sc-walls-container">'+walls.panelHTML()+'</div></div>';
+      walls.bind();
+    }
     const active=!!getCurrentFog().enabled&&!!currentScene();
     if(fogIndicator){
       fogIndicator.hidden=!active;
@@ -319,7 +323,7 @@ export function createBattleSystems({
   }
   function toggleFogMode(){
     if(!getAdmin()||!currentScene())return false;
-    if(!getCurrentFog().enabled){notify('Ative a névoa na aba Campanha antes de revelar áreas.');return false}
+    if(!getCurrentFog().enabled){notify('Ative a névoa na aba Ambiente antes de revelar áreas.');return false}
     walls.cancel();mode=mode==='reveal'?'':'reveal';shapeStart=null;brushPoints=[];render();redraw();return true;
   }
   function cancel(){const active=!!mode||!!shapeStart||!!brushPoints.length||walls.active();if(!active)return false;mode='';shapeStart=null;shapeEnd=null;brushPoints=[];walls.cancel();render();redraw();return true}
@@ -524,5 +528,8 @@ export function createBattleSystems({
     pointerDown,pointerMove,pointerUp,cancel,toggleFogMode,isMode,shortStatus,
     getCurrentFog,applyRoundTick,getConditionList,setTokenHidden,toggleTokenHidden,isTokenHidden,isRevealed,
     drawWalls:(ctx,view)=>walls.draw(ctx,view),blocksMovement:walls.moveBlocked,
-    doorHint:walls.doorHint,toggleDoorAt:walls.toggleDoorAt};
+    doorHint:walls.doorHint,toggleDoorAt:walls.toggleDoorAt,
+    enterWallEdit:()=>walls.selectMode(true),exitWallEdit:()=>walls.selectMode(false),
+    isWallEditing:()=>walls.active(),isWallSelected:walls.isSelected,
+    deleteSelectedWall:walls.deleteSelected,wallMode:walls.wallMode};
 }
