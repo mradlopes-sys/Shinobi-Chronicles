@@ -33,19 +33,3 @@ O jogador **não** recebe autorização para editar `theatre.wallsMap` nem para 
 
 ## Limitação de segurança
 A névoa, as paredes e o bloqueio de movimento são principalmente controles de interface. O navegador ainda recebe a imagem/URL do mapa e dados da cena compartilhada; portanto, isso **não é uma barreira antifraude** contra inspeção de rede ou manipulação deliberada do cliente. Para sigilo real, servir mapas recortados por jogador e validar movimento com lógica confiável no servidor exige uma arquitetura adicional.
-
-
-## Edição rápida no próprio mapa (novembro de 2026)
-- O mestre encontra o botão **▤ Paredes** no canto inferior direito do mapa ativo, mesmo com o painel lateral fechado.
-- Ao clicar, entra no modo **Selecionar**. Linhas existentes ficam visíveis só para o mestre. Clique no traço e arraste uma ponta para ajustá-la, ou arraste o meio para mover o segmento inteiro.
-- Use o menu **Tipo da nova parede → Desenhar** para traçar qualquer um dos tipos: sólida, janela, porta, secreta, invisível, ilusória ou terreno.
-- Com uma parede selecionada, pressione **Delete/Del** ou clique em **Apagar parede** no menu flutuante. Dentro do modo de paredes, esse atalho **nunca** remove um token.
-- O menu flutuante permite alterar o tipo e o estado de uma porta sem voltar para a aba Campanha. **Esc** encerra a ferramenta e **Concluir** retorna ao modo normal.
-
-## Inspeção de visão do jogador
-- Fora do modo de edição, o mestre clica sobre um token pertencente a outro usuário (sem arrastá-lo). O mapa entra na **Visão do jogador**.
-- A prévia respeita a névoa, as paredes, os tokens ocultos e o alcance. Se o jogador controla vários tokens, a área exibida combina a visão dos tokens dele, como acontece na interface dos participantes.
-- Um segundo clique no mesmo token, um clique na área vazia, **Esc** ou o botão **✕ Sair** devolve a visão completa do mestre.
-- A opção **◉ Visão** também aparece na lista de tokens para os personagens vinculados a jogadores.
-- Quando a névoa está desativada, a prévia mostra o mapa inteiro, como a tela real do jogador; o indicador de inspeção avisa que não há restrição ativa.
-- A inspeção é **local ao mestre**: não altera o documento da sala nem impõe visão a outros usuários.
