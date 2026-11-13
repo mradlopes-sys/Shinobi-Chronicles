@@ -625,7 +625,7 @@ function closeActorMenu(){
   element.remove();
   if(opener?.isConnected&&document.activeElement===document.body)opener.focus({preventScroll:true});
 }
-function openActorMenu(sheet,x,y,opener=null){
+function openActorMenu(sheet,x,y,opener=null,token=null){
   if(!admin||!room)return;
   closeActorMenu();
   const menu=document.createElement('div');menu.className='actor-context-menu';menu.setAttribute('role','menu');
@@ -663,6 +663,32 @@ function openActorMenu(sheet,x,y,opener=null){
       show(ok?'Personagem adicionado ao Teatro.':'Não foi possível adicionar. Confira os retratos da ficha e o limite do palco.');
       renderSheets();
     });
+  }
+  // Somente tokens que existem no mapa oferecem uma prévia do campo de visão.
+  // Não altera o Firestore e não ativa a névoa nem a visão automaticamente.
+  if(token){
+    const inspected=battle.getVisionPreview()?.id===token.id;
+    const previewAction=action(
+      inspected?'Voltar à visão do mestre':'Ver visão do personagem',
+      '◉',
+      ()=>{
+        if(inspected){
+          battle.clearVisionPreview();
+        }else{
+          if(!battle.visionDynamicEnabled()){
+            show('Ative Visão dinâmica em Ambiente → Paredes para inspecionar o personagem.');
+            return;
+          }
+          const current=visibleTokens().find(t=>t.id===token.id);
+          if(!current||!battle.setVisionPreview(current.id)){
+            show('Este token não está disponível para inspeção na cena atual.');
+            return;
+          }
+        }
+        updateStageToolStatus();renderTokens();draw();
+      }
+    );
+    previewAction.classList.add('actor-menu-vision');
   }
   // Ações iguais para o painel de atores e para o clique direito no token.
   if(combatDirector.hasEntry(sheet.id)){
@@ -1179,7 +1205,7 @@ function renderTokens(){
         const sheet=sheets.find(f=>f.id===t.fichaId);
         if(!sheet)return show('Ficha vinculada indisponível.');
         const rect=openMenu.getBoundingClientRect();
-        openActorMenu(sheet,rect.left,rect.bottom+4,openMenu);
+        openActorMenu(sheet,rect.left,rect.bottom+4,openMenu,t);
       };
       line.append(openMenu);
       const original=sheets.find(f=>f.id===t.fichaId);
@@ -1503,7 +1529,7 @@ canvas.oncontextmenu=e=>{
   selected=token.id;renderTokens();draw();
   const sheet=sheets.find(f=>f.id===token.fichaId);
   if(!sheet){show('Token sem ficha disponível: não é possível usar Teatro ou iniciativa.');return}
-  openActorMenu(sheet,e.clientX,e.clientY,canvas);
+  openActorMenu(sheet,e.clientX,e.clientY,canvas,token);
 };
 // Arrastar as fichas da iniciativa e da biblioteca utiliza o mesmo formato.
 const canPlaceToken=()=>admin&&!!room&&!!roomData?.activeSceneId;
