@@ -54,7 +54,7 @@ export function createWallTools({
   getAdmin,getUid,getSceneId,getRoom,getMap,getCell,getZoom,getTokens,isHidden,
   saveFields,notify,redraw,onModeActivated,onModeChanged,sendDoorRequest,ensureFog
 }){
-  let data={},mode='',kind='solid',selected='',pending=null,busy=false,snap=true,revision=0,doorBusy=false,lastDoorAction=0,history=[];
+  let data={},mode='',kind='solid',selected='',pending=null,busy=false,snap=true,revision=0,doorBusy=false,lastDoorAction=0,history=[],advancedOpen=false;
   const current=()=>getSceneId()||'';
   const scene=()=>data[current()]||{walls:[],vision:false,range:10};
   const img=()=>getMap();
@@ -115,13 +115,18 @@ export function createWallTools({
     const cfg=scene(),chosen=cfg.walls.find(w=>w.id===selected);
     return '<section class="sc-wall-panel" aria-label="Camada de paredes">'+
       '<div class="sc-battle-head"><small>CAMADA DO MESTRE · VISÃO E COLISÃO</small><h3>Arquitetura da cena</h3>'+
-      '<p>Arraste para criar segmentos; selecione uma linha e arraste suas pontas para corrigir o traçado. Jogadores não veem as linhas.</p></div>'+
-      '<div class="sc-wall-presets">'+WALL_PRESETS.map(x=>
+      '<p>Selecione uma linha para editar. Arraste as pontas para redimensionar ou o meio para mover a parede. As linhas são invisíveis para os jogadores.</p></div>'+
+      '<div class="sc-wall-presets main">'+WALL_PRESETS.filter(x=>['solid','door','window'].includes(x.id)).map(x=>
         '<button type="button" data-wall-kind="'+x.id+'" class="sc-wall-preset'+(mode==='wall-draw'&&kind===x.id?' active':'')+
         '" title="'+esc(x.name)+'"><span style="--wall-color:'+x.color+'"></span>'+esc(x.name)+'</button>').join('')+'</div>'+
+      '<details id="sc-wall-advanced" class="sc-wall-advanced"'+(advancedOpen?' open':'')+'>'+
+        '<summary>Mais tipos de parede <span aria-hidden="true">⌄</span></summary>'+
+        '<div class="sc-wall-presets">'+WALL_PRESETS.filter(x=>!['solid','door','window'].includes(x.id)).map(x=>
+        '<button type="button" data-wall-kind="'+x.id+'" class="sc-wall-preset'+(mode==='wall-draw'&&kind===x.id?' active':'')+
+        '" title="'+esc(x.name)+'"><span style="--wall-color:'+x.color+'"></span>'+esc(x.name)+'</button>').join('')+'</div></details>'+
       '<div class="sc-wall-tools"><button id="sc-wall-select" type="button" class="sc-battle-secondary'+(mode==='wall-select'?' active':'')+
         '">⌖ Selecionar / editar</button><button id="sc-wall-stop" type="button" class="sc-battle-secondary"'+(!isEditing()?' disabled':'')+
-        '>✓ Finalizar desenho</button></div>'+
+        '>✓ Sair da edição</button></div>'+
       '<label class="sc-wall-toggle"><input type="checkbox" id="sc-wall-snap"'+(snap?' checked':'')+'> Alinhar pontas à meia célula</label>'+
       '<div class="sc-wall-options"><label><input type="checkbox" id="sc-wall-vision"'+(cfg.vision?' checked':'')+
         '> Visão automática dos personagens</label>'+
@@ -148,6 +153,8 @@ export function createWallTools({
     const $=id=>document.getElementById(id);
     const bindChange=(id,fn)=>{const el=$(id);if(el)el.onchange=fn};
     const bindClick=(id,fn)=>{const el=$(id);if(el)el.onclick=fn};
+    const advanced=document.getElementById('sc-wall-advanced');
+    if(advanced)advanced.ontoggle=()=>{advancedOpen=advanced.open};
     for(const button of document.querySelectorAll('[data-wall-kind]'))button.onclick=()=>{
       kind=button.dataset.wallKind;mode='wall-draw';pending=null;selected='';
       onModeActivated();onModeChanged?.();redraw();refreshUI();
