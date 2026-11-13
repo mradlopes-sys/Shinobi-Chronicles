@@ -52,7 +52,7 @@ function normalizeScene(value){
 }
 export function createWallTools({
   getAdmin,getUid,getSceneId,getRoom,getMap,getCell,getZoom,getTokens,isHidden,
-  saveFields,notify,redraw,onModeActivated,sendDoorRequest,ensureFog
+  saveFields,notify,redraw,onModeActivated,onModeChanged,sendDoorRequest,ensureFog
 }){
   let data={},mode='',kind='solid',selected='',pending=null,busy=false,snap=true,revision=0,doorBusy=false,lastDoorAction=0;
   const current=()=>getSceneId()||'';
@@ -136,7 +136,7 @@ export function createWallTools({
     const bindClick=(id,fn)=>{const el=$(id);if(el)el.onclick=fn};
     for(const button of document.querySelectorAll('[data-wall-kind]'))button.onclick=()=>{
       kind=button.dataset.wallKind;mode='wall-draw';pending=null;selected='';
-      onModeActivated();redraw();refreshUI();
+      onModeActivated();onModeChanged?.();redraw();refreshUI();
     };
     bindClick('sc-wall-select',()=>{selectMode(mode!=='wall-select')});
     bindClick('sc-wall-stop',()=>{cancel();refreshUI()});
@@ -184,7 +184,7 @@ export function createWallTools({
     mode=enabled?'wall-select':'';pending=null;
     if(!enabled)selected='';
     if(enabled)onModeActivated?.();
-    refreshUI();redraw();return true;
+    refreshUI();onModeChanged?.();redraw();return true;
   }
   const isSelected=()=>isEditing()&&!!selected;
   const wallMode=()=>mode;
@@ -253,7 +253,7 @@ export function createWallTools({
   }
   function cancel(){
     if(!isEditing()&&!pending)return false;
-    mode='';pending=null;selected='';redraw();return true;
+    mode='';pending=null;selected='';onModeChanged?.();redraw();return true;
   }
   function active(){return isEditing()}
   const mapSegments=()=>{
