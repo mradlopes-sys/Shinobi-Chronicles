@@ -432,36 +432,54 @@ export function createWallTools({
       return rayDistance(eye.x,eye.y,dx/dist,dy/dist,dist,nearby,cell)>=dist-.5;
     });
   }
-  function cutVision(maskCtx,cw,ch,w,h,viewerTokenId=''){
-    if(!visionActive())return;
-    const cell=Math.max(1,Number(getCell())||64);
+  // Cache da geometria: névoa atual e memória de exploração reutilizam os
+  // mesmos raios no quadro, sem calcular milhares de interseções duas vezes.
+  const shapeCache=new Map();
+  function visionShapes(viewerTokenId=''){
+    if(!visionActive())return[];
+    const {w,h}=pixels(),cell=Math.max(1,Number(getCell())||64);
+    if(!w||!h)return[];
+    const key=signature(viewerTokenId)+':'+w+'x'+h+':'+cell;
+    if(shapeCache.has(key))return shapeCache.get(key);
     const radius=scene().range*cell,segments=mapSegments(),eyes=ownedEyes(viewerTokenId);
-    if(!eyes.length)return;
-    maskCtx.save();
-    maskCtx.globalCompositeOperation='destination-out';
-    maskCtx.fillStyle='#fff';
-    maskCtx.setTransform(cw/w,0,0,ch/h,0,0);
+    const shapes=[];
     for(const eye of eyes){
       const nearby=segments.filter(w=>distSeg(eye.x,eye.y,w.x1,w.y1,w.x2,w.y2)<=radius+cell);
       const angles=[];
-      const sample=72;
+      const sample=96;
       for(let i=0;i<sample;i++)angles.push(i*Math.PI*2/sample);
       for(const wall of nearby){
         for(const p of [[wall.x1,wall.y1],[wall.x2,wall.y2]]){
           const angle=Math.atan2(p[1]-eye.y,p[0]-eye.x);
           const full=Math.PI*2;
-          const angleNorm=v=>((v%full)+full)%full;
-          angles.push(angleNorm(angle-.00014),angleNorm(angle),angleNorm(angle+.00014));
+          const normalized=v=>((v%full)+full)%full;
+          angles.push(normalized(angle-.00014),normalized(angle),normalized(angle+.00014));
         }
       }
       angles.sort((a,b)=>a-b);
-      maskCtx.beginPath();
-      for(let i=0;i<angles.length;i++){
-        const angle=angles[i],dx=Math.cos(angle),dy=Math.sin(angle);
+      const shape=angles.map(angle=>{
+        const dx=Math.cos(angle),dy=Math.sin(angle);
         const dist=rayDistance(eye.x,eye.y,dx,dy,radius,nearby,cell);
-        const x=eye.x+dx*dist,y=eye.y+dy*dist;
-        if(i===0)maskCtx.moveTo(x,y);
-        else maskCtx.lineTo(x,y);
+        return {x:eye.x+dx*dist,y:eye.y+dy*dist};
+      });
+      if(shape.length>2)shapes.push(shape);
+    }
+    shapeCache.set(key,shapes);
+    if(shapeCache.size>8)shapeCache.delete(shapeCache.keys().next().value);
+    return shapes;
+  }
+  function cutVision(maskCtx,cw,ch,w,h,viewerTokenId=''){
+    const shapes=visionShapes(viewerTokenId);
+    if(!shapes.length)return;
+    maskCtx.save();
+    maskCtx.globalCompositeOperation='destination-out';
+    maskCtx.fillStyle='#fff';
+    maskCtx.setTransform(cw/w,0,0,ch/h,0,0);
+    for(const shape of shapes){
+      maskCtx.beginPath();
+      for(let i=0;i<shape.length;i++){
+        if(i===0)maskCtx.moveTo(shape[i].x,shape[i].y);
+        else maskCtx.lineTo(shape[i].x,shape[i].y);
       }
       maskCtx.closePath();maskCtx.fill();
     }
