@@ -342,6 +342,19 @@ html[data-appearance] #sc-open-environment strong{
 html[data-appearance] #sc-open-environment small{
   font:500 10px 'DM Sans',sans-serif;color:var(--vtt-fade)
 }
+/* Destacar a visão no menu nativo do clique direito, sem criar janelas extras. */
+html[data-appearance] .actor-context-menu .actor-menu-action.actor-menu-vision{
+  color:var(--vtt-ink);
+  background:var(--vtt-blend);
+  border-left:2px solid var(--vtt-pigment);
+  font-weight:700;
+}
+html[data-appearance] .actor-context-menu .actor-menu-action.actor-menu-vision .actor-menu-icon{
+  color:var(--vtt-display);
+}
+html[data-appearance] .actor-context-menu .actor-menu-action.actor-menu-vision:hover{
+  background:var(--vtt-blend-strong);
+}
 /* Keyboard focus and responsive workspaces. No chat height overrides here. */
 html[data-appearance] :is(.sc-environment-switch button,.sc-wall-preset,#sc-open-environment,.rail button):focus-visible{
   outline:2px solid var(--vtt-display);outline-offset:2px
