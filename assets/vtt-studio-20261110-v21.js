@@ -1695,6 +1695,11 @@ $('vtt-fullscreen').onclick=async()=>{
 document.addEventListener('keydown',e=>{
   if(e.target?.closest?.('input,textarea,select,[contenteditable]')||
      $('sheet-modal').classList.contains('open'))return;
+  if(admin&&battle.isWallEditing()&&(e.ctrlKey||e.metaKey)&&
+     e.key.toLowerCase()==='z'&&!e.shiftKey){
+    e.preventDefault();e.stopImmediatePropagation();
+    void battle.undoWallEdit();return;
+  }
   if(e.key==='Delete'&&admin&&battle.isWallEditing()){
     e.preventDefault();e.stopImmediatePropagation();
     if(battle.isWallSelected())void battle.deleteSelectedWall();
