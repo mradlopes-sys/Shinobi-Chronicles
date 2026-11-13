@@ -464,6 +464,7 @@ function setEnvironmentView(which,activate=true){
   });
   if(activeEnvironmentView==='walls'&&activate){
     if(measure.enabled)setMetricTool('off');
+    battle.clearVisionPreview();
     battle.enterWallEdit();
   }else battle.cancel();
   updateStageToolStatus();
@@ -1054,6 +1055,10 @@ function watchTokens(sceneId){
   tokenUnsub=onSnapshot(source,snap=>{
     if(room!==watchingRoom)return;
     tokens=snap.docs.map(d=>({id:d.id,...d.data()}));
+    const observed=battle.getVisionPreview();
+    if(observed&&!visibleTokens().some(t=>t.id===observed.id)){
+      battle.clearVisionPreview();updateStageToolStatus();
+    }
     renderTokens();draw();battle.render();combatDirector.refreshMapStatus();combatDirector.refresh();refreshCombatTargets();gmQuick.refresh();
   },err=>show('Permissão dos tokens: '+err.message));
 }
@@ -1136,7 +1141,7 @@ function renderScenes(){
 
 function renderTokens(){
   const root=$('token-list');root.replaceChildren();
-  const list=visibleTokens().filter(t=>battle.tokenVisible(t));
+  const list=visibleTokens().filter(t=>admin||battle.tokenVisible(t));
   $('tokens-count').textContent=String(list.length);
   const h=document.createElement('h3');h.textContent='Tokens da cena · '+list.length;root.append(h);
   if(!list.length){const p=document.createElement('p');p.textContent=admin?'Arraste uma ficha da pasta Jogadores ou NPCs até o mapa para colocar um token.':'O mestre ainda não colocou personagens nesta cena.';root.append(p);return}
@@ -1392,7 +1397,9 @@ function requestDraw(){
 }
 function updateStageToolStatus(){
   const label=$('sc-tool-active-label'),exit=$('sc-tool-exit');if(!label||!exit)return;
-  const text=battle.isMode('wall-select')?'Editando paredes':
+  const preview=battle.getVisionPreview();
+  const text=preview?'Visão · '+String(preview.name||'Shinobi').slice(0,24):
+    battle.isMode('wall-select')?'Editando paredes':
     battle.isMode('wall-draw')?'Desenhando paredes':
     battle.isMode('reveal')?'Revelando área':
     battle.isMode('brush-reveal')?'Pincel revelar':
@@ -1402,6 +1409,7 @@ function updateStageToolStatus(){
   label.hidden=!text;exit.hidden=!text;label.textContent=text;
 }
 $('sc-tool-exit').onclick=()=>{
+  if(battle.clearVisionPreview()){updateStageToolStatus();renderTokens();return}
   if(measure.enabled)setMetricTool('off');
   battle.cancel();updateStageToolStatus();
 };
@@ -1415,7 +1423,7 @@ function reflectBattleMode(){
   updateStageToolStatus();
 }
 canvas.onpointerdown=e=>{if(e.button!==0)return;const p=point(e);
-  if(!measure.enabled&&!['target','reveal','brush-reveal','brush-cover','wall-draw','wall-select']
+  if(!battle.getVisionPreview()&&!measure.enabled&&!['target','reveal','brush-reveal','brush-cover','wall-draw','wall-select']
       .some(kind=>battle.isMode(kind))){
     const q=world(p.x,p.y);
     if(battle.doorHint(q.x,q.y)){
@@ -1434,7 +1442,7 @@ canvas.onpointerdown=e=>{if(e.button!==0)return;const p=point(e);
   }if(measure.enabled){if(!view.image)return show('Ative e carregue um cenário antes de medir.');measure.start=world(p.x,p.y);measure.end=measure.start;measure.drag=true;measure.drawnPx=0;canvas.setPointerCapture(e.pointerId);updateMetricDrawStatus();draw();return}const t=hit(p.x,p.y);selected=t?.id||null;renderTokens();draw();if(t&&!canMove(t))return;dragToken={id:e.pointerId,start:p,ox:view.ox,oy:view.oy,t,original:t?{x:t.x,y:t.y}:null};canvas.setPointerCapture(e.pointerId);canvas.classList.add('dragging')};
 canvas.onpointermove=e=>{
   if(!fogDrawing&&!dragToken&&!measure.enabled){
-    const p=point(e),q=world(p.x,p.y),hint=battle.doorHint(q.x,q.y);
+    const p=point(e),q=world(p.x,p.y),hint=battle.getVisionPreview()?'':battle.doorHint(q.x,q.y);
     canvas.style.cursor=hint?'pointer':'';canvas.title=hint;
   }
   if(fogDrawing){
@@ -1462,7 +1470,24 @@ const finish=async e=>{
     reflectBattleMode();
     return;
   }
-  if(measure.drag){measure.drag=false;updateMetricDrawStatus();draw();return}if(!dragToken||dragToken.id!==e.pointerId)return;const d=dragToken;dragToken=null;canvas.classList.remove('dragging');if(d.t&&room&&(d.t.x!==d.original.x||d.t.y!==d.original.y)){try{await updateDoc(tokenRef(d.t.id),{x:d.t.x,y:d.t.y})}catch(err){d.t.x=d.original.x;d.t.y=d.original.y;draw();show('Movimento recusado: '+err.message)}}};
+  if(measure.drag){measure.drag=false;updateMetricDrawStatus();draw();return}
+  if(!dragToken||dragToken.id!==e.pointerId)return;
+  const d=dragToken;dragToken=null;canvas.classList.remove('dragging');
+  const moved=!!d.t&&(d.t.x!==d.original.x||d.t.y!==d.original.y);
+  const p=point(e),distance=Math.hypot(p.x-d.start.x,p.y-d.start.y);
+  // Apenas o mestre, com visão dinâmica explicitamente ligada, inspeciona a
+  // perspectiva ao clicar sem arrastar. Nenhuma névoa é salva ou ativada.
+  if(admin&&battle.visionDynamicEnabled()&&!battle.isWallEditing()&&
+     !moved&&distance<=5){
+    if(d.t)battle.setVisionPreview(d.t.id);
+    else battle.clearVisionPreview();
+    updateStageToolStatus();renderTokens();draw();
+  }
+  if(moved&&room){
+    try{await updateDoc(tokenRef(d.t.id),{x:d.t.x,y:d.t.y})}
+    catch(err){d.t.x=d.original.x;d.t.y=d.original.y;draw();show('Movimento recusado: '+err.message)}
+  }
+};
 canvas.onpointerup=finish;
 canvas.onpointercancel=e=>{
   if(fogDrawing){fogDrawing=false;battle.cancel();reflectBattleMode();return}
@@ -1721,6 +1746,7 @@ document.addEventListener('keydown',async e=>{
   if(e.target?.closest?.('input,textarea,select,[contenteditable]')||
      $('sheet-modal').classList.contains('open')||e.ctrlKey||e.metaKey||e.altKey)return;
   if(e.key==='Escape'){
+    if(battle.clearVisionPreview()){updateStageToolStatus();renderTokens();e.preventDefault();return}
     if(battle.cancel()){updateStageToolStatus();e.preventDefault();return}
   }
   const key=e.key.toLowerCase();
