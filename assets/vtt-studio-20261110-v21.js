@@ -1598,6 +1598,7 @@ $('zoom-in').onclick=()=>zoom(1.2);$('zoom-out').onclick=()=>zoom(.8);$('reset')
   const calibrating=mode==='calibrate',enabled=mode==='ruler'||calibrating;
   if(enabled&&!view.image){show('Abra um mapa para medir distâncias.');return}
   if(calibrating&&!admin){show('Só o mestre pode calibrar a escala.');return}
+  if(enabled)battle.cancel();
   measure.enabled=enabled;measure.calibrating=calibrating;measure.drag=false;
   measure.start=null;measure.end=null;measure.drawnPx=0;
   $('metric-known-distance').value='';
@@ -1607,7 +1608,7 @@ $('zoom-in').onclick=()=>zoom(1.2);$('zoom-out').onclick=()=>zoom(.8);$('reset')
   $('tool-calibrate').setAttribute('aria-pressed',String(calibrating));
   $('metric-card').hidden=!calibrating;
   canvas.style.cursor=enabled?'crosshair':'';
-  updateMetricDrawStatus();draw();
+  updateMetricDrawStatus();draw();updateStageToolStatus();
   if(calibrating)show('Calibração: arraste a régua sobre uma distância conhecida.');
   else if(enabled)show('Régua em metros: arraste entre dois pontos. Pressione R para sair.');
 }
