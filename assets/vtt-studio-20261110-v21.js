@@ -625,6 +625,9 @@ function closeActorMenu(){
   element.remove();
   if(opener?.isConnected&&document.activeElement===document.body)opener.focus({preventScroll:true});
 }
+// Escala visual individual do token. Movimentação, colisões e visão continuam
+// usando coordenadas do mapa, nunca o tamanho da ilustração.
+const tokenScaleOf=t=>Math.max(.3,Math.min(1.8,Number(t?.tokenScale)||1));
 function openActorMenu(sheet,x,y,opener=null,token=null){
   if(!admin||!room)return;
   closeActorMenu();
@@ -689,6 +692,64 @@ function openActorMenu(sheet,x,y,opener=null,token=null){
       }
     );
     previewAction.classList.add('actor-menu-vision');
+    // Escala por token: feedback instantâneo e uma única gravação ao soltar o
+    // controle, evitando atualizar o Firebase em cada quadro de arraste.
+    const resize=document.createElement('div');
+    resize.className='sc-token-scale-editor';
+    resize.setAttribute('aria-label','Tamanho do token');
+    const header=document.createElement('div');header.className='sc-token-scale-head';
+    const label=document.createElement('strong');label.textContent='Tamanho do token';
+    const amount=document.createElement('output');amount.textContent=Math.round(tokenScaleOf(token)*100)+'%';
+    header.append(label,amount);
+    const controls=document.createElement('div');controls.className='sc-token-scale-controls';
+    const smaller=document.createElement('button');smaller.type='button';smaller.textContent='−';
+    smaller.title='Diminuir token';smaller.setAttribute('aria-label','Diminuir token');
+    const range=document.createElement('input');range.type='range';
+    range.min='30';range.max='180';range.step='5';range.value=String(Math.round(tokenScaleOf(token)*100));
+    range.setAttribute('aria-label','Tamanho do token em porcentagem');
+    const larger=document.createElement('button');larger.type='button';larger.textContent='+';
+    larger.title='Aumentar token';larger.setAttribute('aria-label','Aumentar token');
+    const reset=document.createElement('button');reset.type='button';reset.className='sc-token-scale-reset';
+    reset.textContent='100%';reset.title='Restaurar tamanho original';
+    controls.append(smaller,range,larger,reset);
+    resize.append(header,controls);
+    menu.append(resize);
+    let committed=tokenScaleOf(token),saving=false;
+    const previewScale=percent=>{
+      const size=Math.max(30,Math.min(180,Math.round(Number(percent)/5)*5));
+      const live=visibleTokens().find(t=>t.id===token.id);
+      if(!live)return;
+      live.tokenScale=size/100;
+      range.value=String(size);amount.textContent=size+'%';
+      draw();
+    };
+    const commitScale=async()=>{
+      if(saving||!room||!admin)return;
+      const current=visibleTokens().find(t=>t.id===token.id);
+      if(!current)return;
+      const next=tokenScaleOf(current);
+      if(next===committed)return;
+      saving=true;
+      smaller.disabled=true;larger.disabled=true;reset.disabled=true;range.disabled=true;
+      try{
+        await updateDoc(tokenRef(token.id),{tokenScale:next});
+        committed=next;
+      }catch(error){
+        current.tokenScale=committed;
+        range.value=String(Math.round(committed*100));
+        amount.textContent=range.value+'%';
+        draw();
+        show('Não foi possível salvar o tamanho do token: '+error.message);
+      }finally{
+        saving=false;
+        smaller.disabled=false;larger.disabled=false;reset.disabled=false;range.disabled=false;
+      }
+    };
+    range.oninput=()=>previewScale(range.value);
+    range.onchange=()=>void commitScale();
+    smaller.onclick=()=>{if(saving)return;previewScale(Number(range.value)-5);void commitScale()};
+    larger.onclick=()=>{if(saving)return;previewScale(Number(range.value)+5);void commitScale()};
+    reset.onclick=()=>{if(saving)return;previewScale(100);void commitScale()};
   }
   // Ações iguais para o painel de atores e para o clique direito no token.
   if(combatDirector.hasEntry(sheet.id)){
@@ -1307,6 +1368,8 @@ function spriteBounds(t){
   const ratio=image?.naturalWidth&&image?.naturalHeight?Math.max(.16,Math.min(4,image.naturalWidth/image.naturalHeight)):.67;
   let height=view.cell*1.65,width=height*ratio;
   if(width>view.cell*1.7){width=view.cell*1.7;height=width/ratio}
+  const size=tokenScaleOf(t);
+  width*=size;height*=size;
   const x=(t.x+.5)*view.cell,y=(t.y+1)*view.cell;
   return {image,left:x-width/2,top:y-height,width,height,x,y};
 }
