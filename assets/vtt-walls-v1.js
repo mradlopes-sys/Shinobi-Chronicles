@@ -52,7 +52,7 @@ function normalizeScene(value){
 }
 export function createWallTools({
   getAdmin,getUid,getSceneId,getRoom,getMap,getCell,getZoom,getTokens,isHidden,
-  saveFields,notify,redraw,onModeActivated,sendDoorRequest,ensureFog,onUiChange
+  saveFields,notify,redraw,onModeActivated,sendDoorRequest,ensureFog
 }){
   let data={},mode='',kind='solid',selected='',pending=null,busy=false,snap=true,revision=0,doorBusy=false,lastDoorAction=0;
   const current=()=>getSceneId()||'';
@@ -62,7 +62,6 @@ export function createWallTools({
   const isDoor=w=>w?.type==='door'||w?.type==='secret';
   const typeName=t=>WALL_PRESETS.find(x=>x.id===t)?.name||'Parede';
   const isEditing=()=>mode==='wall-select'||mode==='wall-draw';
-  const refreshQuick=()=>onUiChange?.();
   let lastScene='';
   function setData(raw){
     if(current()!==lastScene){lastScene=current();mode='';pending=null;selected=''}
@@ -74,7 +73,6 @@ export function createWallTools({
       data=next;revision++;
       if(selected&&!scene().walls.some(w=>w.id===selected))selected='';
     }
-    refreshQuick();
   }
   const wPix=(wall,w,h)=>({id:wall.id,type:wall.type,state:wall.state,dir:wall.dir,
     x1:wall.x1*w,y1:wall.y1*h,x2:wall.x2*w,y2:wall.y2*h});
@@ -96,7 +94,7 @@ export function createWallTools({
     try{
       await saveFields({'theatre.wallsMap':nextData});return true;
     }catch(error){data=before;revision++;notify('Não foi possível salvar paredes: '+error.message);return false}
-    finally{busy=false;redraw();refreshQuick()}
+    finally{busy=false;redraw()}
   }
   function panelHTML(){
     if(!getAdmin()||!current())return '';
@@ -138,11 +136,11 @@ export function createWallTools({
     const bindClick=(id,fn)=>{const el=$(id);if(el)el.onclick=fn};
     for(const button of document.querySelectorAll('[data-wall-kind]'))button.onclick=()=>{
       kind=button.dataset.wallKind;mode='wall-draw';pending=null;selected='';
-      onModeActivated();redraw();refreshUI();refreshQuick();
+      onModeActivated();redraw();refreshUI();
     };
-    bindClick('sc-wall-select',()=>{setQuickMode(mode==='wall-select'?'off':'select')});
+    bindClick('sc-wall-select',()=>{mode=mode==='wall-select'?'':'wall-select';pending=null;onModeActivated();refreshUI();redraw()});
     bindClick('sc-wall-stop',()=>{cancel();refreshUI()});
-    bindChange('sc-wall-snap',e=>{snap=e.target.checked;refreshQuick()});
+    bindChange('sc-wall-snap',e=>{snap=e.target.checked});
     bindChange('sc-wall-vision',async e=>{
       const enabled=e.target.checked;
       const ok=await saveScene({...scene(),vision:enabled});
@@ -166,8 +164,8 @@ export function createWallTools({
   }
   function refreshUI(){
     const root=document.getElementById('sc-walls-container');
-    if(root){root.innerHTML=panelHTML();bind()}
-    refreshQuick();
+    if(!root)return;
+    root.innerHTML=panelHTML();bind();
   }
   async function update(fields){if(await saveScene({...scene(),...fields}))refreshUI()}
   async function changeSelected(fields){
@@ -176,30 +174,9 @@ export function createWallTools({
     if(await saveScene({...scene(),walls:a}))refreshUI();
   }
   async function removeSelected(){
-    if(!getAdmin()||!isEditing()||!selected)return false;
-    const id=selected,next=scene().walls.filter(w=>w.id!==id);
-    if(await saveScene({...scene(),walls:next})){
-      selected='';refreshUI();return true;
-    }
-    refreshUI();return false;
+    if(!selected)return;const id=selected;selected='';
+    await saveScene({...scene(),walls:scene().walls.filter(w=>w.id!==id)});refreshUI();
   }
-  // A mesma camada pode ser controlada pelo painel antigo ou diretamente pelo mapa.
-  function setQuickMode(next='select',type){
-    if(!getAdmin()||!current()||!img()?.naturalWidth)return false;
-    if(next==='off')return cancel();
-    if(next==='draw'&&kinds.has(type)){kind=type;mode='wall-draw';selected=''}
-    else if(next==='select'){mode='wall-select'}
-    else return false;
-    pending=null;onModeActivated?.();refreshUI();redraw();return true;
-  }
-  const quickState=()=>({
-    mode,kind,snap,selectedId:selected,
-    selectedWall:scene().walls.find(w=>w.id===selected)||null,
-    count:scene().walls.length,
-    presets:WALL_PRESETS
-  });
-  const setSnap=next=>{snap=!!next;refreshUI()};
-  function changeSelectedQuick(fields){return changeSelected(fields)}
   function nearby(x,y){
     const {w,h}=pixels();if(!w||!h)return null;
     let choice=null,distance=18/Math.max(.25,Number(getZoom())||1);
@@ -220,8 +197,7 @@ export function createWallTools({
         const size=pixels(),v=wPix(chosen,size.w,size.h);
         const max=11/Math.max(.2,Number(getZoom())||1);
         const a=Math.hypot(x-v.x1,y-v.y1),b=Math.hypot(x-v.x2,y-v.y2);
-        pending={edit:chosen.id,endpoint:Math.min(a,b)<=max?(a<=b?'a':'b'):'segment',
-          start:p,end:p,original:{x1:chosen.x1,y1:chosen.y1,x2:chosen.x2,y2:chosen.y2}};
+        if(Math.min(a,b)<=max)pending={edit:chosen.id,endpoint:a<=b?'a':'b',start:p,end:p};
       }
       refreshUI();redraw();return true;
     }
@@ -241,16 +217,8 @@ export function createWallTools({
       pending=null;
       const size=pixels();
       if(Math.hypot((start.x-end.x)*size.w,(start.y-end.y)*size.h)<5){redraw();return true}
-      const dx=end.x-start.x,dy=end.y-start.y;
-      const updated=scene().walls.map(w=>{
-        if(w.id!==edit)return w;
-        if(endpoint==='a')return {...w,x1:end.x,y1:end.y};
-        if(endpoint==='b')return {...w,x2:end.x,y2:end.y};
-        const limX1=-Math.min(w.x1,w.x2),limX2=1-Math.max(w.x1,w.x2);
-        const limY1=-Math.min(w.y1,w.y2),limY2=1-Math.max(w.y1,w.y2);
-        const tx=clamp(dx,limX1,limX2),ty=clamp(dy,limY1,limY2);
-        return {...w,x1:w.x1+tx,y1:w.y1+ty,x2:w.x2+tx,y2:w.y2+ty};
-      });
+      const updated=scene().walls.map(w=>w.id===edit?
+        {...w,...(endpoint==='a'?{x1:end.x,y1:end.y}:{x2:end.x,y2:end.y})}:w);
       await saveScene({...scene(),walls:updated});refreshUI();return true;
     }
     if(mode!=='wall-draw'||!pending)return true;
@@ -268,7 +236,7 @@ export function createWallTools({
   }
   function cancel(){
     if(!isEditing()&&!pending)return false;
-    mode='';pending=null;selected='';redraw();refreshUI();return true;
+    mode='';pending=null;selected='';redraw();return true;
   }
   function active(){return isEditing()}
   const mapSegments=()=>{
@@ -295,9 +263,9 @@ export function createWallTools({
   // Portas: o mestre aciona livremente; jogadores precisam estar junto a um token próprio
   // e não podem operar portas secretas fechadas nem portas trancadas.
   const centerDoor=w=>({x:(w.x1+w.x2)/2,y:(w.y1+w.y2)/2});
-  function ownerAtDoor(wall,ownerUid=getUid()){
+  function ownerAtDoor(wall){
     const cell=Math.max(1,Number(getCell())||64),mid=centerDoor(wall);
-    return getTokens().filter(t=>t.ownerUid===ownerUid&&!isHidden(t.id)).find(t=>{
+    return getTokens().filter(t=>t.ownerUid===getUid()&&!isHidden(t.id)).find(t=>{
       const eye=eyeOf(t),distance=Math.hypot(eye.x-mid.x,eye.y-mid.y);
       if(distance>cell*1.75)return false;
       return !mapSegments().some(other=>other.id!==wall.id&&other.type!=='ethereal'&&
@@ -305,11 +273,11 @@ export function createWallTools({
         intersects({x:eye.x,y:eye.y},mid,{x:other.x1,y:other.y1},{x:other.x2,y:other.y2}));
     })||null;
   }
-  function usableDoor(wall,viewerUid='',asPlayer=false){
+  function usableDoor(wall){
     if(!isDoor(wall))return false;
-    if(getAdmin()&&!asPlayer)return true;
+    if(getAdmin())return true;
     if(wall.type==='secret'&&wall.state!=='open')return false;
-    return wall.state!=='locked'&&!!ownerAtDoor(wall,viewerUid||getUid());
+    return wall.state!=='locked'&&!!ownerAtDoor(wall);
   }
   function doorAt(x,y){
     if(!img()?.naturalWidth)return null;
@@ -351,11 +319,11 @@ export function createWallTools({
     finally{doorBusy=false;redraw()}
     return true;
   }
-  function drawDoorHandles(ctx,view,viewerUid=''){
+  function drawDoorHandles(ctx,view){
     const z=Math.max(.15,Number(view?.zoom)||1);
     ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';
     for(const door of mapSegments()){
-      if(!usableDoor(door,viewerUid,!!viewerUid))continue;
+      if(!usableDoor(door))continue;
       const mid=centerDoor(door),radius=7/z;
       ctx.beginPath();ctx.arc(mid.x,mid.y,radius,0,Math.PI*2);
       ctx.fillStyle=door.state==='open'?'#527e69':door.state==='locked'?'#825451':'#bd9c66';
@@ -396,19 +364,19 @@ export function createWallTools({
     return radius;
   }
   const eyeOf=t=>{const c=Math.max(1,Number(getCell())||64);return {x:(n(t.x)+.5)*c,y:(n(t.y)+.75)*c}};
-  function ownedEyes(ownerUid=getUid()){
-    const user=ownerUid;
+  function ownedEyes(){
+    const user=getUid();
     if(!user)return[];
     return getTokens().filter(t=>t.ownerUid===user&&!isHidden(t.id)).slice(0,6).map(eyeOf);
   }
   function visionActive(){return scene().vision&&scene().walls.length>0}
   function visionSettings(){return scene()}
-  function visibleAtWorld(x,y,ownerUid=getUid()){
+  function visibleAtWorld(x,y){
     if(!visionActive())return false;
     const {w,h}=pixels(),cell=Math.max(1,Number(getCell())||64);
     if(!w||!h)return false;
     const radius=scene().range*cell,segments=mapSegments();
-    return ownedEyes(ownerUid).some(eye=>{
+    return ownedEyes().some(eye=>{
       const dx=x-eye.x,dy=y-eye.y,dist=Math.hypot(dx,dy);
       if(dist<.05)return true;
       if(dist>radius)return false;
@@ -416,10 +384,10 @@ export function createWallTools({
       return rayDistance(eye.x,eye.y,dx/dist,dy/dist,dist,nearby,cell)>=dist-.5;
     });
   }
-  function cutVision(maskCtx,cw,ch,w,h,ownerUid=getUid()){
+  function cutVision(maskCtx,cw,ch,w,h){
     if(!visionActive())return;
     const cell=Math.max(1,Number(getCell())||64);
-    const radius=scene().range*cell,segments=mapSegments(),eyes=ownedEyes(ownerUid);
+    const radius=scene().range*cell,segments=mapSegments(),eyes=ownedEyes();
     if(!eyes.length)return;
     maskCtx.save();
     maskCtx.globalCompositeOperation='destination-out';
@@ -451,26 +419,17 @@ export function createWallTools({
     }
     maskCtx.restore();
   }
-  function signature(ownerUid=getUid()){
+  function signature(){
     if(!visionActive())return 'none';
-    return revision+':'+current()+':'+scene().range+':'+ownerUid+':'+ownedEyes(ownerUid).map(e=>e.x.toFixed(2)+','+e.y.toFixed(2)).join('|');
+    return revision+':'+current()+':'+scene().range+':'+ownedEyes().map(e=>e.x.toFixed(2)+','+e.y.toFixed(2)).join('|');
   }
-  function draw(ctx,view,viewerUid=''){
-    if(viewerUid){drawDoorHandles(ctx,view,viewerUid);return}
+  function draw(ctx,view){
     if(!getAdmin()||!isEditing()){drawDoorHandles(ctx,view);return}
     const {w,h}=pixels();if(!w||!h)return;
     const scale=Math.max(.12,view?.zoom||1);
     ctx.save();ctx.lineCap='round';
     for(const v of scene().walls){
-      const preview=pending?.edit===v.id?(()=>{
-        const o=pending.original||v,dx=pending.end.x-pending.start.x,dy=pending.end.y-pending.start.y;
-        if(pending.endpoint==='a')return {...v,x1:pending.end.x,y1:pending.end.y};
-        if(pending.endpoint==='b')return {...v,x2:pending.end.x,y2:pending.end.y};
-        const tx=clamp(dx,-Math.min(o.x1,o.x2),1-Math.max(o.x1,o.x2));
-        const ty=clamp(dy,-Math.min(o.y1,o.y2),1-Math.max(o.y1,o.y2));
-        return {...v,x1:o.x1+tx,y1:o.y1+ty,x2:o.x2+tx,y2:o.y2+ty};
-      })():v;
-      const q=wPix(preview,w,h),def=WALL_PRESETS.find(x=>x.id===v.type);
+      const q=wPix(v,w,h),def=WALL_PRESETS.find(x=>x.id===v.type);
       ctx.strokeStyle=v.id===selected?'#fff1c1':def?.color||'#d8bd8f';
       ctx.lineWidth=(v.id===selected?4:2.8)/scale;
       ctx.setLineDash(v.type==='secret'?[3/scale,5/scale]:v.type==='ethereal'?[7/scale,5/scale]:[]);
@@ -489,7 +448,14 @@ export function createWallTools({
     }
     if(pending){
       ctx.strokeStyle='#fff0ce';ctx.lineWidth=3/scale;ctx.setLineDash([8/scale,4/scale]);
-      if(!pending.edit){
+      if(pending.edit){
+        const current=scene().walls.find(v=>v.id===pending.edit);
+        if(current){
+          const opposite=pending.endpoint==='a'?[current.x2,current.y2]:[current.x1,current.y1];
+          ctx.beginPath();ctx.moveTo(opposite[0]*w,opposite[1]*h);
+          ctx.lineTo(pending.end.x*w,pending.end.y*h);ctx.stroke();
+        }
+      }else{
         ctx.beginPath();ctx.moveTo(pending.start.x*w,pending.start.y*h);
         ctx.lineTo(pending.end.x*w,pending.end.y*h);ctx.stroke();
       }
@@ -498,7 +464,6 @@ export function createWallTools({
     drawDoorHandles(ctx,view);
   }
   return {setData,panelHTML,bind,refreshUI,pointerDown,pointerMove,pointerUp,cancel,
-    setQuickMode,quickState,setSnap,changeSelectedQuick,deleteSelected:removeSelected,
     active,activeDraw:()=>mode==='wall-draw',activeSelect:()=>mode==='wall-select',
     draw,moveBlocked,visibleAtWorld,cutVision,signature,visionActive,visionSettings,
     doorAt,doorHint,toggleDoorAt};
