@@ -627,7 +627,7 @@ function closeActorMenu(){
 }
 // Escala visual individual do token. Movimentação, colisões e visão continuam
 // usando coordenadas do mapa, nunca o tamanho da ilustração.
-const tokenScaleOf=t=>Math.max(.3,Math.min(1.8,Number(t?.tokenScale)||1));
+const tokenScaleOf=t=>{const v=Number(t?.tokenScale);return Number.isFinite(v)&&v>0?Math.max(.3,Math.min(1.8,v)):1;};
 function openActorMenu(sheet,x,y,opener=null,token=null){
   if(!admin||!room)return;
   closeActorMenu();
