@@ -1,7 +1,7 @@
 # Shinobi Chronicles · Paredes, portas e visão dinâmica
 
 ## O que mudou
-- A primeira parede criada ativa a visão dinâmica **e** a névoa de guerra na cena.
+- Criar a primeira parede **não ativa a névoa nem a visão dinâmica**. O mestre deve habilitar a visão automática em **Ambiente → Paredes** e, caso queira encobrir o mapa, clicar explicitamente em **Encobrir mapa** em **Ambiente → Névoa**.
 - A visão de cada jogador parte dos tokens que pertencem a ele e respeita o alcance em células definido pelo mestre.
 - Paredes sólidas bloqueiam visão e movimento; portas fechadas também. Portas abertas liberam ambos.
 - Janelas bloqueiam movimento e permitem enxergar de perto. Paredes invisíveis bloqueiam o movimento, sem ocultar a visão. Paredes ilusórias fazem o inverso.
@@ -40,3 +40,8 @@ A névoa, as paredes e o bloqueio de movimento são principalmente controles de 
 - No modo de edição de paredes, **Del** remove somente a parede selecionada e **Ctrl+Z** desfaz a última alteração de parede. Para encerrar a edição, use **Esc**, **✓ Sair da edição** ou o controle ✓ ao lado das ferramentas do mapa.
 - O menu **Ambiente → Névoa** concentra encobrimento, retângulo e pincéis. A tecla **F** abre as ferramentas de névoa do mestre e alterna a seleção de áreas.
 - Os estilos respeitam o tema claro/escuro e a cor do clã configurada no site. O espaço e a altura do chat não foram alterados.
+
+## Correção: névoa somente com ativação manual
+- Nenhuma operação de parede, porta, desenho, configuração de alcance ou visão automática ativa a névoa.
+- O pincel e a ferramenta de retângulo não podem ligar a névoa implicitamente, inclusive após trocas de modo.
+- A configuração da névoa pertence à cena e permanece desligada até o comando explícito do mestre. Cenas com névoa já ligada não são alteradas automaticamente, evitando modificar escolhas anteriores do mestre.
