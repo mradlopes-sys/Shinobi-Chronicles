@@ -129,10 +129,10 @@ export function createWallTools({
         '>✓ Sair da edição</button></div>'+
       '<label class="sc-wall-toggle"><input type="checkbox" id="sc-wall-snap"'+(snap?' checked':'')+'> Alinhar pontas à meia célula</label>'+
       '<div class="sc-wall-options"><label><input type="checkbox" id="sc-wall-vision"'+(cfg.vision?' checked':'')+
-        '> Visão automática dos personagens</label>'+
+        '> Visão dinâmica dos personagens</label>'+
       '<label>Alcance <select id="sc-wall-range">'+[4,6,8,10,12,16,20,25,30].map(v=>
         '<option value="'+v+'"'+(cfg.range===v?' selected':'')+'>'+v+' células</option>').join('')+'</select></label></div>'+
-      '<p class="sc-battle-note">Paredes e visão não ativam a névoa sozinhas. Para ocultar áreas, use Ambiente → Névoa e ative manualmente. Janelas permitem enxergar de perto; portas abertas liberam visão e movimento.</p>'+
+      '<p class="sc-battle-note">Visão dinâmica é independente da névoa manual: ao ativá-la, cada personagem enxerga somente dentro do seu alcance e através das aberturas. O mapa não é encoberto automaticamente para o mestre.</p>'+
       (chosen?
         '<div class="sc-wall-selected"><strong>Segmento selecionado</strong><small>'+esc(typeName(chosen.type))+
         '</small><label>Tipo <select id="sc-wall-edit-type">'+WALL_PRESETS.map(x=>
@@ -397,19 +397,25 @@ export function createWallTools({
     return radius;
   }
   const eyeOf=t=>{const c=Math.max(1,Number(getCell())||64);return {x:(n(t.x)+.5)*c,y:(n(t.y)+.75)*c}};
-  function ownedEyes(){
+  function ownedEyes(viewerTokenId=''){
+    if(viewerTokenId){
+      const target=getTokens().find(t=>t.id===viewerTokenId);
+      return target?[eyeOf(target)]:[];
+    }
     const user=getUid();
     if(!user)return[];
     return getTokens().filter(t=>t.ownerUid===user&&!isHidden(t.id)).slice(0,6).map(eyeOf);
   }
-  function visionActive(){return scene().vision&&scene().walls.length>0}
+  // Visão é uma opção explícita da cena, separada da névoa manual.
+  // Sem paredes, ainda existe a limitação do alcance da visão.
+  function visionActive(){return scene().vision===true}
   function visionSettings(){return scene()}
-  function visibleAtWorld(x,y){
+  function visibleAtWorld(x,y,viewerTokenId=''){
     if(!visionActive())return false;
     const {w,h}=pixels(),cell=Math.max(1,Number(getCell())||64);
     if(!w||!h)return false;
     const radius=scene().range*cell,segments=mapSegments();
-    return ownedEyes().some(eye=>{
+    return ownedEyes(viewerTokenId).some(eye=>{
       const dx=x-eye.x,dy=y-eye.y,dist=Math.hypot(dx,dy);
       if(dist<.05)return true;
       if(dist>radius)return false;
@@ -417,10 +423,10 @@ export function createWallTools({
       return rayDistance(eye.x,eye.y,dx/dist,dy/dist,dist,nearby,cell)>=dist-.5;
     });
   }
-  function cutVision(maskCtx,cw,ch,w,h){
+  function cutVision(maskCtx,cw,ch,w,h,viewerTokenId=''){
     if(!visionActive())return;
     const cell=Math.max(1,Number(getCell())||64);
-    const radius=scene().range*cell,segments=mapSegments(),eyes=ownedEyes();
+    const radius=scene().range*cell,segments=mapSegments(),eyes=ownedEyes(viewerTokenId);
     if(!eyes.length)return;
     maskCtx.save();
     maskCtx.globalCompositeOperation='destination-out';
@@ -452,9 +458,10 @@ export function createWallTools({
     }
     maskCtx.restore();
   }
-  function signature(){
+  function signature(viewerTokenId=''){
     if(!visionActive())return 'none';
-    return revision+':'+current()+':'+scene().range+':'+ownedEyes().map(e=>e.x.toFixed(2)+','+e.y.toFixed(2)).join('|');
+    return revision+':'+current()+':'+scene().range+':'+viewerTokenId+':'+
+      ownedEyes(viewerTokenId).map(e=>e.x.toFixed(2)+','+e.y.toFixed(2)).join('|');
   }
   function draw(ctx,view){
     if(!getAdmin()||!isEditing()){drawDoorHandles(ctx,view);return}
