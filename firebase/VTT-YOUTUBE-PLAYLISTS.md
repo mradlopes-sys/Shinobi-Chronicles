@@ -49,3 +49,16 @@
 - Cliques manuais em Próxima/Anterior são circulares (última → primeira e primeira → última).
 - Removida a correção de posição forçada de cinco em cinco segundos, que podia causar saltos durante a reprodução e eventos falsos de término.
 - O player incorporado não recebe cliques para trocar/pausar músicas; a edição da fila e o controle compartilhado continuam exclusivos do mestre, com a autorização verificada no Firestore.
+
+## Linha do tempo e fade-out de 5 segundos (15/11/2026)
+
+- Player com barra de progresso, tempo decorrido, duração total e contador regressivo do tempo restante.
+- **Somente mestre** pode arrastar o marcador para avançar ou retroceder no áudio. A nova posição é publicada no Firestore e aplicada aos jogadores da mesa.
+- A API IFrame do YouTube fornece `getDuration()`, `getCurrentTime()`, `seekTo()` e `setVolume()`. A duração só aparece depois dos metadados carregarem.
+- **Ao clicar em Parar, Pausar, Próxima, Anterior ou em outra faixa**, a música que está tocando entra no estado sincronizado `fading` por **5.000 ms**, com volume linear decrescendo de 100% do volume individual até 0%.
+- Os jogadores acompanham o mesmo fade. A próxima música começa **depois** dos 5 segundos; a parada ou pausa é concluída depois do fade.
+- O mestre fica com os controles de troca temporariamente desabilitados durante o fade para evitar comandos de saída conflitantes.
+- O mestre conclui as transições via transação do Firestore protegida por `transitionId`, para evitar confirmar duas vezes a mesma troca em múltiplas abas.
+- Excluir a faixa que ainda está tocando exige parar e concluir o fade antes, evitando cortes inesperados.
+- No fim natural do vídeo, o YouTube pode encerrar por conta própria; o fade de 5 segundos é garantido para comandos manuais realizados durante a reprodução.
+- Não foram alteradas as regras do Firestore, a biblioteca de playlists ou os recursos de mapa/combate.

@@ -23,6 +23,7 @@ const nBound=(x,min,max)=>Math.max(min,Math.min(max,Number.isFinite(+x)?+x:min))
 const uid=()=>crypto.randomUUID?crypto.randomUUID().replace(/-/g,'').slice(0,18):
   Math.random().toString(36).slice(2)+Date.now().toString(36);
 const GENERAL='geral';
+const FADE_MS=5000; // Fade-out real de cinco segundos, compartilhado pela mesa.
 const DEFAULT_LIST=()=>({id:GENERAL,name:'Geral',tracks:[]});
 const EMPTY_STATE=()=>({playlistId:'',trackId:'',videoId:'',status:'stopped',position:0,loop:false});
 function parseYouTube(raw){
@@ -68,9 +69,19 @@ function safeState(value){
   return {
     playlistId:cap(value.playlistId,40),trackId:cap(value.trackId,40),
     videoId:/^[A-Za-z0-9_-]{11}$/.test(value.videoId||'')?value.videoId:'',
-    status:['playing','paused','stopped'].includes(value.status)?value.status:'stopped',
+    status:['playing','paused','stopped','fading'].includes(value.status)?value.status:'stopped',
     position:nBound(value.position,0,86400),loop:!!value.loop,
-    startedAt:value.startedAt||null
+    startedAt:value.startedAt||null,
+    fadeLocalTime:nBound(value.fadeLocalTime,0,1e15),
+    transitionId:cap(value.transitionId,40),
+    fadeTo:value.fadeTo&&typeof value.fadeTo==='object'?{
+      playlistId:cap(value.fadeTo.playlistId,40),
+      trackId:cap(value.fadeTo.trackId,40),
+      videoId:cap(value.fadeTo.videoId,11),
+      status:['playing','paused','stopped'].includes(value.fadeTo.status)?value.fadeTo.status:'stopped',
+      position:nBound(value.fadeTo.position,0,86400),
+      loop:!!value.fadeTo.loop
+    }:null
   };
 }
 function findTrack(trackId,playlistId){
@@ -90,8 +101,9 @@ const errorText=error=>{
 };
 let user=null,gm=false,lists=[DEFAULT_LIST()],state=EMPTY_STATE();
 let selectedPlaylistId=GENERAL,player=null,playerReady=false;
-let loadedVideoId='',appliedState='',fireUnsub=null,authEpoch=0;
+let loadedVideoId='',appliedState='',lastAppliedStatus='',fireUnsub=null,authEpoch=0;
 let busy=false,localVolume=80,lastLibraryKey='',lastManualPlayAt=0;
+let fadeFinishInFlight='',fadeCommandBusy=false,sliderDragging=false;
 try{const v=Number(localStorage.getItem('sc-youtube-volume'));if(Number.isFinite(v))localVolume=nBound(v,0,100)}catch{}
 
 root.innerHTML=String.raw`
@@ -110,6 +122,18 @@ root.innerHTML=String.raw`
     <div class="sc-yt-video-shell" id="sc-yt-video-shell">
       <div id="sc-yt-embed"></div>
       <button type="button" id="sc-yt-listener-play" class="sc-yt-listener-play" hidden>▶ Ouvir música da mesa</button>
+    </div>
+    <div class="sc-yt-seek" aria-label="Linha do tempo da trilha sonora">
+      <div class="sc-yt-seek-times">
+        <span id="sc-yt-elapsed">0:00</span>
+        <span id="sc-yt-remaining">--:-- restantes</span>
+      </div>
+      <input id="sc-yt-seek" type="range" min="0" max="100" value="0" step="0.1"
+        aria-label="Avançar ou retroceder na música (somente mestre)" disabled>
+      <div class="sc-yt-seek-footer">
+        <small id="sc-yt-seek-hint">Tempo de reprodução</small>
+        <span id="sc-yt-total">0:00</span>
+      </div>
     </div>
     <div class="sc-yt-master-heading" id="sc-yt-master-heading" hidden>CONTROLES DO MESTRE · SESSÃO</div>
     <div class="sc-yt-deck-controls" id="sc-yt-gm-controls" hidden>
@@ -146,7 +170,8 @@ root.innerHTML=String.raw`
   <p class="sc-yt-feedback" id="sc-yt-feedback" aria-live="polite"></p>
   <details class="sc-yt-help"><summary>Como funciona?</summary>
     <p>Como mestre, crie playlists, cole links de vídeos e clique em ▶ para tocar a trilha para a mesa. Os links ficam salvos no Firebase e não precisam ser baixados.</p>
-    <p>Só o mestre pode iniciar, pausar, parar, escolher faixas e editar playlists. O botão Próxima sempre passa para a próxima música e volta ao início no fim da lista. A trilha não avança sozinha: é necessário clicar nos controles do mestre.</p>
+    <p>Só o mestre pode iniciar, pausar, parar, escolher faixas, arrastar a linha do tempo e editar playlists. A barra mostra o tempo decorrido e o tempo que falta.</p>
+    <p>Ao pausar, parar ou trocar de música, o som atual diminui suavemente ao longo de <b>5 segundos</b> antes de sair. A próxima faixa só começa depois do fade-out.</p>
     <p>Jogadores apenas escutam. Se o navegador deles bloquear som automático, aparece um botão para iniciar a escuta local, sem afetar a música da mesa.</p>
     <p>Alguns vídeos têm incorporação desativada pelo autor e não podem tocar fora do YouTube. Experimente outro vídeo se aparecer essa mensagem.</p>
   </details>
@@ -164,9 +189,41 @@ function current(){
   return findTrack(state.trackId,state.playlistId)||findTrack(state.trackId)||null;
 }
 function statePosition(){
-  if(state.status!=='playing')return state.position;
-  const stamp=state.startedAt?.toMillis?.();
+  if(state.status!=='playing'&&state.status!=='fading')return state.position;
+  const stamp=state.startedAt?.toMillis?.()||(state.status==='fading'?state.fadeLocalTime:0);
   return stamp?Math.max(0,state.position+(Date.now()-stamp)/1000):state.position;
+}
+function fadeFraction(){
+  if(state.status!=='fading')return 0;
+  const start=state.startedAt?.toMillis?.()||state.fadeLocalTime;
+  return start? nBound((Date.now()-start)/FADE_MS,0,1):0;
+}
+const mmss=sec=>{
+  if(!Number.isFinite(sec)||sec<0)return '--:--';
+  const v=Math.floor(sec);
+  return Math.floor(v/60)+':'+String(v%60).padStart(2,'0');
+};
+function durationSeconds(){
+  if(!playerReady||!current()||loadedVideoId!==current().videoId)return 0;
+  const seconds=Number(player?.getDuration?.());
+  return Number.isFinite(seconds)&&seconds>0?seconds:0;
+}
+function refreshSeek(){
+  const input=$('sc-yt-seek'),duration=durationSeconds();
+  const live=playerReady&&loadedVideoId===current()?.videoId?
+    Number(player?.getCurrentTime?.()):NaN;
+  const elapsed=nBound(Number.isFinite(live)?live:statePosition(),0,duration||86400);
+  input.max=String(Math.max(1,duration));
+  if(!sliderDragging)input.value=String(elapsed);
+  const shown=sliderDragging?Number(input.value):elapsed;
+  input.disabled=!gm||!current()||duration===0||state.status==='fading'||state.status==='stopped';
+  input.style.setProperty('--sc-yt-progress',(duration?100*nBound(shown,0,duration)/duration:0).toFixed(2)+'%');
+  $('sc-yt-elapsed').textContent=mmss(shown);
+  $('sc-yt-remaining').textContent=duration?'-'+mmss(Math.max(0,duration-shown))+' restantes':'--:-- restantes';
+  $('sc-yt-total').textContent=duration?mmss(duration):'--:--';
+  $('sc-yt-seek-hint').textContent=state.status==='fading'?
+    'Fade-out · '+(Math.max(0,5-5*fadeFraction())).toFixed(1)+' s restantes':
+    gm?'Arraste para escolher o trecho':'Acompanhando a música do mestre';
 }
 function syncHeader(){
   const song=current();
@@ -175,7 +232,11 @@ function syncHeader(){
   $('sc-yt-gm-controls').hidden=!gm;
   $('sc-yt-master-heading').hidden=!gm;
   root.classList.toggle('sc-yt-master',gm);
-  $('sc-yt-play').textContent=state.status==='playing'?'Ⅱ Pausar':'▶ Tocar';
+  root.dataset.playback=state.status;
+  const fading=state.status==='fading';
+  for(const id of ['sc-yt-prev','sc-yt-play','sc-yt-stop','sc-yt-next','sc-yt-loop','sc-yt-play-list'])
+    $(id).disabled=!gm||fading;
+  $('sc-yt-play').textContent=fading?'↘ Saindo…':state.status==='playing'?'Ⅱ Pausar':'▶ Tocar';
   $('sc-yt-loop').textContent=state.loop?'↻ Repetir faixa: ligado':'↻ Repetir faixa: desligado';
   $('sc-yt-loop').setAttribute('aria-pressed',String(state.loop));
   $('sc-yt-loop').classList.toggle('active',state.loop);
@@ -184,6 +245,7 @@ function syncHeader(){
   $('sc-yt-new').hidden=!gm;
   $('sc-yt-add-form').hidden=!gm;
   $('sc-yt-play-list').hidden=!gm;
+  refreshSeek();
 }
 function selectPlaylist(id){
   if(!lists.some(x=>x.id===id))id=GENERAL;
@@ -316,6 +378,9 @@ async function renamePlaylist(id){
 }
 async function deletePlaylist(id){
   if(!gm)return;
+  if(state.status==='fading')return toast('Aguarde o fade-out terminar para excluir playlists.',true);
+  if(state.playlistId===id&&['playing','fading'].includes(state.status))
+    return toast('Pare a música e aguarde o fade-out de 5 segundos antes de excluir a playlist.',true);
   const p=lists.find(x=>x.id===id);if(!p||p.id===GENERAL)return;
   if(!confirm('Excluir a playlist "'+p.name+'" e todos os links salvos nela?'))return;
   try{
@@ -359,6 +424,9 @@ async function renameTrack(playlistId,trackId){
 }
 async function deleteTrack(playlistId,trackId){
   if(!gm)return;
+  if(state.status==='fading')return toast('Aguarde o fade-out terminar para excluir músicas.',true);
+  if(state.trackId===trackId&&['playing','fading'].includes(state.status))
+    return toast('Pare a música e aguarde o fade-out de 5 segundos antes de excluir o link.',true);
   const t=findTrack(trackId,playlistId);if(!t||!confirm('Remover "'+t.title+'" da playlist?'))return;
   try{
     if(state.trackId===trackId)await publish({...EMPTY_STATE(),loop:state.loop});
@@ -380,7 +448,69 @@ async function publish(next){
     startedAt:serverTimestamp(),
     updatedBy:user.uid
   };
+  if(next.status==='fading'){
+    payload.transitionId=cap(next.transitionId,40);
+    payload.fadeLocalTime=nBound(next.fadeLocalTime,0,1e15);
+    payload.fadeTo={
+      playlistId:cap(next.fadeTo?.playlistId,40),
+      trackId:cap(next.fadeTo?.trackId,40),
+      videoId:cap(next.fadeTo?.videoId,11),
+      status:next.fadeTo?.status||'stopped',
+      position:nBound(next.fadeTo?.position,0,86400),
+      loop:!!next.fadeTo?.loop
+    };
+  }
   await updateDoc(roomRef,{'theatre.youtubeState':payload,updatedAt:serverTimestamp()});
+}
+async function exitWithFade(next){
+  if(!gm||!user)return;
+  if(fadeCommandBusy||state.status==='fading'){
+    toast('O fade-out de cinco segundos ainda está em andamento.');return;
+  }
+  // Não há o que reduzir se a faixa já estiver parada ou pausada.
+  if(state.status!=='playing'||!current()){
+    await publish(next);return;
+  }
+  fadeCommandBusy=true;
+  try{
+    const now=playerTime(),duration=durationSeconds();
+    const target={
+      playlistId:next.playlistId||'',trackId:next.trackId||'',
+      videoId:next.videoId||'',status:next.status||'stopped',
+      position:next.status==='paused'?
+        Math.min(now+FADE_MS/1000,duration||86400):nBound(next.position,0,86400),
+      loop:!!next.loop
+    };
+    await publish({...state,status:'fading',position:now,
+      transitionId:uid(),fadeLocalTime:Date.now(),fadeTo:target});
+  }finally{fadeCommandBusy=false}
+}
+// O mestre conclui a transição após o fade. A transação impede
+// confirmações duplicadas em múltiplas abas e comandos atrasados.
+async function finalizeFade(){
+  if(!gm||!user||state.status!=='fading'||!state.transitionId||
+    fadeFraction()<1||fadeFinishInFlight===state.transitionId)return;
+  const transitionId=state.transitionId;
+  fadeFinishInFlight=transitionId;
+  try{
+    await runTransaction(db,async tx=>{
+      const snapshot=await tx.get(roomRef);
+      const stored=snapshot.data()?.theatre?.youtubeState;
+      if(stored?.status!=='fading'||stored?.transitionId!==transitionId)return;
+      const to=stored.fadeTo;
+      if(!to)return;
+      const next={
+        playlistId:cap(to.playlistId,40),trackId:cap(to.trackId,40),
+        videoId:cap(to.videoId,11),status:to.status||'stopped',
+        position:nBound(to.position,0,86400),loop:!!to.loop,
+        startedAt:serverTimestamp(),updatedBy:user.uid
+      };
+      tx.update(roomRef,{'theatre.youtubeState':next,updatedAt:serverTimestamp()});
+    });
+  }catch(error){
+    fadeFinishInFlight='';
+    toast('Não foi possível concluir o fade-out: '+errorText(error),true);
+  }
 }
 function playerTime(){
   const currentTime=playerReady?Number(player?.getCurrentTime?.()):NaN;
@@ -388,46 +518,53 @@ function playerTime(){
 }
 async function playTrack(playlistId,trackId){
   if(!gm)return;
+  if(state.status==='fading'||fadeCommandBusy)return toast('Aguarde o fade-out terminar para trocar a música.');
   const song=findTrack(trackId,playlistId);
   if(!song)return toast('A música não foi encontrada.',true);
   lastManualPlayAt=Date.now();
   notice('');
-  // Carregar dentro do gesto do clique aumenta a chance de permitir som.
-  if(playerReady){
-    try{
-      loadedVideoId=song.videoId;
-      player.loadVideoById({videoId:song.videoId,startSeconds:0});
-      player.setVolume(localVolume);
-    }catch(e){console.warn('YouTube:',e)}
-  }
   try{
-    await publish({playlistId,trackId,videoId:song.videoId,status:'playing',position:0,loop:state.loop});
-  }catch(e){toast(errorText(e),true)}
+    if(state.status==='playing'&&current()){
+      // Mantém a música anterior audível durante os cinco segundos completos.
+      await exitWithFade({playlistId,trackId,videoId:song.videoId,
+        status:'playing',position:0,loop:state.loop});
+    }else{
+      // Sem faixa tocando, o clique já pode iniciar imediatamente.
+      if(playerReady){
+        loadedVideoId=song.videoId;
+        player.loadVideoById({videoId:song.videoId,startSeconds:0});
+        player.setVolume(localVolume);
+      }
+      await publish({playlistId,trackId,videoId:song.videoId,status:'playing',position:0,loop:state.loop});
+    }
+  }catch(e){toast('Falha ao trocar a música: '+errorText(e),true)}
 }
 async function togglePlay(){
-  if(!gm)return;
+  if(!gm||state.status==='fading'||fadeCommandBusy)return;
   const song=current();
   if(!song){
     const p=lists.find(x=>x.id===selectedPlaylistId);
     if(p?.tracks[0])return playTrack(p.id,p.tracks[0].id);
     return toast('Adicione uma música antes de dar play.',true);
   }
-  const paused=state.status==='playing';
-  if(playerReady){
-    try{paused?player.pauseVideo():player.playVideo()}catch{}
-  }
-  try{await publish({...state,status:paused?'paused':'playing',position:playerTime()})}
-  catch(e){toast(errorText(e),true)}
+  try{
+    if(state.status==='playing'){
+      await exitWithFade({...state,status:'paused',position:playerTime()});
+    }else{
+      if(playerReady){try{player.playVideo()}catch{}}
+      await publish({...state,status:'playing',position:playerTime()});
+    }
+  }catch(e){toast(errorText(e),true)}
 }
 async function stopPlayback(){
-  if(!gm)return;
-  try{player?.pauseVideo?.();player?.seekTo?.(0,true)}catch{}
-  try{await publish({...state,status:'stopped',position:0})}
-  catch(e){toast(errorText(e),true)}
+  if(!gm||state.status==='fading'||fadeCommandBusy)return;
+  try{
+    await exitWithFade({...state,status:'stopped',position:0});
+  }catch(e){toast(errorText(e),true)}
 }
 function adjacent(offset){
   // Manual e determinístico: nunca depende de eventos ENDED do YouTube.
-  if(!gm)return;
+  if(!gm||state.status==='fading'||fadeCommandBusy)return;
   const song=current(),p=song?.playlist||lists.find(x=>x.id===selectedPlaylistId);
   if(!p?.tracks.length)return toast('Esta playlist está vazia.',true);
   const idx=song?.playlist.id===p.id?p.tracks.findIndex(x=>x.id===song.id):-1;
@@ -453,7 +590,10 @@ function onYTStateChange(e){
   }
 }
 function playerVolume(){
-  if(playerReady)try{player.setVolume(localVolume)}catch{}
+  if(playerReady){
+    const gain=state.status==='fading'?(1-fadeFraction()):1;
+    try{player.setVolume(Math.round(localVolume*gain))}catch{}
+  }
 }
 // O player nativo não pode ser clicado por jogadores. O único gesto
 // permitido, caso o navegador bloqueie autoplay, é iniciar a escuta.
@@ -477,25 +617,28 @@ function syncPlayer(){
   if(!playerReady)return;
   const song=current();
   if(!song){
-    loadedVideoId='';appliedState='';
+    loadedVideoId='';appliedState='';lastAppliedStatus='';
     try{player.stopVideo()}catch{}
     return;
   }
   const videoId=song.videoId,requested=state.status;
-  const changingVideo=videoId!==loadedVideoId;
+  // Ao sair de um fade para a mesma faixa, reiniciar do começo também.
+  const justFinishedFade=lastAppliedStatus==='fading'&&requested!=='fading';
+  const forceRestart=justFinishedFade&&requested==='playing'&&state.position===0;
+  const changingVideo=videoId!==loadedVideoId||forceRestart;
   const stamp=state.startedAt?.toMillis?.()||0;
   const marker=[state.trackId,requested,stamp,Math.round(state.position)].join('|');
-  if(videoId!==loadedVideoId){
+  if(changingVideo){
     loadedVideoId=videoId;appliedState='';
     try{
-      if(requested==='playing')player.loadVideoById({videoId,startSeconds:statePosition()});
+      if(requested==='playing'||requested==='fading')player.loadVideoById({videoId,startSeconds:statePosition()});
       else player.cueVideoById({videoId,startSeconds:state.position});
     }catch(error){toast('Falha ao abrir o vídeo: '+errorText(error),true)}
   }
   if(marker!==appliedState){
     appliedState=marker;
     try{
-      if(requested==='playing'){
+      if(requested==='playing'||requested==='fading'){
         const seconds=statePosition(),local=Number(player.getCurrentTime?.()||0);
         // O mestre nunca deve ser arrastado por correções de relógio do Firestore.
         // Quando já tocamos esta faixa, preservar o ponto local.
@@ -512,6 +655,7 @@ function syncPlayer(){
       }
     }catch(error){console.warn('YouTube:',error)}
   }
+  lastAppliedStatus=requested;
   playerVolume();
   updateListenerPlay();
 }
@@ -539,7 +683,7 @@ function attachPlayer(){
           e.target.getIframe().setAttribute('tabindex','-1');
           e.target.getIframe().setAttribute('referrerpolicy','strict-origin-when-cross-origin');
         }catch{}
-        syncPlayer();playerVolume();updateListenerPlay();
+        syncPlayer();playerVolume();updateListenerPlay();refreshSeek();
       },
       onStateChange:onYTStateChange,
       onAutoplayBlocked:()=>{
@@ -583,8 +727,9 @@ function refreshAfterSnapshot(){
 }
 function resetConnection(){
   fireUnsub?.();fireUnsub=null;
+  sliderDragging=false;fadeFinishInFlight='';fadeCommandBusy=false;
   lists=[DEFAULT_LIST()];state=EMPTY_STATE();
-  lastLibraryKey='';loadedVideoId='';appliedState='';
+  lastLibraryKey='';loadedVideoId='';appliedState='';lastAppliedStatus='';
   try{player?.stopVideo?.()}catch{}
   renderFolders();renderTracks();syncHeader();updateListenerPlay();
 }
@@ -628,7 +773,7 @@ $('sc-yt-stop').onclick=()=>void stopPlayback();
 $('sc-yt-next').onclick=()=>adjacent(1);
 $('sc-yt-prev').onclick=()=>adjacent(-1);
 $('sc-yt-loop').onclick=async()=>{
-  if(!gm)return;
+  if(!gm||state.status==='fading')return;
   try{await publish({...state,position:playerTime(),loop:!state.loop})}
   catch(error){toast(errorText(error),true)}
 };
@@ -638,12 +783,46 @@ $('sc-yt-volume').addEventListener('input',e=>{
   try{localStorage.setItem('sc-youtube-volume',String(localVolume))}catch{}
   playerVolume();
 });
-// O evento de clique ocorre no iframe nativo do YouTube quando o navegador
-// exige interação. Não existe bloqueio artificial nem botão de habilitar som.
+// A linha do tempo mostra o ponto real do YouTube. Somente o mestre
+// pode arrastar; ao soltar, a posição é compartilhada com os jogadores.
+const seekSlider=$('sc-yt-seek');
+seekSlider.addEventListener('pointerdown',()=>{
+  if(gm&&!seekSlider.disabled)sliderDragging=true;
+});
+seekSlider.addEventListener('input',()=>{
+  if(!gm||seekSlider.disabled)return;
+  sliderDragging=true;refreshSeek();
+});
+seekSlider.addEventListener('change',async()=>{
+  if(!gm||seekSlider.disabled){sliderDragging=false;return}
+  const duration=durationSeconds(),target=nBound(seekSlider.value,0,duration||0);
+  sliderDragging=false;
+  if(!duration||state.status==='fading'||!current())return;
+  try{
+    lastManualPlayAt=Date.now();
+    if(playerReady){
+      player.seekTo(target,true);
+      if(state.status==='paused')player.pauseVideo();
+    }
+    await publish({...state,position:target});
+    toast('Reprodução ajustada para '+mmss(target)+'.');
+  }catch(error){toast('Não foi possível mudar o trecho: '+errorText(error),true)}
+  refreshSeek();
+});
+seekSlider.addEventListener('pointercancel',()=>{sliderDragging=false;refreshSeek()});
+seekSlider.addEventListener('blur',()=>{sliderDragging=false;refreshSeek()});
+// Atualização leve da linha do tempo e do fade, sem alterar a posição
+// do YouTube automaticamente. Não há troca automática de faixas.
 setInterval(()=>{
   updateListenerPlay();
-  if(!playerReady||!user)return;
-  // Não forçar seek a cada cinco segundos: diferenças de relógio causavam
-  // saltos de posição e eventos ENDED falsos. Só atualizar affordance de escuta.
-},5000);
+  refreshSeek();
+  if(state.status!=='fading')return;
+  playerVolume();
+  if(fadeFraction()<1)return;
+  // O volume já chegou a zero. Interrompe o vídeo somente após cinco segundos.
+  if(playerReady&&Number(player?.getPlayerState?.())===window.YT?.PlayerState?.PLAYING){
+    try{player.pauseVideo()}catch{}
+  }
+  if(gm)void finalizeFade();
+},120);
 renderFolders();renderTracks();syncHeader();loadYT();

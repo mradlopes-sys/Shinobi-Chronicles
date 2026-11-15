@@ -140,3 +140,50 @@
 /* O próprio player do YouTube não controla a sessão. O mestre usa os botões
    acima e os jogadores não podem pausar clicando no vídeo. */
 #sc-music-root .sc-yt-video-shell iframe{pointer-events:none!important}
+
+/* Linha do tempo do YouTube: leitura para todos, edição somente do mestre. */
+#pane-musica .sc-yt-seek{
+  margin:0 12px;padding:14px 1px 12px;
+  border-bottom:1px solid var(--yt-line);
+}
+#pane-musica .sc-yt-seek-times,
+#pane-musica .sc-yt-seek-footer{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  font-size:11px;font-variant-numeric:tabular-nums;
+}
+#pane-musica .sc-yt-seek-times{color:var(--yt-ink);font-weight:700;margin:0 1px 10px}
+#pane-musica #sc-yt-remaining{color:var(--yt-muted);font-size:10px;font-weight:600}
+#pane-musica .sc-yt-seek-footer{margin:8px 1px 0;color:var(--yt-muted)}
+#pane-musica .sc-yt-seek-footer small{
+  font-size:9px;font-weight:500;line-height:1.3;color:var(--yt-muted);
+}
+#pane-musica .sc-yt-seek-footer span{font-size:10px;white-space:nowrap}
+#pane-musica input#sc-yt-seek{
+  --sc-yt-progress:0%;
+  display:block;appearance:none;-webkit-appearance:none;
+  box-sizing:border-box;width:100%;height:6px;margin:0;
+  cursor:pointer;border:0;border-radius:99px;
+  background:linear-gradient(to right,var(--yt-gold) 0%,var(--yt-gold) var(--sc-yt-progress),
+    var(--yt-line) var(--sc-yt-progress),var(--yt-line) 100%);
+  outline-offset:6px;box-shadow:inset 0 0 1px var(--yt-line);
+}
+#pane-musica input#sc-yt-seek::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;height:15px;width:15px;
+  border:3px solid var(--yt-elev);border-radius:50%;
+  background:var(--yt-gold);box-shadow:0 0 0 1px var(--yt-gold),0 2px 6px var(--sc-shadow,#0003);
+}
+#pane-musica input#sc-yt-seek::-moz-range-thumb{
+  height:9px;width:9px;border:3px solid var(--yt-elev);
+  border-radius:50%;background:var(--yt-gold);
+  box-shadow:0 0 0 1px var(--yt-gold);
+}
+#pane-musica input#sc-yt-seek:disabled{cursor:default;opacity:.86}
+#pane-musica input#sc-yt-seek:disabled::-webkit-slider-thumb{opacity:.72}
+#pane-musica input#sc-yt-seek:disabled::-moz-range-thumb{opacity:.72}
+#pane-musica #sc-music-root[data-playback="fading"] .sc-yt-seek{
+  background:linear-gradient(90deg,var(--sc-gold-soft,#ae8b5820),transparent);
+  border-radius:8px;
+}
+#pane-musica #sc-music-root[data-playback="fading"] .sc-yt-seek-footer small{
+  color:var(--yt-gold);font-weight:700;
+}
