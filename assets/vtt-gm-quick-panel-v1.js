@@ -2,7 +2,7 @@
 // Recursos são alterados pelo callback transacional; nenhum dado é salvo no navegador.
 export function createGMQuickPanel({
   panel,getAdmin,getSceneId,getTokens,getSheets,getCombat,getConditions,
-  getTokenHidden,getFogVisible,onAdjust,onHide,onFocus,onSheet,onInitiative,onCondition,notify
+  getTokenHidden,getFogVisible,onAdjust,onHide,onFocus,onSheet,onInitiative,notify
 }){
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const number=(v,alt=0)=>Number.isFinite(Number(v))?Number(v):alt;
@@ -56,7 +56,7 @@ export function createGMQuickPanel({
       (status?'<div class="sc-gm-condition" title="Condições atuais">✦ '+esc(status)+'</div>':'')+
       '<div class="sc-gm-actions"><button type="button" data-q-focus="'+id+'">⌖ Mapa</button>'+
       '<button type="button" data-q-sheet="'+id+'">▤ Ficha</button>'+
-      '<button type="button" data-q-cond="'+id+'">✧ Condições</button>'+
+
       (!entry?'<button type="button" data-q-ini="'+id+'">+ Iniciativa</button>':'')+'</div></article>';
   }
   panel.innerHTML='<details class="sc-gm-quick" id="sc-gm-quick-content" open><summary><span>'+
@@ -111,9 +111,6 @@ export function createGMQuickPanel({
     for(const b of root.querySelectorAll('[data-q-focus]'))b.onclick=()=>onFocus(b.dataset.qFocus);
     for(const b of root.querySelectorAll('[data-q-sheet]'))b.onclick=()=>{
       const token=getTokens().find(t=>t.id===b.dataset.qSheet);if(token)onSheet(token.fichaId);
-    };
-    for(const b of root.querySelectorAll('[data-q-cond]'))b.onclick=()=>{
-      const token=getTokens().find(t=>t.id===b.dataset.qCond);if(token)onCondition(token.fichaId);
     };
     for(const b of root.querySelectorAll('[data-q-ini]'))b.onclick=async()=>{
       const token=getTokens().find(t=>t.id===b.dataset.qIni);

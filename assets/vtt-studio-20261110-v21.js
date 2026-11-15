@@ -1,10 +1,8 @@
 import {createTheatre} from './vtt-theatre-v17.js';
 import {createRollsPanel,makeDicePayload,rollForSheet} from './vtt-rolls-v4.js?v=20261111-chat-medium5';
 import {createCombatDirector} from './vtt-combat-director-v1.js?v=20261111-hidden1';
-import {createBattleSystems} from './vtt-battle-systems-v1.js?v=20261112-vision2';
-import {createGMQuickPanel} from './vtt-gm-quick-panel-v1.js?v=20261111-gm1';
-import {createSessionTools} from './vtt-session-tools-v1.js?v=20261111-no-smoke1';
-import {createVisualEffects,EFFECTS} from './vtt-effects-v2.js?v=20261110-jutsus2';
+import {createBattleSystems} from './vtt-battle-systems-v1.js?v=20261115-conditions-context1';
+import {createGMQuickPanel} from './vtt-gm-quick-panel-v1.js?v=20261115-conditions-context1';
 import {DEFAULT_METERS_PER_CELL,metersPerCell,pixelsToMeters,calibrateMetersPerCell,formatMeters,scaleBar} from './vtt-metrics-v1.js';
 import {initializeApp,getApps} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
 import {getAuth,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
@@ -17,7 +15,6 @@ let activeEnvironmentView='walls';
 const $=id=>document.getElementById(id);
 let uid='',admin=false,room='',roomData=null,tokens=[],sheets=[],scenes=[],mapFolders=[],subs=[],dragToken=null,selected=null,sceneKey='',lastRoll='',busy=false,editingSceneId='',tokenUnsub=null,tokenSceneSubscribed=null,sheetsUnsub=null,subscriptionEpoch=0,worldCollectionsReady=false,portraitSubs=new Map(),vitalSubs=new Map(),lastVitals=new Map(),vitalTimer=null,masterUid='',lastStageRosterKey='__initial__',secretRollFeeds={self:[],gm:[],blind:[]},blindProcessing=new Set();
 const stage=$('stage'),canvas=$('map'),ctx=canvas.getContext('2d');
-const visualEffects=createVisualEffects(stage);
 const combatDirector=createCombatDirector({
   panel:$('sc-combat-director'),strip:$('sc-turn-strip'),
   getAdmin:()=>admin,getSheets:()=>sheets,getRoomData:()=>roomData,
@@ -70,20 +67,8 @@ const battle=createBattleSystems({
     const token=visibleTokens().find(t=>t.fichaId===id);
     if(token){selected=token.id;renderTokens();draw()}
   },
-  playEffect:async({kind,name,sourceSheetId,targetSheetId,targetToken})=>{
-    if(!admin||!room)throw Error('Apenas o mestre publica efeitos.');
-    const nonce=uid+'-'+Date.now()+'-'+Math.floor(Math.random()*1000000);
-    const payload={kind,source:'habilidade',fichaId:sourceSheetId,
-      targetFichaId:targetSheetId,jutsuName:String(name).slice(0,80),
-      sceneId:roomData?.activeSceneId||'',nonce};
-    if(targetToken)payload.target={x:targetToken.x,y:targetToken.y};
-    localVfxNonces.add(nonce);
-    setTimeout(()=>localVfxNonces.delete(nonce),15000);
-    visualEffects.play(kind,effectPoint(payload),payload.jutsuName);
-    await addDoc(collection(db,'vttRooms',room,'events'),{
-      type:'effect',uid,at:serverTimestamp(),payload
-    });
-  },
+  // A aplicação de condições permanece funcional; efeitos animados removidos.
+  playEffect:async()=>{},
   adjustHitPoints:async(target,mode,points)=>{
     if(!admin||!room)throw Error('Apenas o mestre edita HP de outras fichas.');
     const ref=doc(db,'fichas',target.id);
@@ -110,56 +95,6 @@ const battle=createBattleSystems({
     });
   }
 });
-function refreshCombatTargets(){
-  const input=$('effect-target');if(!input)return;
-  const value=input.value;
-  const opts=[new Option('Centro do cenário','center'),new Option('Token selecionado','selected')];
-  if(admin)for(const f of sheets){
-    opts.push(new Option(String(f.nome||f.name||'Personagem').slice(0,65),'sheet:'+f.id));
-  }
-  input.replaceChildren(...opts);
-  if([...input.options].some(x=>x.value===value))input.value=value;
-}
-function syncJutsuAudioControls(){
-  const panel=window.SHINOBI_JUTSU_FX;
-  const current=panel?.getSettings?.()||{enabled:true,volume:55};
-  const toggle=$('vtt-jutsu-audio-toggle'),range=$('vtt-jutsu-audio-volume'),label=$('vtt-jutsu-audio-value');
-  if(toggle){
-    toggle.textContent=current.enabled?'🔊 Sons ativados':'🔇 Sons silenciados';
-    toggle.setAttribute('aria-pressed',String(current.enabled));
-  }
-  if(range&&document.activeElement!==range)range.value=current.volume;
-  if(label)label.textContent=current.volume+'%';
-}
-$('vtt-jutsu-audio-test')?.addEventListener('click',()=>{
-  const audio=window.SHINOBI_JUTSU_FX;
-  if(!audio?.getSettings?.().enabled)return show('Ative os sons para testar.');
-  audio.audio('chakra','Prévia sonora shinobi');
-});
-$('vtt-jutsu-audio-toggle')?.addEventListener('click',()=>{
-  window.SHINOBI_JUTSU_FX?.toggle?.();
-  syncJutsuAudioControls();
-});
-$('vtt-jutsu-audio-volume')?.addEventListener('input',event=>{
-  window.SHINOBI_JUTSU_FX?.volume?.(event.target.value);
-  syncJutsuAudioControls();
-});
-syncJutsuAudioControls();
-window.addEventListener('storage',event=>{
-  if(event.key==='sc-jutsu-sound-v1')syncJutsuAudioControls();
-});
-const localVfxNonces=new Set();
-const effectOptions=$('effect-kind');
-for(const fx of EFFECTS){const option=document.createElement('option');option.value=fx.id;option.textContent=fx.name;effectOptions.append(option)}
-function updateEffectHelp(){const fx=EFFECTS.find(x=>x.id===effectOptions.value);$('effect-help').textContent=fx?.description||''}
-effectOptions.onchange=updateEffectHelp;updateEffectHelp();
-const guide=$('effect-guide-items');
-for(const fx of EFFECTS){
-  const row=document.createElement('div');row.style.cssText='border-bottom:1px solid #3f5144;padding:8px 2px';
-  const name=document.createElement('strong');name.textContent=fx.name;name.style.cssText='display:block;font-size:12px;color:#eee4d0';
-  const description=document.createElement('p');description.textContent=fx.description;description.style.cssText='font-size:11px;margin:4px 0 0;color:#aebfad';
-  row.append(name,description);guide.append(row);
-}
 const view={cell:64,zoom:1,ox:110,oy:85,image:null,scene:''};
 const measure={enabled:false,calibrating:false,start:null,end:null,drag:false,drawnPx:0};
 const tokenImages=new Map();function tokenImage(url){if(!safeImage(url)||(url.startsWith('data:')&&url.length>85000))return null;if(!tokenImages.has(url)){const img=new Image();img.onload=draw;img.onerror=()=>tokenImages.set(url,null);img.src=url;tokenImages.set(url,img)}return tokenImages.get(url)}
@@ -321,69 +256,9 @@ const rolls=createRollsPanel({
 });
 // Ferramentas integradas usam as coleções de eventos que o VTT já sincroniza.
 // Os ajustes de HP/Chakra são atômicos para evitar conflitos entre ações.
-const sessionTools=createSessionTools({
-  combatPanel:$('sc-assisted-combat'),
-  scenePanel:$('sc-scene-director'),
-  stage,
-  getUid:()=>uid,getAdmin:()=>admin,getSheets:()=>sheets,
-  getSceneId:()=>roomData?.activeSceneId||'',
-  getRoomData:()=>roomData,getMasterUid:()=>roomData?.masterUid||masterUid||'',
-  notify:show,
-  send:async(type,payload)=>{
-    if(!room||!uid)throw Error('Entre na mesa antes de publicar.');
-    if(type!=='message'&&type!=='roll')throw Error('Tipo de evento não permitido.');
-    return addDoc(collection(db,'vttRooms',room,'events'),{
-      type,uid,at:serverTimestamp(),payload
-    });
-  },
-  applyResources:async(sourceId,targetId,damage,chakraCost)=>{
-    if(!admin||!room)throw Error('Somente o mestre pode alterar recursos.');
-    const sourceRef=doc(db,'fichas',sourceId),targetRef=doc(db,'fichas',targetId);
-    const dmg=Math.max(0,Math.min(999,Math.round(Number(damage)||0)));
-    const cost=Math.max(0,Math.min(999,Math.round(Number(chakraCost)||0)));
-    await runTransaction(db,async tx=>{
-      const src=await tx.get(sourceRef);
-      const dst=sourceId===targetId?src:await tx.get(targetRef);
-      if(!src.exists()||!dst.exists())throw Error('Ficha não encontrada.');
-      const updatesSource={},updatesTarget={};
-      if(cost>0){
-        const data=src.data(),max=Math.max(0,10+3*(Number(data.atributos?.ESP)||0));
-        const stored=data.recursos?.chakra;
-        const current=stored===null||stored===undefined||stored===''?
-          max:Math.max(0,Math.min(max,Math.round(Number(stored)||0)));
-        if(current<cost)throw Error('Chakra insuficiente em '+(data.nome||'atacante')+'.');
-        updatesSource['recursos.chakra']=current-cost;
-      }
-      if(dmg>0){
-        const hp=healthOf(dst.data());
-        updatesTarget['recursos.vit']=Math.max(0,hp.current-dmg);
-      }
-      if(sourceId===targetId){
-        const changes={...updatesSource,...updatesTarget};
-        if(Object.keys(changes).length)tx.update(sourceRef,changes);
-      }else{
-        if(Object.keys(updatesSource).length)tx.update(sourceRef,updatesSource);
-        if(Object.keys(updatesTarget).length)tx.update(targetRef,updatesTarget);
-      }
-    });
-  },
-  applyCondition:(targetId,condition,rounds)=>battle.addCondition(targetId,condition,rounds),
-  playEffect:async({kind,name,sourceSheetId,targetSheetId})=>{
-    if(!admin||!room)throw Error('Somente o mestre transmite efeitos.');
-    const targetToken=visibleTokens().find(t=>t.fichaId===targetSheetId);
-    const nonce=uid+'-'+Date.now()+'-'+Math.floor(Math.random()*1000000);
-    const payload={kind,source:'combate-assistido',fichaId:sourceSheetId,
-      targetFichaId:targetSheetId,jutsuName:String(name||'Ataque').slice(0,80),
-      sceneId:roomData?.activeSceneId||'',nonce};
-    if(targetToken)payload.target={x:targetToken.x,y:targetToken.y};
-    localVfxNonces.add(nonce);
-    setTimeout(()=>localVfxNonces.delete(nonce),15000);
-    visualEffects.play(kind,effectPoint(payload),payload.jutsuName);
-    await addDoc(collection(db,'vttRooms',room,'events'),{
-      type:'effect',uid,at:serverTimestamp(),payload
-    });
-  }
-});
+// O diretor de efeitos de cena e o combate assistido foram aposentados.
+// Os dados legados são preservados, mas nenhuma animação ou som é executado.
+const sessionTools={setEvents(){},refresh(){},reset(){}};
 // Controle rápido reutiliza fichas e operações existentes, sem coleções novas.
 const gmQuick=createGMQuickPanel({
  panel:$('sc-gm-quick-panel'),getAdmin:()=>admin,
@@ -410,7 +285,6 @@ const gmQuick=createGMQuickPanel({
  onSheet:id=>{
    const f=sheets.find(f=>f.id===id);if(f)openSheet(f.id,f.ownerUid);
  },
- onCondition:id=>battle.openForToken(id,'condition'),
  onInitiative:id=>combatDirector.addOne(id),
  onAdjust:async(id,pool,amount)=>{
    if(!admin||!room||!['vit','chakra'].includes(pool))throw Error('Operação não autorizada.');
@@ -500,8 +374,8 @@ function openScenes(){
 }
 $('scene-open-library').onclick=openScenes;
 $('scene-open-panel').onclick=openScenes;
-function applyRole(){for(const id of ['gm-scenes','next-turn','cast-effect','effect-kind','effect-kind-label','effect-target','effect-target-label','effect-help'])$(id).hidden=!admin;for(const item of document.querySelectorAll('[data-gm-only]'))item.hidden=!admin;$('scene-open-library').setAttribute('aria-label',admin?'Abrir biblioteca de mapas':'Cena em exibição');
-$('scene-open-panel').title=admin?'Escolher mapa na biblioteca':'Cena em exibição';$('auth-label').textContent=uid?(admin?'Mestre · permissões administrativas':'Jogador · acesso restrito'):'Faça login nos Arquivos Shinobi';if(!admin&&(document.querySelector('[data-tab="combate"].active')||document.querySelector('[data-tab="ambiente"].active')||document.querySelector('[data-tab="mapas"].active')))switchTab('rolls');theatre.refresh();renderSheets();combatDirector.refresh();battle.render();refreshCombatTargets();sessionTools.refresh();gmQuick.refresh();gmQuick.refresh();}
+function applyRole(){for(const id of ['gm-scenes'])$(id).hidden=!admin;for(const item of document.querySelectorAll('[data-gm-only]'))item.hidden=!admin;$('scene-open-library').setAttribute('aria-label',admin?'Abrir biblioteca de mapas':'Cena em exibição');
+$('scene-open-panel').title=admin?'Escolher mapa na biblioteca':'Cena em exibição';$('auth-label').textContent=uid?(admin?'Mestre · permissões administrativas':'Jogador · acesso restrito'):'Faça login nos Arquivos Shinobi';if(!admin&&(document.querySelector('[data-tab="combate"].active')||document.querySelector('[data-tab="ambiente"].active')||document.querySelector('[data-tab="mapas"].active')))switchTab('rolls');theatre.refresh();renderSheets();combatDirector.refresh();battle.render();sessionTools.refresh();gmQuick.refresh();gmQuick.refresh();}
 onAuthStateChanged(auth,async user=>{stopSubs();if(sheetsUnsub){sheetsUnsub();sheetsUnsub=null}uid=user?.uid||'';admin=false;sheets=[];theatre.setActors([]);rolls.setUser(uid);rolls.setSheets([]);applyRole();if(!uid){show('Faça login no Shinobi Chronicles antes de entrar na mesa.');return}try{admin=user.email==='mestre_shinobi@players.shinobi-chronicles.invalid'||(await getDoc(doc(db,'admins',uid))).exists();applyRole();loadSheets();void connectWorld()}catch(e){show('Falha na autenticação: '+e.message)}});
 function loadSheets(){
   if(sheetsUnsub){sheetsUnsub();sheetsUnsub=null}
@@ -509,7 +383,7 @@ function loadSheets(){
   sheetsUnsub=onSnapshot(source,snap=>{
     sheets=snap.docs.filter(d=>d.data().tipo!=='diario').map(d=>({id:d.id,...d.data()}));
     updateTheatreDirectory();rolls.setSheets(sheets);
-    renderSheets();combatDirector.refresh();battle.render();refreshCombatTargets();sessionTools.refresh();gmQuick.refresh();
+    renderSheets();combatDirector.refresh();battle.render();sessionTools.refresh();gmQuick.refresh();
     scheduleVitalSync();
   },e=>show('Não foi possível sincronizar as fichas: '+e.message));
 }
@@ -750,6 +624,85 @@ function openActorMenu(sheet,x,y,opener=null,token=null){
     smaller.onclick=()=>{if(saving)return;previewScale(Number(range.value)-5);void commitScale()};
     larger.onclick=()=>{if(saving)return;previewScale(Number(range.value)+5);void commitScale()};
     reset.onclick=()=>{if(saving)return;previewScale(100);void commitScale()};
+
+    // Condições direto no token, sem trocar para outra aba.
+    // Mesmas condições persistidas em theatre.conditions e desenhadas no mapa.
+    const conditionSection=document.createElement('details');
+    conditionSection.className='sc-token-conditions';
+    conditionSection.open=true;
+    const conditionHeading=document.createElement('summary');
+    conditionHeading.textContent='✦ Aplicar condição';
+    conditionHeading.title='Aplicar ou remover condições neste personagem';
+    conditionSection.append(conditionHeading);
+
+    const conditionBody=document.createElement('div');
+    conditionBody.className='sc-token-condition-body';
+    const applied=document.createElement('div');
+    applied.className='sc-token-condition-applied';
+    applied.setAttribute('aria-label','Condições ativas');
+    const conditionSelect=document.createElement('select');
+    conditionSelect.className='sc-token-condition-kind';
+    conditionSelect.setAttribute('aria-label','Condição a aplicar');
+    for(const condition of battle.conditionTypes()){
+      const option=document.createElement('option');
+      option.value=condition.id;
+      option.textContent=condition.icon+' '+condition.name;
+      conditionSelect.append(option);
+    }
+    const roundRow=document.createElement('div');roundRow.className='sc-token-condition-row';
+    const roundLabel=document.createElement('label');roundLabel.textContent='Duração (rodadas)';
+    const roundInput=document.createElement('input');roundInput.type='number';
+    roundInput.min='1';roundInput.max='99';roundInput.step='1';roundInput.value='2';
+    roundInput.className='sc-token-condition-rounds';
+    roundInput.setAttribute('aria-label','Duração da condição em rodadas');
+    roundLabel.append(roundInput);
+    const conditionApply=document.createElement('button');
+    conditionApply.type='button';conditionApply.className='sc-token-condition-apply';
+    conditionApply.textContent='+ Aplicar';
+    roundRow.append(roundLabel,conditionApply);
+    const tooltip=document.createElement('small');tooltip.className='sc-token-condition-help';
+    tooltip.textContent='O símbolo aparece sobre o token e dura as rodadas escolhidas.';
+
+    function refreshConditionBadges(){
+      applied.replaceChildren();
+      const current=battle.getConditionList(sheet.id);
+      const types=battle.conditionTypes();
+      if(!current.length){
+        const none=document.createElement('small');none.className='sc-token-condition-empty';
+        none.textContent='Sem condições aplicadas';applied.append(none);return;
+      }
+      for(const condition of current){
+        const kind=types.find(t=>t.id===condition.id);
+        if(!kind)continue;
+        const line=document.createElement('div');line.className='sc-token-condition-badge';
+        const icon=document.createElement('span');icon.className='sc-token-condition-symbol';icon.textContent=kind.icon;
+        const name=document.createElement('span');name.textContent=kind.name+' · '+condition.remaining+' rod.';
+        const remove=document.createElement('button');remove.type='button';
+        remove.textContent='×';remove.title='Remover '+kind.name;remove.setAttribute('aria-label','Remover '+kind.name);
+        remove.onclick=async()=>{
+          remove.disabled=true;
+          const ok=await battle.removeCondition(sheet.id,condition.id);
+          if(ok){refreshConditionBadges();draw();gmQuick.refresh()}
+          else remove.disabled=false;
+        };
+        line.append(icon,name,remove);applied.append(line);
+      }
+    }
+    conditionApply.onclick=async()=>{
+      if(!admin||!room)return;
+      const rounds=Math.max(1,Math.min(99,Math.round(Number(roundInput.value)||1)));
+      conditionApply.disabled=true;conditionSelect.disabled=true;roundInput.disabled=true;
+      try{
+        const ok=await battle.addCondition(sheet.id,conditionSelect.value,rounds);
+        if(ok){refreshConditionBadges();draw();gmQuick.refresh()}
+      }finally{
+        conditionApply.disabled=false;conditionSelect.disabled=false;roundInput.disabled=false;
+      }
+    };
+    conditionBody.append(applied,conditionSelect,roundRow,tooltip);
+    conditionSection.append(conditionBody);
+    menu.append(conditionSection);
+    refreshConditionBadges();
   }
   // Ações iguais para o painel de atores e para o clique direito no token.
   if(combatDirector.hasEntry(sheet.id)){
@@ -757,9 +710,6 @@ function openActorMenu(sheet,x,y,opener=null,token=null){
   }else{
     action('Adicionar à iniciativa','⚄',()=>combatDirector.addOne(sheet.id));
   }
-  action('Condições de combate','✦',()=>battle.openForToken(sheet.id,'condition'));
-  action('Lançar jutsu deste personagem','巻',()=>battle.openForToken(sheet.id,'jutsu'));
-  action('Definir como alvo de jutsu','◎',()=>battle.openForToken(sheet.id,'target'));
   action('Abrir ficha','▤',()=>openSheet(sheet.id,sheet.ownerUid));
   document.body.append(menu);
   const rect=menu.getBoundingClientRect();
@@ -982,7 +932,7 @@ async function connectWorld(){
       combatDirector.setData(roomData.theatre?.combat||roomData.combat);
        battle.setData(roomData.theatre);
        combatDirector.refresh();
-       refreshCombatTargets();gmQuick.refresh();renderTokens();
+       gmQuick.refresh();renderTokens();
       theatre.setState(roomData.theatre);
       const cast=theatre.getCast();
       updateTheatreDirectory();
@@ -995,7 +945,6 @@ async function connectWorld(){
       $('room-heading').textContent='Mesa Permanente · '+(roomData.name||'Shinobi Chronicles');
       $('scene-name').textContent=roomData.sceneName||'Mesa Shinobi';
       $('scene-caption').textContent=admin?'Clique para abrir a biblioteca':'Cena compartilhada';
-      $('turn-label').textContent='Turno '+(roomData.turn||0);
       $('current-scene-label').textContent=roomData.sceneName||'Nenhuma cena ativa';
       $('current-scene-subtitle').textContent=admin?'Clique para escolher um cenário':'Cenário compartilhado pelo mestre';
       const thumb=$('scene-current-preview'),icon=$('scene-current-icon');
@@ -1023,20 +972,11 @@ async function connectWorld(){
           const eventRows=events.docs.map(d=>({id:d.id,data:d.data()}));
           rolls.setEvents(eventRows);
           sessionTools.setEvents(eventRows);
+          // Somente solicitações de portas continuam sendo tratadas aqui.
+          // Eventos de efeitos antigos não são mais reproduzidos.
           for(const change of events.docChanges()){
             if(change.type!=='added'&&change.type!=='modified')continue;
-            const data=change.doc.data();
-            if(data.type==='door'){
-              if(admin)void resolveDoorEvent(change.doc,epoch);
-              continue;
-            }
-            if(data.type!=='effect')continue;
-            if(data.payload?.sceneId&&data.payload.sceneId!==roomData?.activeSceneId)continue;
-            const stamp=data.at?.toMillis?.();
-            if(!stamp||Math.abs(Date.now()-stamp)>12000)continue;
-            if(visualEffects.seenEvent(change.doc.id))continue;
-            if(data.payload?.nonce&&localVfxNonces.has(data.payload.nonce))continue;
-            visualEffects.play(data.payload?.kind,effectPoint(data.payload),data.payload?.jutsuName||'');
+            if(change.doc.data().type==='door'&&admin)void resolveDoorEvent(change.doc,epoch);
           }
         },e=>show('Histórico: '+e.message)));
         // Private rolls are fetched by the only principal authorized to see them.
@@ -1148,7 +1088,7 @@ function watchTokens(sceneId){
     if(observed&&!visibleTokens().some(t=>t.id===observed.id)){
       battle.clearVisionPreview();updateStageToolStatus();
     }
-    renderTokens();draw();battle.render();combatDirector.refreshMapStatus();combatDirector.refresh();refreshCombatTargets();gmQuick.refresh();
+    renderTokens();draw();battle.render();combatDirector.refreshMapStatus();combatDirector.refresh();gmQuick.refresh();
   },err=>show('Permissão dos tokens: '+err.message));
 }
 
@@ -1412,56 +1352,6 @@ function renderTokens(){
     }
     root.append(line);
   }
-}
-$('next-turn').onclick=async()=>{if(admin&&room)try{await updateDoc(roomRef(),{turn:(roomData?.turn||0)+1,updatedAt:serverTimestamp()})}catch(e){show(e.message)}};
-function effectPoint(payload){
-  let target=payload?.target;
-  if(!target&&payload?.targetFichaId)
-    target=visibleTokens().find(t=>t.fichaId===payload.targetFichaId);
-  if(!target&&!payload?.targetFichaId&&payload?.fichaId)
-    target=visibleTokens().find(t=>t.fichaId===payload.fichaId);
-  if(target&&Number.isFinite(target.x)&&Number.isFinite(target.y)){
-    return {
-      x:view.ox+(target.x+.5)*view.cell*view.zoom,
-      y:view.oy+(target.y+.5)*view.cell*view.zoom
-    };
-  }
-  return {x:stage.clientWidth/2,y:stage.clientHeight/2};
-}
-$('cast-effect').onclick=async()=>{
-  if(!admin||!room)return show('Apenas o mestre ativa efeitos da mesa.');
-  const kind=effectOptions.value;
-  if(!EFFECTS.some(x=>x.id===kind))return;
-  const selectedTarget=$('effect-target').value;
-  const onToken=selectedTarget==='selected'||selectedTarget.startsWith('sheet:');
-  const target=selectedTarget==='selected'?visibleTokens().find(t=>t.id===selected):
-    selectedTarget.startsWith('sheet:')?visibleTokens().find(t=>t.fichaId===selectedTarget.slice(6)):null;
-  if(onToken&&!target)return show('Coloque o personagem no mapa ou selecione um token para executar o efeito nele.');
-  const nonce=uid+'-'+Date.now()+'-'+Math.floor(Math.random()*1000000);
-  localVfxNonces.add(nonce);
-  setTimeout(()=>localVfxNonces.delete(nonce),15000);
-  const payload={kind,sceneId:roomData?.activeSceneId||'',nonce};
-  if(target)payload.target={x:target.x,y:target.y};
-  visualEffects.play(kind,effectPoint(payload));
-  $('effect-feedback').textContent='Efeito executado: '+(EFFECTS.find(x=>x.id===kind)?.name||kind);
-  try{
-    await addDoc(collection(db,'vttRooms',room,'events'),{type:'effect',uid,at:serverTimestamp(),payload});
-  }catch(e){
-    show('Efeito exibido apenas localmente; falha ao compartilhar: '+e.message);
-    $('effect-feedback').textContent='Não foi possível compartilhar o efeito com os jogadores.';
-  }
-};
-// Um toque para executar efeitos frequentes; posiciona no token selecionado
-// quando existe um alvo, senão no centro da cena.
-for(const button of document.querySelectorAll('#fx-quick [data-fx]')){
-  button.addEventListener('click',()=>{
-    if(!admin||!room)return show('Efeitos rápidos disponíveis apenas para o mestre.');
-    const id=button.dataset.fx;
-    if(!EFFECTS.some(effect=>effect.id===id))return;
-    effectOptions.value=id;updateEffectHelp();
-    // O efeito rápido usa o alvo já escolhido no seletor do mestre.
-    $('cast-effect').click();
-  });
 }
 function automaticMapCell(img){return Math.max(32,Math.min(192,Math.round(Math.min(img.naturalWidth||img.width,img.naturalHeight||img.height)/18)))}
 function loadMap(url){

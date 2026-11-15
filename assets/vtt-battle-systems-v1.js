@@ -594,6 +594,7 @@ export function createBattleSystems({
   render();
   return {setData,render,paintFog,tokenVisible,drawTokenMarks,refreshTimelineBadges,
     addCondition,removeCondition,openForToken,setTarget:chooseTarget,
+    conditionTypes:()=>CONDITIONS.map(c=>({...c})),
     pointerDown,pointerMove,pointerUp,cancel,toggleFogMode,isMode,shortStatus,
     getCurrentFog,applyRoundTick,getConditionList,setTokenHidden,toggleTokenHidden,isTokenHidden,isRevealed,
     drawWalls:(ctx,view)=>walls.draw(ctx,view,previewTokenId),blocksMovement:walls.moveBlocked,

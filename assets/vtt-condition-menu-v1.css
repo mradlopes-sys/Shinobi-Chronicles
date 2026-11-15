@@ -1,0 +1,139 @@
+/* Shinobi Chronicles · condições pelo clique direito no token.
+   Nenhuma animação, efeitos de jutsu ou som são criados aqui. */
+.actor-context-menu {
+  width: 266px;
+  max-width: calc(100vw - 16px);
+  max-height: min(79dvh, 680px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--sc-stroke-strong,#7e907b) transparent;
+}
+.sc-token-conditions{
+  border:1px solid var(--sc-stroke,#596c5c);
+  background:var(--sc-green-soft,#6b815f18);
+  border-radius:9px;
+  margin:9px 2px 10px;
+  overflow:hidden;
+}
+.sc-token-conditions>summary{
+  display:flex;
+  align-items:center;
+  list-style:none;
+  cursor:pointer;
+  padding:10px 12px;
+  gap:8px;
+  font:700 12px/1.3 var(--vtt-title,Georgia,serif);
+  color:var(--sc-ink,#eee4cf);
+  background:var(--sc-gold-soft,#a58b591a);
+}
+.sc-token-conditions>summary::-webkit-details-marker{display:none}
+.sc-token-conditions>summary:hover{color:var(--sc-gold,#dcc08b)}
+.sc-token-conditions[open]>summary{border-bottom:1px solid var(--sc-stroke,#526957)}
+.sc-token-condition-body{
+  display:grid;
+  gap:9px;
+  padding:10px 9px 11px;
+  min-width:0;
+}
+.sc-token-condition-applied{
+  display:grid;
+  gap:5px;
+  max-height:144px;
+  overflow-y:auto;
+  padding-right:1px;
+}
+.sc-token-condition-empty{
+  display:block;
+  padding:7px 5px;
+  font-size:10px;
+  color:var(--sc-muted,#acbaaa);
+}
+.sc-token-condition-badge{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:5px 6px;
+  min-width:0;
+  border:1px solid var(--sc-stroke,#637260);
+  border-radius:7px;
+  font:500 11px/1.3 var(--vtt-body,Arial,sans-serif);
+  color:var(--sc-ink,#ebe7d8);
+  background:var(--sc-elev,#23332b);
+}
+.sc-token-condition-symbol{
+  flex:0 0 21px;
+  height:21px;
+  display:grid;
+  place-items:center;
+  color:var(--sc-gold,#d1b787);
+  font:700 15px Georgia,serif;
+}
+.sc-token-condition-badge>span:nth-child(2){
+  flex:1;
+  min-width:0;
+  overflow-wrap:anywhere;
+}
+.sc-token-condition-badge>button{
+  width:25px;
+  height:25px;
+  border:1px solid transparent;
+  border-radius:6px;
+  color:var(--sc-accent,#d8a09a);
+  background:transparent;
+  cursor:pointer;
+  font-size:18px;
+}
+.sc-token-condition-badge>button:hover{border-color:var(--sc-accent,#d8a09a)}
+.sc-token-condition-body select,
+.sc-token-condition-body input{
+  background:var(--sc-elev,#213027);
+  color:var(--sc-ink,#f0e9df);
+  border:1px solid var(--sc-stroke-strong,#6e826a);
+  border-radius:7px;
+  padding:9px 8px;
+  font-size:11px;
+  min-width:0;
+}
+.sc-token-condition-kind{width:100%}
+.sc-token-condition-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:7px;
+  align-items:end;
+}
+.sc-token-condition-row label{
+  display:grid;
+  gap:5px;
+  min-width:0;
+  color:var(--sc-muted,#aab6a5);
+  font-size:10px;
+}
+.sc-token-condition-rounds{width:100%;height:35px}
+.sc-token-condition-apply{
+  background:var(--sc-primary,#4c694e);
+  color:var(--sc-primary-text,#f3eedc);
+  font:700 11px var(--vtt-body,Arial,sans-serif);
+  border:1px solid var(--sc-gold,#d0b17c);
+  border-radius:7px;
+  padding:9px;
+  min-height:35px;
+  cursor:pointer;
+}
+.sc-token-condition-apply:hover{filter:brightness(1.1)}
+.sc-token-condition-apply:disabled,
+.sc-token-condition-badge>button:disabled{opacity:.5;cursor:wait}
+.sc-token-condition-help{
+  display:block;
+  font:500 10px/1.45 var(--vtt-body,Arial,sans-serif);
+  color:var(--sc-muted,#a9b7a8);
+}
+.sc-combat-minimal-note{
+  margin:13px 2px 23px;
+  font-size:11px;
+  line-height:1.6;
+  color:var(--sc-muted,#b1bbaa);
+  border-top:1px solid var(--sc-stroke,#4b5e4b);
+  padding:12px 2px;
+}
