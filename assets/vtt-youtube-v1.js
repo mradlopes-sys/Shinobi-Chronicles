@@ -1,0 +1,602 @@
+// Shinobi Chronicles · Trilha do YouTube por playlists.
+// Dados guardados nos campos theatre.youtubePlaylists e theatre.youtubeState
+// do documento existente da Mesa Permanente; nenhum Firebase Storage necessário.
+import {initializeApp,getApps} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
+import {getAuth,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
+import {getFirestore,doc,getDoc,onSnapshot,updateDoc,runTransaction,serverTimestamp}
+  from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
+
+const app=getApps()[0]||initializeApp({
+  apiKey:'AIzaSyCdTZejzKXYyyAnYgak7ADEsDhfsdFgvVo',
+  authDomain:'shinobi-chronicles-b9635.firebaseapp.com',
+  projectId:'shinobi-chronicles-b9635',
+  appId:'1:1000505549378:web:e1cbf459451b617f3503db'
+});
+const auth=getAuth(app),db=getFirestore(app);
+const roomRef=doc(db,'vttRooms','shinobi-chronicles');
+const $=id=>document.getElementById(id),root=$('sc-music-root');
+if(!root)throw Error('Não foi possível encontrar a aba de músicas.');
+
+const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const cap=(x,n)=>String(x??'').trim().slice(0,n);
+const nBound=(x,min,max)=>Math.max(min,Math.min(max,Number.isFinite(+x)?+x:min));
+const uid=()=>crypto.randomUUID?crypto.randomUUID().replace(/-/g,'').slice(0,18):
+  Math.random().toString(36).slice(2)+Date.now().toString(36);
+const GENERAL='geral';
+const DEFAULT_LIST=()=>({id:GENERAL,name:'Geral',tracks:[]});
+const EMPTY_STATE=()=>({playlistId:'',trackId:'',videoId:'',status:'stopped',position:0,loop:false});
+function parseYouTube(raw){
+  const url=cap(raw,2000);
+  let u;
+  try{u=new URL(/^https?:\/\//i.test(url)?url:'https://'+url)}
+  catch{return null}
+  if(u.protocol!=='https:')return null;
+  const h=u.hostname.toLowerCase();
+  let id='';
+  if(h==='youtu.be'||h==='www.youtu.be')id=u.pathname.split('/')[1]||'';
+  else if(['youtube.com','www.youtube.com','m.youtube.com','music.youtube.com','youtube-nocookie.com','www.youtube-nocookie.com'].includes(h)){
+    const seg=u.pathname.split('/').filter(Boolean);
+    if(u.pathname==='/watch')id=u.searchParams.get('v')||'';
+    else if(['shorts','live','embed','v'].includes(seg[0]))id=seg[1]||'';
+  }
+  return /^[A-Za-z0-9_-]{11}$/.test(id)?id:null;
+}
+function sanitizeLists(value){
+  const raw=Array.isArray(value)?value:[];
+  const out=[DEFAULT_LIST()],seen=new Set([GENERAL]);
+  for(const entry of raw.slice(0,30)){
+    if(!entry||typeof entry!=='object')continue;
+    let id=cap(entry.id,40);
+    if(id===GENERAL){out[0].tracks=sanitizeTracks(entry.tracks);continue}
+    if(!/^[A-Za-z0-9_-]{5,40}$/.test(id)||seen.has(id))continue;
+    seen.add(id);
+    out.push({id,name:cap(entry.name,56)||'Playlist',tracks:sanitizeTracks(entry.tracks)});
+  }
+  return out;
+}
+function sanitizeTracks(value){
+  if(!Array.isArray(value))return [];
+  const seen=new Set();
+  return value.slice(0,180).filter(x=>{
+    if(!x||typeof x!=='object'||!(/^[A-Za-z0-9_-]{5,40}$/).test(x.id||'')||
+      !(/^[A-Za-z0-9_-]{11}$/).test(x.videoId||'')||seen.has(x.id))return false;
+    seen.add(x.id);return true;
+  }).map(x=>({id:x.id,videoId:x.videoId,url:'https://www.youtube.com/watch?v='+x.videoId,title:cap(x.title,95)||'Faixa do YouTube'}));
+}
+function safeState(value){
+  if(!value||typeof value!=='object')return EMPTY_STATE();
+  return {
+    playlistId:cap(value.playlistId,40),trackId:cap(value.trackId,40),
+    videoId:/^[A-Za-z0-9_-]{11}$/.test(value.videoId||'')?value.videoId:'',
+    status:['playing','paused','stopped'].includes(value.status)?value.status:'stopped',
+    position:nBound(value.position,0,86400),loop:!!value.loop,
+    startedAt:value.startedAt||null
+  };
+}
+function findTrack(trackId,playlistId){
+  for(const p of lists){
+    if(playlistId&&p.id!==playlistId)continue;
+    const t=p.tracks.find(x=>x.id===trackId);
+    if(t)return {...t,playlist:p};
+  }
+  return null;
+}
+const errorText=error=>{
+  const code=String(error?.code||''),msg=String(error?.message||error||'Erro desconhecido');
+  if(code.includes('permission-denied')||/Missing or insufficient permissions/i.test(msg))
+    return 'O Firebase negou acesso. Confira se você está logado como mestre e se a mesa está com as permissões atuais.';
+  if(code.includes('unavailable'))return 'A conexão com o Firebase caiu. Confira a internet.';
+  return msg;
+};
+let user=null,gm=false,lists=[DEFAULT_LIST()],state=EMPTY_STATE();
+let selectedPlaylistId=GENERAL,player=null,playerReady=false;
+let loadedVideoId='',appliedState='',fireUnsub=null,authEpoch=0;
+let busy=false,localVolume=80,lastLibraryKey='';
+try{const v=Number(localStorage.getItem('sc-youtube-volume'));if(Number.isFinite(v))localVolume=nBound(v,0,100)}catch{}
+
+root.innerHTML=String.raw`
+  <header class="sc-yt-heading">
+    <span class="sc-yt-kicker">音楽 · ARQUIVOS SHINOBI</span>
+    <h2>Músicas da campanha</h2>
+    <p>Suas playlists de ambientação, combate e histórias.</p>
+  </header>
+  <div class="sc-yt-status" id="sc-yt-status" role="status">Conectando à mesa…</div>
+  <section class="sc-yt-deck" aria-label="Reprodutor do YouTube">
+    <div class="sc-yt-deck-title">
+      <span class="sc-yt-deck-icon">音</span>
+      <span><small>TOCANDO NA MESA</small><strong id="sc-yt-now">Nenhuma música selecionada</strong>
+      <em id="sc-yt-now-playlist">O mestre escolhe a próxima trilha.</em></span>
+    </div>
+    <div class="sc-yt-video-shell" id="sc-yt-video-shell">
+      <div id="sc-yt-embed"></div>
+    </div>
+    <div class="sc-yt-deck-controls" id="sc-yt-gm-controls" hidden>
+      <button type="button" id="sc-yt-prev" title="Faixa anterior">⏮</button>
+      <button type="button" id="sc-yt-play" class="primary" title="Reproduzir ou pausar">▶</button>
+      <button type="button" id="sc-yt-stop" title="Parar">■</button>
+      <button type="button" id="sc-yt-next" title="Próxima faixa">⏭</button>
+      <button type="button" id="sc-yt-loop" title="Repetir esta playlist" aria-pressed="false">↻</button>
+    </div>
+    <label class="sc-yt-volume" for="sc-yt-volume"><span>VOLUME LOCAL</span>
+      <input id="sc-yt-volume" type="range" min="0" max="100" value="80" step="1">
+      <output id="sc-yt-volume-label">80%</output></label>
+    <p class="sc-yt-notice" id="sc-yt-notice" hidden></p>
+  </section>
+  <section class="sc-yt-library">
+    <div class="sc-yt-library-head"><span>MINHAS PLAYLISTS</span><small id="sc-yt-count">1 playlist</small></div>
+    <div class="sc-yt-new" id="sc-yt-new" hidden>
+      <input id="sc-yt-new-name" type="text" maxlength="56" placeholder="Ex.: Combate, Vila da Chuva…" aria-label="Nome da playlist">
+      <button type="button" id="sc-yt-new-create" title="Criar playlist">＋ Criar</button>
+    </div>
+    <div class="sc-yt-folders" id="sc-yt-folders"></div>
+    <div class="sc-yt-track-head">
+      <div><span id="sc-yt-list-title">Geral</span><small id="sc-yt-list-count">0 músicas</small></div>
+      <button type="button" id="sc-yt-play-list" hidden>▶ Tocar playlist</button>
+    </div>
+    <form id="sc-yt-add-form" class="sc-yt-add" hidden>
+      <span>ADICIONAR LINK DO YOUTUBE</span>
+      <input id="sc-yt-link" type="url" placeholder="Cole o link do vídeo do YouTube" autocomplete="off" required>
+      <input id="sc-yt-title" type="text" maxlength="95" placeholder="Nome da música (opcional)">
+      <button type="submit">＋ Salvar música na playlist</button>
+    </form>
+    <div id="sc-yt-tracks" class="sc-yt-tracks"></div>
+  </section>
+  <p class="sc-yt-feedback" id="sc-yt-feedback" aria-live="polite"></p>
+  <details class="sc-yt-help"><summary>Como funciona?</summary>
+    <p>Como mestre, crie playlists, cole links de vídeos e clique em ▶ para tocar a trilha para a mesa. Os links ficam salvos no Firebase e não precisam ser baixados.</p>
+    <p>Os jogadores acompanham a trilha pelo player do YouTube. Alguns navegadores bloqueiam áudio automático: nesses casos, basta clicar no ▶ do próprio vídeo. Não é necessário enviar arquivos nem habilitar o Firebase Storage.</p>
+    <p>Alguns vídeos têm incorporação desativada pelo autor e não podem tocar fora do YouTube. Experimente outro vídeo se aparecer essa mensagem.</p>
+  </details>
+`;
+const toast=(message,error=false)=>{
+  const el=$('sc-yt-feedback');el.textContent=message;el.classList.toggle('error',error);
+};
+function connected(text,status='ok'){
+  const el=$('sc-yt-status');el.textContent=text;el.dataset.state=status;
+}
+function notice(text){
+  const el=$('sc-yt-notice');el.hidden=!text;el.textContent=text||'';
+}
+function current(){
+  return findTrack(state.trackId,state.playlistId)||findTrack(state.trackId)||null;
+}
+function statePosition(){
+  if(state.status!=='playing')return state.position;
+  const stamp=state.startedAt?.toMillis?.();
+  return stamp?Math.max(0,state.position+(Date.now()-stamp)/1000):state.position;
+}
+function syncHeader(){
+  const song=current();
+  $('sc-yt-now').textContent=song?.title||'Nenhuma música selecionada';
+  $('sc-yt-now-playlist').textContent=song?.playlist.name||'O mestre escolhe a próxima trilha.';
+  $('sc-yt-gm-controls').hidden=!gm;
+  $('sc-yt-play').textContent=state.status==='playing'?'Ⅱ':'▶';
+  $('sc-yt-loop').setAttribute('aria-pressed',String(state.loop));
+  $('sc-yt-loop').classList.toggle('active',state.loop);
+  $('sc-yt-volume').value=localVolume;
+  $('sc-yt-volume-label').textContent=localVolume+'%';
+  $('sc-yt-new').hidden=!gm;
+  $('sc-yt-add-form').hidden=!gm;
+  $('sc-yt-play-list').hidden=!gm;
+}
+function selectPlaylist(id){
+  if(!lists.some(x=>x.id===id))id=GENERAL;
+  selectedPlaylistId=id;
+  renderFolders();renderTracks();
+}
+function renderFolders(){
+  $('sc-yt-count').textContent=lists.length+' '+(lists.length===1?'playlist':'playlists');
+  const host=$('sc-yt-folders');host.replaceChildren();
+  for(const p of lists){
+    const row=document.createElement('div');row.className='sc-yt-folder'+(p.id===selectedPlaylistId?' active':'');
+    const choose=document.createElement('button');choose.type='button';choose.className='sc-yt-folder-choice';
+    choose.innerHTML='<span class="sc-yt-folder-glyph">▤</span><span class="sc-yt-folder-info"><strong>'+
+      esc(p.name)+'</strong><small>'+p.tracks.length+' '+(p.tracks.length===1?'música':'músicas')+'</small></span>';
+    choose.onclick=()=>selectPlaylist(p.id);row.append(choose);
+    if(gm&&p.id!==GENERAL){
+      const rename=document.createElement('button');rename.type='button';rename.className='sc-yt-folder-action';
+      rename.title='Renomear';rename.textContent='✎';rename.onclick=()=>void renamePlaylist(p.id);
+      const remove=document.createElement('button');remove.type='button';remove.className='sc-yt-folder-action danger';
+      remove.title='Excluir playlist';remove.textContent='×';remove.onclick=()=>void deletePlaylist(p.id);
+      row.append(rename,remove);
+    }
+    host.append(row);
+  }
+}
+function renderTracks(){
+  const p=lists.find(x=>x.id===selectedPlaylistId)||lists[0],host=$('sc-yt-tracks');
+  $('sc-yt-list-title').textContent=p.name;
+  $('sc-yt-list-count').textContent=p.tracks.length+' '+(p.tracks.length===1?'música':'músicas');
+  $('sc-yt-play-list').disabled=!p.tracks.length;
+  host.replaceChildren();
+  if(!p.tracks.length){
+    const empty=document.createElement('p');empty.className='sc-yt-empty';
+    empty.textContent=gm?'Cole o primeiro link do YouTube acima para começar sua playlist.':
+      'Esta playlist ainda não tem músicas.';
+    host.append(empty);return;
+  }
+  p.tracks.forEach((t,i)=>{
+    const active=state.trackId===t.id;
+    const item=document.createElement('article');
+    item.className='sc-yt-track'+(active?' active':'');
+    const image=document.createElement('img');
+    image.src='https://i.ytimg.com/vi/'+t.videoId+'/mqdefault.jpg';
+    image.loading='lazy';image.alt='';image.className='sc-yt-track-thumb';
+    const info=document.createElement('div');info.className='sc-yt-track-info';
+    const name=document.createElement('strong');name.textContent=t.title;
+    const label=document.createElement('small');label.textContent=active?'♫ Na mesa · YouTube':'YouTube · '+String(i+1).padStart(2,'0');
+    const external=document.createElement('a');external.href='https://www.youtube.com/watch?v='+t.videoId;
+    external.target='_blank';external.rel='noopener noreferrer';external.textContent='↗ Abrir no YouTube';
+    external.className='sc-yt-external';
+    info.append(name,label,external);item.append(image,info);
+    if(gm){
+      const play=document.createElement('button');play.type='button';play.className='sc-yt-track-play';
+      play.title='Tocar na mesa';play.textContent='▶';play.onclick=()=>void playTrack(p.id,t.id);
+      const menu=document.createElement('button');menu.type='button';menu.className='sc-yt-track-edit';
+      menu.title='Renomear música';menu.textContent='✎';menu.onclick=()=>void renameTrack(p.id,t.id);
+      const del=document.createElement('button');del.type='button';del.className='sc-yt-track-delete';
+      del.title='Excluir link';del.textContent='×';del.onclick=()=>void deleteTrack(p.id,t.id);
+      item.append(play,menu,del);
+    }
+    const wrap=document.createElement('div');wrap.className='sc-yt-track-wrap';wrap.append(item);
+    if(gm&&lists.length>1){
+      const move=document.createElement('select');move.className='sc-yt-track-move';
+      move.setAttribute('aria-label','Mover música para outra playlist');
+      for(const destination of lists)move.add(new Option(destination.name,destination.id));
+      move.value=p.id;
+      move.onchange=async()=>{
+        const target=move.value;
+        move.disabled=true;
+        try{
+          await changeLibrary(data=>{
+            const old=data.find(x=>x.id===p.id),dest=data.find(x=>x.id===target);
+            if(!old||!dest)return;
+            const idx=old.tracks.findIndex(x=>x.id===t.id);
+            if(idx<0)return;
+            const [track]=old.tracks.splice(idx,1);
+            if(dest.tracks.length>=180)throw Error('Playlist de destino cheia.');
+            dest.tracks.push(track);
+          });
+          toast('Música movida para '+(lists.find(x=>x.id===target)?.name||'a playlist')+'.');
+        }catch(e){toast(errorText(e),true);move.disabled=false}
+      };
+      const foot=document.createElement('div');foot.className='sc-yt-track-foot';
+      const caption=document.createElement('span');caption.textContent='MOVER PARA';
+      foot.append(caption,move);wrap.append(foot);
+    }
+    host.append(wrap);
+  });
+}
+async function changeLibrary(mutator){
+  if(!gm||!user)throw Error('Somente o mestre pode modificar as playlists.');
+  return runTransaction(db,async tx=>{
+    const snap=await tx.get(roomRef);
+    if(!snap.exists())throw Error('Entre na Mesa Permanente antes de salvar músicas.');
+    const clean=sanitizeLists(snap.data()?.theatre?.youtubePlaylists);
+    const result=mutator(clean);
+    tx.update(roomRef,{'theatre.youtubePlaylists':clean,updatedAt:serverTimestamp()});
+    return result;
+  });
+}
+async function createPlaylist(){
+  if(!gm||busy)return;
+  const field=$('sc-yt-new-name'),name=cap(field.value.replace(/\s+/g,' '),56);
+  if(!name)return toast('Dê um nome para a playlist.',true);
+  busy=true;
+  const id=uid();
+  try{
+    await changeLibrary(data=>{
+      if(data.length>=26)throw Error('Limite de 25 playlists personalizadas.');
+      if(data.some(x=>x.name.toLocaleLowerCase('pt-BR')===name.toLocaleLowerCase('pt-BR')))
+        throw Error('Já existe uma playlist com esse nome.');
+      data.push({id,name,tracks:[]});
+    });
+    field.value='';selectedPlaylistId=id;toast('Playlist criada: '+name);
+  }catch(e){toast(errorText(e),true)}finally{busy=false}
+}
+async function renamePlaylist(id){
+  const existing=lists.find(x=>x.id===id);if(!existing||id===GENERAL)return;
+  const result=prompt('Novo nome da playlist',existing.name);
+  if(result===null)return;
+  const name=cap(result.replace(/\s+/g,' '),56);
+  if(!name)return toast('Informe um nome válido.',true);
+  try{
+    await changeLibrary(data=>{
+      const p=data.find(x=>x.id===id);if(!p)throw Error('Playlist não encontrada.');
+      p.name=name;
+    });
+  }catch(e){toast(errorText(e),true)}
+}
+async function deletePlaylist(id){
+  const p=lists.find(x=>x.id===id);if(!p||p.id===GENERAL)return;
+  if(!confirm('Excluir a playlist "'+p.name+'" e todos os links salvos nela?'))return;
+  try{
+    if(state.playlistId===id)await publish({...EMPTY_STATE(),loop:state.loop});
+    await changeLibrary(data=>{
+      const i=data.findIndex(x=>x.id===id);if(i!==-1)data.splice(i,1);
+    });
+    if(selectedPlaylistId===id)selectedPlaylistId=GENERAL;
+    toast('Playlist excluída.');
+  }catch(e){toast(errorText(e),true)}
+}
+async function addTrack(){
+  if(!gm||busy)return;
+  const link=$('sc-yt-link').value.trim();
+  const videoId=parseYouTube(link);
+  if(!videoId)return toast('Cole um link válido de vídeo do YouTube (watch, youtu.be ou shorts).',true);
+  const title=cap($('sc-yt-title').value.replace(/\s+/g,' '),95)||'YouTube · '+videoId;
+  const playlistId=selectedPlaylistId,id=uid();busy=true;
+  try{
+    await changeLibrary(data=>{
+      const p=data.find(x=>x.id===playlistId);if(!p)throw Error('Playlist não encontrada.');
+      if(p.tracks.length>=180)throw Error('Esta playlist chegou ao limite de 180 músicas.');
+      if(p.tracks.some(x=>x.videoId===videoId))throw Error('Essa música já está salva na playlist.');
+      p.tracks.push({id,videoId,title,url:'https://www.youtube.com/watch?v='+videoId});
+    });
+    $('sc-yt-link').value='';$('sc-yt-title').value='';
+    toast('Música salva na playlist "'+(lists.find(p=>p.id===playlistId)?.name||'Geral')+'".');
+  }catch(e){toast(errorText(e),true)}finally{busy=false}
+}
+async function renameTrack(playlistId,trackId){
+  const t=findTrack(trackId,playlistId);if(!t)return;
+  const result=prompt('Nome da música',t.title);
+  if(result===null)return;
+  const title=cap(result.replace(/\s+/g,' '),95);
+  if(!title)return toast('Informe um título válido.',true);
+  try{await changeLibrary(data=>{
+    const item=data.find(x=>x.id===playlistId)?.tracks.find(x=>x.id===trackId);
+    if(!item)throw Error('Música não encontrada.');item.title=title;
+  })}catch(e){toast(errorText(e),true)}
+}
+async function deleteTrack(playlistId,trackId){
+  const t=findTrack(trackId,playlistId);if(!t||!confirm('Remover "'+t.title+'" da playlist?'))return;
+  try{
+    if(state.trackId===trackId)await publish({...EMPTY_STATE(),loop:state.loop});
+    await changeLibrary(data=>{
+      const p=data.find(x=>x.id===playlistId);if(!p)return;
+      p.tracks=p.tracks.filter(x=>x.id!==trackId);
+    });
+    toast('Link removido.');
+  }catch(e){toast(errorText(e),true)}
+}
+async function publish(next){
+  if(!gm||!user)throw Error('Só o mestre controla a trilha da sessão.');
+  const payload={
+    playlistId:cap(next.playlistId,40),trackId:cap(next.trackId,40),
+    videoId:cap(next.videoId,11),
+    status:next.status||'stopped',
+    position:nBound(next.position,0,86400),
+    loop:!!next.loop,
+    startedAt:serverTimestamp(),
+    updatedBy:user.uid
+  };
+  await updateDoc(roomRef,{'theatre.youtubeState':payload,updatedAt:serverTimestamp()});
+}
+function playerTime(){
+  const currentTime=playerReady?Number(player?.getCurrentTime?.()):NaN;
+  return Number.isFinite(currentTime)&&currentTime>=0?currentTime:statePosition();
+}
+async function playTrack(playlistId,trackId){
+  if(!gm)return;
+  const song=findTrack(trackId,playlistId);
+  if(!song)return toast('A música não foi encontrada.',true);
+  // Carregar dentro do gesto do clique aumenta a chance de permitir som.
+  if(playerReady){
+    try{
+      loadedVideoId=song.videoId;
+      player.loadVideoById({videoId:song.videoId,startSeconds:0});
+      player.setVolume(localVolume);
+    }catch(e){console.warn('YouTube:',e)}
+  }
+  try{
+    await publish({playlistId,trackId,videoId:song.videoId,status:'playing',position:0,loop:state.loop});
+  }catch(e){toast(errorText(e),true)}
+}
+async function togglePlay(){
+  if(!gm)return;
+  const song=current();
+  if(!song){
+    const p=lists.find(x=>x.id===selectedPlaylistId);
+    if(p?.tracks[0])return playTrack(p.id,p.tracks[0].id);
+    return toast('Adicione uma música antes de dar play.',true);
+  }
+  const paused=state.status==='playing';
+  if(playerReady){
+    try{paused?player.pauseVideo():player.playVideo()}catch{}
+  }
+  try{await publish({...state,status:paused?'paused':'playing',position:playerTime()})}
+  catch(e){toast(errorText(e),true)}
+}
+async function stopPlayback(){
+  if(!gm)return;
+  try{player?.pauseVideo?.();player?.seekTo?.(0,true)}catch{}
+  try{await publish({...state,status:'stopped',position:0})}
+  catch(e){toast(errorText(e),true)}
+}
+function adjacent(offset){
+  if(!gm)return;
+  const song=current(),p=song?.playlist||lists.find(x=>x.id===selectedPlaylistId);
+  if(!p?.tracks.length)return;
+  let idx=song?p.tracks.findIndex(x=>x.id===song.id):-1;
+  let next=idx+offset;
+  if(next<0||next>=p.tracks.length){
+    if(!state.loop&&idx!==-1)return void stopPlayback();
+    next=(next+p.tracks.length)%p.tracks.length;
+  }
+  void playTrack(p.id,p.tracks[Math.max(0,next)].id);
+}
+function onYTStateChange(e){
+  if(!gm||state.status!=='playing'||e.data!==window.YT?.PlayerState?.ENDED)return;
+  const song=current();
+  if(!song)return;
+  const p=song.playlist,idx=p.tracks.findIndex(x=>x.id===song.id);
+  if(idx>=0&&idx+1<p.tracks.length)void playTrack(p.id,p.tracks[idx+1].id);
+  else if(state.loop&&p.tracks.length)void playTrack(p.id,p.tracks[0].id);
+  else void stopPlayback();
+}
+function playerVolume(){
+  if(playerReady)try{player.setVolume(localVolume)}catch{}
+}
+function syncPlayer(){
+  if(!playerReady)return;
+  const song=current();
+  if(!song){
+    loadedVideoId='';appliedState='';
+    try{player.stopVideo()}catch{}
+    return;
+  }
+  const videoId=song.videoId,requested=state.status;
+  const stamp=state.startedAt?.toMillis?.()||0;
+  const marker=[state.trackId,requested,stamp,Math.round(state.position)].join('|');
+  if(videoId!==loadedVideoId){
+    loadedVideoId=videoId;appliedState='';
+    try{
+      if(requested==='playing')player.loadVideoById({videoId,startSeconds:statePosition()});
+      else player.cueVideoById({videoId,startSeconds:state.position});
+    }catch(error){toast('Falha ao abrir o vídeo: '+errorText(error),true)}
+  }
+  if(marker!==appliedState){
+    appliedState=marker;
+    try{
+      if(requested==='playing'){
+        const seconds=statePosition(),local=Number(player.getCurrentTime?.()||0);
+        if(Math.abs(seconds-local)>3)player.seekTo(seconds,true);
+        player.playVideo();
+      }else{
+        player.pauseVideo();
+        if(requested==='stopped')player.seekTo(0,true);
+        else{
+          const local=Number(player.getCurrentTime?.()||0);
+          if(Math.abs(state.position-local)>3)player.seekTo(state.position,true);
+        }
+      }
+    }catch(error){console.warn('YouTube:',error)}
+  }
+  playerVolume();
+}
+function onYoutubeError(e){
+  const messages={
+    2:'ID de vídeo inválido.',
+    5:'O YouTube não conseguiu reproduzir este vídeo.',
+    100:'Vídeo removido ou privado.',
+    101:'O proprietário não permite reproduzir este vídeo fora do YouTube.',
+    150:'O proprietário não permite reproduzir este vídeo fora do YouTube.',
+    153:'O YouTube não recebeu as informações de origem necessárias para a reprodução.'
+  };
+  notice(messages[e.data]||'Erro do YouTube. Teste outro vídeo.');
+}
+function attachPlayer(){
+  if(player||!window.YT?.Player)return;
+  player=new window.YT.Player('sc-yt-embed',{
+    width:'100%',height:'214',
+    playerVars:{playsinline:1,controls:1,rel:0,origin:location.origin},
+    events:{
+      onReady:e=>{
+        playerReady=true;
+        try{
+          e.target.getIframe().setAttribute('allow','autoplay; encrypted-media; fullscreen; picture-in-picture');
+          e.target.getIframe().setAttribute('referrerpolicy','strict-origin-when-cross-origin');
+        }catch{}
+        syncPlayer();playerVolume();
+      },
+      onStateChange:onYTStateChange,
+      onAutoplayBlocked:()=>{
+        notice('O navegador bloqueou a reprodução automática. Clique em ▶ no vídeo do YouTube acima para ouvir.');
+      },
+      onError:onYoutubeError
+    }
+  });
+}
+function loadYT(){
+  if(window.YT?.Player)return attachPlayer();
+  if(document.getElementById('sc-yt-api-script'))return;
+  const previous=window.onYouTubeIframeAPIReady;
+  window.onYouTubeIframeAPIReady=()=>{
+    try{if(typeof previous==='function')previous()}catch{}
+    attachPlayer();
+  };
+  const script=document.createElement('script');script.id='sc-yt-api-script';
+  script.src='https://www.youtube.com/iframe_api';script.async=true;
+  script.onerror=()=>notice('Não foi possível carregar o player do YouTube. Confira a conexão ou o bloqueador de anúncios.');
+  document.head.append(script);
+}
+function refreshAfterSnapshot(){
+  syncHeader();
+  if(!lists.some(x=>x.id===selectedPlaylistId))selectedPlaylistId=GENERAL;
+  const key=JSON.stringify(lists);
+  if(key!==lastLibraryKey){
+    lastLibraryKey=key;renderFolders();renderTracks();
+  }else{
+    root.querySelectorAll('.sc-yt-track').forEach(x=>x.classList.remove('active'));
+    // O estado foi alterado, não os links; atualize apenas os destaques.
+    renderTracks();
+  }
+  syncPlayer();
+}
+function resetConnection(){
+  fireUnsub?.();fireUnsub=null;
+  lists=[DEFAULT_LIST()];state=EMPTY_STATE();
+  lastLibraryKey='';loadedVideoId='';appliedState='';
+  try{player?.stopVideo?.()}catch{}
+  renderFolders();renderTracks();syncHeader();
+}
+onAuthStateChanged(auth,async nextUser=>{
+  const epoch=++authEpoch;resetConnection();
+  user=nextUser;gm=false;
+  if(!user){connected('Entre no Shinobi Chronicles para acessar suas playlists.','error');return}
+  connected('Carregando playlists da Mesa Permanente…','loading');
+  try{
+    gm=user.email==='mestre_shinobi@players.shinobi-chronicles.invalid'||
+      (await getDoc(doc(db,'admins',user.uid))).exists();
+    if(epoch!==authEpoch)return;
+    syncHeader();renderFolders();renderTracks();
+    fireUnsub=onSnapshot(roomRef,snap=>{
+      if(epoch!==authEpoch)return;
+      if(!snap.exists()){connected('O mestre ainda não iniciou a Mesa Permanente.','error');return}
+      const theatre=snap.data()?.theatre||{};
+      lists=sanitizeLists(theatre.youtubePlaylists);
+      state=safeState(theatre.youtubeState);
+      connected('Playlists salvas · sincronizadas com a mesa');
+      refreshAfterSnapshot();
+    },error=>{
+      if(epoch!==authEpoch)return;
+      connected('Erro de conexão: '+errorText(error),'error');
+      toast(errorText(error),true);
+    });
+  }catch(error){if(epoch===authEpoch)connected(errorText(error),'error')}
+});
+$('sc-yt-new-create').onclick=()=>void createPlaylist();
+$('sc-yt-new-name').addEventListener('keydown',e=>{
+  if(e.key==='Enter'){e.preventDefault();void createPlaylist()}
+});
+$('sc-yt-add-form').addEventListener('submit',e=>{e.preventDefault();void addTrack()});
+$('sc-yt-play-list').onclick=()=>{
+  const p=lists.find(x=>x.id===selectedPlaylistId);
+  if(p?.tracks[0])void playTrack(p.id,p.tracks[0].id);
+};
+$('sc-yt-play').onclick=()=>void togglePlay();
+$('sc-yt-stop').onclick=()=>void stopPlayback();
+$('sc-yt-next').onclick=()=>adjacent(1);
+$('sc-yt-prev').onclick=()=>adjacent(-1);
+$('sc-yt-loop').onclick=async()=>{
+  if(!gm)return;
+  try{await publish({...state,position:playerTime(),loop:!state.loop})}
+  catch(error){toast(errorText(error),true)}
+};
+$('sc-yt-volume').addEventListener('input',e=>{
+  localVolume=nBound(e.target.value,0,100);
+  $('sc-yt-volume-label').textContent=localVolume+'%';
+  try{localStorage.setItem('sc-youtube-volume',String(localVolume))}catch{}
+  playerVolume();
+});
+// O evento de clique ocorre no iframe nativo do YouTube quando o navegador
+// exige interação. Não existe bloqueio artificial nem botão de habilitar som.
+setInterval(()=>{
+  if(!playerReady||!user||state.status!=='playing'||!current())return;
+  if(Number(player.getPlayerState?.())!==window.YT?.PlayerState?.PLAYING)return;
+  const local=Number(player.getCurrentTime?.()),expected=statePosition();
+  if(Number.isFinite(local)&&Number.isFinite(expected)&&Math.abs(local-expected)>6){
+    try{player.seekTo(expected,true)}catch{}
+  }
+},5000);
+renderFolders();renderTracks();syncHeader();loadYT();
