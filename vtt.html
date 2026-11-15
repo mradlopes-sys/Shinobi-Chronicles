@@ -360,6 +360,7 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
 <link rel="stylesheet" href="./assets/vtt-gm-quick-panel-v1.css?v=20261111-gm1">
 <link rel="stylesheet" href="./assets/vtt-walls-v1.css?v=20261112-walls1">
 <link rel="stylesheet" href="./assets/vtt-session-tools-v1.css?v=20261111-cinematic2">
+<link rel="stylesheet" href="./assets/vtt-music-v1.css?v=20261115-music1">
 <link rel="stylesheet" href="./assets/vtt-workspace-20261112-v1.css?v=20261112-token-scale1">
 </head>
 <body>
@@ -368,6 +369,7 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
     <div class="seal" aria-hidden="true">忍</div>
     <button class="active" data-tab="rolls" title="Chat e dados" aria-label="Abrir chat e dados"><span class="rail-icon" aria-hidden="true">⚄</span><span class="rail-name">Chat</span></button>
     <button data-tab="campanha" title="Mapas, fichas e personagens" aria-label="Abrir personagens e mapas"><span class="rail-icon" aria-hidden="true">巻</span><span class="rail-name">Elenco</span></button>
+    <button data-tab="musica" title="Trilha sonora da sessão" aria-label="Abrir trilha sonora"><span class="rail-icon" aria-hidden="true">♫</span><span class="rail-name">Músicas</span></button>
     <button data-tab="combate" data-gm-only hidden title="Iniciativa e efeitos" aria-label="Abrir combate"><span class="rail-icon" aria-hidden="true">⚔</span><span class="rail-name">Combate</span></button>
     <button data-tab="ambiente" data-gm-only hidden title="Editar paredes e névoa de guerra" aria-label="Abrir ambiente"><span class="rail-icon" aria-hidden="true">▥</span><span class="rail-name">Ambiente</span></button>
     <span class="rail-tip" aria-hidden="true">SHINOBI · MESA</span>
@@ -425,6 +427,7 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
     <div class="tabs" role="group" aria-label="Abas da mesa">
       <button class="active" data-tab="rolls" title="Chat e rolagens da sessão">Chat</button>
       <button data-tab="campanha" title="Mapas, fichas e personagens">Elenco</button>
+      <button data-tab="musica" title="Biblioteca e reprodução de músicas da sessão">Músicas</button>
       <button data-tab="combate" data-gm-only hidden title="Iniciativa, condições e efeitos do mestre" aria-label="Combate do mestre">Combate</button>
       <button data-tab="ambiente" data-gm-only hidden title="Paredes, visão e névoa de guerra" aria-label="Ambiente do mestre">Ambiente</button>
     </div>
@@ -474,6 +477,9 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
     </section>
     <section class="pane" id="pane-rolls">
       <div id="rolls-panel"></div>
+    </section>
+    <section class="pane" id="pane-musica" hidden aria-label="Trilha sonora da mesa">
+      <div id="sc-music-root"></div>
     </section>
     <section class="pane sc-pane-environment" id="pane-ambiente" hidden>
       <header class="sc-environment-header">
@@ -535,6 +541,7 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
   </div>
 </div>
 <script src="./assets/shinobi-jutsu-presentation-v1.js?v=20261110-sfx3"></script>
-<script type="module" src="./assets/vtt-studio-20261110-v21.js?v=20261112-token-scale1"></script>
+
+<script type="module" src="./assets/vtt-music-v1.js?v=20261115-music1"></script><script type="module" src="./assets/vtt-studio-20261110-v21.js?v=20261112-token-scale1"></script>
 </body>
 </html>

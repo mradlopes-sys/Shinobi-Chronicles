@@ -83,6 +83,52 @@ service cloud.firestore {
         && request.resource.data.get('metersPerCell', 2) >= 0.05
         && request.resource.data.get('metersPerCell', 2) <= 1000;
       allow delete: if isAdmin();
+
+      // Trilha sonora compartilhada: biblioteca pública aos membros, escrita exclusiva do mestre.
+      match /musicTracks/{trackId} {
+        allow read: if vttAccess(roomId);
+        allow create, update: if isAdmin()
+          && request.resource.data.keys().hasOnly(['name','source','storagePath','url','addedBy','createdAt'])
+          && request.resource.data.keys().hasAll(['name','source','addedBy','createdAt'])
+          && request.resource.data.name is string
+          && request.resource.data.name.size() > 0
+          && request.resource.data.name.size() <= 90
+          && request.resource.data.addedBy == request.auth.uid
+          && (request.resource.data.source == 'storage' || request.resource.data.source == 'url')
+          && (
+            (request.resource.data.source == 'storage'
+              && request.resource.data.get('storagePath','') is string
+              && request.resource.data.get('storagePath','').matches('vttMusic/' + roomId + '/' + trackId + '/[^/]+')
+              && !request.resource.data.keys().hasAny(['url']))
+            ||
+            (request.resource.data.source == 'url'
+              && request.resource.data.get('url','') is string
+              && request.resource.data.get('url','').size() <= 2048
+              && request.resource.data.get('url','').matches('https://[^ ]+')
+              && !request.resource.data.keys().hasAny(['storagePath']))
+          );
+        allow delete: if isAdmin();
+      }
+      match /musicState/{stateId} {
+        allow get: if stateId == 'current' && vttAccess(roomId);
+        allow list: if false;
+        allow create, update: if stateId == 'current' && isAdmin()
+          && request.resource.data.keys().hasOnly(['trackId','status','position','startedAt','volume','loop','updatedBy','updatedAt'])
+          && request.resource.data.keys().hasAll(['trackId','status','position','startedAt','volume','loop','updatedBy','updatedAt'])
+          && request.resource.data.trackId is string
+          && request.resource.data.trackId.size() <= 150
+          && request.resource.data.status in ['playing','paused','stopped']
+          && request.resource.data.position is number
+          && request.resource.data.position >= 0
+          && request.resource.data.position <= 86400
+          && request.resource.data.volume is number
+          && request.resource.data.volume >= 0
+          && request.resource.data.volume <= 100
+          && request.resource.data.loop is bool
+          && request.resource.data.updatedBy == request.auth.uid;
+        allow delete: if isAdmin();
+      }
+
       // Biblioteca privada do mestre: jogadores recebem apenas a cena ativa no documento da sala.
       match /scenes/{sceneId} {
         allow read, create, update, delete: if isAdmin();

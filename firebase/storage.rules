@@ -1,0 +1,25 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Músicas do VTT: jogadores autenticados podem ouvir,
+    // mas apenas um administrador pode enviar ou excluir arquivos.
+    function isVttAdmin() {
+      return request.auth != null
+        && (request.auth.token.email == 'mestre_shinobi@players.shinobi-chronicles.invalid'
+          || firestore.exists(/databases/(default)/documents/admins/$(request.auth.uid)));
+    }
+    match /vttMusic/{roomId}/{trackId}/{fileName} {
+      allow read: if request.auth != null && roomId == 'shinobi-chronicles';
+      allow create, update: if roomId == 'shinobi-chronicles'
+        && isVttAdmin()
+        && request.resource.size > 0
+        && request.resource.size <= 35 * 1024 * 1024
+        && request.resource.contentType.matches('audio/.*');
+      allow delete: if roomId == 'shinobi-chronicles' && isVttAdmin();
+    }
+    // Em produção, mescle esta regra com regras pré-existentes do seu Storage.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
