@@ -1,14 +1,51 @@
 // Shinobi Chronicles · central compartilhada de iniciativa
 export function createCombatDirector({
  panel,strip,getAdmin,getSheets,getRoomData,rollInitiative,saveCombat,notify,portrait,
- getOnMap=()=>false,hasScene=()=>false,onPlaceOnMap=async()=>{},onOpenSheet=()=>{},getVisibleSheet=()=>true
+ getOnMap=()=>false,hasScene=()=>false,onPlaceOnMap=async()=>{},onOpenSheet=()=>{},getVisibleSheet=()=>true,getInjury=()=>''
 }){
  const cap=36,selected=new Set();let combat={entries:[],activeId:'',round:1,started:false},search='',busy=false;
  const $=id=>document.getElementById(id);
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const number=(v,min,max)=>Math.max(min,Math.min(max,Number.isFinite(Number(v))?Math.round(Number(v)):min));
  const validImg=s=>typeof s==='string'&&((/^https:\/\/[^\s"'<>]+$/i.test(s)&&s.length<1500)||(/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(s)&&s.length<12000));
- const photo=e=>validImg(e.portrait)?'<img src="'+esc(e.portrait)+'" alt="" loading="lazy">':'<span aria-hidden="true">忍</span>';
+ // Retratos da seleção e da iniciativa usam a mesma arte atual da ficha.
+ const thumbnailCache=new Map(),thumbnailPending=new Map();
+ function thumbnailFor(f){
+  if(!f)return '';
+  const source=portrait(f);
+  if(!source)return '';
+  if(validImg(source))return source;
+  const cached=thumbnailCache.get(f.id);
+  if(cached?.source===source)return cached.image;
+  if(thumbnailPending.get(f.id)===source)return '';
+  thumbnailPending.set(f.id,source);
+  void smallPortrait(f).then(image=>{
+   if(thumbnailPending.get(f.id)!==source)return;
+   thumbnailPending.delete(f.id);
+   thumbnailCache.set(f.id,{source,image});
+   // Só atualizar a arte, sem limpar seleções de iniciativa.
+   renderDirectory();refreshPortraits();
+  }).catch(()=>{thumbnailPending.delete(f.id)});
+  return '';
+ }
+ const portraitHtml=src=>validImg(src)?'<img src="'+esc(src)+'" alt="" loading="lazy" decoding="async">':'<span aria-hidden="true">忍</span>';
+ const photo=e=>{
+  const sheet=getSheets().find(f=>f.id===e.id);
+  return portraitHtml((sheet&&thumbnailFor(sheet))||e.portrait);
+ };
+ function refreshPortraits(){
+  for(const root of [panel,strip]){
+   root.querySelectorAll('[data-sc-portrait]').forEach(box=>{
+    const sheet=getSheets().find(f=>f.id===box.dataset.scPortrait);
+    const image=sheet?thumbnailFor(sheet):'';
+    if(!validImg(image))return;
+    const current=box.querySelector('img');
+    if(current?.getAttribute('src')===image)return;
+    box.innerHTML=portraitHtml(image);
+   });
+  }
+ }
+
  const order=()=>combat.entries.slice().sort((a,b)=>b.score-a.score||a.order-b.order||a.name.localeCompare(b.name,'pt-BR'));
  const allowed=()=>getAdmin()&&!!getRoomData();
  const dragIds=(event,ids)=>{
@@ -55,7 +92,7 @@ export function createCombatDirector({
       const active=e.id===combat.activeId,upcoming=!active&&e.id===next.id;
       return '<button type="button" class="sc-turn-card'+(active?' is-active':'')+(upcoming?' is-next':'')+
        '" data-sc-turn-id="'+esc(e.id)+'" '+(getAdmin()?'draggable="true" title="Arraste ao mapa ou clique para avançar o turno" ':'disabled ')+' aria-label="'+esc(e.name+', iniciativa '+e.score)+'">'+
-       '<span class="sc-turn-pic">'+photo(e)+'</span><span class="sc-turn-body"><strong>'+esc(e.name)+'</strong><small>'+
+       '<span class="sc-turn-pic" data-sc-portrait="'+esc(e.id)+'">'+photo(e)+'</span><span class="sc-turn-body"><strong>'+esc(e.name)+'</strong><small>'+
        (active?'AGINDO AGORA':upcoming?'PRÓXIMO':'AGUARDANDO')+'</small></span><b class="sc-turn-score">'+e.score+'</b></button>';
     }).join('')+'</div>';
   const track=$('sc-turn-track');track.scrollLeft=previous;
@@ -96,14 +133,15 @@ export function createCombatDirector({
   if(!visible.length){root.innerHTML='<p class="sc-combat-empty">Nenhuma ficha encontrada.</p>';return}
   root.innerHTML=visible.map(f=>{
     const checked=selected.has(f.id),inList=used.has(f.id),inScene=getOnMap(f.id);
+    const injury=getInjury(f.id);
     const id=esc(f.id),name=esc(f.nome||f.name||'Shinobi');
-    const icon=portrait(f),img=validImg(icon)?'<img src="'+esc(icon)+'" alt="">':'忍';
+    const icon=thumbnailFor(f),img=portraitHtml(icon);
     return '<div class="sc-combat-pick'+(checked?' selected':'')+(inList?' already':'')+
-      (inScene?' in-scene':'')+'" data-sc-sheet-row="'+id+'" draggable="true" title="Arraste até o mapa para posicionar o token">'+
+      (inScene?' in-scene':'')+(injury?' injury-'+injury:'')+'" data-sc-sheet-row="'+id+'" draggable="true" title="Arraste até o mapa para posicionar o token">'+
       '<label class="sc-combat-pick-main"><input type="checkbox" data-sc-pick="'+id+'" '+
         (checked?'checked ':'')+(inList||busy?'disabled ':'')+'>'+
-        '<span class="sc-combat-pic">'+img+'</span><span class="sc-combat-person"><b>'+name+
-        '</b><small>'+esc(f.clanId||'Shinobi')+(inList?' · INICIATIVA':'')+
+        '<span class="sc-combat-pic" data-sc-portrait="'+id+'">'+img+'</span><span class="sc-combat-person"><b>'+name+
+        '</b><small>'+esc(f.clanId||'Shinobi')+(injury?(injury==='grave'?' · GRAVE':' · FERIDO'):'')+(inList?' · INICIATIVA':'')+
         '</small><small class="sc-combat-map-status" data-sc-token-status="'+id+'">'+
         (inScene?'● NO MAPA':'↗ ARRASTE PARA O MAPA')+'</small></span>'+
         '<span class="sc-combat-check">'+(inList||checked?'✓':'+')+'</span></label>'+
@@ -151,7 +189,7 @@ export function createCombatDirector({
    const current=e.id===combat.activeId;
    return '<div class="sc-combat-line'+(current?' active':'')+'" draggable="true" data-sc-roster-drag="'+esc(e.id)+'" title="Arraste até o mapa">'+
     '<span class="sc-combat-rank">'+String(i+1).padStart(2,'0')+'</span>'+
-    '<div class="sc-combat-pic">'+photo(e)+'</div><div class="sc-combat-person"><b>'+esc(e.name)+'</b><small>'+
+    '<div class="sc-combat-pic" data-sc-portrait="'+esc(e.id)+'">'+photo(e)+'</div><div class="sc-combat-person"><b>'+esc(e.name)+'</b><small>'+
     (current?'AGINDO AGORA':e.roll+' no d8 + '+e.bonus+' bônus')+'</small></div>'+
     '<label class="sc-combat-score">INI<input data-sc-score="'+esc(e.id)+'" type="number" min="-99" max="999" value="'+e.score+'" '+(busy?'disabled':'')+'></label>'+
     '<button class="sc-combat-map-one" data-sc-order-map="'+esc(e.id)+'" title="Colocar ou localizar no mapa" aria-label="Colocar '+esc(e.name)+' no mapa">⌖</button>'+

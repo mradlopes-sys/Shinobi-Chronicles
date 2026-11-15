@@ -1,0 +1,38 @@
+/* Shinobi Chronicles · Ferimentos ligados à ficha
+   Estado visual sem flashes ou novos efeitos sonoros. */
+#pane-combate .sc-combat-pick .sc-combat-pic{
+  width:48px!important;height:53px!important;flex-basis:48px!important;
+  border-radius:6px!important;
+  border:1px solid var(--sc-stroke-strong,#7c9578)!important;
+  background:var(--sc-paper-2,#1a2c22)!important;
+}
+#pane-combate .sc-combat-pick .sc-combat-pic img,
+#pane-combate .sc-combat-line .sc-combat-pic img,
+#sc-turn-strip .sc-turn-pic img{
+  display:block!important;width:100%!important;height:100%!important;
+  object-fit:contain!important;object-position:center bottom!important;
+}
+#pane-combate .sc-combat-pick{
+  min-height:59px;align-items:center!important;
+}
+#pane-combate .sc-combat-pick.injury-ferido .sc-combat-pic{
+  border-color:#ad8e61!important;box-shadow:inset 0 -2px #c69a60!important;
+}
+#pane-combate .sc-combat-pick.injury-grave .sc-combat-pic{
+  border-color:#b26e66!important;box-shadow:inset 0 -2px #b76560!important;
+}
+#pane-combate .sc-combat-pick.injury-ferido .sc-combat-person small,
+#pane-combate .sc-combat-pick.injury-grave .sc-combat-person small{
+  color:var(--sc-muted,#b9a994);
+}
+#pane-combate .sc-combat-pick.injury-grave .sc-combat-person small{
+  color:#d8a39b!important;
+}
+#pane-combate .sc-combat-line .sc-combat-pic{
+  width:42px!important;height:46px!important;flex-basis:42px!important;
+}
+@media(max-width:690px){
+  #pane-combate .sc-combat-pick .sc-combat-pic{
+    width:42px!important;height:48px!important;flex-basis:42px!important;
+  }
+}

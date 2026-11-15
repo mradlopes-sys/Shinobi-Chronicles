@@ -21,6 +21,9 @@ export function createTheatre({stage,onChange,isAdmin,publishPortrait,previewPor
 #sc-theatre .stage-tools .scale-value{font:700 10px/1 system-ui,sans-serif;white-space:nowrap;color:#f1e1bd;min-width:34px;text-align:center}
 @keyframes sc-theatre-injury{0%{transform:translateX(0);filter:drop-shadow(0 12px 13px #0008)}20%{transform:translateX(-5px);filter:drop-shadow(0 0 15px #e35c5799)}45%{transform:translateX(5px)}70%{transform:translateX(-2px)}100%{transform:translateX(0);filter:drop-shadow(0 12px 13px #0008)}}
 @keyframes sc-theatre-hurt-flash{0%{opacity:0}24%{opacity:1}100%{opacity:0}}
+#sc-theatre .stage-injury-badge{position:absolute;left:50%;bottom:43px;transform:translateX(-50%);z-index:5;max-width:94%;width:max-content;pointer-events:none;white-space:nowrap;text-align:center;border:1px solid #b99c7a70;border-radius:5px;padding:3px 8px;background:#382a25d9;color:#f3dcc5;font:700 10px/1.25 system-ui,sans-serif;letter-spacing:.06em;text-shadow:0 1px 3px #0008}
+#sc-theatre .stage-injury-badge[hidden]{display:none!important}
+#sc-theatre .stage-character[data-injury="grave"] .stage-injury-badge{background:#572a29e5;border-color:#d59c88a1;color:#ffe8df}
 #sc-theatre .stage-name{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:5;display:block;max-width:96%;padding:1px 10px 4px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;border:0;border-radius:6px;background:linear-gradient(0deg,#0b1b17a8,#11271d63);color:#fff0da;font:400 25px/1.08 'Caveat Brush','Yuji Boku',cursive;letter-spacing:.01em;text-align:center;text-shadow:0 2px 5px #000e,0 0 10px #0007;pointer-events:none}
 #sc-theatre .stage-tools{position:absolute;left:50%;transform:translateX(-50%);z-index:5;display:flex;gap:3px;align-items:center;justify-content:center;padding:4px;border:1px solid #ad936788;border-radius:10px;background:#15271fea;backdrop-filter:blur(9px);box-shadow:0 8px 24px #020a0870;pointer-events:auto}
 #sc-theatre:not(.master) .stage-tools{display:none!important}
@@ -402,6 +405,8 @@ export function createTheatre({stage,onChange,isAdmin,publishPortrait,previewPor
     const fig=document.createElement('div');fig.className='stage-character preparing';fig.dataset.actor=actor.id;
     const label=document.createElement('span');label.className='stage-name';label.textContent=actor.name;
     const bar=document.createElement('div');bar.className='stage-tools';bar.setAttribute('role','group');
+    const injuryBadge=document.createElement('span');injuryBadge.className='stage-injury-badge';
+    injuryBadge.hidden=true;injuryBadge.setAttribute('aria-live','polite');
     // Invisible, silhouette-sized target. Only its owner or the ADM can use it.
     // A single click does nothing; double-click opens the original sheet.
     const hot=document.createElement('button');hot.type='button';hot.className='stage-sheet-hotspot';
@@ -419,7 +424,7 @@ export function createTheatre({stage,onChange,isAdmin,publishPortrait,previewPor
       e.preventDefault();e.stopPropagation();
       if(canOpenSheet?.(actor.id))onOpenSheet?.(actor.id);
     };
-    fig.append(label,hot,bar);return fig;
+    fig.append(label,injuryBadge,hot,bar);return fig;
   }
   let lastRosterOrder='';
   function render(){
@@ -446,6 +451,16 @@ export function createTheatre({stage,onChange,isAdmin,publishPortrait,previewPor
       if(reorder||fig.parentNode!==overlay)overlay.append(fig);
       fig.classList.remove('leaving');
       const name=fig.querySelector('.stage-name');if(name)name.textContent=actor.name;
+      const v=vitals.get(actor.id),ratio=v?.max>0?v.current/v.max:1;
+      const severity=v?.max>0?(ratio<=.25?'grave':ratio<=.5?'ferido':''):'';
+      fig.dataset.injury=severity;
+      const badge=fig.querySelector('.stage-injury-badge');
+      if(badge){
+        badge.hidden=!severity;
+        badge.textContent=severity?(severity==='grave'?'GRAVEMENTE FERIDO':'FERIDO')+
+          ' · '+Math.round(100*ratio)+'%':'';
+        badge.title=v?('HP '+v.current+' / '+v.max):'';
+      }
       const hot=fig.querySelector('.stage-sheet-hotspot');
       if(hot){
         hot.hidden=!canOpenSheet?.(actor.id);

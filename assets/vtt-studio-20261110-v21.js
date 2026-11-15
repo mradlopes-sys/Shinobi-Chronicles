@@ -1,6 +1,6 @@
-import {createTheatre} from './vtt-theatre-v17.js';
+import {createTheatre} from './vtt-theatre-v17.js?v=20261115-injury-linked1';
 import {createRollsPanel,makeDicePayload,rollForSheet} from './vtt-rolls-v4.js?v=20261111-chat-medium5';
-import {createCombatDirector} from './vtt-combat-director-v1.js?v=20261111-hidden1';
+import {createCombatDirector} from './vtt-combat-director-v1.js?v=20261115-injury-linked1';
 import {createBattleSystems} from './vtt-battle-systems-v1.js?v=20261115-conditions-context1';
 import {createGMQuickPanel} from './vtt-gm-quick-panel-v1.js?v=20261115-conditions-context1';
 import {DEFAULT_METERS_PER_CELL,metersPerCell,pixelsToMeters,calibrateMetersPerCell,formatMeters,scaleBar} from './vtt-metrics-v1.js';
@@ -13,11 +13,12 @@ const WORLD_ID='shinobi-chronicles';
 const activeDoorEvents=new Set(),pendingDoorEvents=new Map();
 let activeEnvironmentView='walls';
 const $=id=>document.getElementById(id);
-let uid='',admin=false,room='',roomData=null,tokens=[],sheets=[],scenes=[],mapFolders=[],subs=[],dragToken=null,selected=null,sceneKey='',lastRoll='',busy=false,editingSceneId='',tokenUnsub=null,tokenSceneSubscribed=null,sheetsUnsub=null,subscriptionEpoch=0,worldCollectionsReady=false,portraitSubs=new Map(),vitalSubs=new Map(),lastVitals=new Map(),vitalTimer=null,masterUid='',lastStageRosterKey='__initial__',secretRollFeeds={self:[],gm:[],blind:[]},blindProcessing=new Set();
+let uid='',admin=false,room='',roomData=null,tokens=[],sheets=[],scenes=[],mapFolders=[],subs=[],dragToken=null,selected=null,sceneKey='',lastRoll='',busy=false,editingSceneId='',tokenUnsub=null,tokenSceneSubscribed=null,sheetsUnsub=null,subscriptionEpoch=0,worldCollectionsReady=false,portraitSubs=new Map(),vitalSubs=new Map(),publicVitals=new Map(),lastVitals=new Map(),vitalTimer=null,injuryArtPending=new Set(),stageInjuryUpgrade=new Map(),stageInjuryPending=new Set(),masterUid='',lastStageRosterKey='__initial__',secretRollFeeds={self:[],gm:[],blind:[]},blindProcessing=new Set();
 const stage=$('stage'),canvas=$('map'),ctx=canvas.getContext('2d');
 const combatDirector=createCombatDirector({
   panel:$('sc-combat-director'),strip:$('sc-turn-strip'),
   getAdmin:()=>admin,getSheets:()=>sheets,getRoomData:()=>roomData,
+  getInjury:id=>injuryState(id),
   rollInitiative:f=>{
     const rule=rollForSheet(f,'Iniciativa');
     const payload=makeDicePayload('1d8',rule?.bonus||0,'Iniciativa',String(f.nome||f.name||'Shinobi'));
@@ -42,7 +43,7 @@ const combatDirector=createCombatDirector({
       }
     }catch(error){battle.setData(roomData?.theatre);throw error}
   },
-  notify:message=>show(message),portrait:f=>portrait(f),
+  notify:message=>show(message),portrait:f=>combatPortrait(f),
   getOnMap:id=>visibleTokens().some(t=>t.fichaId===id),
   getVisibleSheet:id=>{
     const onMap=visibleTokens().filter(t=>t.fichaId===id);
@@ -135,7 +136,7 @@ function updateMetricDrawStatus(){
   $('metric-save').disabled=!admin||!hasLine||!Number.isFinite(known)||known<=0||known>100000;
 }
 const tokenRef=id=>doc(db,'vttRooms',room,'tokens',id);
-const stopSubs=()=>{gmQuick?.reset?.();sessionTools?.reset?.();measure.enabled=false;measure.calibrating=false;measure.start=null;measure.end=null;measure.drawnPx=0;$('metric-card').hidden=true;$('metric-status').hidden=true;$('metric-hud').hidden=true;if($('sheet-modal').classList.contains('open'))$('sheet-close').click();subscriptionEpoch++;worldCollectionsReady=false;secretRollFeeds={self:[],gm:[],blind:[]};blindProcessing.clear();if(typeof rolls!=='undefined')rolls.setPrivateEvents([]);for(const stop of portraitSubs.values())stop();portraitSubs.clear();for(const stop of vitalSubs.values())stop();vitalSubs.clear();lastVitals.clear();clearTimeout(vitalTimer);masterUid='';if(tokenUnsub){tokenUnsub();tokenUnsub=null}tokenSceneSubscribed=null;subs.forEach(u=>u());subs=[];room='';roomData=null;tokens=[];scenes=[];mapFolders=[];selected=null;editingSceneId='';lastStageRosterKey='__initial__';theatre.reset();combatDirector.setData(null);battle.setData(null);$('room-heading').textContent='Mesa Permanente · Shinobi Chronicles';$('world-status').textContent='Aguardando conexão…';$('scene-empty').hidden=false;renderScenes();renderTokens();draw();};
+const stopSubs=()=>{gmQuick?.reset?.();sessionTools?.reset?.();measure.enabled=false;measure.calibrating=false;measure.start=null;measure.end=null;measure.drawnPx=0;$('metric-card').hidden=true;$('metric-status').hidden=true;$('metric-hud').hidden=true;if($('sheet-modal').classList.contains('open'))$('sheet-close').click();subscriptionEpoch++;worldCollectionsReady=false;secretRollFeeds={self:[],gm:[],blind:[]};blindProcessing.clear();if(typeof rolls!=='undefined')rolls.setPrivateEvents([]);for(const stop of portraitSubs.values())stop();portraitSubs.clear();for(const stop of vitalSubs.values())stop();vitalSubs.clear();publicVitals.clear();lastVitals.clear();injuryArtPending.clear();stageInjuryUpgrade.clear();stageInjuryPending.clear();clearTimeout(vitalTimer);masterUid='';if(tokenUnsub){tokenUnsub();tokenUnsub=null}tokenSceneSubscribed=null;subs.forEach(u=>u());subs=[];room='';roomData=null;tokens=[];scenes=[];mapFolders=[];selected=null;editingSceneId='';lastStageRosterKey='__initial__';theatre.reset();combatDirector.setData(null);battle.setData(null);$('room-heading').textContent='Mesa Permanente · Shinobi Chronicles';$('world-status').textContent='Aguardando conexão…';$('scene-empty').hidden=false;renderScenes();renderTokens();draw();};
 const theatre=createTheatre({
   stage,
   notify:show,
@@ -165,7 +166,9 @@ const theatre=createTheatre({
   },
   isAdmin:()=>admin,
   previewPortrait:(id,variant)=>{const f=sheets.find(x=>x.id===id);return variant==='casual'?(f?.retratos?.casual||f?.foto):f?.retratos?.[variant]},
-  publishPortrait:async(id,variant)=>{
+  publishPortrait:publishTheatrePortrait
+});
+async function publishTheatrePortrait(id,variant){
     if(!admin||!room)throw Error('Somente o mestre pode publicar retratos.');
     const f=sheets.find(x=>x.id===id);
     if(!f)throw Error('Ficha indisponível.');
@@ -175,11 +178,13 @@ const theatre=createTheatre({
     for(const key of ['casual','ninja','triste','ferido','grave']){
       const source=key==='casual'?(f.retratos?.casual||f.foto):f.retratos?.[key];
       if(!source)continue;
-      if(!safeImage(source)||source.length>160000){
-        if(key===variant)throw Error('O retrato escolhido é grande demais para sincronizar. Reenvie em WebP.');
+      if(!safeImage(source))continue;
+      const ready=source.length>157000?await shrinkTheatrePortrait(source):source;
+      if(!ready||ready.length>160000){
+        if(key===variant)throw Error('Não foi possível preparar esse retrato para o Teatro.');
         continue;
       }
-      variants[key]=source;
+      variants[key]=ready;
     }
     if(!variants[variant])throw Error('Envie primeiro o retrato escolhido na ficha.');
     const name=String(f.nome||f.name||'Shinobi').slice(0,70);
@@ -187,8 +192,7 @@ const theatre=createTheatre({
       variants,name,ownerUid:f.ownerUid,updatedAt:serverTimestamp()
     });
     theatre.setPortrait(id,variants,variant);
-  }
-});
+}
 // Private results never enter the shared event feed.
 function syncSecretFeed(){
   rolls.setPrivateEvents(['self','gm','blind'].flatMap(kind=>
@@ -383,8 +387,8 @@ function loadSheets(){
   sheetsUnsub=onSnapshot(source,snap=>{
     sheets=snap.docs.filter(d=>d.data().tipo!=='diario').map(d=>({id:d.id,...d.data()}));
     updateTheatreDirectory();rolls.setSheets(sheets);
-    renderSheets();combatDirector.refresh();battle.render();sessionTools.refresh();gmQuick.refresh();
-    scheduleVitalSync();
+    renderSheets();combatDirector.refresh();battle.render();sessionTools.refresh();gmQuick.refresh();draw();
+    scheduleVitalSync();void syncTokenInjuryArt();
   },e=>show('Não foi possível sincronizar as fichas: '+e.message));
 }
 function updateTheatreDirectory(){
@@ -407,6 +411,22 @@ function syncTheatrePortraits(cast){
     const unsub=onSnapshot(doc(db,'vttRooms',room,'theatrePortraits',id),snap=>{
       const data=snap.data();
       theatre.setPortrait(id,data?.variants||data?.image||'',data?.variant||'');
+      // Teatros montados antes desta atualização podem não ter os retratos
+      // ferido/grave publicados. O mestre os disponibiliza uma única vez,
+      // sem trocar a versão manual escolhida no palco.
+      const f=sheets.find(x=>x.id===id);
+      const needsUpgrade=admin&&f&&['ferido','grave'].some(key=>
+        safeImage(f.retratos?.[key])&&!safeImage(data?.variants?.[key]));
+      if(needsUpgrade){
+        const actor=theatre.getCast().find(a=>a.id===id);
+        const signature=tokenArtSignature(f);
+        if(actor&&stageInjuryUpgrade.get(id)!==signature&&!stageInjuryPending.has(id)){
+          stageInjuryUpgrade.set(id,signature);stageInjuryPending.add(id);
+          void publishTheatrePortrait(id,actor.variant).catch(error=>
+            console.warn('Atualização dos retratos do Teatro:',error)
+          ).finally(()=>stageInjuryPending.delete(id));
+        }
+      }
     },e=>show('Retrato no Teatro: '+e.message));
     portraitSubs.set(id,unsub);
   }
@@ -420,18 +440,47 @@ function healthOf(f){
   const current=raw===null||raw===undefined||raw===''?max:Math.max(0,Math.min(max,Math.round(Number(raw)||0)));
   return {current,max};
 }
-function syncTheatreVitals(cast){
-  const ids=new Set((Array.isArray(cast)?cast:[]).filter(c=>c&&typeof c.id==='string').map(c=>c.id));
+// O mesmo HP das fichas controla retratos de palco e tokens no mapa.
+// Jogadores leem somente resumos numéricos dos personagens visíveis no VTT.
+function watchedInjuryIds(){
+  return new Set([
+    ...theatre.getCast().map(a=>a.id),
+    ...visibleTokens().filter(t=>t.fichaId).map(t=>t.fichaId)
+  ]);
+}
+function tokenVital(id){
+  const f=sheets.find(x=>x.id===id);
+  // O dono e o mestre usam imediatamente o valor atualizado da ficha.
+  if(f&&(admin||f.ownerUid===uid))return healthOf(f);
+  return publicVitals.get(id)||null;
+}
+function injuryState(id){
+  const hp=tokenVital(id);
+  if(!hp||hp.max<=0)return '';
+  const ratio=hp.current/hp.max;
+  return ratio<=.25?'grave':ratio<=.5?'ferido':'';
+}
+function syncTheatreVitals(){
+  const ids=watchedInjuryIds();
   for(const [id,unsubscribe] of vitalSubs){
     if(ids.has(id))continue;
-    unsubscribe();vitalSubs.delete(id);theatre.setVital(id,null);
+    unsubscribe();vitalSubs.delete(id);
+    publicVitals.delete(id);theatre.setVital(id,null);
   }
   if(!room)return;
   for(const id of ids){
     if(vitalSubs.has(id))continue;
     const unsubscribe=onSnapshot(doc(db,'vttRooms',room,'theatreVitals',id),snap=>{
-      theatre.setVital(id,snap.exists()?snap.data():null);
-    },err=>show('Sincronização do HP: '+err.message));
+      const data=snap.exists()?snap.data():null;
+      if(data&&Number.isFinite(Number(data.current))&&Number(data.max)>0)
+        publicVitals.set(id,{current:Number(data.current),max:Number(data.max)});
+      else publicVitals.delete(id);
+      theatre.setVital(id,data);
+      draw();
+      // Retratos na seleção de combate acompanham a Vitalidade pública.
+      combatDirector.refresh();
+    },err=>{if(!String(err?.message||'').toLowerCase().includes('permission'))
+      show('Sincronização do HP: '+err.message)});
     vitalSubs.set(id,unsubscribe);
   }
 }
@@ -441,9 +490,9 @@ function scheduleVitalSync(){
 }
 async function publishVitality(){
   if(!room||!uid||!roomData)return;
-  const cast=theatre.getCast();
-  for(const actor of cast){
-    const f=sheets.find(s=>s.id===actor.id);
+  const ids=watchedInjuryIds();
+  for(const id of ids){
+    const f=sheets.find(s=>s.id===id);
     if(!f||(!admin&&f.ownerUid!==uid))continue;
     const vital=healthOf(f),signature=f.ownerUid+':'+vital.current+':'+vital.max;
     if(lastVitals.get(f.id)===signature)continue;
@@ -453,16 +502,15 @@ async function publishVitality(){
       });
       lastVitals.set(f.id,signature);
     }catch(err){
-      // As fichas permanecem privadas; as novas regras do Firebase precisam
-      // ser publicadas antes desta sincronização funcionar em produção.
-      if(!String(err.message||'').includes('permission'))show('HP do Teatro: '+err.message);
+      if(!String(err.message||'').includes('permission'))
+        show('Sincronização de Vitalidade: '+err.message);
     }
   }
 }
 function portrait(f){const variants=f.retratoBase==='casual'?[f.retratos?.casual,f.retratos?.ninja]:[f.retratos?.ninja,f.retratos?.casual];for(const x of [...variants,f.foto,f.portrait,f.retrato,f.imagem,f.avatar])if(safeImage(x))return x;return ''}
-async function tokenPortrait(f){
-  // Nunca cortar, enquadrar em círculo ou converter para JPEG: WebP mantém o canal alfa do PNG.
-  const source=portrait(f);
+async function tokenPortrait(f,variant=''){
+  // WebP mantém o canal alfa do PNG, inclusive nos retratos de ferimento.
+  const source=variant?f?.retratos?.[variant]:portrait(f);
   if(safeUrl(source))return source;
   if(!source)return '';
   return new Promise(resolve=>{
@@ -490,6 +538,91 @@ async function tokenPortrait(f){
     img.onerror=()=>resolve('');
     img.src=source;
   });
+}
+// Retratos da ficha podem ultrapassar o limite de 160 KB aceito pelo
+// Firestore do Teatro. Reduzir somente quando necessário, mantendo alfa.
+async function shrinkTheatrePortrait(source){
+  if(safeUrl(source))return source;
+  if(!safeImage(source))return '';
+  return new Promise(resolve=>{
+    const img=new Image();
+    img.onload=()=>{
+      try{
+        const width=img.naturalWidth,height=img.naturalHeight;
+        const cvs=document.createElement('canvas');
+        const c=cvs.getContext('2d',{alpha:true});
+        if(!c){resolve('');return}
+        for(const side of [980,840,720,640,560,460,380]){
+          const ratio=Math.min(1,side/Math.max(width,height));
+          cvs.width=Math.max(1,Math.round(width*ratio));
+          cvs.height=Math.max(1,Math.round(height*ratio));
+          c.clearRect(0,0,cvs.width,cvs.height);
+          c.imageSmoothingEnabled=true;c.imageSmoothingQuality='high';
+          c.drawImage(img,0,0,cvs.width,cvs.height);
+          const ready=cvs.toDataURL('image/webp',.84);
+          if(ready.length<=157000){resolve(ready);return}
+        }
+      }catch(error){console.warn('Otimização de retrato no Teatro:',error)}
+      resolve('');
+    };
+    img.onerror=()=>resolve('');
+    img.src=source;
+  });
+}
+// As artes de ferimento são versões compactas dos retratos já cadastrados
+// na ficha. Elas viajam junto ao token sem revelar os demais dados privados.
+function tokenArtSignature(f){
+  return ['ferido','grave'].map(key=>{
+    const v=f?.retratos?.[key];
+    if(!safeImage(v))return '-';
+    // Assinatura barata para detectar troca de imagens sem guardar o original.
+    let hash=2166136261;
+    for(let i=0;i<v.length;i+=Math.max(1,Math.floor(v.length/160))){
+      hash=Math.imul(hash^v.charCodeAt(i),16777619);
+    }
+    return key+':'+v.length+':'+(hash>>>0).toString(36);
+  }).join('|');
+}
+async function tokenInjuryPortraits(f){
+  const variants={};
+  for(const key of ['ferido','grave']){
+    if(!safeImage(f?.retratos?.[key]))continue;
+    const image=await tokenPortrait(f,key);
+    if(safeImage(image))variants[key]=image;
+  }
+  return variants;
+}
+async function syncTokenInjuryArt(){
+  if(!admin||!room||!roomData?.activeSceneId)return;
+  // Não alterar escala, posição, retrato base ou qualquer outra opção do token.
+  for(const t of visibleTokens()){
+    const f=sheets.find(x=>x.id===t.fichaId);
+    if(!f||injuryArtPending.has(t.id))continue;
+    const key=tokenArtSignature(f);
+    if(t.injuryArtKey===key)continue;
+    injuryArtPending.add(t.id);
+    const snapshotRoom=room,sceneId=roomData.activeSceneId;
+    try{
+      const injuryPortraits=await tokenInjuryPortraits(f);
+      if(room!==snapshotRoom||roomData?.activeSceneId!==sceneId)continue;
+      await updateDoc(tokenRef(t.id),{injuryPortraits,injuryArtKey:key});
+    }catch(error){
+      // Um retrato inválido não pode impedir a mesa de carregar.
+      console.warn('Retratos de ferimento do token:',error);
+    }finally{injuryArtPending.delete(t.id)}
+  }
+}
+function combatPortrait(f){
+  const state=injuryState(f?.id);
+  const primary=state?f?.retratos?.[state]:'';
+  const fallback=state==='grave'?f?.retratos?.ferido:'';
+  return safeImage(primary)?primary:safeImage(fallback)?fallback:portrait(f);
+}
+function tokenVisiblePortrait(t){
+  const state=injuryState(t.fichaId);
+  const primary=state&&t.injuryPortraits?.[state];
+  const fallback=state==='grave'&&t.injuryPortraits?.ferido;
+  return safeImage(primary)?primary:safeImage(fallback)?fallback:t.portrait;
 }
 // Menu contextual do elenco — botão direito na ficha ou botão ⋯.
 let actorMenu=null;
@@ -936,7 +1069,7 @@ async function connectWorld(){
       theatre.setState(roomData.theatre);
       const cast=theatre.getCast();
       updateTheatreDirectory();
-      syncTheatrePortraits(cast);syncTheatreVitals(cast);scheduleVitalSync();
+      syncTheatrePortraits(cast);syncTheatreVitals();scheduleVitalSync();
       const rosterKey=String(masterUid)+'|'+cast.map(a=>a.id).join('|');
       if(rosterKey!==lastStageRosterKey){
         lastStageRosterKey=rosterKey;renderSheets();
@@ -1088,6 +1221,7 @@ function watchTokens(sceneId){
     if(observed&&!visibleTokens().some(t=>t.id===observed.id)){
       battle.clearVisionPreview();updateStageToolStatus();
     }
+    syncTheatreVitals();scheduleVitalSync();void syncTokenInjuryArt();
     renderTokens();draw();battle.render();combatDirector.refreshMapStatus();combatDirector.refresh();gmQuick.refresh();
   },err=>show('Permissão dos tokens: '+err.message));
 }
@@ -1391,7 +1525,7 @@ function loadMap(url){
 function center(){view.zoom=1;const w=stage.clientWidth,h=stage.clientHeight;if(view.image){const scale=Math.min((w-28)/view.image.width,(h-28)/view.image.height);view.zoom=Math.max(.012,Math.min(4,scale));view.ox=(w-view.image.width*view.zoom)/2;view.oy=(h-view.image.height*view.zoom)/2}else{view.ox=w/2-8*view.cell;view.oy=h/2-5*view.cell}draw();updateMetricHud()}
 const world=(x,y)=>({x:(x-view.ox)/view.zoom,y:(y-view.oy)/view.zoom});
 function spriteBounds(t){
-  const image=tokenImage(t.portrait);
+  const image=tokenImage(tokenVisiblePortrait(t));
   const ratio=image?.naturalWidth&&image?.naturalHeight?Math.max(.16,Math.min(4,image.naturalWidth/image.naturalHeight)):.67;
   let height=view.cell*1.65,width=height*ratio;
   if(width>view.cell*1.7){width=view.cell*1.7;height=width/ratio}
@@ -1422,6 +1556,23 @@ function draw(){
       ctx.fillText((t.name||'Shinobi').slice(0,18),b.x,b.y-view.cell*.3);ctx.restore();
     }
     battle.drawTokenMarks(ctx,t,view,b);
+    // Estado discreto de ferimento, sem flashes, halos ou sons artificiais.
+    const injury=injuryState(t.fichaId);
+    if(injury){
+      const px=Math.max(16/view.zoom,10),py=Math.max(12/view.zoom,8);
+      const label=injury==='grave'?'GRAVE':'FERIDO';
+      ctx.save();
+      ctx.font='700 '+Math.max(9/view.zoom,8)+'px system-ui';
+      ctx.textAlign='center';
+      const width=Math.max(px*2,ctx.measureText(label).width+10/view.zoom);
+      // Evitar colisão com os ícones de condições já exibidos pelo combate.
+      const hasConditions=battle.getConditionList(t.fichaId).length>0;
+      const y=b.top-(hasConditions?36:9)/view.zoom;
+      ctx.fillStyle=injury==='grave'?'rgba(105,47,47,.89)':'rgba(112,76,53,.88)';
+      ctx.beginPath();ctx.roundRect(b.x-width/2,y-py,width,py+2/view.zoom,3/view.zoom);ctx.fill();
+      ctx.fillStyle='#fff0dc';ctx.fillText(label,b.x,y-2/view.zoom);
+      ctx.restore();
+    }
     if(selected===t.id){
       // Apenas a seleção tem indicadores discretos nos cantos, nunca um aro permanente.
       const pad=view.cell*.07,l=b.left-pad,r=b.left+b.width+pad,top=b.top-pad,bot=b.top+b.height+pad,d=view.cell*.14;
@@ -1638,6 +1789,7 @@ async function spawn(f,x,y,{silent=false}={}){
       name:String(f.nome||f.name||'Shinobi').slice(0,40),
       fichaId:f.id,ownerUid:f.ownerUid,x:position.x,y:position.y,
       color:'#a57c64',portrait:await tokenPortrait(f),
+      injuryPortraits:await tokenInjuryPortraits(f),injuryArtKey:tokenArtSignature(f),
       sceneId:roomData.activeSceneId
     });
     if(!silent)show('Token criado: '+(f.nome||'Shinobi'));
