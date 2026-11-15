@@ -35,3 +35,10 @@
 - Mestre: criar uma playlist, salvar um link, tocar, pausar, avançar, renomear, mover faixa, recarregar página, confirmar persistência.
 - Jogador autenticado: observar playlist e estado compartilhado; permitir áudio por clique no ▶ do vídeo se o navegador bloquear o início automático.
 - Confirme que chat, mapa, fog of war, teatro, iniciativa e cenas continuam funcionando após a troca.
+
+## Controles exclusivos do mestre
+- Apenas o mestre pode reproduzir, pausar, parar, avançar, voltar, repetir, renomear, mover ou excluir faixas e playlists.
+- Jogadores não recebem botões de controle do mestre; o iframe do YouTube também não recebe cliques nem foco do teclado, e o player é criado sem controles nativos.
+- Como os navegadores podem bloquear autoplay, o jogador verá somente **Ouvir música da mesa** quando a música estiver ativa mas ainda não estiver tocando localmente. Esse botão apenas inicia a escuta e não pausa a música.
+- O documento compartilhado `vttRooms/shinobi-chronicles` já exige `isAdmin()` para escrita nas regras do Firestore; jogador não consegue interromper a reprodução dos demais nem alterar playlists.
+- Um usuário sempre pode silenciar o áudio do próprio navegador/sistema operacional: isso não é controlável pelo VTT.

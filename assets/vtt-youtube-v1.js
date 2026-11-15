@@ -109,6 +109,7 @@ root.innerHTML=String.raw`
     </div>
     <div class="sc-yt-video-shell" id="sc-yt-video-shell">
       <div id="sc-yt-embed"></div>
+      <button type="button" id="sc-yt-listener-play" class="sc-yt-listener-play" hidden>▶ Ouvir música da mesa</button>
     </div>
     <div class="sc-yt-deck-controls" id="sc-yt-gm-controls" hidden>
       <button type="button" id="sc-yt-prev" title="Faixa anterior">⏮</button>
@@ -144,7 +145,7 @@ root.innerHTML=String.raw`
   <p class="sc-yt-feedback" id="sc-yt-feedback" aria-live="polite"></p>
   <details class="sc-yt-help"><summary>Como funciona?</summary>
     <p>Como mestre, crie playlists, cole links de vídeos e clique em ▶ para tocar a trilha para a mesa. Os links ficam salvos no Firebase e não precisam ser baixados.</p>
-    <p>Os jogadores acompanham a trilha pelo player do YouTube. Alguns navegadores bloqueiam áudio automático: nesses casos, basta clicar no ▶ do próprio vídeo. Não é necessário enviar arquivos nem habilitar o Firebase Storage.</p>
+    <p>Só o mestre pode iniciar, pausar, parar, trocar e remover faixas. Os jogadores apenas escutam, sem controles para interromper a trilha. Se o navegador bloquear o som automático, aparece um botão para começar a ouvir; ele não pausa a música.</p>
     <p>Alguns vídeos têm incorporação desativada pelo autor e não podem tocar fora do YouTube. Experimente outro vídeo se aparecer essa mensagem.</p>
   </details>
 `;
@@ -170,6 +171,7 @@ function syncHeader(){
   $('sc-yt-now').textContent=song?.title||'Nenhuma música selecionada';
   $('sc-yt-now-playlist').textContent=song?.playlist.name||'O mestre escolhe a próxima trilha.';
   $('sc-yt-gm-controls').hidden=!gm;
+  root.classList.toggle('sc-yt-master',gm);
   $('sc-yt-play').textContent=state.status==='playing'?'Ⅱ':'▶';
   $('sc-yt-loop').setAttribute('aria-pressed',String(state.loop));
   $('sc-yt-loop').classList.toggle('active',state.loop);
@@ -295,6 +297,7 @@ async function createPlaylist(){
   }catch(e){toast(errorText(e),true)}finally{busy=false}
 }
 async function renamePlaylist(id){
+  if(!gm)return;
   const existing=lists.find(x=>x.id===id);if(!existing||id===GENERAL)return;
   const result=prompt('Novo nome da playlist',existing.name);
   if(result===null)return;
@@ -308,6 +311,7 @@ async function renamePlaylist(id){
   }catch(e){toast(errorText(e),true)}
 }
 async function deletePlaylist(id){
+  if(!gm)return;
   const p=lists.find(x=>x.id===id);if(!p||p.id===GENERAL)return;
   if(!confirm('Excluir a playlist "'+p.name+'" e todos os links salvos nela?'))return;
   try{
@@ -338,6 +342,7 @@ async function addTrack(){
   }catch(e){toast(errorText(e),true)}finally{busy=false}
 }
 async function renameTrack(playlistId,trackId){
+  if(!gm)return;
   const t=findTrack(trackId,playlistId);if(!t)return;
   const result=prompt('Nome da música',t.title);
   if(result===null)return;
@@ -349,6 +354,7 @@ async function renameTrack(playlistId,trackId){
   })}catch(e){toast(errorText(e),true)}
 }
 async function deleteTrack(playlistId,trackId){
+  if(!gm)return;
   const t=findTrack(trackId,playlistId);if(!t||!confirm('Remover "'+t.title+'" da playlist?'))return;
   try{
     if(state.trackId===trackId)await publish({...EMPTY_STATE(),loop:state.loop});
@@ -426,6 +432,7 @@ function adjacent(offset){
   void playTrack(p.id,p.tracks[Math.max(0,next)].id);
 }
 function onYTStateChange(e){
+  updateListenerPlay();
   if(!gm||state.status!=='playing'||e.data!==window.YT?.PlayerState?.ENDED)return;
   const song=current();
   if(!song)return;
@@ -437,6 +444,24 @@ function onYTStateChange(e){
 function playerVolume(){
   if(playerReady)try{player.setVolume(localVolume)}catch{}
 }
+// O player nativo não pode ser clicado por jogadores. O único gesto
+// permitido, caso o navegador bloqueie autoplay, é iniciar a escuta.
+function updateListenerPlay(){
+  const button=$('sc-yt-listener-play');
+  if(!button)return;
+  const playing=window.YT?.PlayerState?.PLAYING;
+  const status=playerReady?Number(player?.getPlayerState?.()):NaN;
+  const needsClick=!gm&&!!user&&playerReady&&!!current()&&state.status==='playing'&&status!==playing;
+  button.hidden=!needsClick;
+}
+$('sc-yt-listener-play').addEventListener('click',()=>{
+  if(gm||!user||state.status!=='playing'||!current()||!playerReady)return;
+  try{
+    player.playVideo();
+    $('sc-yt-listener-play').hidden=true;
+    setTimeout(updateListenerPlay,1500);
+  }catch(error){notice('O YouTube não conseguiu iniciar a música. Confira o navegador e tente novamente.')}
+});
 function syncPlayer(){
   if(!playerReady)return;
   const song=current();
@@ -473,6 +498,7 @@ function syncPlayer(){
     }catch(error){console.warn('YouTube:',error)}
   }
   playerVolume();
+  updateListenerPlay();
 }
 function onYoutubeError(e){
   const messages={
@@ -489,19 +515,25 @@ function attachPlayer(){
   if(player||!window.YT?.Player)return;
   player=new window.YT.Player('sc-yt-embed',{
     width:'100%',height:'214',
-    playerVars:{playsinline:1,controls:1,rel:0,origin:location.origin},
+    playerVars:{playsinline:1,controls:0,disablekb:1,fs:0,rel:0,origin:location.origin},
     events:{
       onReady:e=>{
         playerReady=true;
         try{
           e.target.getIframe().setAttribute('allow','autoplay; encrypted-media; fullscreen; picture-in-picture');
+          e.target.getIframe().setAttribute('tabindex','-1');
           e.target.getIframe().setAttribute('referrerpolicy','strict-origin-when-cross-origin');
         }catch{}
-        syncPlayer();playerVolume();
+        syncPlayer();playerVolume();updateListenerPlay();
       },
       onStateChange:onYTStateChange,
       onAutoplayBlocked:()=>{
-        notice('O navegador bloqueou a reprodução automática. Clique em ▶ no vídeo do YouTube acima para ouvir.');
+        if(!gm&&state.status==='playing'){
+          notice('O navegador bloqueou o início automático. Use “Ouvir música da mesa” para começar a escutar.');
+          updateListenerPlay();
+        }else if(gm){
+          notice('O navegador bloqueou a reprodução automática. Use o play do mestre para iniciar.');
+        }
       },
       onError:onYoutubeError
     }
@@ -532,13 +564,14 @@ function refreshAfterSnapshot(){
     renderTracks();
   }
   syncPlayer();
+  updateListenerPlay();
 }
 function resetConnection(){
   fireUnsub?.();fireUnsub=null;
   lists=[DEFAULT_LIST()];state=EMPTY_STATE();
   lastLibraryKey='';loadedVideoId='';appliedState='';
   try{player?.stopVideo?.()}catch{}
-  renderFolders();renderTracks();syncHeader();
+  renderFolders();renderTracks();syncHeader();updateListenerPlay();
 }
 onAuthStateChanged(auth,async nextUser=>{
   const epoch=++authEpoch;resetConnection();
@@ -592,6 +625,7 @@ $('sc-yt-volume').addEventListener('input',e=>{
 // O evento de clique ocorre no iframe nativo do YouTube quando o navegador
 // exige interação. Não existe bloqueio artificial nem botão de habilitar som.
 setInterval(()=>{
+  updateListenerPlay();
   if(!playerReady||!user||state.status!=='playing'||!current())return;
   if(Number(player.getPlayerState?.())!==window.YT?.PlayerState?.PLAYING)return;
   const local=Number(player.getCurrentTime?.()),expected=statePosition();
