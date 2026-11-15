@@ -15,7 +15,7 @@ const WORLD_ID='shinobi-chronicles';
 const activeDoorEvents=new Set(),pendingDoorEvents=new Map();
 let activeEnvironmentView='walls';
 const $=id=>document.getElementById(id);
-let uid='',admin=false,room='',roomData=null,tokens=[],sheets=[],scenes=[],subs=[],dragToken=null,selected=null,sceneKey='',lastRoll='',busy=false,editingSceneId='',tokenUnsub=null,tokenSceneSubscribed=null,sheetsUnsub=null,subscriptionEpoch=0,worldCollectionsReady=false,portraitSubs=new Map(),vitalSubs=new Map(),lastVitals=new Map(),vitalTimer=null,masterUid='',lastStageRosterKey='__initial__',secretRollFeeds={self:[],gm:[],blind:[]},blindProcessing=new Set();
+let uid='',admin=false,room='',roomData=null,tokens=[],sheets=[],scenes=[],mapFolders=[],subs=[],dragToken=null,selected=null,sceneKey='',lastRoll='',busy=false,editingSceneId='',tokenUnsub=null,tokenSceneSubscribed=null,sheetsUnsub=null,subscriptionEpoch=0,worldCollectionsReady=false,portraitSubs=new Map(),vitalSubs=new Map(),lastVitals=new Map(),vitalTimer=null,masterUid='',lastStageRosterKey='__initial__',secretRollFeeds={self:[],gm:[],blind:[]},blindProcessing=new Set();
 const stage=$('stage'),canvas=$('map'),ctx=canvas.getContext('2d');
 const visualEffects=createVisualEffects(stage);
 const combatDirector=createCombatDirector({
@@ -200,7 +200,7 @@ function updateMetricDrawStatus(){
   $('metric-save').disabled=!admin||!hasLine||!Number.isFinite(known)||known<=0||known>100000;
 }
 const tokenRef=id=>doc(db,'vttRooms',room,'tokens',id);
-const stopSubs=()=>{gmQuick?.reset?.();sessionTools?.reset?.();measure.enabled=false;measure.calibrating=false;measure.start=null;measure.end=null;measure.drawnPx=0;$('metric-card').hidden=true;$('metric-status').hidden=true;$('metric-hud').hidden=true;if($('sheet-modal').classList.contains('open'))$('sheet-close').click();subscriptionEpoch++;worldCollectionsReady=false;secretRollFeeds={self:[],gm:[],blind:[]};blindProcessing.clear();if(typeof rolls!=='undefined')rolls.setPrivateEvents([]);for(const stop of portraitSubs.values())stop();portraitSubs.clear();for(const stop of vitalSubs.values())stop();vitalSubs.clear();lastVitals.clear();clearTimeout(vitalTimer);masterUid='';if(tokenUnsub){tokenUnsub();tokenUnsub=null}tokenSceneSubscribed=null;subs.forEach(u=>u());subs=[];room='';roomData=null;tokens=[];scenes=[];selected=null;editingSceneId='';lastStageRosterKey='__initial__';theatre.reset();combatDirector.setData(null);battle.setData(null);$('room-heading').textContent='Mesa Permanente · Shinobi Chronicles';$('world-status').textContent='Aguardando conexão…';$('scene-empty').hidden=false;renderScenes();renderTokens();draw();};
+const stopSubs=()=>{gmQuick?.reset?.();sessionTools?.reset?.();measure.enabled=false;measure.calibrating=false;measure.start=null;measure.end=null;measure.drawnPx=0;$('metric-card').hidden=true;$('metric-status').hidden=true;$('metric-hud').hidden=true;if($('sheet-modal').classList.contains('open'))$('sheet-close').click();subscriptionEpoch++;worldCollectionsReady=false;secretRollFeeds={self:[],gm:[],blind:[]};blindProcessing.clear();if(typeof rolls!=='undefined')rolls.setPrivateEvents([]);for(const stop of portraitSubs.values())stop();portraitSubs.clear();for(const stop of vitalSubs.values())stop();vitalSubs.clear();lastVitals.clear();clearTimeout(vitalTimer);masterUid='';if(tokenUnsub){tokenUnsub();tokenUnsub=null}tokenSceneSubscribed=null;subs.forEach(u=>u());subs=[];room='';roomData=null;tokens=[];scenes=[];mapFolders=[];selected=null;editingSceneId='';lastStageRosterKey='__initial__';theatre.reset();combatDirector.setData(null);battle.setData(null);$('room-heading').textContent='Mesa Permanente · Shinobi Chronicles';$('world-status').textContent='Aguardando conexão…';$('scene-empty').hidden=false;renderScenes();renderTokens();draw();};
 const theatre=createTheatre({
   stage,
   notify:show,
@@ -471,7 +471,7 @@ function setEnvironmentView(which,activate=true){
 }
 function switchTab(name){
   if(['mapa','actors','biblioteca'].includes(name))name='campanha';
-  if((name==='combate'||name==='ambiente')&&!admin){
+  if((name==='combate'||name==='ambiente'||name==='mapas')&&!admin){
     show('Esta ferramenta é exclusiva do mestre.');return;
   }
   const leavingEnvironment=!document.querySelector('#pane-ambiente[hidden]')&&name!=='ambiente';
@@ -491,8 +491,8 @@ document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>switchTab(b.dat
 document.querySelectorAll('[data-env-view]').forEach(b=>b.onclick=()=>setEnvironmentView(b.dataset.envView));
 $('sc-open-environment').onclick=()=>{activeEnvironmentView='walls';switchTab('ambiente')};
 function openScenes(){
-  switchTab('campanha');
   if(!admin){show('A biblioteca é exclusiva do mestre. Você acompanha a cena ativa.');return}
+  switchTab('mapas');
   const workspace=$('workspace');
   if(workspace.classList.contains('panel-hidden'))$('vtt-toggle-panel').click();
   const folder=$('scene-library-drawer');folder.open=true;
@@ -501,7 +501,7 @@ function openScenes(){
 $('scene-open-library').onclick=openScenes;
 $('scene-open-panel').onclick=openScenes;
 function applyRole(){for(const id of ['gm-scenes','next-turn','cast-effect','effect-kind','effect-kind-label','effect-target','effect-target-label','effect-help'])$(id).hidden=!admin;for(const item of document.querySelectorAll('[data-gm-only]'))item.hidden=!admin;$('scene-open-library').setAttribute('aria-label',admin?'Abrir biblioteca de mapas':'Cena em exibição');
-$('scene-open-panel').title=admin?'Escolher mapa na biblioteca':'Cena em exibição';$('auth-label').textContent=uid?(admin?'Mestre · permissões administrativas':'Jogador · acesso restrito'):'Faça login nos Arquivos Shinobi';if(!admin&&(document.querySelector('[data-tab="combate"].active')||document.querySelector('[data-tab="ambiente"].active')))switchTab('rolls');theatre.refresh();renderSheets();combatDirector.refresh();battle.render();refreshCombatTargets();sessionTools.refresh();gmQuick.refresh();gmQuick.refresh();}
+$('scene-open-panel').title=admin?'Escolher mapa na biblioteca':'Cena em exibição';$('auth-label').textContent=uid?(admin?'Mestre · permissões administrativas':'Jogador · acesso restrito'):'Faça login nos Arquivos Shinobi';if(!admin&&(document.querySelector('[data-tab="combate"].active')||document.querySelector('[data-tab="ambiente"].active')||document.querySelector('[data-tab="mapas"].active')))switchTab('rolls');theatre.refresh();renderSheets();combatDirector.refresh();battle.render();refreshCombatTargets();sessionTools.refresh();gmQuick.refresh();gmQuick.refresh();}
 onAuthStateChanged(auth,async user=>{stopSubs();if(sheetsUnsub){sheetsUnsub();sheetsUnsub=null}uid=user?.uid||'';admin=false;sheets=[];theatre.setActors([]);rolls.setUser(uid);rolls.setSheets([]);applyRole();if(!uid){show('Faça login no Shinobi Chronicles antes de entrar na mesa.');return}try{admin=user.email==='mestre_shinobi@players.shinobi-chronicles.invalid'||(await getDoc(doc(db,'admins',uid))).exists();applyRole();loadSheets();void connectWorld()}catch(e){show('Falha na autenticação: '+e.message)}});
 function loadSheets(){
   if(sheetsUnsub){sheetsUnsub();sheetsUnsub=null}
@@ -1014,7 +1014,9 @@ async function connectWorld(){
         worldCollectionsReady=true;
         if(admin)subs.push(onSnapshot(collection(db,'vttRooms',WORLD_ID,'scenes'),sceneSnapshot=>{
           if(epoch!==subscriptionEpoch)return;
-          scenes=sceneSnapshot.docs.map(d=>({id:d.id,...d.data()}));renderScenes();
+          const entries=sceneSnapshot.docs.map(d=>({id:d.id,...d.data()}));
+          mapFolders=entries.filter(d=>d.type==='folder');
+          scenes=entries.filter(d=>d.type!=='folder');renderSceneFolderOptions();renderScenes();
         },e=>show('Biblioteca: '+e.message)));
         subs.push(onSnapshot(query(collection(db,'vttRooms',WORLD_ID,'events'),orderBy('at','desc'),limit(100)),events=>{
           if(epoch!==subscriptionEpoch)return;
@@ -1149,80 +1151,211 @@ function watchTokens(sceneId){
     renderTokens();draw();battle.render();combatDirector.refreshMapStatus();combatDirector.refresh();refreshCombatTargets();gmQuick.refresh();
   },err=>show('Permissão dos tokens: '+err.message));
 }
+
+const openSceneFolders=new Map();
+const sceneColl=()=>collection(db,'vttRooms',room,'scenes');
+const folderName=id=>mapFolders.find(f=>f.id===id)?.name||'Sem pasta';
+function renderSceneFolderOptions(){
+  const select=$('scene-folder-select');
+  if(!select)return;
+  const chosen=select.value;
+  select.replaceChildren(new Option('Sem pasta',''),...mapFolders
+    .slice().sort((a,b)=>String(a.name).localeCompare(String(b.name),'pt-BR'))
+    .map(f=>new Option(f.name,f.id)));
+  select.value=mapFolders.some(f=>f.id===chosen)?chosen:'';
+}
 function resetSceneEditor(){
   editingSceneId='';
-  $('scene-title-input').value='';$('scene-url').value='';$('scene-meter-scale').value=String(DEFAULT_METERS_PER_CELL);
+  $('scene-title-input').value='';
+  $('scene-url').value='';
+  $('scene-meter-scale').value=String(DEFAULT_METERS_PER_CELL);
+  $('scene-folder-select').value='';
   $('scene-add').textContent='Salvar cena na biblioteca';
   $('scene-cancel-edit').hidden=true;
 }
 $('scene-cancel-edit').onclick=resetSceneEditor;
+$('scene-search').addEventListener('input',renderScenes);
+$('scene-folder-create').onclick=async()=>{
+  if(!admin||!room)return show('Somente o mestre pode organizar pastas.');
+  const field=$('scene-folder-name');
+  const name=field.value.trim().replace(/\s+/g,' ');
+  if(!name||name.length>48)return show('Digite um nome de pasta com até 48 caracteres.');
+  if(mapFolders.some(f=>String(f.name).toLocaleLowerCase('pt-BR')===name.toLocaleLowerCase('pt-BR')))
+    return show('Já existe uma pasta com esse nome.');
+  const btn=$('scene-folder-create');btn.disabled=true;
+  try{
+    await addDoc(sceneColl(),{type:'folder',name,createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
+    field.value='';
+    show('Pasta criada: '+name);
+  }catch(error){show('Falha ao criar pasta: '+error.message)}
+  finally{btn.disabled=false}
+};
+$('scene-folder-name').addEventListener('keydown',e=>{
+  if(e.key==='Enter'){e.preventDefault();$('scene-folder-create').click()}
+});
 $('scene-add').onclick=async()=>{
   if(!admin||!room)return show('Somente o mestre pode preparar cenas.');
   const name=$('scene-title-input').value.trim(),url=$('scene-url').value.trim();
-  const grid=64; // Unidade visual interna, independente da distância em metros.
+  const selectedFolder=$('scene-folder-select').value;
+  const folderId=mapFolders.some(f=>f.id===selectedFolder)?selectedFolder:'';
+  const grid=64;
   const rawScale=Number($('scene-meter-scale').value);
   if(!name||name.length>80||!safeUrl(url))
     return show('Informe o nome do mapa e uma URL HTTPS válida.');
   if(!Number.isFinite(rawScale)||rawScale<.05||rawScale>1000)
     return show('A escala deve estar entre 0,05 m e 1.000 m por célula.');
   const mScale=Math.round(rawScale*1000)/1000;
+  const btn=$('scene-add');btn.disabled=true;
   try{
     if(editingSceneId){
-      await updateDoc(doc(db,'vttRooms',room,'scenes',editingSceneId),{name,url,grid,metersPerCell:mScale,updatedAt:serverTimestamp()});
+      await updateDoc(doc(sceneColl(),editingSceneId),{name,url,grid,folderId,metersPerCell:mScale,updatedAt:serverTimestamp()});
       if(roomData?.activeSceneId===editingSceneId){
         await updateDoc(roomRef(),{scene:url,sceneName:name,grid,metersPerCell:mScale,updatedAt:serverTimestamp()});
       }
-      show('Cena atualizada na biblioteca.');
+      show('Mapa atualizado em '+folderName(folderId)+'.');
     }else{
-      await addDoc(collection(db,'vttRooms',room,'scenes'),{name,url,grid,metersPerCell:mScale,createdAt:serverTimestamp()});
-      show('Cena salva. Clique em Ativar para mostrá-la aos jogadores.');
+      await addDoc(sceneColl(),{name,url,grid,folderId,metersPerCell:mScale,createdAt:serverTimestamp()});
+      show('Mapa salvo em '+folderName(folderId)+'.');
     }
     resetSceneEditor();
   }catch(e){show('Não foi possível salvar a cena: '+e.message)}
+  finally{btn.disabled=false}
 };
 function renderScenes(){
   const root=$('scene-library');root.replaceChildren();
   $('scene-count').textContent=String(scenes.length);
   if(!admin||!room)return;
-  if(!scenes.length){const p=document.createElement('p');p.textContent='Nenhuma cena salva. Cadastre seu primeiro mapa acima.';root.append(p);return}
-  for(const scene of [...scenes].sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'pt-BR'))){
-    const current=roomData?.activeSceneId===scene.id;
-    const card=document.createElement('article');card.className='scene-card'+(current?' current':'');
-    const img=document.createElement('img');img.className='scene-preview';img.src=scene.url;img.alt='Prévia de '+scene.name;img.loading='lazy';
-    const info=document.createElement('div');info.className='scene-info';
-    const title=document.createElement('strong');title.textContent=scene.name||'Cena sem nome';
-    const detail=document.createElement('small');detail.textContent=(current?'● Em exibição · ':'Privada · ')
-      +formatMeters(metersPerCell(scene.metersPerCell))+' / célula · enquadramento automático';
-    const actions=document.createElement('div');actions.className='scene-actions';
-    const activate=document.createElement('button');activate.className='btn small'+(!current?' primary':'');
-    activate.textContent=current?'Ocultar dos jogadores':'Ativar para jogadores';
-    activate.onclick=async()=>{
-      if(!admin||!room)return;
-      try{
-        if(current)await updateDoc(roomRef(),{scene:'',sceneName:'Sem cena ativa',activeSceneId:'',updatedAt:serverTimestamp()});
-        else await updateDoc(roomRef(),{scene:scene.url,sceneName:scene.name,activeSceneId:scene.id,grid:scene.grid||64,
-          metersPerCell:metersPerCell(scene.metersPerCell),updatedAt:serverTimestamp()});
-        show(current?'Cena ocultada.':'Cena ativada para todos.');
-      }catch(e){show('Falha na ativação: '+e.message)}
-    };
-    const edit=document.createElement('button');edit.className='btn small';edit.textContent='Editar';
-    edit.onclick=()=>{
-      editingSceneId=scene.id;
-      $('scene-title-input').value=scene.name||'';
-      $('scene-url').value=scene.url||'';
-      $('scene-meter-scale').value=String(metersPerCell(scene.metersPerCell));
-      $('scene-add').textContent='Salvar alterações';
-      $('scene-cancel-edit').hidden=false;
-      $('scene-title-input').focus();
-    };
-    const remove=document.createElement('button');remove.className='btn small';remove.textContent='Excluir';remove.disabled=current;
-    remove.title=current?'Oculte a cena antes de excluí-la':'Excluir mapa da biblioteca';
-    remove.onclick=async()=>{
-      if(!admin||!room||current||!confirm('Excluir esta cena da biblioteca do mestre?'))return;
-      try{await deleteDoc(doc(db,'vttRooms',room,'scenes',scene.id));if(editingSceneId===scene.id)resetSceneEditor();show('Cena excluída.')}
-      catch(e){show('Não foi possível excluir: '+e.message)}
-    };
-    actions.append(activate,edit,remove);info.append(title,detail,actions);card.append(img,info);root.append(card);
+  const sortedFolders=[...mapFolders].sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'pt-BR'));
+  const search=$('scene-search').value.trim().toLocaleLowerCase('pt-BR');
+  const filteredFolders=sortedFolders.filter(f=>!search||String(f.name||'').toLocaleLowerCase('pt-BR').includes(search)||
+    scenes.some(sc=>sc.folderId===f.id&&String(sc.name||'').toLocaleLowerCase('pt-BR').includes(search)));
+  const anyLoose=scenes.some(sc=>!sc.folderId||!mapFolders.some(f=>f.id===sc.folderId));
+  if(!scenes.length&&!mapFolders.length){
+    const p=document.createElement('p');p.className='sc-map-empty';p.textContent='Seu acervo ainda está vazio. Crie uma pasta ou cadastre o primeiro mapa.';
+    root.append(p);return;
+  }
+  const groups=[...filteredFolders.map(f=>({id:f.id,name:f.name,folder:f})),...(!search||anyLoose?[{id:'__loose__',name:'Sem pasta',folder:null}]:[])];
+  const makeButton=(label,className,fn)=>{
+    const button=document.createElement('button');button.type='button';button.textContent=label;button.className=className;
+    button.onclick=e=>{e.preventDefault();e.stopPropagation();void fn()};
+    return button;
+  };
+  let visibleGroups=0;
+  for(const group of groups){
+    const folderSearch=!!search&&group.folder&&String(group.name).toLocaleLowerCase('pt-BR').includes(search);
+    const list=scenes.filter(sc=>{
+      const belongs=group.folder?sc.folderId===group.id:
+        !sc.folderId||!mapFolders.some(f=>f.id===sc.folderId);
+      return belongs&&(!search||folderSearch||String(sc.name||'').toLocaleLowerCase('pt-BR').includes(search));
+    }).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'pt-BR'));
+    if(search&&!list.length&&!folderSearch)continue;
+    if(!search&&group.id==='__loose__'&&!list.length&&mapFolders.length)continue;
+    visibleGroups++;
+    const details=document.createElement('details');
+    details.className='sc-map-group';details.dataset.folderId=group.id;
+    details.open=search?true:openSceneFolders.get(group.id)!==false;
+    details.addEventListener('toggle',()=>{if(!search)openSceneFolders.set(group.id,details.open)});
+    const summary=document.createElement('summary');
+    const symbol=document.createElement('span');symbol.className='sc-map-folder-icon';symbol.textContent=group.folder?'▤':'◇';
+    const label=document.createElement('span');label.className='sc-map-folder-label';
+    const title=document.createElement('strong');title.textContent=group.name;
+    const count=document.createElement('small');count.textContent=list.length+' '+(list.length===1?'cenário':'cenários');
+    label.append(title,count);
+    const arrow=document.createElement('span');arrow.className='sc-map-folder-arrow';arrow.textContent='⌄';
+    summary.append(symbol,label);
+    if(group.folder){
+      const controls=document.createElement('span');controls.className='sc-map-folder-actions';
+      controls.append(
+        makeButton('Renomear','sc-map-mini',async()=>{
+          const next=prompt('Novo nome da pasta',group.name);
+          if(next===null)return;
+          const name=next.trim().replace(/\s+/g,' ');
+          if(!name||name.length>48)return show('O nome precisa ter entre 1 e 48 caracteres.');
+          if(sortedFolders.some(f=>f.id!==group.id&&String(f.name).toLocaleLowerCase('pt-BR')===name.toLocaleLowerCase('pt-BR')))
+            return show('Já existe outra pasta com esse nome.');
+          try{await updateDoc(doc(sceneColl(),group.id),{name,updatedAt:serverTimestamp()});show('Pasta renomeada.')}
+          catch(error){show('Falha ao renomear: '+error.message)}
+        }),
+        makeButton('Excluir','sc-map-mini sc-map-delete',async()=>{
+          if(scenes.some(sc=>sc.folderId===group.id))
+            return show('Mova os mapas desta pasta antes de excluí-la.');
+          if(!confirm('Excluir a pasta vazia "'+group.name+'"?'))return;
+          try{await deleteDoc(doc(sceneColl(),group.id));show('Pasta excluída.')}
+          catch(error){show('Falha ao excluir pasta: '+error.message)}
+        })
+      );
+      summary.append(controls);
+    }
+    summary.append(arrow);details.append(summary);
+    const grid=document.createElement('div');grid.className='sc-map-grid';
+    if(!list.length){
+      const empty=document.createElement('p');empty.className='sc-map-empty';
+      empty.textContent='Esta pasta está vazia. Escolha-a no formulário acima para adicionar mapas.';grid.append(empty);
+    }
+    for(const scene of list){
+      const current=roomData?.activeSceneId===scene.id;
+      const card=document.createElement('article');card.className='scene-card sc-map-card'+(current?' current':'');
+      const img=document.createElement('img');img.className='scene-preview';img.src=scene.url;img.alt='Prévia de '+(scene.name||'cena');img.loading='lazy';
+      img.onerror=()=>{img.style.opacity='.25'};
+      const info=document.createElement('div');info.className='scene-info';
+      const title=document.createElement('strong');title.textContent=scene.name||'Mapa sem nome';
+      const detail=document.createElement('small');detail.textContent=(current?'● EM EXIBIÇÃO · ':'PRIVADO · ')+
+        formatMeters(metersPerCell(scene.metersPerCell))+' por célula';
+      const actions=document.createElement('div');actions.className='scene-actions sc-map-actions';
+      const activate=makeButton(current?'◉ Ocultar':'▶ Ativar', 'btn small'+(current?'':' primary'),async()=>{
+        if(!admin||!room)return;
+        try{
+          if(current)await updateDoc(roomRef(),{scene:'',sceneName:'Sem cena ativa',activeSceneId:'',updatedAt:serverTimestamp()});
+          else await updateDoc(roomRef(),{scene:scene.url,sceneName:scene.name,activeSceneId:scene.id,grid:scene.grid||64,
+            metersPerCell:metersPerCell(scene.metersPerCell),updatedAt:serverTimestamp()});
+          show(current?'Mapa ocultado.':'Mapa exibido para todos.');
+        }catch(e){show('Falha na ativação: '+e.message)}
+      });
+      const edit=makeButton('Editar','btn small',()=>{
+        editingSceneId=scene.id;
+        $('scene-title-input').value=scene.name||'';
+        $('scene-url').value=scene.url||'';
+        $('scene-meter-scale').value=String(metersPerCell(scene.metersPerCell));
+        $('scene-folder-select').value=mapFolders.some(f=>f.id===scene.folderId)?scene.folderId:'';
+        $('scene-add').textContent='Salvar alterações';
+        $('scene-cancel-edit').hidden=false;
+        $('scene-title-input').focus({preventScroll:true});
+        $('scene-title-input').scrollIntoView({behavior:'smooth',block:'center'});
+      });
+      const remove=makeButton('Excluir','btn small sc-map-delete',async()=>{
+        if(!admin||!room||current)return;
+        if(!confirm('Excluir o mapa "'+scene.name+'" da biblioteca?'))return;
+        try{
+          await deleteDoc(doc(sceneColl(),scene.id));
+          if(editingSceneId===scene.id)resetSceneEditor();
+          show('Mapa excluído.');
+        }catch(error){show('Falha ao excluir: '+error.message)}
+      });
+      remove.disabled=current;
+      remove.title=current?'Oculte o mapa antes de excluí-lo':'Excluir mapa';
+      actions.append(activate,edit,remove);
+      const mover=document.createElement('label');mover.className='sc-map-move-label';
+      mover.textContent='Mover para';
+      const select=document.createElement('select');select.className='sc-map-move';select.setAttribute('aria-label','Pasta de '+scene.name);
+      select.append(new Option('Sem pasta',''),...sortedFolders.map(f=>new Option(f.name,f.id)));
+      select.value=mapFolders.some(f=>f.id===scene.folderId)?scene.folderId:'';
+      select.onchange=async()=>{
+        const target=select.value;
+        select.disabled=true;
+        try{await updateDoc(doc(sceneColl(),scene.id),{folderId:target,updatedAt:serverTimestamp()});
+          if(editingSceneId===scene.id)$('scene-folder-select').value=target;
+          show('Mapa movido para '+folderName(target)+'.');
+        }catch(error){show('Não foi possível mover o mapa: '+error.message);select.disabled=false}
+      };
+      mover.append(select);
+      info.append(title,detail,actions,mover);
+      card.append(img,info);grid.append(card);
+    }
+    details.append(grid);root.append(details);
+  }
+  if(!visibleGroups){
+    const empty=document.createElement('p');empty.className='sc-map-empty';
+    empty.textContent='Nenhum mapa ou pasta corresponde à busca.';root.append(empty);
   }
 }
 

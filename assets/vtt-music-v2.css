@@ -1,0 +1,93 @@
+/* Shinobi Chronicles — Caderno sonoro do VTT · sumi-e / interface de estúdio */
+#pane-musica{--snd-ink:var(--sc-ink,#ece7dd);--snd-mute:var(--sc-muted,#acb9a9);--snd-gold:var(--sc-gold,#d4ae7c);--snd-green:var(--sc-green,#91ac8c);--snd-line:var(--sc-stroke,#4b6250);--snd-sheet:var(--sc-elev,#203027);--snd-wash:var(--sc-paper-2,#192820);padding:0 13px 28px;color:var(--snd-ink);min-width:0}
+#pane-musica [hidden]{display:none!important}
+#sc-music-root{min-width:0}
+#sc-music-root :is(input,button,summary){font-family:inherit}
+.sc-music-heading{padding:23px 4px 18px;position:relative}
+.sc-music-heading::after{content:'';position:absolute;bottom:3px;left:3px;right:3px;height:1px;background:linear-gradient(90deg,var(--snd-gold),var(--snd-line) 53%,transparent)}
+.sc-music-kicker{font-size:9px;color:var(--snd-gold);font-weight:800;letter-spacing:.2em}
+.sc-music-heading h2{font:700 23px/1.25 var(--vtt-title,"Noto Serif JP",Georgia,serif);margin:7px 0;color:var(--snd-ink);letter-spacing:.005em}
+.sc-music-heading p{font-size:11px;line-height:1.5;color:var(--snd-mute);margin:0}
+.sc-music-connect{display:flex;align-items:flex-start;gap:9px;border-radius:8px;padding:9px 10px;margin:9px 0 16px;background:var(--sc-green-soft,#47604421);border:1px solid var(--snd-line);font-size:11px;line-height:1.5;color:var(--snd-mute)}
+.sc-music-connect-dot{width:7px;height:7px;flex:0 0 7px;margin-top:5px;border-radius:50%;background:var(--snd-gold);box-shadow:0 0 0 4px var(--sc-gold-soft,#98704722)}
+.sc-music-connect[data-state="ok"]{color:var(--snd-green)}
+.sc-music-connect[data-state="ok"] .sc-music-connect-dot{background:var(--snd-green);box-shadow:0 0 0 4px var(--sc-green-soft,#6a96672c)}
+.sc-music-connect[data-state="error"]{border-color:var(--sc-accent,#dc9181);background:var(--sc-accent-soft,#dc918116);color:var(--snd-ink)}
+.sc-music-connect[data-state="error"] .sc-music-connect-dot{background:var(--sc-accent,#dc9181)}
+.sc-music-player{position:relative;overflow:hidden;background:linear-gradient(180deg,var(--snd-sheet),var(--snd-wash));border:1px solid var(--snd-line);border-radius:13px;box-shadow:0 9px 24px var(--sc-shadow,#030d082e)}
+.sc-music-player::before{content:'';position:absolute;inset:0 0 auto 0;height:2px;background:linear-gradient(90deg,transparent,var(--snd-gold),transparent);pointer-events:none}
+.sc-music-art{height:123px;position:relative;display:flex;justify-content:center;align-items:center;overflow:hidden;background:radial-gradient(circle at 27% 20%,var(--sc-green-soft,#81976b31),transparent 62%),linear-gradient(135deg,var(--sc-paper-3,#344736),var(--snd-wash));isolation:isolate;border-bottom:1px solid var(--snd-line)}
+.sc-music-art-sun{position:absolute;left:50%;top:50%;width:132px;height:132px;transform:translate(-50%,-50%) rotate(-13deg);border-radius:48% 52% 45% 55%;background:radial-gradient(circle at 41% 40%,var(--sc-gold-soft,#bfa16c56),var(--sc-accent-soft,#a6534e2d) 70%,transparent 74%);border:5px solid var(--snd-gold);opacity:.65;mask-image:radial-gradient(circle,black 60%,transparent 80%)}
+.sc-music-art-symbol{position:relative;z-index:2;font:500 66px/1 var(--vtt-japanese-font,"Noto Serif JP",Georgia,serif);color:var(--snd-ink);text-shadow:0 3px 9px var(--sc-shadow,#0005);transform:rotate(-5deg);opacity:.84}
+.sc-music-art-ink{position:absolute;bottom:12px;left:8%;width:84%;height:22px;background:linear-gradient(100deg,transparent,var(--snd-green),var(--snd-ink),transparent);filter:blur(9px);opacity:.15;transform:rotate(-8deg);z-index:0}
+.sc-music-player-content{padding:17px 15px 4px;text-align:center}
+.sc-music-label{color:var(--snd-gold);font-size:9px;font-weight:750;letter-spacing:.19em}
+.sc-music-playing-title{display:block;margin-top:7px;color:var(--snd-ink);font:700 17px/1.35 var(--vtt-title,"Noto Serif JP",Georgia,serif);overflow-wrap:anywhere}
+.sc-music-playing-status{display:block;margin:6px 0 17px;color:var(--snd-mute);font-size:10px}
+.sc-music-timeline{display:flex;align-items:center;gap:10px;color:var(--snd-mute);font-size:10px;font-variant-numeric:tabular-nums}
+.sc-music-timeline input{flex:1;min-width:0;accent-color:var(--snd-gold);cursor:pointer}
+.sc-music-timeline input:disabled{opacity:.6;cursor:default}
+.sc-music-controls{display:flex;align-items:center;justify-content:center;gap:12px;margin:14px 0 8px}
+.sc-music-controls button{cursor:pointer;display:grid;place-items:center;width:33px;height:33px;border:1px solid transparent;background:transparent;border-radius:50%;color:var(--snd-ink);font-size:15px;transition:background .17s,border-color .17s,transform .17s}
+.sc-music-controls button:hover{background:var(--sc-green-soft,#7c947021);border-color:var(--snd-line)}
+.sc-music-controls .sc-music-primary{height:44px;width:44px;border:1px solid var(--snd-gold);color:var(--sc-primary-text,#fff5e2);background:var(--sc-primary,#415e44);box-shadow:0 3px 8px var(--sc-shadow,#0005);font-size:18px}
+.sc-music-controls .selected{background:var(--sc-gold-soft,#98833e31);border-color:var(--snd-gold);color:var(--snd-gold)}
+.sc-music-mix{margin:13px 15px 15px;padding-top:12px;border-top:1px solid var(--snd-line)}
+.sc-music-enable{cursor:pointer;display:block;width:100%;border:1px solid var(--snd-gold);border-radius:8px;background:var(--sc-gold-soft,#e0bc7b1c);color:var(--snd-ink);min-height:40px;padding:10px;font-size:11px;font-weight:750}
+.sc-music-enable:hover{background:var(--sc-gold-soft,#e0bc7b35);filter:brightness(1.08)}
+.sc-music-enable.enabled{border-color:var(--snd-green);background:var(--sc-green-soft,#8aaf8325)}
+.sc-music-enable:disabled{opacity:.53;cursor:not-allowed}
+.sc-music-volume{display:flex;gap:8px;align-items:center;margin:15px 0 0}
+.sc-music-volume>span{flex:0 0 107px;font-size:9px;letter-spacing:.07em;font-weight:750;color:var(--snd-mute);text-align:left}
+.sc-music-volume input{flex:1;min-width:0;accent-color:var(--snd-gold);cursor:pointer}
+.sc-music-volume output{flex:0 0 32px;text-align:right;font-size:10px;font-variant-numeric:tabular-nums;color:var(--snd-ink)}
+.sc-music-section-title{display:flex;align-items:end;justify-content:space-between;gap:8px;margin:23px 2px 10px}
+.sc-music-section-title>div{min-width:0}
+.sc-music-section-title>div>span{display:block;color:var(--snd-gold);font-size:10px;font-weight:800;letter-spacing:.17em}
+.sc-music-section-title>div>small{display:block;margin-top:5px;color:var(--snd-mute);font-size:10px}
+#sc-music-count{color:var(--snd-mute);font-size:10px;white-space:nowrap}
+.sc-music-source-drawer{margin:11px 0 12px;border:1px solid var(--snd-line);background:var(--snd-sheet);border-radius:10px;overflow:hidden}
+.sc-music-source-drawer>summary{display:flex;cursor:pointer;align-items:center;gap:8px;list-style:none;padding:10px 12px;color:var(--snd-ink);background:var(--sc-green-soft,#607d5922)}
+.sc-music-source-drawer>summary::-webkit-details-marker{display:none}
+.sc-music-source-drawer>summary>span{height:24px;width:24px;display:grid;place-items:center;border:1px solid var(--snd-gold);border-radius:6px;color:var(--snd-gold);font-weight:750}
+.sc-music-source-drawer>summary strong{flex:1;font:700 12px var(--vtt-title,"Noto Serif JP",serif)}
+.sc-music-source-drawer>summary small{color:var(--snd-mute);font-size:10px}
+.sc-music-source-drawer[open]>summary{border-bottom:1px solid var(--snd-line)}
+.sc-music-source-body{padding:12px}
+.sc-music-upload{display:block;text-align:center;cursor:pointer;padding:14px 11px;border-radius:9px;background:var(--sc-gold-soft,#e2c1881c);border:1px dashed var(--snd-gold)}
+.sc-music-upload:hover{filter:brightness(1.1)}
+.sc-music-upload strong{display:block;font-size:12px;color:var(--snd-ink)}
+.sc-music-upload small{display:block;font-size:10px;line-height:1.55;color:var(--snd-mute);margin-top:7px}
+.sc-music-link-drawer{margin:12px 0 0;border:1px solid var(--snd-line);border-radius:8px}
+.sc-music-link-drawer>summary{cursor:pointer;color:var(--snd-mute);padding:10px;font-size:11px}
+.sc-music-url{padding:0 10px 10px}
+.sc-music-url>label{display:block;color:var(--snd-mute);font-size:9px;font-weight:750;margin-bottom:6px}
+.sc-music-url>div{display:flex;gap:5px}
+.sc-music-url input{width:100%;flex:1;min-width:0;padding:10px 7px;font-size:11px}
+.sc-music-url button{border:1px solid var(--snd-gold);border-radius:7px;background:var(--sc-gold-soft,#aa8e5e36);padding:0 9px;color:var(--snd-ink);cursor:pointer;font-size:11px}
+.sc-music-progress{margin-top:13px;font-size:11px;color:var(--snd-ink)}
+.sc-music-progress progress{display:block;width:100%;height:7px;accent-color:var(--snd-gold);margin-top:6px}
+.sc-music-hint{font-size:10px;line-height:1.55;color:var(--snd-mute);margin:10px 0 0}
+.sc-music-feedback{margin:9px 0;font-size:11px;line-height:1.5;color:var(--snd-green);overflow-wrap:anywhere}
+.sc-music-feedback.is-error{background:var(--sc-accent-soft,#d56f5f1e);border:1px solid var(--sc-accent,#dc9181);border-radius:8px;padding:10px;color:var(--snd-ink)}
+.sc-music-feedback:empty{display:none}
+.sc-music-list{display:flex;flex-direction:column;gap:6px}
+.sc-music-empty{padding:22px 13px;border:1px dashed var(--snd-line);border-radius:8px;background:var(--snd-wash);color:var(--snd-mute);font-size:11px;line-height:1.5;text-align:center}
+.sc-music-track{display:flex;align-items:center;gap:10px;min-width:0;padding:10px 9px;border:1px solid var(--snd-line);border-radius:9px;background:var(--snd-sheet);transition:background .18s,border-color .18s}
+.sc-music-track:hover{background:var(--sc-green-soft,#566e4f26)}
+.sc-music-track.active{border-color:var(--snd-gold);background:linear-gradient(90deg,var(--sc-gold-soft,#b8976a2a),var(--snd-sheet))}
+.sc-music-track-index{font:700 11px/1.4 var(--vtt-title,Georgia,serif);color:var(--snd-gold);flex:0 0 25px;text-align:center;border-right:1px solid var(--snd-line);padding-right:7px}
+.sc-music-track-name{flex:1;min-width:0}
+.sc-music-track-name strong{display:block;color:var(--snd-ink);font:700 12px/1.4 var(--vtt-title,"Noto Serif JP",Georgia,serif);overflow-wrap:anywhere}
+.sc-music-track-name small{display:block;color:var(--snd-mute);font-size:10px;margin-top:4px}
+.sc-music-track button{flex:0 0 30px;cursor:pointer;background:transparent;border:1px solid var(--snd-line);border-radius:7px;color:var(--snd-ink);height:30px;width:30px}
+.sc-music-track button:hover{background:var(--sc-gold-soft,#ae854f33);border-color:var(--snd-gold)}
+.sc-music-track .sc-music-remove{color:var(--sc-accent,#dd968a)}
+.sc-music-help{margin:18px 0 6px;padding:0;border:1px solid var(--snd-line);border-radius:9px;background:var(--snd-wash);font-size:11px;color:var(--snd-mute)}
+.sc-music-help>summary{cursor:pointer;list-style:none;padding:12px;color:var(--snd-gold);font-weight:750}
+.sc-music-help>summary::-webkit-details-marker{display:none}
+.sc-music-help>div{padding:0 13px 11px;line-height:1.55}
+.sc-music-help p{margin:7px 0}
+.sc-music-help b{color:var(--snd-ink)}
+.sc-music-help code{font-size:10px;word-break:break-word}
+@media(max-width:690px){#pane-musica{padding:0 10px 22px}.sc-music-heading{padding-top:17px}.sc-music-art{height:90px}.sc-music-art-sun{width:108px;height:108px}.sc-music-art-symbol{font-size:48px}.sc-music-player-content{padding:13px 11px 3px}.sc-music-mix{margin:9px 11px 12px}.sc-music-volume>span{flex-basis:95px}}
