@@ -364,6 +364,7 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
 <link rel="stylesheet" href="./assets/vtt-condition-menu-v1.css?v=20261115-conditions-menu1">
 <link rel="stylesheet" href="./assets/vtt-maps-v1.css?v=20261115-folders1">
 <link rel="stylesheet" href="./assets/vtt-youtube-v1.css?v=20261115-timeline-fade5">
+<link rel="stylesheet" href="./assets/vtt-compact-workflow-v1.css?v=20261115-compact1">
 </head>
 <body>
 <div class="workspace" id="workspace">
@@ -425,7 +426,7 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
     <div id="status" class="status" hidden role="status"></div>
   </main>
   <aside class="sidebar" id="side-panel">
-    <div class="side-header"><span class="overline">SHINOBI · MESA VIRTUAL</span><b>Mesa Virtual</b><p id="auth-label">Conectando ao Firebase…</p><div class="vtt-clan-mark" aria-label="Identidade visual da mesa"><span class="mark" id="vtt-clan-symbol" aria-hidden="true">忍</span><span class="clan-label" id="vtt-clan-label">ARQUIVOS SHINOBI</span></div></div>
+    <div class="side-header sc-vtt-compact-header"><div class="vtt-clan-mark" aria-label="Identidade shinobi"><span class="mark" id="vtt-clan-symbol" aria-hidden="true">忍</span><span class="clan-label" id="vtt-clan-label">SHINOBI</span></div><p id="auth-label">Conectando…</p></div>
     <div class="tabs" role="group" aria-label="Abas da mesa">
       <button class="active" data-tab="rolls" title="Chat e rolagens da sessão">Chat</button>
       <button data-tab="campanha" title="Fichas e personagens">Elenco</button>
@@ -460,40 +461,52 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
       <div id="sc-music-root"></div>
     </section>
     <section class="pane sc-pane-maps" id="pane-mapas" hidden>
-      <header class="sc-map-hero"><span class="sc-map-eyebrow">地図 · ACERVO DO MESTRE</span><h2>Biblioteca de mapas</h2><p>Cenários organizados para suas próximas sessões.</p></header>
-
-      <div class="campaign-section-label"><span>CENÁRIO EM EXIBIÇÃO</span><span class="section-ornament">景</span></div>
-      <button class="current-scene-card scene-entry" type="button" id="scene-open-panel" title="Abrir biblioteca de mapas">
-        <span class="scene-thumbnail" aria-hidden="true"><img id="scene-current-preview" alt="" hidden><span id="scene-current-icon">▧</span></span>
-        <span class="scene-entry-copy"><b id="current-scene-label">Nenhuma cena ativa</b><small id="current-scene-subtitle">Clique para explorar os mapas</small></span>
-        <span class="scene-open-chevron" aria-hidden="true">⌄</span>
-      </button>
-      <button type="button" id="sc-open-environment" class="sc-environment-link" data-gm-only hidden><span aria-hidden="true">▥</span><span><strong>Preparar ambiente</strong><small>Paredes, portas e névoa de guerra</small></span><span aria-hidden="true">›</span></button>
+      <div class="sc-map-live-row">
+        <span class="sc-map-live-label">EM CENA</span>
+        <button class="current-scene-card scene-entry" type="button" id="scene-open-panel" title="Escolher ou ativar mapa">
+          <span class="scene-thumbnail" aria-hidden="true"><img id="scene-current-preview" alt="" hidden><span id="scene-current-icon">▧</span></span>
+          <span class="scene-entry-copy"><b id="current-scene-label">Nenhuma cena ativa</b><small id="current-scene-subtitle">Selecione um mapa</small></span>
+          <span class="scene-open-chevron" aria-hidden="true">⌄</span>
+        </button>
+      </div>
+      <button type="button" id="sc-open-environment" class="sc-environment-link" data-gm-only hidden><span aria-hidden="true">▥</span><span><strong>Ambiente</strong><small>Paredes e névoa</small></span><span aria-hidden="true">›</span></button>
       <div id="gm-scenes" data-gm-only hidden>
         <details id="scene-library-drawer" class="vtt-folder scene-drawer" open>
-          <summary><span class="folder-symbol" aria-hidden="true">▧</span><span class="folder-info"><strong>Acervo de cenários</strong><small>Pastas, mapas e preparação</small></span><span id="scene-count" class="folder-count">0</span><span class="folder-chevron" aria-hidden="true">⌄</span></summary>
+          <summary><span class="folder-symbol" aria-hidden="true">▧</span><span class="folder-info"><strong>Pastas e mapas</strong></span><span id="scene-count" class="folder-count">0</span><span class="folder-chevron" aria-hidden="true">⌄</span></summary>
           <div class="folder-content">
-            <p class="hint">Organize seus cenários em pastas. Só o mestre vê a biblioteca; os jogadores acompanham o mapa ativado.</p>
-            <div class="sc-map-folder-form"><label for="scene-folder-name">PASTAS DA BIBLIOTECA</label>
-              <div class="sc-map-folder-create"><input id="scene-folder-name" maxlength="48" placeholder="Ex.: País do Fogo" autocomplete="off">
-              <button type="button" id="scene-folder-create">＋ Criar pasta</button></div>
+            <div class="sc-map-browser-heading">
+              <input id="scene-search" type="search" placeholder="⌕ Buscar mapas ou pastas…" aria-label="Buscar mapas e pastas">
             </div>
-            <div class="sc-map-form-heading"><span>REGISTRAR MAPA</span><small>Imagem por URL HTTPS</small></div>
-            <label for="scene-title-input">Nome do cenário</label><input id="scene-title-input" maxlength="80" placeholder="Ex.: Floresta da Morte">
-            <label for="scene-url">Imagem (URL HTTPS)</label><input id="scene-url" placeholder="https://.../floresta.webp">
-            <label for="scene-folder-select">Pasta do mapa</label>
-            <select id="scene-folder-select"><option value="">Sem pasta</option></select>
-            <label for="scene-meter-scale">Escala do mapa (metros por célula virtual)</label>
-            <input id="scene-meter-scale" type="number" min="0.05" max="1000" step="0.05" value="2" placeholder="2">
-            <p class="vtt-metric-form-notice">Valor sugerido: <strong>2 m</strong> por célula. Para precisão, ative o mapa e use a ferramenta <strong>Calibrar</strong> sobre uma distância conhecida.</p>
-            <button id="scene-add" class="btn primary">Salvar mapa</button><button id="scene-cancel-edit" class="btn small" hidden>Cancelar edição</button>
-            <div class="sc-map-browser-heading"><div><strong>MEUS CENÁRIOS</strong><small>Abra uma pasta para gerenciar os mapas</small></div>
-              <input id="scene-search" type="search" placeholder="Buscar mapa ou pasta..." aria-label="Buscar mapas e pastas"></div>
+            <div class="sc-map-creation-bar">
+              <details id="scene-folder-create-drawer" class="sc-map-create-drawer">
+                <summary>＋ Pasta</summary>
+                <div class="sc-map-create-body">
+                  <div class="sc-map-folder-create">
+                    <input id="scene-folder-name" maxlength="48" placeholder="Nome da pasta" autocomplete="off">
+                    <button type="button" id="scene-folder-create">Criar</button>
+                  </div>
+                </div>
+              </details>
+              <details id="scene-editor-drawer" class="sc-map-create-drawer">
+                <summary>＋ Mapa</summary>
+                <div class="sc-map-create-body">
+                  <label for="scene-title-input">Nome</label>
+                  <input id="scene-title-input" maxlength="80" placeholder="Ex.: Floresta da Morte">
+                  <label for="scene-url">URL da imagem</label>
+                  <input id="scene-url" placeholder="https://.../floresta.webp">
+                  <label for="scene-folder-select">Pasta</label>
+                  <select id="scene-folder-select"><option value="">Sem pasta</option></select>
+                  <label for="scene-meter-scale">Metros por célula</label>
+                  <input id="scene-meter-scale" type="number" min="0.05" max="1000" step="0.05" value="2">
+                  <button id="scene-add" class="btn primary">Salvar mapa</button>
+                  <button id="scene-cancel-edit" class="btn small" hidden>Cancelar edição</button>
+                </div>
+              </details>
+            </div>
             <div class="scene-library sc-map-library" id="scene-library"></div>
           </div>
         </details>
       </div>
-
     </section>
     <section class="pane sc-pane-environment" id="pane-ambiente" hidden>
       <header class="sc-environment-header">
@@ -527,7 +540,7 @@ textarea{min-height:72px;resize:vertical}input::placeholder,textarea::placeholde
   </div>
 </div>
 
-<script type="module" src="./assets/vtt-studio-20261110-v21.js?v=20261115-conditions-menu1"></script>
-<script type="module" src="./assets/vtt-youtube-v1.js?v=20261115-timeline-fade5"></script>
+<script type="module" src="./assets/vtt-studio-20261110-v21.js?v=20261115-compact1"></script>
+<script type="module" src="./assets/vtt-youtube-v1.js?v=20261115-compact1"></script>
 </body>
 </html>

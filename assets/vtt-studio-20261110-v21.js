@@ -375,7 +375,7 @@ function openScenes(){
 $('scene-open-library').onclick=openScenes;
 $('scene-open-panel').onclick=openScenes;
 function applyRole(){for(const id of ['gm-scenes'])$(id).hidden=!admin;for(const item of document.querySelectorAll('[data-gm-only]'))item.hidden=!admin;$('scene-open-library').setAttribute('aria-label',admin?'Abrir biblioteca de mapas':'Cena em exibição');
-$('scene-open-panel').title=admin?'Escolher mapa na biblioteca':'Cena em exibição';$('auth-label').textContent=uid?(admin?'Mestre · permissões administrativas':'Jogador · acesso restrito'):'Faça login nos Arquivos Shinobi';if(!admin&&(document.querySelector('[data-tab="combate"].active')||document.querySelector('[data-tab="ambiente"].active')||document.querySelector('[data-tab="mapas"].active')))switchTab('rolls');theatre.refresh();renderSheets();combatDirector.refresh();battle.render();sessionTools.refresh();gmQuick.refresh();gmQuick.refresh();}
+$('scene-open-panel').title=admin?'Escolher mapa na biblioteca':'Cena em exibição';$('auth-label').textContent=uid?(admin?'Mestre':'Jogador'):'Faça login nos Arquivos Shinobi';if(!admin&&(document.querySelector('[data-tab="combate"].active')||document.querySelector('[data-tab="ambiente"].active')||document.querySelector('[data-tab="mapas"].active')))switchTab('rolls');theatre.refresh();renderSheets();combatDirector.refresh();battle.render();sessionTools.refresh();gmQuick.refresh();gmQuick.refresh();}
 onAuthStateChanged(auth,async user=>{stopSubs();if(sheetsUnsub){sheetsUnsub();sheetsUnsub=null}uid=user?.uid||'';admin=false;sheets=[];theatre.setActors([]);rolls.setUser(uid);rolls.setSheets([]);applyRole();if(!uid){show('Faça login no Shinobi Chronicles antes de entrar na mesa.');return}try{admin=user.email==='mestre_shinobi@players.shinobi-chronicles.invalid'||(await getDoc(doc(db,'admins',uid))).exists();applyRole();loadSheets();void connectWorld()}catch(e){show('Falha na autenticação: '+e.message)}});
 function loadSheets(){
   if(sheetsUnsub){sheetsUnsub();sheetsUnsub=null}
@@ -1110,8 +1110,9 @@ function resetSceneEditor(){
   $('scene-url').value='';
   $('scene-meter-scale').value=String(DEFAULT_METERS_PER_CELL);
   $('scene-folder-select').value='';
-  $('scene-add').textContent='Salvar cena na biblioteca';
+  $('scene-add').textContent='Salvar mapa';
   $('scene-cancel-edit').hidden=true;
+  $('scene-editor-drawer').open=false;
 }
 $('scene-cancel-edit').onclick=resetSceneEditor;
 $('scene-search').addEventListener('input',renderScenes);
@@ -1126,6 +1127,7 @@ $('scene-folder-create').onclick=async()=>{
   try{
     await addDoc(sceneColl(),{type:'folder',name,createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
     field.value='';
+    $('scene-folder-create-drawer').open=false;
     show('Pasta criada: '+name);
   }catch(error){show('Falha ao criar pasta: '+error.message)}
   finally{btn.disabled=false}
@@ -1253,6 +1255,8 @@ function renderScenes(){
       });
       const edit=makeButton('Editar','btn small',()=>{
         editingSceneId=scene.id;
+        $('scene-library-drawer').open=true;
+        $('scene-editor-drawer').open=true;
         $('scene-title-input').value=scene.name||'';
         $('scene-url').value=scene.url||'';
         $('scene-meter-scale').value=String(metersPerCell(scene.metersPerCell));

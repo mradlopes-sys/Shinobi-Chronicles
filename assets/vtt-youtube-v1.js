@@ -103,26 +103,30 @@ let user=null,gm=false,lists=[DEFAULT_LIST()],state=EMPTY_STATE();
 let selectedPlaylistId=GENERAL,player=null,playerReady=false;
 let loadedVideoId='',appliedState='',lastAppliedStatus='',fireUnsub=null,authEpoch=0;
 let busy=false,localVolume=80,lastLibraryKey='',lastManualPlayAt=0;
-let fadeFinishInFlight='',fadeCommandBusy=false,sliderDragging=false;
-try{const v=Number(localStorage.getItem('sc-youtube-volume'));if(Number.isFinite(v))localVolume=nBound(v,0,100)}catch{}
+let fadeFinishInFlight='',fadeCommandBusy=false,sliderDragging=false,librarySearch='';
+try{
+  const stored=localStorage.getItem('sc-youtube-volume');
+  if(stored!==null&&stored!==''){
+    const v=Number(stored);
+    if(Number.isFinite(v))localVolume=nBound(v,0,100);
+  }
+}catch{}
 
 root.innerHTML=String.raw`
-  <header class="sc-yt-heading">
-    <span class="sc-yt-kicker">音楽 · ARQUIVOS SHINOBI</span>
-    <h2>Músicas da campanha</h2>
-    <p>Suas playlists de ambientação, combate e histórias.</p>
-  </header>
-  <div class="sc-yt-status" id="sc-yt-status" role="status">Conectando à mesa…</div>
+  <div class="sc-yt-topbar">
+    <span id="sc-yt-status" class="sc-yt-status" role="status">Conectando…</span>
+    <button type="button" id="sc-yt-video-toggle" class="sc-yt-video-toggle" aria-expanded="false">▣ Ver vídeo</button>
+  </div>
   <section class="sc-yt-deck" aria-label="Reprodutor do YouTube">
     <div class="sc-yt-deck-title">
       <span class="sc-yt-deck-icon">音</span>
-      <span><small>TOCANDO NA MESA</small><strong id="sc-yt-now">Nenhuma música selecionada</strong>
-      <em id="sc-yt-now-playlist">O mestre escolhe a próxima trilha.</em></span>
+      <span><strong id="sc-yt-now">Nenhuma música selecionada</strong>
+      <em id="sc-yt-now-playlist">Escolha uma faixa</em></span>
     </div>
-    <div class="sc-yt-video-shell" id="sc-yt-video-shell">
+    <div class="sc-yt-video-shell is-collapsed" id="sc-yt-video-shell">
       <div id="sc-yt-embed"></div>
-      <button type="button" id="sc-yt-listener-play" class="sc-yt-listener-play" hidden>▶ Ouvir música da mesa</button>
     </div>
+    <button type="button" id="sc-yt-listener-play" class="sc-yt-listener-play" hidden>▶ Ouvir música</button>
     <div class="sc-yt-seek" aria-label="Linha do tempo da trilha sonora">
       <div class="sc-yt-seek-times">
         <span id="sc-yt-elapsed">0:00</span>
@@ -135,45 +139,52 @@ root.innerHTML=String.raw`
         <span id="sc-yt-total">0:00</span>
       </div>
     </div>
-    <div class="sc-yt-master-heading" id="sc-yt-master-heading" hidden>CONTROLES DO MESTRE · SESSÃO</div>
+    <div class="sc-yt-master-heading" id="sc-yt-master-heading" hidden>CONTROLES DO MESTRE</div>
     <div class="sc-yt-deck-controls" id="sc-yt-gm-controls" hidden>
-      <button type="button" id="sc-yt-prev" title="Tocar a música anterior">⏮ Anterior</button>
+      <button type="button" id="sc-yt-prev" title="Música anterior" aria-label="Música anterior">⏮</button>
       <button type="button" id="sc-yt-play" class="primary" title="Reproduzir ou pausar">▶ Tocar</button>
-      <button type="button" id="sc-yt-stop" title="Parar a trilha da mesa">■ Parar</button>
-      <button type="button" id="sc-yt-next" title="Tocar a próxima música">Próxima ⏭</button>
-      <button type="button" id="sc-yt-loop" title="Repetir a faixa atual" aria-pressed="false">↻ Repetir faixa: desligado</button>
+      <button type="button" id="sc-yt-stop" title="Parar trilha" aria-label="Parar trilha">■</button>
+      <button type="button" id="sc-yt-next" title="Próxima música">Próx. ⏭</button>
+      <button type="button" id="sc-yt-loop" title="Repetir faixa" aria-label="Repetir faixa" aria-pressed="false">↻</button>
     </div>
-    <label class="sc-yt-volume" for="sc-yt-volume"><span>VOLUME LOCAL</span>
+    <label class="sc-yt-volume" for="sc-yt-volume"><span>Volume</span>
       <input id="sc-yt-volume" type="range" min="0" max="100" value="80" step="1">
       <output id="sc-yt-volume-label">80%</output></label>
     <p class="sc-yt-notice" id="sc-yt-notice" hidden></p>
   </section>
   <section class="sc-yt-library">
-    <div class="sc-yt-library-head"><span>MINHAS PLAYLISTS</span><small id="sc-yt-count">1 playlist</small></div>
-    <div class="sc-yt-new" id="sc-yt-new" hidden>
-      <input id="sc-yt-new-name" type="text" maxlength="56" placeholder="Ex.: Combate, Vila da Chuva…" aria-label="Nome da playlist">
-      <button type="button" id="sc-yt-new-create" title="Criar playlist">＋ Criar</button>
+    <div class="sc-yt-library-toolbar">
+      <input type="search" id="sc-yt-search" aria-label="Buscar em todas as playlists"
+        placeholder="⌕ Buscar músicas ou playlists…" autocomplete="off">
+      <span id="sc-yt-count" class="sc-yt-library-count">1 playlist</span>
     </div>
+    <details class="sc-yt-new" id="sc-yt-new" hidden>
+      <summary>＋ Nova playlist</summary>
+      <div class="sc-yt-new-fields">
+        <input id="sc-yt-new-name" type="text" maxlength="56" placeholder="Nome da playlist" aria-label="Nome da playlist">
+        <button type="button" id="sc-yt-new-create">Criar</button>
+      </div>
+    </details>
     <div class="sc-yt-folders" id="sc-yt-folders"></div>
     <div class="sc-yt-track-head">
       <div><span id="sc-yt-list-title">Geral</span><small id="sc-yt-list-count">0 músicas</small></div>
-      <button type="button" id="sc-yt-play-list" hidden>▶ Tocar playlist</button>
+      <button type="button" id="sc-yt-play-list" hidden>▶ Playlist</button>
     </div>
-    <form id="sc-yt-add-form" class="sc-yt-add" hidden>
-      <span>ADICIONAR LINK DO YOUTUBE</span>
-      <input id="sc-yt-link" type="url" placeholder="Cole o link do vídeo do YouTube" autocomplete="off" required>
-      <input id="sc-yt-title" type="text" maxlength="95" placeholder="Nome da música (opcional)">
-      <button type="submit">＋ Salvar música na playlist</button>
-    </form>
+    <details class="sc-yt-add-panel" id="sc-yt-add-panel" hidden>
+      <summary>＋ Adicionar música por link</summary>
+      <form id="sc-yt-add-form" class="sc-yt-add">
+        <input id="sc-yt-link" type="url" placeholder="Link do vídeo do YouTube" autocomplete="off" required>
+        <input id="sc-yt-title" type="text" maxlength="95" placeholder="Nome opcional">
+        <button type="submit">Salvar na playlist selecionada</button>
+      </form>
+    </details>
     <div id="sc-yt-tracks" class="sc-yt-tracks"></div>
   </section>
   <p class="sc-yt-feedback" id="sc-yt-feedback" aria-live="polite"></p>
-  <details class="sc-yt-help"><summary>Como funciona?</summary>
-    <p>Como mestre, crie playlists, cole links de vídeos e clique em ▶ para tocar a trilha para a mesa. Os links ficam salvos no Firebase e não precisam ser baixados.</p>
-    <p>Só o mestre pode iniciar, pausar, parar, escolher faixas, arrastar a linha do tempo e editar playlists. A barra mostra o tempo decorrido e o tempo que falta.</p>
-    <p>Ao pausar, parar ou trocar de música, o som atual diminui suavemente ao longo de <b>5 segundos</b> antes de sair. A próxima faixa só começa depois do fade-out.</p>
-    <p>Jogadores apenas escutam. Se o navegador deles bloquear som automático, aparece um botão para iniciar a escuta local, sem afetar a música da mesa.</p>
-    <p>Alguns vídeos têm incorporação desativada pelo autor e não podem tocar fora do YouTube. Experimente outro vídeo se aparecer essa mensagem.</p>
+  <details class="sc-yt-help"><summary>Ajuda</summary>
+    <p>Crie uma playlist e cole links do YouTube. As faixas são salvas no Firebase.</p>
+    <p>O mestre controla reprodução, pausa, busca e troca de faixas. O fade-out dura cinco segundos.</p>
+    <p>Se o navegador bloquear o som automaticamente, clique em “Ouvir música”. Alguns vídeos impedem reprodução incorporada.</p>
   </details>
 `;
 const toast=(message,error=false)=>{
@@ -228,7 +239,7 @@ function refreshSeek(){
 function syncHeader(){
   const song=current();
   $('sc-yt-now').textContent=song?.title||'Nenhuma música selecionada';
-  $('sc-yt-now-playlist').textContent=song?.playlist.name||'O mestre escolhe a próxima trilha.';
+  $('sc-yt-now-playlist').textContent=song?.playlist.name||'Escolha uma faixa';
   $('sc-yt-gm-controls').hidden=!gm;
   $('sc-yt-master-heading').hidden=!gm;
   root.classList.toggle('sc-yt-master',gm);
@@ -237,25 +248,30 @@ function syncHeader(){
   for(const id of ['sc-yt-prev','sc-yt-play','sc-yt-stop','sc-yt-next','sc-yt-loop','sc-yt-play-list'])
     $(id).disabled=!gm||fading;
   $('sc-yt-play').textContent=fading?'↘ Saindo…':state.status==='playing'?'Ⅱ Pausar':'▶ Tocar';
-  $('sc-yt-loop').textContent=state.loop?'↻ Repetir faixa: ligado':'↻ Repetir faixa: desligado';
+  $('sc-yt-loop').textContent=state.loop?'↻✓':'↻';
+  $('sc-yt-loop').title=state.loop?'Desativar repetição':'Ativar repetição';
   $('sc-yt-loop').setAttribute('aria-pressed',String(state.loop));
   $('sc-yt-loop').classList.toggle('active',state.loop);
   $('sc-yt-volume').value=localVolume;
   $('sc-yt-volume-label').textContent=localVolume+'%';
   $('sc-yt-new').hidden=!gm;
-  $('sc-yt-add-form').hidden=!gm;
-  $('sc-yt-play-list').hidden=!gm;
+  $('sc-yt-add-panel').hidden=!gm;
+  $('sc-yt-play-list').hidden=!gm||!!librarySearch;
   refreshSeek();
 }
+const normMusicSearch=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR');
 function selectPlaylist(id){
   if(!lists.some(x=>x.id===id))id=GENERAL;
   selectedPlaylistId=id;
+  if(librarySearch){librarySearch='';$('sc-yt-search').value=''}
   renderFolders();renderTracks();
 }
 function renderFolders(){
   $('sc-yt-count').textContent=lists.length+' '+(lists.length===1?'playlist':'playlists');
   const host=$('sc-yt-folders');host.replaceChildren();
   for(const p of lists){
+    if(librarySearch&&!normMusicSearch(p.name).includes(librarySearch)&&
+      !p.tracks.some(t=>normMusicSearch(t.title).includes(librarySearch)))continue;
     const row=document.createElement('div');row.className='sc-yt-folder'+(p.id===selectedPlaylistId?' active':'');
     const choose=document.createElement('button');choose.type='button';choose.className='sc-yt-folder-choice';
     choose.innerHTML='<span class="sc-yt-folder-glyph">▤</span><span class="sc-yt-folder-info"><strong>'+
@@ -273,17 +289,22 @@ function renderFolders(){
 }
 function renderTracks(){
   const p=lists.find(x=>x.id===selectedPlaylistId)||lists[0],host=$('sc-yt-tracks');
-  $('sc-yt-list-title').textContent=p.name;
-  $('sc-yt-list-count').textContent=p.tracks.length+' '+(p.tracks.length===1?'música':'músicas');
+  const searching=!!librarySearch;
+  const entries=searching?lists.flatMap(origin=>origin.tracks
+    .filter(t=>normMusicSearch(t.title).includes(librarySearch)||normMusicSearch(origin.name).includes(librarySearch))
+    .map(t=>({p:origin,t}))):p.tracks.map(t=>({p,t}));
+  $('sc-yt-list-title').textContent=searching?'Resultados':p.name;
+  $('sc-yt-list-count').textContent=entries.length+' '+(entries.length===1?'música':'músicas')+(searching&&entries.length>100?' · 100 exibidas':'');
+  $('sc-yt-play-list').hidden=!gm||searching;
   $('sc-yt-play-list').disabled=!p.tracks.length;
   host.replaceChildren();
-  if(!p.tracks.length){
+  if(!entries.length){
     const empty=document.createElement('p');empty.className='sc-yt-empty';
-    empty.textContent=gm?'Cole o primeiro link do YouTube acima para começar sua playlist.':
-      'Esta playlist ainda não tem músicas.';
+    empty.textContent=searching?'Nenhuma música encontrada.':
+      gm?'Esta playlist está vazia. Use “Adicionar música por link”.':'Esta playlist está vazia.';
     host.append(empty);return;
   }
-  p.tracks.forEach((t,i)=>{
+  entries.slice(0,100).forEach(({p,t},i)=>{
     const active=state.trackId===t.id;
     const item=document.createElement('article');
     item.className='sc-yt-track'+(active?' active':'');
@@ -292,11 +313,13 @@ function renderTracks(){
     image.loading='lazy';image.alt='';image.className='sc-yt-track-thumb';
     const info=document.createElement('div');info.className='sc-yt-track-info';
     const name=document.createElement('strong');name.textContent=t.title;
-    const label=document.createElement('small');label.textContent=active?'♫ Na mesa · YouTube':'YouTube · '+String(i+1).padStart(2,'0');
+    const label=document.createElement('small');label.textContent=active?'♫ Tocando · '+p.name:
+      searching?p.name:'YouTube · '+String(i+1).padStart(2,'0');
     const external=document.createElement('a');external.href='https://www.youtube.com/watch?v='+t.videoId;
-    external.target='_blank';external.rel='noopener noreferrer';external.textContent='↗ Abrir no YouTube';
+    external.target='_blank';external.rel='noopener noreferrer';external.textContent='↗';
+    external.title='Abrir vídeo no YouTube';external.setAttribute('aria-label','Abrir '+t.title+' no YouTube');
     external.className='sc-yt-external';
-    info.append(name,label,external);item.append(image,info);
+    info.append(name,label);item.append(image,info,external);
     if(gm){
       const play=document.createElement('button');play.type='button';play.className='sc-yt-track-play';
       play.title='Tocar na mesa';play.textContent='▶';play.onclick=()=>void playTrack(p.id,t.id);
@@ -329,8 +352,18 @@ function renderTracks(){
         }catch(e){toast(errorText(e),true);move.disabled=false}
       };
       const foot=document.createElement('div');foot.className='sc-yt-track-foot';
+      foot.hidden=true;
       const caption=document.createElement('span');caption.textContent='MOVER PARA';
       foot.append(caption,move);wrap.append(foot);
+      const organizer=document.createElement('button');
+      organizer.type='button';organizer.className='sc-yt-track-organize';
+      organizer.title='Organizar faixa';organizer.setAttribute('aria-expanded','false');
+      organizer.textContent='⋯';
+      organizer.onclick=()=>{
+        foot.hidden=!foot.hidden;
+        organizer.setAttribute('aria-expanded',String(!foot.hidden));
+      };
+      item.append(organizer);
     }
     host.append(wrap);
   });
@@ -359,7 +392,10 @@ async function createPlaylist(){
         throw Error('Já existe uma playlist com esse nome.');
       data.push({id,name,tracks:[]});
     });
-    field.value='';selectedPlaylistId=id;toast('Playlist criada: '+name);
+    field.value='';selectedPlaylistId=id;
+    $('sc-yt-new').open=false;
+    if(librarySearch){librarySearch='';$('sc-yt-search').value=''}
+    toast('Playlist criada: '+name);
   }catch(e){toast(errorText(e),true)}finally{busy=false}
 }
 async function renamePlaylist(id){
@@ -407,6 +443,8 @@ async function addTrack(){
       p.tracks.push({id,videoId,title,url:'https://www.youtube.com/watch?v='+videoId});
     });
     $('sc-yt-link').value='';$('sc-yt-title').value='';
+    $('sc-yt-add-panel').open=false;
+    if(librarySearch){librarySearch='';$('sc-yt-search').value=''}
     toast('Música salva na playlist "'+(lists.find(p=>p.id===playlistId)?.name||'Geral')+'".');
   }catch(e){toast(errorText(e),true)}finally{busy=false}
 }
@@ -749,8 +787,7 @@ onAuthStateChanged(auth,async nextUser=>{
       const theatre=snap.data()?.theatre||{};
       lists=sanitizeLists(theatre.youtubePlaylists);
       state=safeState(theatre.youtubeState);
-      connected(gm?'Mestre conectado · controles liberados e playlists salvas':
-        'Modo jogador · acompanhando as músicas do mestre');
+      connected(gm?'Mestre · sincronizado':'Sincronizado');
       refreshAfterSnapshot();
     },error=>{
       if(epoch!==authEpoch)return;
@@ -758,6 +795,15 @@ onAuthStateChanged(auth,async nextUser=>{
       toast(errorText(error),true);
     });
   }catch(error){if(epoch===authEpoch)connected(errorText(error),'error')}
+});
+$('sc-yt-video-toggle').onclick=()=>{
+  const shell=$('sc-yt-video-shell'),collapsed=shell.classList.toggle('is-collapsed');
+  $('sc-yt-video-toggle').setAttribute('aria-expanded',String(!collapsed));
+  $('sc-yt-video-toggle').textContent=collapsed?'▣ Ver vídeo':'▣ Ocultar vídeo';
+};
+$('sc-yt-search').addEventListener('input',event=>{
+  librarySearch=normMusicSearch(event.target.value.trim());
+  renderFolders();renderTracks();
 });
 $('sc-yt-new-create').onclick=()=>void createPlaylist();
 $('sc-yt-new-name').addEventListener('keydown',e=>{
