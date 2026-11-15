@@ -91,7 +91,7 @@ const errorText=error=>{
 let user=null,gm=false,lists=[DEFAULT_LIST()],state=EMPTY_STATE();
 let selectedPlaylistId=GENERAL,player=null,playerReady=false;
 let loadedVideoId='',appliedState='',fireUnsub=null,authEpoch=0;
-let busy=false,localVolume=80,lastLibraryKey='';
+let busy=false,localVolume=80,lastLibraryKey='',lastManualPlayAt=0;
 try{const v=Number(localStorage.getItem('sc-youtube-volume'));if(Number.isFinite(v))localVolume=nBound(v,0,100)}catch{}
 
 root.innerHTML=String.raw`
@@ -111,12 +111,13 @@ root.innerHTML=String.raw`
       <div id="sc-yt-embed"></div>
       <button type="button" id="sc-yt-listener-play" class="sc-yt-listener-play" hidden>▶ Ouvir música da mesa</button>
     </div>
+    <div class="sc-yt-master-heading" id="sc-yt-master-heading" hidden>CONTROLES DO MESTRE · SESSÃO</div>
     <div class="sc-yt-deck-controls" id="sc-yt-gm-controls" hidden>
-      <button type="button" id="sc-yt-prev" title="Faixa anterior">⏮</button>
-      <button type="button" id="sc-yt-play" class="primary" title="Reproduzir ou pausar">▶</button>
-      <button type="button" id="sc-yt-stop" title="Parar">■</button>
-      <button type="button" id="sc-yt-next" title="Próxima faixa">⏭</button>
-      <button type="button" id="sc-yt-loop" title="Repetir esta playlist" aria-pressed="false">↻</button>
+      <button type="button" id="sc-yt-prev" title="Tocar a música anterior">⏮ Anterior</button>
+      <button type="button" id="sc-yt-play" class="primary" title="Reproduzir ou pausar">▶ Tocar</button>
+      <button type="button" id="sc-yt-stop" title="Parar a trilha da mesa">■ Parar</button>
+      <button type="button" id="sc-yt-next" title="Tocar a próxima música">Próxima ⏭</button>
+      <button type="button" id="sc-yt-loop" title="Repetir a faixa atual" aria-pressed="false">↻ Repetir faixa: desligado</button>
     </div>
     <label class="sc-yt-volume" for="sc-yt-volume"><span>VOLUME LOCAL</span>
       <input id="sc-yt-volume" type="range" min="0" max="100" value="80" step="1">
@@ -145,7 +146,8 @@ root.innerHTML=String.raw`
   <p class="sc-yt-feedback" id="sc-yt-feedback" aria-live="polite"></p>
   <details class="sc-yt-help"><summary>Como funciona?</summary>
     <p>Como mestre, crie playlists, cole links de vídeos e clique em ▶ para tocar a trilha para a mesa. Os links ficam salvos no Firebase e não precisam ser baixados.</p>
-    <p>Só o mestre pode iniciar, pausar, parar, trocar e remover faixas. Os jogadores apenas escutam, sem controles para interromper a trilha. Se o navegador bloquear o som automático, aparece um botão para começar a ouvir; ele não pausa a música.</p>
+    <p>Só o mestre pode iniciar, pausar, parar, escolher faixas e editar playlists. O botão Próxima sempre passa para a próxima música e volta ao início no fim da lista. A trilha não avança sozinha: é necessário clicar nos controles do mestre.</p>
+    <p>Jogadores apenas escutam. Se o navegador deles bloquear som automático, aparece um botão para iniciar a escuta local, sem afetar a música da mesa.</p>
     <p>Alguns vídeos têm incorporação desativada pelo autor e não podem tocar fora do YouTube. Experimente outro vídeo se aparecer essa mensagem.</p>
   </details>
 `;
@@ -171,8 +173,10 @@ function syncHeader(){
   $('sc-yt-now').textContent=song?.title||'Nenhuma música selecionada';
   $('sc-yt-now-playlist').textContent=song?.playlist.name||'O mestre escolhe a próxima trilha.';
   $('sc-yt-gm-controls').hidden=!gm;
+  $('sc-yt-master-heading').hidden=!gm;
   root.classList.toggle('sc-yt-master',gm);
-  $('sc-yt-play').textContent=state.status==='playing'?'Ⅱ':'▶';
+  $('sc-yt-play').textContent=state.status==='playing'?'Ⅱ Pausar':'▶ Tocar';
+  $('sc-yt-loop').textContent=state.loop?'↻ Repetir faixa: ligado':'↻ Repetir faixa: desligado';
   $('sc-yt-loop').setAttribute('aria-pressed',String(state.loop));
   $('sc-yt-loop').classList.toggle('active',state.loop);
   $('sc-yt-volume').value=localVolume;
@@ -386,6 +390,8 @@ async function playTrack(playlistId,trackId){
   if(!gm)return;
   const song=findTrack(trackId,playlistId);
   if(!song)return toast('A música não foi encontrada.',true);
+  lastManualPlayAt=Date.now();
+  notice('');
   // Carregar dentro do gesto do clique aumenta a chance de permitir som.
   if(playerReady){
     try{
@@ -420,26 +426,31 @@ async function stopPlayback(){
   catch(e){toast(errorText(e),true)}
 }
 function adjacent(offset){
+  // Manual e determinístico: nunca depende de eventos ENDED do YouTube.
   if(!gm)return;
   const song=current(),p=song?.playlist||lists.find(x=>x.id===selectedPlaylistId);
-  if(!p?.tracks.length)return;
-  let idx=song?p.tracks.findIndex(x=>x.id===song.id):-1;
-  let next=idx+offset;
-  if(next<0||next>=p.tracks.length){
-    if(!state.loop&&idx!==-1)return void stopPlayback();
-    next=(next+p.tracks.length)%p.tracks.length;
-  }
-  void playTrack(p.id,p.tracks[Math.max(0,next)].id);
+  if(!p?.tracks.length)return toast('Esta playlist está vazia.',true);
+  const idx=song?.playlist.id===p.id?p.tracks.findIndex(x=>x.id===song.id):-1;
+  const next=idx<0?(offset<0?p.tracks.length-1:0):(idx+offset+p.tracks.length)%p.tracks.length;
+  void playTrack(p.id,p.tracks[next].id);
 }
 function onYTStateChange(e){
   updateListenerPlay();
-  if(!gm||state.status!=='playing'||e.data!==window.YT?.PlayerState?.ENDED)return;
-  const song=current();
-  if(!song)return;
-  const p=song.playlist,idx=p.tracks.findIndex(x=>x.id===song.id);
-  if(idx>=0&&idx+1<p.tracks.length)void playTrack(p.id,p.tracks[idx+1].id);
-  else if(state.loop&&p.tracks.length)void playTrack(p.id,p.tracks[0].id);
-  else void stopPlayback();
+  // Eventos de fim de vídeo podem chegar atrasados depois de trocar de faixa.
+  // Nunca avançar a playlist automaticamente: a próxima faixa é decisão do mestre.
+  if(e.data!==window.YT?.PlayerState?.ENDED||!gm||state.status!=='playing')return;
+  const videoId=player?.getVideoData?.()?.video_id||'';
+  const duration=Number(player?.getDuration?.()||0),position=Number(player?.getCurrentTime?.()||0);
+  if(!current()||videoId!==current().videoId||!duration||position<duration-2)return;
+  if(Date.now()-lastManualPlayAt<3500)return;
+  // Terminou DE VERDADE: parar ou repetir a MESMA faixa, nunca passar à próxima.
+  if(state.loop){
+    lastManualPlayAt=Date.now();
+    try{player.seekTo(0,true);player.playVideo()}catch{}
+    void publish({...state,position:0,status:'playing'}).catch(error=>toast(errorText(error),true));
+  }else{
+    void publish({...state,position:0,status:'stopped'}).catch(error=>toast(errorText(error),true));
+  }
 }
 function playerVolume(){
   if(playerReady)try{player.setVolume(localVolume)}catch{}
@@ -471,6 +482,7 @@ function syncPlayer(){
     return;
   }
   const videoId=song.videoId,requested=state.status;
+  const changingVideo=videoId!==loadedVideoId;
   const stamp=state.startedAt?.toMillis?.()||0;
   const marker=[state.trackId,requested,stamp,Math.round(state.position)].join('|');
   if(videoId!==loadedVideoId){
@@ -485,7 +497,10 @@ function syncPlayer(){
     try{
       if(requested==='playing'){
         const seconds=statePosition(),local=Number(player.getCurrentTime?.()||0);
-        if(Math.abs(seconds-local)>3)player.seekTo(seconds,true);
+        // O mestre nunca deve ser arrastado por correções de relógio do Firestore.
+        // Quando já tocamos esta faixa, preservar o ponto local.
+        if(!gm && !changingVideo && Math.abs(seconds-local)>8)
+          player.seekTo(seconds,true);
         player.playVideo();
       }else{
         player.pauseVideo();
@@ -589,7 +604,8 @@ onAuthStateChanged(auth,async nextUser=>{
       const theatre=snap.data()?.theatre||{};
       lists=sanitizeLists(theatre.youtubePlaylists);
       state=safeState(theatre.youtubeState);
-      connected('Playlists salvas · sincronizadas com a mesa');
+      connected(gm?'Mestre conectado · controles liberados e playlists salvas':
+        'Modo jogador · acompanhando as músicas do mestre');
       refreshAfterSnapshot();
     },error=>{
       if(epoch!==authEpoch)return;
@@ -626,11 +642,8 @@ $('sc-yt-volume').addEventListener('input',e=>{
 // exige interação. Não existe bloqueio artificial nem botão de habilitar som.
 setInterval(()=>{
   updateListenerPlay();
-  if(!playerReady||!user||state.status!=='playing'||!current())return;
-  if(Number(player.getPlayerState?.())!==window.YT?.PlayerState?.PLAYING)return;
-  const local=Number(player.getCurrentTime?.()),expected=statePosition();
-  if(Number.isFinite(local)&&Number.isFinite(expected)&&Math.abs(local-expected)>6){
-    try{player.seekTo(expected,true)}catch{}
-  }
+  if(!playerReady||!user)return;
+  // Não forçar seek a cada cinco segundos: diferenças de relógio causavam
+  // saltos de posição e eventos ENDED falsos. Só atualizar affordance de escuta.
 },5000);
 renderFolders();renderTracks();syncHeader();loadYT();

@@ -42,3 +42,10 @@
 - Como os navegadores podem bloquear autoplay, o jogador verá somente **Ouvir música da mesa** quando a música estiver ativa mas ainda não estiver tocando localmente. Esse botão apenas inicia a escuta e não pausa a música.
 - O documento compartilhado `vttRooms/shinobi-chronicles` já exige `isAdmin()` para escrita nas regras do Firestore; jogador não consegue interromper a reprodução dos demais nem alterar playlists.
 - Um usuário sempre pode silenciar o áudio do próprio navegador/sistema operacional: isso não é controlável pelo VTT.
+
+## Correção: avanço manual da trilha (15/11/2026)
+- Controles do mestre restaurados em botões grandes com legendas **Anterior**, **Tocar/Pausar**, **Parar** e **Próxima**.
+- **Nenhuma faixa avança sozinha**. O player não toca a próxima música quando recebe o evento ENDED do YouTube. Ao terminar, a faixa para, ou recomeça a mesma faixa quando **Repetir faixa** estiver ativo.
+- Cliques manuais em Próxima/Anterior são circulares (última → primeira e primeira → última).
+- Removida a correção de posição forçada de cinco em cinco segundos, que podia causar saltos durante a reprodução e eventos falsos de término.
+- O player incorporado não recebe cliques para trocar/pausar músicas; a edição da fila e o controle compartilhado continuam exclusivos do mestre, com a autorização verificada no Firestore.

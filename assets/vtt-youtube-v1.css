@@ -110,3 +110,33 @@
 #sc-music-root .sc-yt-listener-play:hover{filter:brightness(1.1)}
 #sc-music-root .sc-yt-listener-play[hidden]{display:none!important}
 #sc-music-root.sc-yt-master .sc-yt-listener-play{display:none!important}
+
+/* Controles do mestre: legíveis, acessíveis e com alvos grandes. */
+#pane-musica .sc-yt-master-heading{
+  display:block;margin:12px 12px 0;padding-top:10px;
+  border-top:1px solid var(--yt-line);font-size:9px;font-weight:800;
+  letter-spacing:.14em;color:var(--yt-gold);text-align:center;
+}
+#pane-musica .sc-yt-master-heading[hidden]{display:none!important}
+#pane-musica .sc-yt-deck-controls{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:7px;margin:11px 12px 13px;
+}
+#pane-musica .sc-yt-deck-controls[hidden]{display:none!important}
+#pane-musica .sc-yt-deck-controls button,
+#pane-musica .sc-yt-deck-controls button.primary{
+  width:100%;height:40px;min-width:0;padding:8px 7px;
+  display:flex;justify-content:center;align-items:center;
+  font:700 11px/1.2 var(--vtt-body,"DM Sans",Arial,sans-serif);
+  letter-spacing:.01em;white-space:nowrap;border-radius:8px;
+  border:1px solid var(--yt-line);color:var(--yt-ink);
+  background:var(--sc-green-soft,#5e784726);
+  box-shadow:none;
+}
+#pane-musica .sc-yt-deck-controls button:hover{border-color:var(--yt-gold);filter:brightness(1.09)}
+#pane-musica .sc-yt-deck-controls button.primary{background:var(--yt-green);border-color:var(--yt-gold);color:var(--sc-primary-text,#fff8e8)}
+#pane-musica .sc-yt-deck-controls #sc-yt-loop{grid-column:1/-1;height:35px}
+#pane-musica .sc-yt-deck-controls #sc-yt-loop.active{background:var(--sc-gold-soft,#a1875925);color:var(--yt-gold)}
+/* O próprio player do YouTube não controla a sessão. O mestre usa os botões
+   acima e os jogadores não podem pausar clicando no vídeo. */
+#sc-music-root .sc-yt-video-shell iframe{pointer-events:none!important}
