@@ -74,7 +74,7 @@
         }
       };
       painting.onerror=()=>{paintingReady=false;};
-      painting.src='./assets/konoha_atlas_arte.webp';
+      painting.src='./assets/konoha_atlas_arte.avif';
     }
     function setView(next){
       if(next===mode){
