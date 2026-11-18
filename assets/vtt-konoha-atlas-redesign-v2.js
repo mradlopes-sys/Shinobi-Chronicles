@@ -106,16 +106,20 @@
       if(e.key==='ArrowRight'){e.preventDefault();setView('atlas');atlasButton.focus();}
     });
     atlas.querySelectorAll('.sc-atlas-pin').forEach(pin=>pin.addEventListener('click',()=>showDetails(true)));
+    atlas.querySelector('#sc-atlas-view')?.addEventListener('pointerdown',e=>{
+      if(!e.target.closest('.sc-atlas-pin')&&!e.target.closest('.sc-atlas-zoom'))showDetails(false);
+    },true);
     atlas.querySelector('#sc-atlas-list')?.addEventListener('click',e=>{
       if(e.target.closest('button'))showDetails(true);
     });
-    document.addEventListener('keydown',e=>{
+    window.addEventListener('keydown',e=>{
       if(e.key==='Escape'&&mode==='atlas'&&!atlas.hidden){
         if(atlas.classList.contains('sc-atlas-details-open')){
           e.stopImmediatePropagation();
           e.preventDefault();
           showDetails(false);
         }else{
+          e.stopPropagation();
           setView('scene');
           sceneButton.focus();
         }
