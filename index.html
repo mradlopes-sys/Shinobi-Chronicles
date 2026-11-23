@@ -7241,7 +7241,8 @@ let vttSidebarCollapsed=true;
  if(S.view==='diario'&&S.diaryDirty)void persistDiary();
  if(view==='quadros')return PublicBoard.enter();
  if(view==='diario')return void openDiaryFor(uid(),S.user?.displayName||'Jogador',false);
- if(view==='forja'){if(!canAdmin()||!S.adminUnlocked)return showToast('Acesso restrito ao mestre.',true);S.view='forja';render();return}\n if(view==='admin'){
+ if(view==='forja'){if(!canAdmin()||!S.adminUnlocked)return showToast('Acesso restrito ao mestre.',true);S.view='forja';render();return}
+ if(view==='admin'){
    if(!canAdmin())return showToast('Acesso restrito ao mestre.',true);
    if(!S.adminUnlocked){S.view='admin-gate';render();window.scrollTo({top:0});return}
    void refreshAdmin();return;
