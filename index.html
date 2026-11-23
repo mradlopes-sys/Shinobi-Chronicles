@@ -5280,6 +5280,65 @@ function startAdminLive(){
     for(let i=0;i<points;i++)result[forjaPick(bag)]++;
     return result;
   }
+
+  function forjaEquipTechniques(p,style,table){
+    // Usa exclusivamente o catálogo oficial já carregado pelo site.
+    const powers=LIBRARY_ENTRIES.filter(x=>x.kind==='power'&&(x.clan==='comum'||x.clan===p.clanId));
+    const preferred={ninjutsu:['ninpou','katon','suiton','fuuton','raiton','doton'],taijutsu:['taijutsu','ninpou'],genjutsu:['genjutsu','ninpou'],bukijutsu:['bukijutsu','ninpou'],medico:['iryou','ninpou'],equilibrado:['ninpou']};
+    const order=preferred[style]||preferred.equilibrado;
+    const sorted=forjaShuffle(powers).sort((a,b)=>order.indexOf(a.id)<0?1:order.indexOf(b.id)<0?-1:order.indexOf(a.id)-order.indexOf(b.id));
+    const budget=Math.max(0,Number(table.powers)||0);
+    const target=Math.min(4,Math.max(1,Math.floor(budget/5)));
+    let remaining=budget;
+    for(const item of sorted){
+      if(p.poderes.length>=target||remaining<=0)break;
+      if(catalogRequirements(p,item))continue;
+      if(['doton','fuuton','katon','raiton','suiton'].includes(item.id)&&p.atributos.ESP<10&&p.poderes.some(x=>['doton','fuuton','katon','raiton','suiton'].includes(x.catalogId)))continue;
+      const levels=Math.min(Math.max(1,Math.floor(budget/(target*2))),remaining,Math.max(1,Math.floor((p.nc-2)/2)));
+      p.poderes.push({id:randomId(),nome:item.name,nivel:levels,descricao:systemSummary(item),catalogId:item.id,efeitos:[]});
+      remaining-=levels;
+    }
+    // Efeitos vinculados aos poderes elementais e Ninpou.
+    for(const power of p.poderes){
+      const def=catalogItem(power.catalogId);
+      if(!def?.effectPower)continue;
+      const options=forjaShuffle(LIBRARY_ENTRIES.filter(x=>x.kind==='effect'));
+      for(const effect of options){
+        if(power.efeitos.length>=power.nivel)break;
+        if(['katon','raiton'].includes(power.catalogId)&&effect.id==='barreira')continue;
+        if(effect.min>power.efeitos.length+1)continue;
+        if(power.efeitos.some(x=>x.catalogId===effect.id))continue;
+        power.efeitos.push({nome:effect.name,nivelEscolha:power.efeitos.length+1,catalogId:effect.id});
+      }
+      syncCatalogEffectDescription(power);
+    }
+    // Aptidões iniciais gratuitas, sempre respeitando requisitos.
+    for(const apt of forjaShuffle(LIBRARY_ENTRIES.filter(x=>x.kind==='aptitude'&&(x.clan==='comum'||x.clan===p.clanId)))){
+      if(p.aptidoes.length>=3)break;
+      if(catalogRequirements(p,apt))continue;
+      p.aptidoes.push({id:randomId(),nome:apt.name,tipo:apt.clan==='comum'?'Geral':'Clã: '+clanOf(apt.clan).name,catalogId:apt.id});
+    }
+    // Técnicas do catálogo: exigem nível do poder, efeito e aptidões, conforme o sistema.
+    const eligible=()=>LIBRARY_ENTRIES.filter(item=>{
+      if(item.kind!=='jutsu'||catalogTech(p,item)||catalogRequirements(p,item))return false;
+      if(item.free)return true;
+      const special=item.id==='goukakyuu'&&p.clanId==='uchiha'&&catalogApt(p,'Elemento Natural: Katon');
+      const power=catalogPower(p,item.power);
+      if(!special&&(!power||n(power.nivel)<n(item.min)))return false;
+      if(item.effectNeed&&!special&&!catalogHasEffect(p,item.power,item.effectNeed))return false;
+      if(item.id==='shikakyu-jutsu'&&!catalogApt(p,'Hakken no Jutsu'))return false;
+      if(item.id==='juujin'&&!catalogApt(p,'Companheiro Animal'))return false;
+      const parent=catalogItem(item.power);
+      return !parent||!catalogRequirements(p,parent);
+    });
+    const cap=Math.min(16,Math.max(4,Math.floor(p.nc*0.8)));
+    for(const item of forjaShuffle(eligible()).slice(0,cap)){
+      const special=item.id==='goukakyuu'&&p.clanId==='uchiha'&&catalogApt(p,'Elemento Natural: Katon');
+      const rules=systemRules(item);
+      p.jutsus.push({id:randomId(),nome:item.name,nivel:item.free?0:(special?4:n(item.min)||1),acao:rules?.[4]||item.action||'',duracao:rules?.[6]||'',alvo:'',alcance:rules?.[5]||item.range||'',efeito:[systemSummary(item),rules?.[1],rules?.[2]].filter(Boolean).join(' '),origemPoder:item.power||'',catalogId:item.id,rank:item.rank||'',custoChakra:item.cost||rules?.[3]||'Ver descrição do poder',custo:/^\d+$/.test(String(item.cost??''))?Number(item.cost):''});
+    }
+  }
+
   function forjaGenerate(){
     if(!canAdmin()||!S.adminUnlocked)return;
     const clanId=document.getElementById('forja-clan')?.value||'semcla';
@@ -5302,12 +5361,13 @@ function startAdminLive(){
     p.descricao=({inimigo:'Antagonista',aliado:'Aliado',chefe:'Chefe de combate',comum:'Personagem secundário'})[role]+' especializado em '+({ninjutsu:'Ninjutsu',taijutsu:'Taijutsu',genjutsu:'Genjutsu',bukijutsu:'Bukijutsu',medico:'Iryō Ninjutsu',equilibrado:'técnicas variadas'})[style]+'.';
     p.historia=forjaPick(['Veterano de missões perigosas, guarda segredos do passado.','Ninja viajante que busca recuperar sua honra.','Shinobi disciplinado com lealdades difíceis de decifrar.']);
     p.recursos.vit=vitMax(p);
+    forjaEquipTechniques(p,style,table);
     forjaDraft=p;forjaPreview();
   }
   function forjaPreview(){
     const root=document.getElementById('forja-preview');if(!root||!forjaDraft)return;
     const p=forjaDraft;
-    root.innerHTML='<div class="divider mt16"></div><h3>'+E(p.nome)+'</h3><p class="muted">NC '+p.nc+' · '+E(p.graduacao)+' · '+E(clanOf(p.clanId).name)+'</p><p>'+E(p.descricao)+'</p><p class="text-sm">'+ATTRS.map(([k])=>E(k)+': '+p.atributos[k]).join(' · ')+'</p><p class="text-sm">Perícias: '+Object.entries(p.pericias).filter(([,v])=>v>0).map(([k,v])=>E(k)+' '+v).join(' · ')+'</p><p class="muted text-sm">Poderes, aptidões e jutsus ficam para seleção manual na ficha, respeitando pré-requisitos.</p><div class="flex wrap"><button class="button" data-action="forja-save">Salvar NPC</button><button class="button secondary" data-action="forja-regenerate">Gerar novamente</button></div>';
+    root.innerHTML='<div class="divider mt16"></div><h3>'+E(p.nome)+'</h3><p class="muted">NC '+p.nc+' · '+E(p.graduacao)+' · '+E(clanOf(p.clanId).name)+'</p><p>'+E(p.descricao)+'</p><p class="text-sm">'+ATTRS.map(([k])=>E(k)+': '+p.atributos[k]).join(' · ')+'</p><p class="text-sm">Perícias: '+Object.entries(p.pericias).filter(([,v])=>v>0).map(([k,v])=>E(k)+' '+v).join(' · ')+'</p><p class="text-sm"><b>Poderes:</b> '+p.poderes.map(x=>E(x.nome)+' Nv.'+x.nivel).join(' · ')+'</p><p class="text-sm"><b>Aptidões:</b> '+p.aptidoes.map(x=>E(x.nome)).join(' · ')+'</p><p class="text-sm"><b>Jutsus ('+p.jutsus.length+'):</b> '+(p.jutsus.map(x=>E(x.nome)).join(' · ')||'Nenhum compatível com os pré-requisitos')+'</p><div class="flex wrap"><button class="button" data-action="forja-save">Salvar NPC</button><button class="button secondary" data-action="forja-regenerate">Gerar novamente</button></div>';
   }
   function forjaView(){
     if(!canAdmin()||!S.adminUnlocked)return layout('<div class="empty"><h3>Acesso restrito</h3></div>');
